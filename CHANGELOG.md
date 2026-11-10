@@ -18,6 +18,10 @@
 - Date et auteur de la dernière modification de chaque évaluation.
 - Identification de l'enseignant par son nom, demandé après le mot de passe : il signe les fichiers envoyés et apparaît dans le plan d'import.
 
+### Corrigé
+
+- L'empreinte du référentiel porte sur son contenu lisible (libellés, codes, rattachements) et non plus sur ses identifiants internes : un libellé modifié est désormais détecté, et deux référentiels identiques saisis séparément sont reconnus comme tels.
+
 ### Sécurité
 
 - Les données sont chiffrées sur le disque et protégées par un mot de passe, avec un code de secours en cas d'oubli.

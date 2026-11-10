@@ -7832,3 +7832,12 @@ bind("r-annee","change",e=>{ui.ref.annee=e.target.value;paintRef()});
 bind("rClear","click",()=>{Object.assign(ui.ref,{q:"",group:"bloc",annee:"*",sems:[]});paintRef()});
 
 paintTabs();paintForm();paintPick();paintSaved();paintRef();paintSet();
+
+/* Pont vers l'application : contenu lisible (sans identifiants internes) du référentiel d'un diplôme,
+   pour l'une de ses versions validées ou, si `versionId` est vide ou inconnu, pour son référentiel de travail.
+   Sert à vérifier que deux enseignants travaillent sur la même base. */
+window.dnmaxPont.projeterReferentiel=(diplomeId,versionId)=>{
+  if(!DATA.diplomes.some(d=>d.id===diplomeId))return null;
+  const v=versionsOf(diplomeId).find(x=>x.id===versionId);
+  return projectSnap(DATA,diplomeId,JSON.parse(JSON.stringify(v?v.snap:refOf(DATA,diplomeId))));
+};

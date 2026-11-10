@@ -27,6 +27,7 @@ import {
   lireEtatCoffre,
 } from "./enveloppe";
 import { chargerInterfaceHistorique } from "./heritage/pont";
+import { dresserCatalogue } from "./heritage/referentiels";
 
 const NOM_APPLICATION = "DNMAX";
 
@@ -92,6 +93,7 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
 
   const acces: AccesDonnees = {
     identite,
+    dresserCatalogue,
     lireEntrees: () => magasin.entrees(),
     remplacerEntrees: async (nouvelles) => {
       // Les dates en dernier : écrire les évaluations les redate à « maintenant »,
