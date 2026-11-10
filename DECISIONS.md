@@ -64,3 +64,30 @@ L'icône est un simple pavé « DN » généré depuis `src-tauri/icone-source.s
 ## 7. Les exports passent par la boîte de dialogue du système
 
 L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom proposé et des octets, l'enveloppe nettoie le nom, ouvre « Enregistrer sous » et écrit là où l'enseignant l'a décidé. Aucun droit d'accès général aux fichiers n'est accordé à la page.
+
+## 8. Les données sont chiffrées par un mot de passe
+
+**Retenu** : tout ce que l'enseignant saisit est enregistré dans un seul fichier chiffré, `coffre.dnmax`, déverrouillé par un mot de passe demandé à chaque ouverture. Un code de secours, affiché une seule fois à la création, permet de choisir un nouveau mot de passe en cas d'oubli.
+
+**Comment** :
+
+- une clé de données aléatoire chiffre le contenu (XChaCha20-Poly1305) ;
+- cette clé est enfermée deux fois, sous une clé dérivée du mot de passe et sous une clé dérivée du code de secours (Argon2id, 64 Mio, 3 passes) ;
+- le fichier porte un numéro de version de format : une version inconnue est refusée avec un message clair plutôt que mal interprétée ;
+- l'écriture passe par un fichier provisoire puis un renommage, pour ne jamais laisser un coffre à moitié écrit ;
+- une copie du coffre (chiffrée elle aussi) est faite au plus une fois par jour dans `sauvegardes/`, juste après une ouverture réussie ; les dix dernières sont conservées ;
+- rien n'est écrit dans le stockage du navigateur intégré.
+
+**Pourquoi un mot de passe plutôt que le trousseau du système** : le trousseau aurait évité la saisie, mais il ne protège pas contre une personne qui utilise la session de l'enseignant, et il n'est pas toujours disponible sous Linux. Le mot de passe fonctionne de la même façon sur les trois systèmes.
+
+**Ce que cela protège** : la lecture du disque par un tiers (ordinateur perdu, volé, prêté, réparé), une copie du fichier ou d'une sauvegarde, un autre compte du même ordinateur.
+
+**Ce que cela ne protège pas** :
+
+- les documents exportés (Word, Excel, OpenDocument), écrits en clair là où l'enseignant les enregistre ;
+- les données tant que l'application est ouverte et déverrouillée ;
+- un mot de passe faible ou noté à côté de l'ordinateur.
+
+**Conséquence assumée** : mot de passe **et** code de secours perdus, les données sont irrécupérables, y compris par l'auteur de l'application.
+
+**Reste à faire** : changer de mot de passe sans passer par le code de secours, restaurer une sauvegarde depuis l'application, verrouiller sans quitter.

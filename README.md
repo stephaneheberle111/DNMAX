@@ -4,7 +4,21 @@ DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs �
 
 C'est une application de bureau autonome pour Windows, Linux et macOS : pas de serveur central, pas de compte, les données restent sur l'ordinateur de l'enseignant.
 
-> **État** : en construction. L'interface est complète, mais les données ne sont pas encore enregistrées : elles disparaissent à la fermeture.
+> **État** : utilisable pour des essais. Manquent encore l'échange de contenus entre enseignants et la mise à jour automatique.
+
+## Où sont les données
+
+Tout est enregistré dans un fichier chiffré, `coffre.dnmax`, protégé par le mot de passe choisi au premier lancement. Un dossier `sauvegardes/` voisin garde une copie chiffrée par jour d'utilisation (dix au plus).
+
+| Système | Dossier |
+| --- | --- |
+| Windows | `%APPDATA%\fr.dnmax.app\` |
+| macOS | `~/Library/Application Support/fr.dnmax.app/` |
+| Linux | `~/.local/share/fr.dnmax.app/` |
+
+Pour revenir à une sauvegarde : quitter l'application, puis copier le fichier voulu de `sauvegardes/` à la place de `coffre.dnmax`. Le mot de passe reste celui en vigueur le jour de la sauvegarde.
+
+Les documents exportés (Word, Excel, OpenDocument) ne sont **pas** chiffrés. Le détail de la protection et de ses limites est dans [`DECISIONS.md`](DECISIONS.md), décision 8.
 
 ## Prérequis pour développer
 
@@ -63,13 +77,15 @@ flowchart LR
 - `src/heritage/pont.ts` : ce que l'application fournit à l'interface historique (stockage, enregistrement de fichiers).
 - `src/domaine/` : ce qui calcule. Aucune dépendance au navigateur ni à Tauri, donc testable directement.
 - `src/enveloppe.ts` : ce qui parle à l'extérieur.
-- `src-tauri/` : la fenêtre de bureau, ses commandes (`src/`) et ses droits (`capabilities/`).
+- `src/ecran-coffre.ts` : l'écran de mot de passe.
+- `src-tauri/` : la fenêtre de bureau et ses droits (`capabilities/`). Dans `src-tauri/src/` : `coffre.rs` chiffre (sans toucher au disque), `depot.rs` range les fichiers (sans connaître le chiffrement), `export.rs` écrit les exports, `lib.rs` relie le tout aux commandes appelées par l'interface.
 
 ## Pièges déjà rencontrés
 
 | Symptôme | Parade |
 | --- | --- |
 | Une commande Rust reçoit du JSON alors que l'interface a envoyé des octets | Sous Linux, Tauri transmet un envoi binaire comme une liste JSON de nombres : accepter les deux formes (voir `extraire_octets`). |
+| Les tests du chiffrement sont lents | Leur passer `DERIVATION_DE_TEST` (coût minimal), jamais `PARAMETRES_PAR_DEFAUT`. |
 | Changer `document.title` ne change pas le titre de la fenêtre | Le fixer côté Rust avec `set_title`. |
 | `npm run lint` signale une erreur de type sur `import.meta.dirname` | `@types/node` doit être installé et listé dans `types` de `tsconfig.json`. |
 
