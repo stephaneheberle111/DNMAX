@@ -29,6 +29,8 @@ export async function dresserCatalogue(entrees: Entrees): Promise<ReferentielLoc
           mention: diplome.mention,
           versionId: version.id,
           dateVersion: version.date,
+          enVigueur: version.id !== "" && donnees.versionsEnVigueur.get(diplome.id) === version.id,
+          contenu,
           empreinte: await calculerEmpreinteReferentiel(contenu),
         });
       }
