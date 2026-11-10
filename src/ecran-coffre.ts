@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-coffre.css";
+import { LONGUEUR_MAXIMALE_NOM, creerIdentite, type Identite } from "./domaine/identite";
 import type { Entrees } from "./domaine/magasin-memoire";
 import {
   LONGUEUR_MINIMALE_MOT_DE_PASSE,
@@ -206,6 +207,40 @@ export function demanderOuvertureCoffre(coffreExiste: boolean): Promise<Entrees>
     } else {
       montrerCreation(ecran, terminer);
     }
+  });
+}
+
+const GABARIT_IDENTITE = `
+  <h1>Qui êtes-vous ?</h1>
+  <p>Votre nom accompagne ce que vous modifiez et signe les fichiers que vous envoyez à d'autres enseignants :
+     chacun voit ainsi qui a écrit quoi.</p>
+  <label>Votre nom, tel que les autres enseignants le liront
+    <input type="text" name="nom" autocomplete="name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>
+  <p class="coffre-erreur" role="alert" hidden></p>
+  <div class="coffre-actions"><span></span><button type="submit" class="btn primary">Continuer</button></div>`;
+
+/**
+ * Demande son nom à l'enseignant et rend son identité. L'écran reste affiché
+ * tant que le nom saisi est vide.
+ *
+ * @param genererIdentifiant fournit l'identifiant de l'installation (passé en paramètre pour rester testable).
+ */
+export function demanderIdentite(genererIdentifiant: () => string): Promise<Identite> {
+  return new Promise((resoudre) => {
+    const ecran = document.createElement("div");
+    ecran.className = "ecran-coffre";
+    document.body.prepend(ecran);
+    const formulaire = afficherFormulaire(ecran, GABARIT_IDENTITE);
+    formulaire.addEventListener("submit", (evenement) => {
+      evenement.preventDefault();
+      const identite = creerIdentite(lireChamp(formulaire, "nom"), genererIdentifiant());
+      if (identite === null) {
+        afficherErreur(formulaire, "Indiquez votre nom pour continuer.");
+        return;
+      }
+      ecran.remove();
+      resoudre(identite);
+    });
   });
 }
 

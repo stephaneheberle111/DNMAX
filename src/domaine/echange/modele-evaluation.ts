@@ -22,7 +22,7 @@ export const CHAMPS_LOCAUX = [
   "refV",
 ] as const;
 
-/** Le modèle d'une évaluation : ce qui peut être partagé avec un collègue. */
+/** Le modèle d'une évaluation : ce qui peut être partagé avec un autre enseignant. */
 export function extraireModele(evaluation: Evaluation): Evaluation {
   const modele: ObjetJson = { ...evaluation };
   for (const champ of CHAMPS_LOCAUX) {
