@@ -4,7 +4,16 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["dist/", "node_modules/", "src-tauri/"] },
+  {
+    ignores: [
+      "dist/",
+      "node_modules/",
+      "src-tauri/",
+      // Interface historique reprise telle quelle (environ 7 800 lignes de JavaScript non typé).
+      // Elle est exclue en bloc en attendant sa reprise progressive en TypeScript : voir DECISIONS.md.
+      "public/heritage/",
+    ],
+  },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   {

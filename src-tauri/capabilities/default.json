@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Droits de la fenêtre principale : le strict nécessaire.",
   "windows": ["main"],
-  "permissions": ["core:app:allow-version"]
+  "permissions": []
 }
