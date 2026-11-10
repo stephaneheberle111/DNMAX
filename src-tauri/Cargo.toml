@@ -15,7 +15,12 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+serde_json = "1"
 tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
 
 [lints.clippy]
 all = { level = "deny", priority = -1 }
+
+[dev-dependencies]
+tempfile = "3"

@@ -4,13 +4,246 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DNMAX</title>
-    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/heritage/application.css" />
   </head>
   <body>
-    <main>
-      <h1 id="titre">DNMAX</h1>
-      <p id="version"></p>
-    </main>
+<!-- Début de l'interface historique : balisage repris tel quel, voir public/heritage/application.js -->
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="brand"><b>DNMAX</b></div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="t-saved" aria-selected="true">Mes évaluations</button>
+      <button role="tab" id="t-prog" aria-selected="false">Progression</button>
+      <button role="tab" id="t-ref" aria-selected="false">Référentiel</button>
+      <button role="tab" id="t-org" aria-selected="false">Mon établissement</button>
+      <button role="tab" id="t-set" aria-selected="false">Paramètres</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="v-new" hidden>
+    <div class="backbar"><button type="button" class="btn ghost" id="bBack">← Mes évaluations</button>
+      <span class="hint" id="newWhat"></span></div>
+    <ol class="steps" id="steps">
+      <li><button type="button" data-step="1"><span class="hd"><b>1</b><span class="l">L'évaluation</span></span><span class="s" id="s1sum"></span></button></li>
+      <li><button type="button" data-step="2"><span class="hd"><b>2</b><span class="l">Compétences</span></span><span class="s" id="s2sum"></span></button></li>
+      <li><button type="button" data-step="3"><span class="hd"><b>3</b><span class="l">Formulation</span></span><span class="s" id="s3sum"></span></button></li>
+      <li id="li-step4" hidden><button type="button" data-step="4"><span class="hd"><b>4</b><span class="l">Élèves</span></span><span class="s" id="s4sum"></span></button></li>
+    </ol>
+
+    <div id="step1">
+      <div class="cols2" id="step1cols">
+        <div class="panel">
+          <h3>L'évaluation</h3>
+          <div class="panel-body">
+            <div class="fgroup first">Identification</div>
+            <div class="field" id="fld-dip" hidden><label for="f-dip">Diplôme</label><select id="f-dip"></select></div>
+            <div class="field"><label for="f-titre">Intitulé de l'évaluation</label><input type="text" id="f-titre" placeholder="Évaluation intermédiaire — …"></div>
+            <div class="field" id="fld-consignes"><label for="f-consignes">Consignes données aux élèves</label><textarea id="f-consignes"></textarea></div>
+            <div class="field"><label>Livrables attendus <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— sélection multiple</span></label>
+              <div class="ecpick" id="f-livr"></div>
+            </div>
+
+            <div class="fgroup">Contexte</div>
+            <div class="row2">
+              <div class="field"><label>Promotions <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— sélection multiple</span></label>
+                <div class="ecpick" id="f-classes"></div></div>
+              <div class="field"><label>Dates prévues <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— facultatives</span></label>
+                <div class="row2"><label class="hint" style="display:flex;flex-direction:column;gap:3px">Distribution aux élèves<input type="date" id="f-distrib"></label>
+                <label class="hint" style="display:flex;flex-direction:column;gap:3px">Date butoir de rendu<input type="date" id="f-rendu"></label></div></div>
+            </div>
+            <div class="field" id="fld-eleve" hidden><label>Élèves <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— sélection multiple, aucune : toute la promotion</span></label>
+              <div class="ecpick" id="f-eleve"></div>
+              <div class="hint" id="eleveHint"></div></div>
+            <div class="field"><label>Semestre</label>
+              <div class="seg" id="f-sem"></div>
+              <div class="hint" id="semHint"></div>
+            </div>
+            <div class="field"><label>Enseignant·es <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— sélection multiple</span></label>
+              <div class="ecpick" id="f-prof-sel"></div>
+              <input type="text" id="f-prof" placeholder="Nom" hidden></div>
+
+            <div class="fgroup" id="fgroup-ref">Rattachement au référentiel</div>
+            <div id="row-ec" style="display:flex;flex-direction:column;gap:13px">
+              <div class="field"><label>Unité d'enseignement</label>
+                <div class="ecpick" id="f-ue"></div>
+              </div>
+              <div class="field"><label>Enseignements constitutifs <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— sélection multiple</span></label>
+                <div class="ecpick" id="f-ecsel"></div>
+                <div class="hint" id="ecHint"></div>
+              </div>
+            </div>
+
+            <div class="fgroup" id="fgroup-ech">Échelle<span id="helpEch"></span></div>
+            <div class="field" id="fld-preset"><label for="f-preset">Échelle</label><select id="f-preset"></select><div class="hint" id="f-presetHint"></div></div>
+            <div class="levels" id="f-levels"></div>
+            <button class="btn ghost" id="bAddLevel" style="align-self:flex-start">+ Ajouter un degré</button>
+            <div class="ro" id="lvRead"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="panel-eleves">
+          <h3>Élèves et promotions<span id="helpPromo"></span></h3>
+          <div class="panel-body">
+            <div class="field"><label for="f-promo">Promotion</label>
+              <div style="display:flex;gap:7px">
+                <select id="f-promo"></select>
+                <button class="btn ghost" id="bPromoNew" title="Créer une promotion">+ Promo</button>
+              </div>
+            </div>
+            <div id="promoEdit" style="display:flex;flex-direction:column;gap:13px">
+              <div class="field"><label for="p-nom">Nom de la promotion</label><input type="text" id="p-nom" placeholder="DN MADE 2 Objet"></div>
+              <div class="row2">
+                <div class="field"><label for="p-annee">Année de formation</label><select id="p-annee"></select></div>
+                <div class="field"><label for="p-as">Année scolaire</label><input type="text" id="p-as" placeholder="2025-2026"></div>
+              </div>
+              <div class="field"><label for="p-eleves">Élèves — un nom par ligne</label>
+                <textarea id="p-eleves" rows="8" placeholder="Camille Ferrand&#10;Noé Baptiste"></textarea></div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="pill" id="p-count">0 inscrit</span>
+                <button class="btn ghost" id="bPromoDel" style="margin-left:auto">Supprimer</button>
+              </div>
+            </div>
+            <div class="field" id="fld-eleves-libre"><label for="f-eleves">Élèves de cette évaluation — un nom par ligne</label>
+              <textarea id="f-eleves" placeholder="Camille Ferrand&#10;Noé Baptiste"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="navrow"><span class="hint" id="n1hint" style="flex:1 1 auto"></span>
+        <button class="btn ghost" id="bSave1">Enregistrer</button>
+        <button class="btn primary" data-go="2">Choisir les compétences →</button></div>
+    </div>
+
+    <div id="step2" hidden>
+      <div class="panel">
+        <div class="pick-head">
+          <h3>Compétences à évaluer</h3>
+          <span class="count" id="cCount">0</span>
+          <input type="text" id="f-search" placeholder="Filtrer…">
+          <button class="btn ghost" id="bClear">Tout décocher</button>
+        </div>
+        <div class="hint" id="pickScope" style="padding:8px 14px 0"></div>
+        <div id="pick"></div>
+      </div>
+      <div class="navrow"><button class="btn" data-go="1">← L'évaluation</button>
+        <span class="hint" id="n2hint" style="flex:1 1 auto"></span>
+        <button class="btn ghost" id="bSave2">Enregistrer</button>
+        <button class="btn primary" data-go="3">Formuler et lier →</button></div>
+    </div>
+
+    <div id="step3" hidden>
+      <div class="cols3">
+        <div class="panel pal">
+          <h3>À glisser<span id="helpDrag"></span></h3>
+          <div class="panel-body">
+            <div class="field"><label>Livrables</label><div class="ecpick" id="palLivr"></div></div>
+          </div>
+        </div>
+        <div>
+          <div class="panel">
+            <div class="pick-head">
+              <h3>Lignes de l'évaluation</h3><span class="count" id="lCount">0</span>
+              <span class="hint" id="n3hint" style="flex:1 1 auto"></span>
+              <button class="btn" id="bLink" disabled>Lier les lignes cochées</button>
+              <button class="btn ghost" id="bLinkNone">Tout décocher</button>
+            </div>
+            <div id="lignes"></div>
+          </div>
+          <div class="navrow"><button class="btn" data-go="2">← Compétences</button>
+            <span class="hint" id="n3save"></span>
+            <button class="btn primary" id="bSave3">Enregistrer l'évaluation</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="step4" hidden>
+      <div class="panel">
+        <div class="pick-head">
+          <h3>Évaluation des élèves</h3><span class="count" id="eCount">0</span>
+          <span class="hint" id="eProg" style="flex:1 1 auto"></span>
+          <div class="subnav" id="eMode" style="margin:0">
+            <button type="button" data-emode="fiche">Fiche par élève</button>
+            <button type="button" data-emode="grille">Grille de la promo</button>
+          </div>
+        </div>
+        <div id="elevesPane"></div>
+      </div>
+      <div class="navrow"><button class="btn" data-go="3">← Formulation</button>
+        <span class="hint" id="n4hint" style="flex:1 1 auto"></span>
+        <button class="btn primary" id="bSave4">Enregistrer l'évaluation</button></div>
+    </div>
+  </section>
+
+  <section id="v-saved" hidden>
+    <div class="panel">
+      <div class="pick-head"><button class="btn" id="bNew">+ Nouvelle évaluation</button><h3>Évaluations enregistrées</h3><span class="count" id="sCount">0</span>
+      </div>
+      <div class="sfbar" id="sFilters" hidden></div>
+      <div class="tw" id="savedList"></div>
+    </div>
+  </section>
+
+  <section id="v-ref" hidden>
+    <div class="subnav" id="refNav"></div>
+    <div id="refExplore">
+      <div class="panel" style="margin-bottom:18px">
+        <div class="pick-head"><h3>Référentiel chargé</h3></div>
+        <div class="panel-body" id="refMeta"></div>
+      </div>
+      <div class="panel" id="refSearch" hidden>
+        <div class="pick-head"><h3>Compétences</h3><span class="count" id="rCount">0</span>
+          <input type="text" id="r-search" placeholder="Code (C4.1, EC 11.2), UE ou mot-clé…">
+          <select id="r-group" style="width:auto;flex:0 1 200px" aria-label="Regrouper par"></select>
+          <select id="r-annee" style="width:auto;flex:0 1 160px" aria-label="Année"></select>
+          <button class="btn ghost" id="rClear">Réinitialiser</button>
+        </div>
+        <div class="semfilter"><span class="sflab">Semestres</span><div class="seg" id="r-sem"></div></div>
+        <div id="refList"></div>
+      </div>
+    </div>
+    <div id="refPane" hidden></div>
+  </section>
+  <section id="v-prog" hidden>
+    <div id="progPane"></div>
+  </section>
+
+  <section id="v-org" hidden>
+    <div class="subnav" id="orgNav"></div>
+    <div id="orgPane"></div>
+  </section>
+
+  <section id="v-set" hidden>
+    <div class="panel" style="max-width:720px">
+      <div class="pick-head"><h3>Modules de l'application</h3><span class="count" id="mCount">0</span>
+        <div style="margin-left:auto"><button class="btn ghost" id="bModReset">Valeurs par défaut</button></div>
+      </div>
+      <div id="modList"></div>
+    </div>
+    <div class="panel" style="max-width:720px;margin-top:18px">
+      <div class="pick-head"><h3>Échelles d'évaluation<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Les échelles cochées sont actives ; celle marquée « par défaut » s'applique à toute nouvelle évaluation et ne se change pas depuis l'évaluation. Une évaluation déjà enregistrée garde son échelle.</span></span></h3></div>
+      <div id="echList"></div>
+    </div>
+    <div class="panel" style="max-width:720px;margin-top:18px">
+      <div class="pick-head"><h3>Exemple<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Remplit une évaluation complète (semestre, livrables, compétences, regroupements, deux promotions et leurs élèves, résultats déjà saisis) pour voir l'application en situation, et ajoute trois évaluations dans « Mes évaluations ». L'évaluation en cours est remplacée.</span></span></h3>
+        <div style="margin-left:auto"><button class="btn" id="bDemo">Charger un exemple</button></div></div>
+      <div class="panel-body"><div class="hint">Données fictives : un rendu intermédiaire de projet en DN MADE 2 Objet, et une fiche de lecture en DN MADE 1.</div></div>
+    </div>
+    <div class="panel" style="max-width:720px;margin-top:18px">
+      <div class="pick-head"><h3>Vocabulaire<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Le nom du champ d'évaluation rempli pour chaque ligne de l'évaluation à l'étape 3, repris en tête de colonne dans le Word et l'Excel.</span></span></h3></div>
+      <div class="panel-body">
+        <div class="field"><label for="p-critsel">Nom du champ d'évaluation</label>
+          <select id="p-critsel"></select></div>
+        <div class="field" id="p-critwrap" hidden><label for="p-critlab">Nom personnalisé</label>
+          <input type="text" id="p-critlab" placeholder="Attendu, indicateur…"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Fin de l'interface historique -->
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

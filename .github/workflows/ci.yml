@@ -28,7 +28,7 @@ jobs:
       - run: npm test
 
   enveloppe:
-    name: Enveloppe de bureau (format, clippy)
+    name: Enveloppe de bureau (format, clippy, tests)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -40,4 +40,6 @@ jobs:
       - run: cargo fmt --check
         working-directory: src-tauri
       - run: cargo clippy --all-targets --locked -- -D warnings
+        working-directory: src-tauri
+      - run: cargo test --locked
         working-directory: src-tauri

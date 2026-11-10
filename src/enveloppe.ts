@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { getVersion } from "@tauri-apps/api/app";
-import { isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
+
+/** En-tête lu par la commande `enregistrer_fichier` de l'enveloppe. */
+const ENTETE_NOM_FICHIER = "x-nom-fichier";
 
 /**
- * Lit la version auprès de l'enveloppe de bureau.
+ * Ouvre la boîte de dialogue « Enregistrer sous » du système et y écrit le fichier.
  *
- * Rend `null` hors de l'enveloppe (page ouverte dans un navigateur pendant le
- * développement) ou si l'appel échoue : l'affichage ne doit pas en dépendre.
+ * @returns `true` si le fichier a été écrit, `false` si l'enseignant a annulé.
+ * @throws si l'écriture échoue ou si l'application tourne hors de l'enveloppe.
  */
-export async function lireVersionApplication(): Promise<string | null> {
-  if (!isTauri()) {
-    return null;
-  }
-  try {
-    return await getVersion();
-  } catch {
-    return null;
-  }
+export async function enregistrerFichier(nomPropose: string, octets: Uint8Array): Promise<boolean> {
+  // Les en-têtes n'acceptent que de l'ASCII : le nom est encodé, l'enveloppe le décode.
+  return await invoke<boolean>("enregistrer_fichier", octets, {
+    headers: { [ENTETE_NOM_FICHIER]: encodeURIComponent(nomPropose) },
+  });
 }
