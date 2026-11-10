@@ -12,6 +12,7 @@
 - Version affichée dans le titre de la fenêtre.
 - Enregistrement automatique des données sur l'ordinateur, y compris à la fermeture de la fenêtre.
 - Sauvegarde quotidienne automatique, dix jours conservés.
+- Installeurs Windows, macOS et Linux construits par l'intégration continue.
 
 ### Sécurité
 
