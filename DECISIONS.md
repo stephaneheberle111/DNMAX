@@ -91,3 +91,9 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 **Conséquence assumée** : mot de passe **et** code de secours perdus, les données sont irrécupérables, y compris par l'auteur de l'application.
 
 **Reste à faire** : changer de mot de passe sans passer par le code de secours, restaurer une sauvegarde depuis l'application, verrouiller sans quitter.
+
+## 9. Installeurs construits par l'intégration continue, sans certificat
+
+**Retenu** : l'atelier `.github/workflows/installeurs.yml` construit les installeurs Windows (`.exe`), macOS (`.dmg` universel, Intel et Apple Silicon) et Linux (`.deb`, `.AppImage`) et les joint à son exécution. Il ne publie rien et n'utilise aucun secret.
+
+**Signature** : aucun certificat payant pour l'instant (voir décision 1). Sous macOS, l'application reçoit une signature locale « ad hoc » (`signingIdentity: "-"`) : sans elle, un Mac Apple Silicon refuse purement de la lancer. Elle ne supprime pas l'avertissement de Gatekeeper.
