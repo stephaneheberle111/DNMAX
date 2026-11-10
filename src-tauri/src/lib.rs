@@ -3,6 +3,7 @@
 mod coffre;
 mod depot;
 mod export;
+mod import;
 
 use std::borrow::Cow;
 use std::path::PathBuf;
@@ -80,6 +81,7 @@ enum ErreurCommande {
     CoffreAbsent,
     CoffreVerrouille,
     DisqueInaccessible,
+    FichierTropVolumineux,
     Interne,
 }
 
@@ -233,6 +235,34 @@ fn enregistrer_coffre(
     Ok(())
 }
 
+/// Extension des fichiers d'échange entre enseignants, sans le point.
+const EXTENSION_ECHANGE: &str = "dnmax";
+
+/// Fait choisir un fichier d'échange à l'enseignant et rend son texte.
+///
+/// Rend `None` si l'enseignant a annulé. Le contenu n'est pas interprété ici :
+/// l'interface le valide avant d'en faire quoi que ce soit.
+#[tauri::command(async)]
+fn ouvrir_fichier_echange(application: AppHandle) -> Result<Option<String>, ErreurCommande> {
+    let choix = application
+        .dialog()
+        .file()
+        .add_filter("Fichier d'échange DNMAX", &[EXTENSION_ECHANGE])
+        .blocking_pick_file();
+    let Some(emplacement) = choix else {
+        return Ok(None);
+    };
+    let chemin = emplacement
+        .into_path()
+        .map_err(|_| ErreurCommande::DisqueInaccessible)?;
+    match import::lire_texte_limite(&chemin, import::TAILLE_MAXIMALE_ECHANGE) {
+        Ok(texte) => Ok(Some(texte)),
+        Err(import::ErreurLecture::TropVolumineux) => Err(ErreurCommande::FichierTropVolumineux),
+        Err(import::ErreurLecture::PasDuTexte) => Err(ErreurCommande::FichierIllisible),
+        Err(import::ErreurLecture::Inaccessible(_)) => Err(ErreurCommande::DisqueInaccessible),
+    }
+}
+
 /// Rend les octets transmis par l'interface.
 ///
 /// Selon le système, Tauri livre un même envoi binaire soit tel quel, soit
@@ -287,7 +317,8 @@ pub fn lancer() {
             ouvrir_coffre,
             ouvrir_coffre_par_secours,
             lire_coffre,
-            enregistrer_coffre
+            enregistrer_coffre,
+            ouvrir_fichier_echange
         ])
         .setup(|application| {
             // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.

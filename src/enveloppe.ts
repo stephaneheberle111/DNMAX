@@ -32,6 +32,7 @@ const CODES_ERREUR_COFFRE = [
   "coffre-absent",
   "coffre-verrouille",
   "disque-inaccessible",
+  "fichier-trop-volumineux",
   "interne",
 ] as const;
 
@@ -117,4 +118,18 @@ export async function attendreAvantFermeture(avantFermeture: () => Promise<void>
   await getCurrentWindow().onCloseRequested(async () => {
     await avantFermeture();
   });
+}
+
+/**
+ * Fait choisir un fichier d'échange à l'enseignant et rend son texte, non interprété.
+ *
+ * @returns `null` si l'enseignant a annulé.
+ * @throws ErreurCoffre si le fichier est trop volumineux, n'est pas du texte ou ne peut pas être lu.
+ */
+export async function ouvrirFichierEchange(): Promise<string | null> {
+  const texte = await appelerCoffre("ouvrir_fichier_echange");
+  if (texte !== null && typeof texte !== "string") {
+    throw new ErreurCoffre("interne");
+  }
+  return texte;
 }

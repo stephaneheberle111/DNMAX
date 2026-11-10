@@ -1,0 +1,168 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+#bouton-echange {
+  margin-left: auto;
+}
+
+.echange-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(8, 10, 14, 0.5);
+}
+
+.echange-boite {
+  width: 100%;
+  max-width: 760px;
+  max-height: calc(100vh - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.35);
+}
+
+.echange-boite h2 {
+  font-size: 18px;
+}
+
+.echange-boite p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.echange-boite .echange-erreur {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.echange-choix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.echange-choix button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  text-align: left;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.echange-choix button:hover {
+  border-color: var(--accent);
+}
+
+.echange-choix b {
+  font-family: var(--fd);
+  font-size: 14.5px;
+}
+
+.echange-choix span {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.echange-outils {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.echange-outils input[type="search"] {
+  flex: 1 1 200px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-2);
+}
+
+.echange-liste {
+  flex: 1 1 auto;
+  min-height: 120px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.echange-ligne {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.echange-ligne:first-child {
+  border-top: 0;
+}
+
+.echange-ligne.inactive {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.echange-ligne input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.echange-titre {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  font-weight: 600;
+}
+
+.echange-detail {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.echange-detail.alerte {
+  color: var(--signal);
+}
+
+.echange-pastille {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 99px;
+  border: 1px solid var(--line-strong);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.echange-pastille.creer {
+  background: #e3f4e8;
+  border-color: #b9e2c6;
+  color: #23733f;
+}
+
+.echange-pastille.modifier {
+  background: var(--signal-soft);
+  border-color: var(--signal);
+  color: var(--signal);
+}
+
+.echange-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
