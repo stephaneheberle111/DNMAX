@@ -37,9 +37,11 @@ La consigne est de préférer, à fonction égale, un outil référencé au [SIL
 
 « Non vérifié » : le catalogue n'a pas pu être consulté au moment du choix. À compléter.
 
-## 3. L'identifiant d'application est provisoire
+## 3. L'identifiant d'application est `fr.dnmax.app`
 
-`fr.dnmax.app` (dans `src-tauri/tauri.conf.json`) détermine le dossier où le système range les données de l'application. Il doit être fixé définitivement **avant** la première diffusion : le changer ensuite ferait perdre aux enseignants l'accès à leurs données.
+`fr.dnmax.app` (dans `src-tauri/tauri.conf.json`) détermine le dossier où le système range les données de l'application. Il est retenu définitivement, faute de nom de domaine propre au projet.
+
+**Il ne doit plus changer** : le modifier ferait perdre aux enseignants l'accès à leurs données, qui resteraient dans l'ancien dossier.
 
 ## 4. Icône provisoire
 
