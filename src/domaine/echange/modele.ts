@@ -12,9 +12,6 @@ export const CLE_EVALUATIONS = "dnmade.fiches";
 export const CLE_PROMOTIONS = "dnmade.promos";
 export const CLE_DONNEES = "dnmade.data";
 
-/** Les quatre listes qui constituent un référentiel, dans l'ordre retenu pour son empreinte. */
-export const PARTIES_REFERENTIEL = ["ues", "ecs", "blocs", "competences"] as const;
-
 export type ObjetJson = Record<string, unknown>;
 
 /** Une évaluation : seul son identifiant est exigé, le reste est transporté tel quel. */
@@ -34,17 +31,14 @@ export interface Diplome {
   mention: string;
 }
 
+/** Une version validée du référentiel d'un diplôme. */
 export interface VersionReferentiel {
   id: string;
   date: string;
-  /** Contenu figé du référentiel, réduit à ses quatre parties. */
-  contenu: unknown[];
 }
 
 export interface DonneesEtablissement {
   diplomes: Diplome[];
-  /** Référentiel de travail de chaque diplôme, réduit à ses quatre parties. */
-  referentiels: Map<string, unknown[]>;
   versions: Map<string, VersionReferentiel[]>;
   /** Version en vigueur de chaque diplôme. */
   versionsEnVigueur: Map<string, string>;
@@ -93,14 +87,6 @@ export function lirePromotions(texte: string | null | undefined): Promotion[] {
   }));
 }
 
-function extraireParties(referentiel: unknown): unknown[] {
-  const source = estObjet(referentiel) ? referentiel : {};
-  return PARTIES_REFERENTIEL.map((partie): unknown => {
-    const liste = source[partie];
-    return Array.isArray(liste) ? liste : [];
-  });
-}
-
 function lireTable(valeur: unknown): [string, unknown][] {
   return estObjet(valeur) ? Object.entries(valeur) : [];
 }
@@ -113,19 +99,17 @@ export function lireDonneesEtablissement(texte: string | null | undefined): Donn
     nom: lireTexte(diplome.nom),
     mention: lireTexte(diplome.mention),
   }));
-  const referentiels = new Map(lireTable(donnees.refs).map(([id, referentiel]) => [id, extraireParties(referentiel)]));
   const versions = new Map(
     lireTable(donnees.versions).map(([id, liste]) => [
       id,
       (Array.isArray(liste) ? liste : []).filter(estObjet).map((version) => ({
         id: lireTexte(version.id),
         date: lireTexte(version.date),
-        contenu: extraireParties(version.snap),
       })),
     ]),
   );
   const versionsEnVigueur = new Map(lireTable(donnees.valide).map(([id, version]) => [id, lireTexte(version)]));
-  return { diplomes, referentiels, versions, versionsEnVigueur };
+  return { diplomes, versions, versionsEnVigueur };
 }
 
 /**

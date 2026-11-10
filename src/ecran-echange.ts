@@ -9,7 +9,7 @@ import {
   type Paquet,
 } from "./domaine/echange/paquet";
 import { appliquerPlan, calculerPlan, type Action, type LignePlan } from "./domaine/echange/plan";
-import type { ComparaisonBase } from "./domaine/echange/referentiel";
+import type { ComparaisonBase, ReferentielLocal } from "./domaine/echange/referentiel";
 import {
   CLE_DATES_MODIFICATION,
   MODIFICATION_INCONNUE,
@@ -26,6 +26,8 @@ export interface AccesDonnees {
   /** L'enseignant qui utilise l'application : son nom signe les fichiers qu'il envoie. */
   identite: Identite;
   lireEntrees(): Entrees;
+  /** Référentiels présents sur ce poste, avec leur empreinte. */
+  dresserCatalogue(entrees: Entrees): Promise<ReferentielLocal[]>;
   /** Enregistre les nouvelles entrées puis recharge l'interface pour qu'elle les affiche. */
   remplacerEntrees(entrees: Entrees): Promise<void>;
 }
@@ -152,7 +154,9 @@ function montrerExport(acces: AccesDonnees): void {
   erreur.hidden = true;
   const boutonCreer = creerBouton("", "btn primary", () => {
     boutonCreer.disabled = true;
-    construirePaquet(entrees, choisies, new Date(), acces.identite.nom)
+    acces
+      .dresserCatalogue(entrees)
+      .then((catalogue) => construirePaquet(entrees, choisies, new Date(), acces.identite.nom, catalogue))
       .then((paquet) => enregistrerFichier(`evaluations${EXTENSION_FICHIER}`, new TextEncoder().encode(JSON.stringify(paquet))))
       .then((fichierEcrit) => {
         if (fichierEcrit) {
@@ -333,7 +337,7 @@ async function lancerImport(acces: AccesDonnees): Promise<void> {
     return;
   }
   const entrees = acces.lireEntrees();
-  montrerPlan(acces, entrees, paquet, await calculerPlan(entrees, paquet));
+  montrerPlan(acces, entrees, paquet, calculerPlan(entrees, paquet, await acces.dresserCatalogue(entrees)));
 }
 
 function montrerChoix(acces: AccesDonnees): void {
