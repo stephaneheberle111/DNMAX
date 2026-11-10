@@ -15,6 +15,7 @@
 - Installeurs Windows, macOS et Linux construits par l'intégration continue.
 - Échange d'évaluations entre enseignants par fichier `.dnmax`, sans élèves ni résultats : choix à l'envoi, puis plan des changements (nouvelle, modifiée, identique) à valider à la réception.
 - Vérification, à la réception, que l'évaluation a été construite sur le même référentiel.
+- Échange de référentiels : envoi du référentiel d'un diplôme, détail des écarts à la réception, ajout comme nouvelle version non activée.
 - Date et auteur de la dernière modification de chaque évaluation.
 - Identification de l'enseignant par son nom, demandé après le mot de passe : il signe les fichiers envoyés et apparaît dans le plan d'import.
 

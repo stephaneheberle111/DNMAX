@@ -9,7 +9,19 @@ import {
   type Paquet,
 } from "./domaine/echange/paquet";
 import { appliquerPlan, calculerPlan, type Action, type LignePlan } from "./domaine/echange/plan";
-import type { ComparaisonBase, ReferentielLocal } from "./domaine/echange/referentiel";
+import {
+  appliquerReferentiels,
+  calculerPlanReferentiels,
+  rattacherAuxVersionsCreees,
+  type ActionReferentiel,
+  type LigneReferentiel,
+} from "./domaine/echange/plan-referentiels";
+import {
+  trouverReferentielDeReference,
+  type ComparaisonBase,
+  type ReferentielLocal,
+} from "./domaine/echange/referentiel";
+import type { Differences } from "./domaine/echange/referentiel-echange";
 import {
   CLE_DATES_MODIFICATION,
   MODIFICATION_INCONNUE,
@@ -33,6 +45,9 @@ export interface AccesDonnees {
 }
 
 const IDENTIFIANT_BOUTON = "bouton-echange";
+
+/** Nombre de caractères aléatoires des identifiants créés à l'import. */
+const LONGUEUR_IDENTIFIANT_GENERE = 8;
 
 const MESSAGES_PAQUET: Record<ErreurPaquet, string> = {
   illisible: "Ce fichier n'est pas un fichier d'échange DNMAX, ou il est endommagé.",
@@ -79,6 +94,15 @@ function ecrireDate(dateIso: string): string {
     return "date inconnue";
   }
   return date.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+}
+
+/** Écrit le jour d'une date ISO, sans l'heure : pour les dates de validation, qui n'en ont pas. */
+function ecrireJour(dateIso: string): string {
+  const date = new Date(dateIso);
+  if (dateIso === "" || Number.isNaN(date.getTime())) {
+    return "date inconnue";
+  }
+  return date.toLocaleDateString("fr-FR", { dateStyle: "long" });
 }
 
 function lireTexte(valeur: unknown): string {
@@ -128,21 +152,31 @@ function decrireEvaluation(evaluation: Evaluation, modification: Modification): 
   return parties.filter((partie) => partie !== "").join(" · ");
 }
 
-function montrerExport(acces: AccesDonnees): void {
-  const entrees = acces.lireEntrees();
+/** Les diplômes du poste, chacun avec le référentiel qui serait envoyé pour lui. */
+function listerDiplomes(catalogue: readonly ReferentielLocal[]): ReferentielLocal[] {
+  const identifiants = [...new Set(catalogue.map((referentiel) => referentiel.diplomeId))];
+  return identifiants
+    .map((diplomeId) => trouverReferentielDeReference(catalogue, diplomeId))
+    .filter((referentiel) => referentiel !== null);
+}
+
+function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonly ReferentielLocal[]): void {
   const evaluations = lireEvaluations(entrees[CLE_EVALUATIONS]);
-  if (evaluations.length === 0) {
-    afficherMessage("Envoyer des évaluations", "Vous n'avez encore aucune évaluation enregistrée à envoyer.");
+  const diplomes = listerDiplomes(catalogue);
+  if (evaluations.length === 0 && diplomes.length === 0) {
+    afficherMessage("Envoyer", "Vous n'avez encore ni évaluation enregistrée ni référentiel à envoyer.");
     return;
   }
   const dates = lireDatesModification(entrees[CLE_DATES_MODIFICATION]);
   const choisies = new Set<string>();
-  const { boite, fermer } = ouvrirBoite("Envoyer des évaluations");
+  const diplomesChoisis = new Set<string>();
+  const { boite, fermer } = ouvrirBoite("Envoyer des évaluations et des référentiels");
   boite.append(
     creer(
       "p",
       "",
-      `Cochez les évaluations à envoyer. Le fichier sera signé de votre nom (${acces.identite.nom}) et ne contient ni noms d'élèves, ni résultats, ni votre suivi.`,
+      `Cochez ce que vous envoyez. Le fichier sera signé de votre nom (${acces.identite.nom}) et ne contient ni noms d'élèves, ni résultats, ni votre suivi. ` +
+        "Chaque évaluation emporte l'empreinte de son référentiel, que vous envoyiez le référentiel ou non.",
     ),
   );
 
@@ -154,9 +188,7 @@ function montrerExport(acces: AccesDonnees): void {
   erreur.hidden = true;
   const boutonCreer = creerBouton("", "btn primary", () => {
     boutonCreer.disabled = true;
-    acces
-      .dresserCatalogue(entrees)
-      .then((catalogue) => construirePaquet(entrees, choisies, new Date(), acces.identite.nom, catalogue))
+    Promise.resolve(construirePaquet(entrees, choisies, new Date(), acces.identite.nom, catalogue, diplomesChoisis))
       .then((paquet) => enregistrerFichier(`evaluations${EXTENSION_FICHIER}`, new TextEncoder().encode(JSON.stringify(paquet))))
       .then((fichierEcrit) => {
         if (fichierEcrit) {
@@ -168,9 +200,38 @@ function montrerExport(acces: AccesDonnees): void {
         erreur.hidden = false;
       })
       .finally(() => {
-        boutonCreer.disabled = choisies.size === 0;
+        actualiser();
       });
   });
+
+  for (const diplome of diplomes) {
+    const ligne = creer("label", "echange-ligne");
+    const case_ = creer("input");
+    case_.type = "checkbox";
+    const texte = creer("div");
+    const titre = creer("div", "echange-titre");
+    titre.append(creer("span", "echange-pastille", "Référentiel"), creer("span", "", `${diplome.diplome} — ${diplome.mention}`));
+    texte.append(
+      titre,
+      creer(
+        "div",
+        "echange-detail",
+        diplome.versionId === ""
+          ? "Référentiel de travail, non validé."
+          : `Version en vigueur, validée le ${ecrireJour(diplome.dateVersion)}.`,
+      ),
+    );
+    ligne.append(case_, texte);
+    case_.addEventListener("change", () => {
+      if (case_.checked) {
+        diplomesChoisis.add(diplome.diplomeId);
+      } else {
+        diplomesChoisis.delete(diplome.diplomeId);
+      }
+      actualiser();
+    });
+    liste.append(ligne);
+  }
 
   const lignes = evaluations.map((evaluation) => {
     const ligne = creer("label", "echange-ligne");
@@ -196,8 +257,9 @@ function montrerExport(acces: AccesDonnees): void {
   });
 
   const actualiser = (): void => {
-    boutonCreer.textContent = `Créer le fichier (${String(choisies.size)})`;
-    boutonCreer.disabled = choisies.size === 0;
+    const nombre = choisies.size + diplomesChoisis.size;
+    boutonCreer.textContent = `Créer le fichier (${String(nombre)})`;
+    boutonCreer.disabled = nombre === 0;
   };
   const cocherVisibles = (coche: boolean): void => {
     for (const { ligne, case_, id } of lignes) {
@@ -222,10 +284,10 @@ function montrerExport(acces: AccesDonnees): void {
   const outils = creer("div", "echange-outils");
   outils.append(
     filtre,
-    creerBouton("Tout cocher", "btn ghost", () => {
+    creerBouton("Toutes les évaluations", "btn ghost", () => {
       cocherVisibles(true);
     }),
-    creerBouton("Tout décocher", "btn ghost", () => {
+    creerBouton("Aucune", "btn ghost", () => {
       cocherVisibles(false);
     }),
   );
@@ -281,14 +343,111 @@ function creerLignePlan(ligne: LignePlan, choisies: Set<string>, actualiser: () 
   return element;
 }
 
-function montrerPlan(acces: AccesDonnees, entrees: Entrees, paquet: Paquet, plan: readonly LignePlan[]): void {
+const LIBELLES_ACTION_REFERENTIEL: Record<ActionReferentiel, string> = {
+  ajouter: "Nouvelle version",
+  aucune: "Identique",
+  impossible: "Diplôme absent",
+};
+
+const LIBELLES_PARTIES: Record<keyof Differences, string> = {
+  blocs: "Blocs",
+  ues: "Unités d'enseignement",
+  ecs: "Enseignements constitutifs",
+  competences: "Compétences",
+};
+
+/** Nombre de codes ou de noms cités avant de résumer par « … ». */
+const NOMBRE_MAXIMAL_CITES = 6;
+
+function citer(elements: readonly string[]): string {
+  const cites = elements.slice(0, NOMBRE_MAXIMAL_CITES).join(", ");
+  return elements.length > NOMBRE_MAXIMAL_CITES ? `${cites}…` : cites;
+}
+
+/** Décrit en phrases les écarts d'un référentiel reçu avec celui d'ici. */
+function decrireDifferences(differences: Differences): string[] {
+  const phrases: string[] = [];
+  for (const partie of ["competences", "ecs", "ues", "blocs"] as const) {
+    const { ajoutes, retires, modifies } = differences[partie];
+    const morceaux = [
+      ajoutes.length > 0 ? `${String(ajoutes.length)} en plus (${citer(ajoutes)})` : "",
+      retires.length > 0 ? `${String(retires.length)} en moins (${citer(retires)})` : "",
+      modifies.length > 0 ? `${String(modifies.length)} modifié(s) (${citer(modifies)})` : "",
+    ].filter((morceau) => morceau !== "");
+    if (morceaux.length > 0) {
+      phrases.push(`${LIBELLES_PARTIES[partie]} : ${morceaux.join(" · ")}.`);
+    }
+  }
+  return phrases;
+}
+
+function creerLigneReferentiel(ligne: LigneReferentiel, choisis: Set<string>, actualiser: () => void): HTMLElement {
+  const element = creer("label", ligne.action === "ajouter" ? "echange-ligne" : "echange-ligne inactive");
+  const case_ = creer("input");
+  case_.type = "checkbox";
+  case_.checked = ligne.action === "ajouter";
+  case_.disabled = ligne.action !== "ajouter";
+  case_.addEventListener("change", () => {
+    if (case_.checked) {
+      choisis.add(ligne.identifiant);
+    } else {
+      choisis.delete(ligne.identifiant);
+    }
+    actualiser();
+  });
+  const texte = creer("div");
+  const titre = creer("div", "echange-titre");
+  titre.append(
+    creer("span", `echange-pastille ${ligne.action === "ajouter" ? "creer" : ""}`, LIBELLES_ACTION_REFERENTIEL[ligne.action]),
+    creer("span", "", `Référentiel ${ligne.diplome} — ${ligne.mention}`),
+  );
+  texte.append(titre);
+  texte.append(
+    creer(
+      "div",
+      "echange-detail",
+      ligne.dateVersion === "" ? "Référentiel de travail, non validé par son auteur." : `Version validée le ${ecrireJour(ligne.dateVersion)}.`,
+    ),
+  );
+  if (ligne.action === "ajouter" && ligne.differences !== null) {
+    const phrases = decrireDifferences(ligne.differences);
+    for (const phrase of phrases.length > 0 ? phrases : ["Écarts limités aux niveaux ou aux réglages du diplôme."]) {
+      texte.append(creer("div", "echange-detail", `Par rapport au vôtre — ${phrase}`));
+    }
+    texte.append(
+      creer(
+        "div",
+        "echange-detail",
+        "Il sera ajouté comme nouvelle version, sans être activé : votre référentiel et vos promotions ne changent pas.",
+      ),
+    );
+  }
+  if (ligne.action === "impossible") {
+    texte.append(
+      creer("div", "echange-detail alerte", "Créez d'abord ce diplôme et cette mention dans « Mon établissement » pour le recevoir."),
+    );
+  }
+  element.append(case_, texte);
+  return element;
+}
+
+function montrerPlan(
+  acces: AccesDonnees,
+  entrees: Entrees,
+  paquet: Paquet,
+  plan: readonly LignePlan[],
+  planReferentiels: readonly LigneReferentiel[],
+): void {
   const { boite, fermer } = ouvrirBoite("Ce que ce fichier changerait");
-  if (plan.length === 0) {
+  if (plan.length === 0 && planReferentiels.length === 0) {
     fermer();
-    afficherMessage("Recevoir des évaluations", "Ce fichier ne contient aucune évaluation.");
+    afficherMessage("Recevoir", "Ce fichier ne contient ni évaluation ni référentiel.");
     return;
   }
   const choisies = new Set(plan.filter((ligne) => ligne.proposee).map((ligne) => ligne.identifiant));
+  const referentielsChoisis = new Set(
+    planReferentiels.filter((ligne) => ligne.action === "ajouter").map((ligne) => ligne.identifiant),
+  );
   const expediteur = paquet.expediteur === "" ? "un enseignant non identifié" : paquet.expediteur;
   boite.append(creer("p", "", `Fichier créé par ${expediteur} le ${ecrireDate(paquet.creeLe)}.`));
   boite.append(
@@ -304,17 +463,28 @@ function montrerPlan(acces: AccesDonnees, entrees: Entrees, paquet: Paquet, plan
   erreur.hidden = true;
   const boutonAppliquer = creerBouton("", "btn primary", () => {
     boutonAppliquer.disabled = true;
-    acces.remplacerEntrees(appliquerPlan(entrees, plan, choisies, new Date())).catch((erreurApplication: unknown) => {
+    const maintenant = new Date();
+    const { entrees: avecReferentiels, versionsCreees } = appliquerReferentiels(entrees, planReferentiels, referentielsChoisis, {
+      dateDuJour: maintenant.toISOString().slice(0, "AAAA-MM-JJ".length),
+      note: `Reçu de ${expediteur} le ${ecrireDate(maintenant.toISOString())}`,
+      genererIdentifiant: (partie) => `${partie.charAt(0)}${crypto.randomUUID().slice(0, LONGUEUR_IDENTIFIANT_GENERE)}`,
+    });
+    const aAppliquer = appliquerPlan(avecReferentiels, rattacherAuxVersionsCreees(plan, versionsCreees), choisies, maintenant);
+    acces.remplacerEntrees(aAppliquer).catch((erreurApplication: unknown) => {
       erreur.textContent = messagePourErreur(erreurApplication);
       erreur.hidden = false;
       boutonAppliquer.disabled = false;
     });
   });
   const actualiser = (): void => {
-    boutonAppliquer.textContent = `Appliquer (${String(choisies.size)})`;
-    boutonAppliquer.disabled = choisies.size === 0;
+    const nombre = choisies.size + referentielsChoisis.size;
+    boutonAppliquer.textContent = `Appliquer (${String(nombre)})`;
+    boutonAppliquer.disabled = nombre === 0;
   };
   const liste = creer("div", "echange-liste");
+  for (const ligne of planReferentiels) {
+    liste.append(creerLigneReferentiel(ligne, referentielsChoisis, actualiser));
+  }
   // Ce qui demande une décision d'abord : nouvelles, puis modifiées, puis identiques.
   const ordre: Record<Action, number> = { creer: 0, modifier: 1, aucune: 2 };
   for (const ligne of [...plan].sort((a, b) => ordre[a.action] - ordre[b.action])) {
@@ -333,11 +503,12 @@ async function lancerImport(acces: AccesDonnees): Promise<void> {
   }
   const paquet = lirePaquet(texte);
   if (typeof paquet === "string") {
-    afficherMessage("Recevoir des évaluations", MESSAGES_PAQUET[paquet]);
+    afficherMessage("Recevoir", MESSAGES_PAQUET[paquet]);
     return;
   }
   const entrees = acces.lireEntrees();
-  montrerPlan(acces, entrees, paquet, calculerPlan(entrees, paquet, await acces.dresserCatalogue(entrees)));
+  const catalogue = await acces.dresserCatalogue(entrees);
+  montrerPlan(acces, entrees, paquet, calculerPlan(entrees, paquet, catalogue), calculerPlanReferentiels(paquet, catalogue));
 }
 
 function montrerChoix(acces: AccesDonnees): void {
@@ -345,20 +516,28 @@ function montrerChoix(acces: AccesDonnees): void {
   const choix = creer("div", "echange-choix");
   const envoyer = creerBouton("", "", () => {
     fermer();
-    montrerExport(acces);
+    const entrees = acces.lireEntrees();
+    acces
+      .dresserCatalogue(entrees)
+      .then((catalogue) => {
+        montrerExport(acces, entrees, catalogue);
+      })
+      .catch((erreur: unknown) => {
+        afficherMessage("Envoyer", messagePourErreur(erreur));
+      });
   });
   envoyer.append(
-    creer("b", "", "Envoyer des évaluations"),
-    creer("span", "", "Créer un fichier à transmettre par courriel, clé USB ou l'ENT. Sans élèves ni résultats."),
+    creer("b", "", "Envoyer"),
+    creer("span", "", "Créer un fichier d'évaluations et de référentiels à transmettre par courriel, clé USB ou l'ENT. Sans élèves ni résultats."),
   );
   const recevoir = creerBouton("", "", () => {
     fermer();
     lancerImport(acces).catch((erreur: unknown) => {
-      afficherMessage("Recevoir des évaluations", messagePourErreur(erreur));
+      afficherMessage("Recevoir", messagePourErreur(erreur));
     });
   });
   recevoir.append(
-    creer("b", "", "Recevoir des évaluations"),
+    creer("b", "", "Recevoir"),
     creer("span", "", "Ouvrir un fichier reçu et choisir, ligne par ligne, ce que vous en gardez."),
   );
   choix.append(envoyer, recevoir);
