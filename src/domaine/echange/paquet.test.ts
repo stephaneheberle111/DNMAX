@@ -1,41 +1,46 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { creerEntrees, creerEvaluation } from "./jeu-essai";
+import { CATALOGUE, EMPREINTE_VERSION, creerEntrees, creerEvaluation } from "./jeu-essai";
 import { construirePaquet, lirePaquet } from "./paquet";
 
 const MAINTENANT = new Date("2026-03-09T10:00:00.000Z");
 
 describe("construirePaquet", () => {
-  it("ne contient que les évaluations choisies, avec leur date et leur base", async () => {
+  it("ne contient que les évaluations choisies, avec leur date et leur base", () => {
     const entrees = creerEntrees([creerEvaluation(), creerEvaluation({ id: "eval2" })], {
       eval1: { le: "2026-02-01T00:00:00.000Z", par: "Noé Baptiste" },
     });
-    const paquet = await construirePaquet(entrees, new Set(["eval1"]), MAINTENANT, "Camille Ferrand");
+    const paquet = construirePaquet(entrees, new Set(["eval1"]), MAINTENANT, "Camille Ferrand", CATALOGUE);
     expect(paquet.evaluations).toHaveLength(1);
     expect(paquet.evaluations[0]?.modifieLe).toBe("2026-02-01T00:00:00.000Z");
     expect(paquet.evaluations[0]?.modifiePar).toBe("Noé Baptiste");
     expect(paquet.expediteur).toBe("Camille Ferrand");
-    expect(paquet.evaluations[0]?.base?.mention).toBe("Objet");
+    expect(paquet.evaluations[0]?.base).toEqual({
+      diplome: "DN MADE",
+      mention: "Objet",
+      empreinte: EMPREINTE_VERSION,
+      dateVersion: "2025-09-01",
+    });
     expect(paquet.creeLe).toBe(MAINTENANT.toISOString());
   });
 
-  it("n'écrit aucune donnée d'élève dans le fichier", async () => {
-    const paquet = await construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand");
+  it("n'écrit aucune donnée d'élève dans le fichier", () => {
+    const paquet = construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand", CATALOGUE);
     const texte = JSON.stringify(paquet);
     expect(texte).not.toContain("Élève Fictif");
     expect(texte).not.toContain("eleve1");
     expect(texte).not.toContain("suivi");
   });
 
-  it("rend un paquet vide quand rien n'est choisi", async () => {
-    const paquet = await construirePaquet(creerEntrees([creerEvaluation()]), new Set(), MAINTENANT, "Camille Ferrand");
+  it("rend un paquet vide quand rien n'est choisi", () => {
+    const paquet = construirePaquet(creerEntrees([creerEvaluation()]), new Set(), MAINTENANT, "Camille Ferrand", CATALOGUE);
     expect(paquet.evaluations).toEqual([]);
   });
 });
 
 describe("lirePaquet", () => {
-  it("relit un paquet qu'il a lui-même construit", async () => {
-    const paquet = await construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand");
+  it("relit un paquet qu'il a lui-même construit", () => {
+    const paquet = construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand", CATALOGUE);
     expect(lirePaquet(JSON.stringify(paquet))).toEqual(paquet);
   });
 

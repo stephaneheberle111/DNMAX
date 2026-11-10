@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { Entrees } from "../magasin-memoire";
 import {
-  CLE_DONNEES,
   CLE_EVALUATIONS,
   analyserJson,
   estEvaluation,
-  lireDonneesEtablissement,
   type Evaluation,
 } from "./modele";
 import { listerRubriquesModifiees, ontMemeModele, remplacerModele } from "./modele-evaluation";
 import type { EvaluationEchangee, Paquet } from "./paquet";
-import { comparerBase, type ComparaisonBase } from "./referentiel";
+import { comparerBase, type ComparaisonBase, type ReferentielLocal } from "./referentiel";
 import {
   CLE_DATES_MODIFICATION,
   MODIFICATION_INCONNUE,
@@ -60,14 +58,17 @@ function lireTitre(evaluation: Evaluation): string {
  * évaluations présentes ici mais absentes du fichier ne sont pas concernées :
  * un fichier d'échange ne contient que ce que l'expéditeur a choisi d'envoyer.
  */
-export async function calculerPlan(entrees: Entrees, paquet: Paquet): Promise<LignePlan[]> {
+export function calculerPlan(
+  entrees: Entrees,
+  paquet: Paquet,
+  catalogue: readonly ReferentielLocal[],
+): LignePlan[] {
   const locales = new Map(
     lireEvaluationsBrutes(entrees)
       .filter(estEvaluation)
       .map((evaluation) => [evaluation.id, evaluation]),
   );
   const dates = lireDatesModification(entrees[CLE_DATES_MODIFICATION]);
-  const donnees = lireDonneesEtablissement(entrees[CLE_DONNEES]);
   const lignes: LignePlan[] = [];
   for (const recue of paquet.evaluations) {
     const locale = locales.get(recue.modele.id);
@@ -87,7 +88,7 @@ export async function calculerPlan(entrees: Entrees, paquet: Paquet): Promise<Li
       modifieDansFichierPar: recue.modifiePar,
       rubriquesModifiees:
         action === "modifier" && locale !== undefined ? listerRubriquesModifiees(locale, recue.modele) : [],
-      referentiel: await comparerBase(recue.base, donnees),
+      referentiel: comparerBase(recue.base, catalogue),
       versionLocalePlusRecente,
       proposee: action === "creer" || (action === "modifier" && !versionLocalePlusRecente),
       recue,

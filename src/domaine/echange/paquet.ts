@@ -12,7 +12,7 @@ import {
   type Evaluation,
 } from "./modele";
 import { extraireModele } from "./modele-evaluation";
-import { decrireBase, type BaseReferentiel } from "./referentiel";
+import { decrireBase, type BaseReferentiel, type ReferentielLocal } from "./referentiel";
 import { CLE_DATES_MODIFICATION, lireDatesModification } from "./suivi-modifications";
 import { nettoyerNom } from "../identite";
 import type { Entrees } from "../magasin-memoire";
@@ -44,13 +44,20 @@ export interface Paquet {
 
 export type ErreurPaquet = "illisible" | "format-inconnu" | "version-trop-recente";
 
-/** Construit le fichier d'échange des évaluations choisies, sans aucune donnée d'élève. */
-export async function construirePaquet(
+/**
+ * Construit le fichier d'échange des évaluations choisies, sans aucune donnée d'élève.
+ *
+ * Chaque évaluation emporte l'empreinte de son référentiel, lue dans
+ * `catalogue`, que le référentiel lui-même soit envoyé ou non : c'est ce qui
+ * permet au destinataire de vérifier qu'il travaille sur la même base.
+ */
+export function construirePaquet(
   entrees: Entrees,
   identifiantsChoisis: ReadonlySet<string>,
   maintenant: Date,
   expediteur: string,
-): Promise<Paquet> {
+  catalogue: readonly ReferentielLocal[],
+): Paquet {
   const promotions = lirePromotions(entrees[CLE_PROMOTIONS]);
   const donnees = lireDonneesEtablissement(entrees[CLE_DONNEES]);
   const dates = lireDatesModification(entrees[CLE_DATES_MODIFICATION]);
@@ -61,7 +68,7 @@ export async function construirePaquet(
         modele: extraireModele(evaluation),
         modifieLe: dates[evaluation.id]?.le ?? "",
         modifiePar: dates[evaluation.id]?.par ?? "",
-        base: await decrireBase(evaluation, promotions, donnees),
+        base: decrireBase(evaluation, promotions, donnees, catalogue),
       });
     }
   }
