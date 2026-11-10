@@ -10,6 +10,12 @@ const ADRESSE_SCRIPT_HISTORIQUE = "/heritage/application.js";
 
 /** Ce que l'interface historique attend de l'application, sous `window.dnmaxPont`. */
 interface Pont {
+  /**
+   * Posée par l'interface historique à son chargement : contenu lisible du
+   * référentiel d'un diplôme, pour une version validée ou (identifiant vide)
+   * pour le référentiel de travail. Rend `null` si le diplôme est inconnu.
+   */
+  projeterReferentiel?: (diplomeId: string, versionId: string) => unknown;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: { filename: string; data: ContenuFichier }): Promise<void>;
