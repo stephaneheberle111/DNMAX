@@ -10,7 +10,14 @@ import "@fontsource/public-sans/500.css";
 import "@fontsource/public-sans/600.css";
 import { EnregistreurDiffere, type Minuteur } from "./domaine/enregistrement-differe";
 import { MagasinMemoire, type Entrees } from "./domaine/magasin-memoire";
+import { CLE_EVALUATIONS } from "./domaine/echange/modele";
+import {
+  CLE_DATES_MODIFICATION,
+  lireDatesModification,
+  mettreAJourDates,
+} from "./domaine/echange/suivi-modifications";
 import { demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
+import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import {
   attendreAvantFermeture,
   enregistrerCoffre,
@@ -43,7 +50,8 @@ async function ouvrirDonnees(): Promise<Entrees> {
   return etat === "ouvert" ? await lireCoffre() : await demanderOuvertureCoffre(etat === "verrouille");
 }
 
-async function creerMagasinProtege(): Promise<MagasinMemoire> {
+/** Application ouverte dans son enveloppe : magasin enregistré dans le coffre, et de quoi échanger. */
+async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: AccesDonnees }> {
   const entrees = await ouvrirDonnees();
   const enregistreur = new EnregistreurDiffere(
     enregistrerCoffre,
@@ -54,17 +62,59 @@ async function creerMagasinProtege(): Promise<MagasinMemoire> {
     },
   );
   await attendreAvantFermeture(() => enregistreur.vider());
-  return new MagasinMemoire(entrees, (entreesAJour) => {
+
+  let evaluationsConnues = entrees[CLE_EVALUATIONS];
+  const magasin: MagasinMemoire = new MagasinMemoire(entrees, (entreesAJour) => {
+    const dates = mettreAJourDates(
+      evaluationsConnues,
+      entreesAJour[CLE_EVALUATIONS],
+      lireDatesModification(entreesAJour[CLE_DATES_MODIFICATION]),
+      new Date(),
+    );
+    evaluationsConnues = entreesAJour[CLE_EVALUATIONS];
+    if (dates !== null) {
+      // Cette écriture rappelle la présente fonction, qui planifiera alors l'enregistrement.
+      magasin.setItem(CLE_DATES_MODIFICATION, JSON.stringify(dates));
+      return;
+    }
     enregistreur.planifier(entreesAJour);
   });
+
+  const acces: AccesDonnees = {
+    lireEntrees: () => magasin.entrees(),
+    remplacerEntrees: async (nouvelles) => {
+      // Les dates en dernier : écrire les évaluations les redate à « maintenant »,
+      // et ce sont les dates portées par le plan d'import qui doivent rester.
+      const cles = Object.keys(nouvelles).sort(
+        (cleA, cleB) => Number(cleA === CLE_DATES_MODIFICATION) - Number(cleB === CLE_DATES_MODIFICATION),
+      );
+      for (const cle of cles) {
+        const valeur = nouvelles[cle];
+        if (valeur !== undefined) {
+          magasin.setItem(cle, valeur);
+        }
+      }
+      await enregistreur.vider();
+      // L'interface historique ne lit ses données qu'au chargement.
+      window.location.reload();
+    },
+  };
+  return { magasin, acces };
 }
 
 async function demarrer(): Promise<void> {
   // Hors de l'enveloppe (page ouverte dans un navigateur pendant le développement),
-  // il n'y a pas de coffre : les données ne vivent que le temps de la session.
-  const magasin = estDansEnveloppe() ? await creerMagasinProtege() : new MagasinMemoire({}, () => undefined);
+  // il n'y a ni coffre ni boîtes de dialogue du système : les données ne vivent
+  // que le temps de la session et l'échange n'est pas proposé.
+  if (!estDansEnveloppe()) {
+    document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
+    await chargerInterfaceHistorique(new MagasinMemoire({}, () => undefined));
+    return;
+  }
+  const { magasin, acces } = await creerMagasinProtege();
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
   await chargerInterfaceHistorique(magasin);
+  installerEchange(acces);
 }
 
 function afficherEchecDemarrage(erreur: unknown): void {

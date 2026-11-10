@@ -97,3 +97,24 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 **Retenu** : l'atelier `.github/workflows/installeurs.yml` construit les installeurs Windows (`.exe`), macOS (`.dmg` universel, Intel et Apple Silicon) et Linux (`.deb`, `.AppImage`) et les joint à son exécution. Il ne publie rien et n'utilise aucun secret.
 
 **Signature** : aucun certificat payant pour l'instant (voir décision 1). Sous macOS, l'application reçoit une signature locale « ad hoc » (`signingIdentity: "-"`) : sans elle, un Mac Apple Silicon refuse purement de la lancer. Elle ne supprime pas l'avertissement de Gatekeeper.
+
+## 10. Échange d'évaluations par fichier, avec un plan avant d'appliquer
+
+**Retenu** : l'enseignant choisit les évaluations à envoyer ; l'application écrit un fichier `.dnmax` (JSON, format versionné) qu'il transmet comme il veut. Celui qui le reçoit voit d'abord ce que le fichier changerait — nouvelle, modifiée, identique — avec la date de dernière modification des deux côtés, et coche ce qu'il accepte. Rien n'est modifié avant sa validation.
+
+**Ce que contient le fichier** : le *modèle* de chaque évaluation (intitulé, consignes, livrables, compétences, critères, échelle, promotions visées, nom de l'enseignant auteur). **Jamais** les élèves, leurs résultats, le suivi ni les identifiants locaux : la liste des champs exclus est dans `src/domaine/echange/modele-evaluation.ts`, et elle est réappliquée à la lecture pour qu'un fichier trafiqué ne puisse pas en injecter. Le fichier n'est donc pas chiffré.
+
+**Base commune** : chaque évaluation embarque l'empreinte (SHA-256 du contenu, clés triées) du référentiel sur lequel elle a été construite — la version validée qu'elle a figée, sinon celle de sa promotion, sinon celle en vigueur, sinon le référentiel de travail. À la réception, l'application cherche chez le destinataire un référentiel de même empreinte pour le même diplôme et la même mention (comparés sans casse ni accents) et annonce « même référentiel », « référentiel différent » ou « diplôme absent ». Une évaluation créée est rattachée à la version locale de même contenu quand elle existe.
+
+**Règles du plan** :
+
+- l'identité d'une évaluation est son identifiant, conservé à l'import : renvoyer une version corrigée la fait apparaître « modifiée » et non « nouvelle » ;
+- la comparaison ne porte que sur le modèle : saisir des résultats ne rend pas une évaluation « modifiée » ;
+- une modification garde les élèves, résultats et suivi du destinataire ;
+- si la version locale est plus récente que celle du fichier, la ligne est signalée et décochée par défaut ;
+- les évaluations présentes chez le destinataire mais absentes du fichier ne sont pas touchées : un fichier ne contient que ce que l'expéditeur a choisi, son silence n'est pas une suppression ;
+- rejouer le même fichier ne propose plus rien (import idempotent).
+
+**Dates de modification** : l'interface historique n'en tenait pas. Elles sont déduites à chaque enregistrement, en comparant le modèle avant et après, et rangées sous la clé `dnmax.modifications`. Une évaluation antérieure à cette fonction affiche « date inconnue » jusqu'à sa prochaine modification.
+
+**Reste à faire** : échanger le référentiel lui-même (et voir ce qui diffère entre deux référentiels), échanger des évaluations avec élèves et résultats dans un fichier protégé par mot de passe, transférer toutes ses données vers un autre ordinateur.
