@@ -35,6 +35,9 @@
     ],
     "license": "AGPL-3.0-or-later",
     "shortDescription": "Évaluations par compétences en DN MADE",
-    "category": "Education"
+    "category": "Education",
+    "macOS": {
+      "signingIdentity": "-"
+    }
   }
 }
