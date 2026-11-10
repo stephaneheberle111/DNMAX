@@ -1,12 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod coffre;
+mod depot;
 mod export;
 
 use std::borrow::Cow;
+use std::path::PathBuf;
+use std::sync::{Mutex, MutexGuard};
 
+use chacha20poly1305::aead::OsRng;
+use serde::Serialize;
 use tauri::ipc::{InvokeBody, Request};
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
+use time::OffsetDateTime;
+
+use coffre::{CoffreOuvert, Entrees, ErreurCoffre};
 
 const NOM_APPLICATION: &str = "DNMAX";
 
@@ -43,6 +52,185 @@ fn enregistrer_fichier(application: AppHandle, requete: Request<'_>) -> Result<b
     export::ecrire_export(&chemin, &contenu)
         .map_err(|erreur| format!("écriture impossible : {erreur}"))?;
     Ok(true)
+}
+
+/// Coffre déverrouillé pour la session en cours ; `None` tant que l'enseignant n'a pas saisi son mot de passe.
+#[derive(Default)]
+struct Session(Mutex<Option<CoffreOuvert>>);
+
+impl Session {
+    fn verrou(&self) -> MutexGuard<'_, Option<CoffreOuvert>> {
+        // Un verrou « empoisonné » signale qu'une autre commande a paniqué ; la valeur
+        // protégée reste cohérente (elle n'est remplacée que d'un bloc), on la reprend.
+        self.0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+}
+
+/// Erreur rendue à l'interface : un code stable, que l'affichage traduit en message.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+enum ErreurCommande {
+    MotDePasseTropCourt,
+    AccesRefuse,
+    FichierIllisible,
+    VersionInconnue,
+    CoffreDejaPresent,
+    CoffreAbsent,
+    CoffreVerrouille,
+    DisqueInaccessible,
+    Interne,
+}
+
+impl From<ErreurCoffre> for ErreurCommande {
+    fn from(erreur: ErreurCoffre) -> Self {
+        match erreur {
+            ErreurCoffre::MotDePasseTropCourt => Self::MotDePasseTropCourt,
+            ErreurCoffre::AccesRefuse => Self::AccesRefuse,
+            ErreurCoffre::FichierIllisible => Self::FichierIllisible,
+            ErreurCoffre::VersionInconnue(_) => Self::VersionInconnue,
+            ErreurCoffre::Interne => Self::Interne,
+        }
+    }
+}
+
+impl From<std::io::Error> for ErreurCommande {
+    fn from(erreur: std::io::Error) -> Self {
+        if erreur.kind() == std::io::ErrorKind::AlreadyExists {
+            Self::CoffreDejaPresent
+        } else {
+            Self::DisqueInaccessible
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+enum EtatCoffre {
+    Absent,
+    Verrouille,
+    Ouvert,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CoffreCree {
+    code_secours: String,
+}
+
+fn dossier_donnees(application: &AppHandle) -> Result<PathBuf, ErreurCommande> {
+    application
+        .path()
+        .app_data_dir()
+        .map_err(|_| ErreurCommande::DisqueInaccessible)
+}
+
+/// Fait la sauvegarde du jour. Un échec ne doit pas empêcher l'enseignant de
+/// travailler : le coffre vient d'être ouvert et il est sain.
+fn sauvegarder_apres_ouverture(dossier: &std::path::Path) {
+    let aujourd_hui = OffsetDateTime::now_utc().date();
+    if let Err(erreur) =
+        depot::sauvegarder_du_jour(dossier, aujourd_hui, depot::NOMBRE_SAUVEGARDES_CONSERVEES)
+    {
+        eprintln!("sauvegarde quotidienne impossible : {erreur}");
+    }
+}
+
+#[tauri::command(async)]
+fn etat_coffre(
+    application: AppHandle,
+    session: State<'_, Session>,
+) -> Result<EtatCoffre, ErreurCommande> {
+    if session.verrou().is_some() {
+        return Ok(EtatCoffre::Ouvert);
+    }
+    if depot::coffre_existe(&dossier_donnees(&application)?) {
+        Ok(EtatCoffre::Verrouille)
+    } else {
+        Ok(EtatCoffre::Absent)
+    }
+}
+
+/// Crée le coffre de l'enseignant et rend le code de secours, à lui montrer une seule fois.
+#[tauri::command(async)]
+fn creer_coffre(
+    application: AppHandle,
+    session: State<'_, Session>,
+    mot_de_passe: String,
+) -> Result<CoffreCree, ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let mut session = session.verrou();
+    if depot::coffre_existe(&dossier) {
+        return Err(ErreurCommande::CoffreDejaPresent);
+    }
+    let (coffre, code_secours) =
+        coffre::creer(&mot_de_passe, coffre::PARAMETRES_PAR_DEFAUT, &mut OsRng)?;
+    depot::creer(&dossier, &coffre.sceller(&Entrees::new(), &mut OsRng)?)?;
+    *session = Some(coffre);
+    Ok(CoffreCree { code_secours })
+}
+
+#[tauri::command(async)]
+fn ouvrir_coffre(
+    application: AppHandle,
+    session: State<'_, Session>,
+    mot_de_passe: String,
+) -> Result<Entrees, ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let mut session = session.verrou();
+    let fichier = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
+    let (coffre, entrees) = coffre::ouvrir(&fichier, &mot_de_passe)?;
+    sauvegarder_apres_ouverture(&dossier);
+    *session = Some(coffre);
+    Ok(entrees)
+}
+
+/// Ouvre le coffre avec le code de secours et remplace le mot de passe oublié.
+#[tauri::command(async)]
+fn ouvrir_coffre_par_secours(
+    application: AppHandle,
+    session: State<'_, Session>,
+    code_secours: String,
+    nouveau_mot_de_passe: String,
+) -> Result<Entrees, ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let mut session = session.verrou();
+    let fichier = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
+    let (coffre, entrees) =
+        coffre::ouvrir_par_secours(&fichier, &code_secours, &nouveau_mot_de_passe, &mut OsRng)?;
+    // La sauvegarde précède la réécriture : elle garde le coffre tel qu'il était avant le changement.
+    sauvegarder_apres_ouverture(&dossier);
+    depot::ecrire(&dossier, &coffre.sceller(&entrees, &mut OsRng)?)?;
+    *session = Some(coffre);
+    Ok(entrees)
+}
+
+/// Relit le contenu du coffre déjà ouvert (après un rechargement de la page, par exemple).
+#[tauri::command(async)]
+fn lire_coffre(
+    application: AppHandle,
+    session: State<'_, Session>,
+) -> Result<Entrees, ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let session = session.verrou();
+    let coffre = session.as_ref().ok_or(ErreurCommande::CoffreVerrouille)?;
+    let fichier = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
+    Ok(coffre.relire(&fichier)?)
+}
+
+/// Remplace le contenu du coffre par `entrees`, chiffré.
+#[tauri::command(async)]
+fn enregistrer_coffre(
+    application: AppHandle,
+    session: State<'_, Session>,
+    entrees: Entrees,
+) -> Result<(), ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let session = session.verrou();
+    let coffre = session.as_ref().ok_or(ErreurCommande::CoffreVerrouille)?;
+    depot::ecrire(&dossier, &coffre.sceller(&entrees, &mut OsRng)?)?;
+    Ok(())
 }
 
 /// Rend les octets transmis par l'interface.
@@ -91,7 +279,16 @@ fn decoder_pourcents(valeur: &str) -> String {
 pub fn lancer() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![enregistrer_fichier])
+        .manage(Session::default())
+        .invoke_handler(tauri::generate_handler![
+            enregistrer_fichier,
+            etat_coffre,
+            creer_coffre,
+            ouvrir_coffre,
+            ouvrir_coffre_par_secours,
+            lire_coffre,
+            enregistrer_coffre
+        ])
         .setup(|application| {
             // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.
             if let Some(fenetre) = application.get_webview_window(ETIQUETTE_FENETRE_PRINCIPALE) {

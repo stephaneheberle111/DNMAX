@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Droits de la fenêtre principale : le strict nécessaire.",
   "windows": ["main"],
-  "permissions": []
+  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten", "core:window:allow-destroy"]
 }

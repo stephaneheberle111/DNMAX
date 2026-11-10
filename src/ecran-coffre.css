@@ -1,0 +1,109 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* Tant que le coffre est fermé, l'interface n'a aucune donnée à montrer. */
+.coffre-ferme header.bar,
+.coffre-ferme main {
+  display: none;
+}
+
+.ecran-coffre {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.ecran-coffre form {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 26px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.ecran-coffre h1 {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.ecran-coffre p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.ecran-coffre label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.ecran-coffre input[type="password"],
+.ecran-coffre input[type="text"] {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.ecran-coffre .coffre-avertissement {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--signal-soft);
+  color: var(--signal);
+}
+
+.ecran-coffre .coffre-erreur {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.ecran-coffre .coffre-code {
+  padding: 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--fm);
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  text-align: center;
+  user-select: all;
+}
+
+.ecran-coffre label.coffre-case {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.ecran-coffre .coffre-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bandeau-enregistrement {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 80;
+  padding: 8px 16px;
+  background: var(--danger);
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+}
