@@ -118,3 +118,13 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 **Dates de modification** : l'interface historique n'en tenait pas. Elles sont déduites à chaque enregistrement, en comparant le modèle avant et après, et rangées sous la clé `dnmax.modifications`. Une évaluation antérieure à cette fonction affiche « date inconnue » jusqu'à sa prochaine modification.
 
 **Reste à faire** : échanger le référentiel lui-même (et voir ce qui diffère entre deux référentiels), échanger des évaluations avec élèves et résultats dans un fichier protégé par mot de passe, transférer toutes ses données vers un autre ordinateur.
+
+## 11. L'enseignant est identifié par son nom
+
+**Retenu** : après son mot de passe, l'enseignant indique son nom une fois. Ce nom est rangé dans le coffre (clé `dnmax.identite`, avec un identifiant d'installation tiré au hasard), accompagne chaque modification d'évaluation et signe les fichiers d'échange. Le plan d'import affiche, pour chaque évaluation, qui l'a modifiée en dernier ici et dans le fichier, et qui a créé le fichier.
+
+**Pourquoi** : sans serveur ni comptes, c'est le seul moyen de savoir qui a écrit quoi quand des évaluations circulent entre enseignants.
+
+**Limite assumée** : le nom est déclaratif. Rien n'empêche de saisir le nom d'un autre, ni de retoucher un fichier d'échange : c'est une information entre personnes de confiance, pas une preuve. Une signature vérifiable demanderait d'échanger des clés entre enseignants.
+
+**Reste à faire** : changer son nom depuis l'application.

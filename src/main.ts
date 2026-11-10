@@ -16,7 +16,8 @@ import {
   lireDatesModification,
   mettreAJourDates,
 } from "./domaine/echange/suivi-modifications";
-import { demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
+import { CLE_IDENTITE, lireIdentite } from "./domaine/identite";
+import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import {
   attendreAvantFermeture,
@@ -63,6 +64,10 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
   );
   await attendreAvantFermeture(() => enregistreur.vider());
 
+  // Un coffre créé avant l'identification des enseignants n'a pas encore d'identité.
+  const identiteConnue = lireIdentite(entrees[CLE_IDENTITE]);
+  const identite = identiteConnue ?? (await demanderIdentite(() => crypto.randomUUID()));
+
   let evaluationsConnues = entrees[CLE_EVALUATIONS];
   const magasin: MagasinMemoire = new MagasinMemoire(entrees, (entreesAJour) => {
     const dates = mettreAJourDates(
@@ -70,6 +75,7 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
       entreesAJour[CLE_EVALUATIONS],
       lireDatesModification(entreesAJour[CLE_DATES_MODIFICATION]),
       new Date(),
+      identite.nom,
     );
     evaluationsConnues = entreesAJour[CLE_EVALUATIONS];
     if (dates !== null) {
@@ -80,7 +86,12 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
     enregistreur.planifier(entreesAJour);
   });
 
+  if (identiteConnue === null) {
+    magasin.setItem(CLE_IDENTITE, JSON.stringify(identite));
+  }
+
   const acces: AccesDonnees = {
+    identite,
     lireEntrees: () => magasin.entrees(),
     remplacerEntrees: async (nouvelles) => {
       // Les dates en dernier : écrire les évaluations les redate à « maintenant »,

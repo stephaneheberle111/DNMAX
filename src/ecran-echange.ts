@@ -1,16 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-echange.css";
 import { CLE_EVALUATIONS, lireEvaluations, type Evaluation } from "./domaine/echange/modele";
-import { EXTENSION_FICHIER, construirePaquet, lirePaquet, type ErreurPaquet } from "./domaine/echange/paquet";
+import {
+  EXTENSION_FICHIER,
+  construirePaquet,
+  lirePaquet,
+  type ErreurPaquet,
+  type Paquet,
+} from "./domaine/echange/paquet";
 import { appliquerPlan, calculerPlan, type Action, type LignePlan } from "./domaine/echange/plan";
 import type { ComparaisonBase } from "./domaine/echange/referentiel";
-import { CLE_DATES_MODIFICATION, lireDatesModification } from "./domaine/echange/suivi-modifications";
+import {
+  CLE_DATES_MODIFICATION,
+  MODIFICATION_INCONNUE,
+  lireDatesModification,
+  type Modification,
+} from "./domaine/echange/suivi-modifications";
+import type { Identite } from "./domaine/identite";
 import type { Entrees } from "./domaine/magasin-memoire";
 import { messagePourErreur } from "./ecran-coffre";
 import { enregistrerFichier, ouvrirFichierEchange } from "./enveloppe";
 
 /** Ce dont l'écran d'échange a besoin de l'application. */
 export interface AccesDonnees {
+  /** L'enseignant qui utilise l'application : son nom signe les fichiers qu'il envoie. */
+  identite: Identite;
   lireEntrees(): Entrees;
   /** Enregistre les nouvelles entrées puis recharge l'interface pour qu'elle les affiche. */
   remplacerEntrees(entrees: Entrees): Promise<void>;
@@ -99,10 +113,16 @@ function afficherMessage(titre: string, message: string): void {
   boite.append(actions);
 }
 
-/** Décrit une évaluation en une ligne : promotions, semestre, date de modification. */
-function decrireEvaluation(evaluation: Evaluation, modifieLe: string): string {
+/** Écrit « date, par Untel » ; l'auteur est omis quand il est inconnu. */
+function ecrireModification(modification: Modification): string {
+  const date = ecrireDate(modification.le);
+  return modification.par === "" ? date : `${date}, par ${modification.par}`;
+}
+
+/** Décrit une évaluation en une ligne : promotions, semestre, dernière modification. */
+function decrireEvaluation(evaluation: Evaluation, modification: Modification): string {
   const classes = Array.isArray(evaluation.classes) ? evaluation.classes.filter((classe) => typeof classe === "string") : [];
-  const parties = [classes.join(", "), lireTexte(evaluation.semestre), `modifiée le ${ecrireDate(modifieLe)}`];
+  const parties = [classes.join(", "), lireTexte(evaluation.semestre), `modifiée le ${ecrireModification(modification)}`];
   return parties.filter((partie) => partie !== "").join(" · ");
 }
 
@@ -115,12 +135,12 @@ function montrerExport(acces: AccesDonnees): void {
   }
   const dates = lireDatesModification(entrees[CLE_DATES_MODIFICATION]);
   const choisies = new Set<string>();
-  const { boite, fermer } = ouvrirBoite("Envoyer des évaluations à un collègue");
+  const { boite, fermer } = ouvrirBoite("Envoyer des évaluations");
   boite.append(
     creer(
       "p",
       "",
-      "Cochez les évaluations à envoyer. Le fichier ne contient ni noms d'élèves, ni résultats, ni votre suivi.",
+      `Cochez les évaluations à envoyer. Le fichier sera signé de votre nom (${acces.identite.nom}) et ne contient ni noms d'élèves, ni résultats, ni votre suivi.`,
     ),
   );
 
@@ -132,7 +152,7 @@ function montrerExport(acces: AccesDonnees): void {
   erreur.hidden = true;
   const boutonCreer = creerBouton("", "btn primary", () => {
     boutonCreer.disabled = true;
-    construirePaquet(entrees, choisies, new Date())
+    construirePaquet(entrees, choisies, new Date(), acces.identite.nom)
       .then((paquet) => enregistrerFichier(`evaluations${EXTENSION_FICHIER}`, new TextEncoder().encode(JSON.stringify(paquet))))
       .then((fichierEcrit) => {
         if (fichierEcrit) {
@@ -153,7 +173,7 @@ function montrerExport(acces: AccesDonnees): void {
     const case_ = creer("input");
     case_.type = "checkbox";
     const texte = creer("div");
-    const description = decrireEvaluation(evaluation, dates[evaluation.id] ?? "");
+    const description = decrireEvaluation(evaluation, dates[evaluation.id] ?? MODIFICATION_INCONNUE);
     texte.append(
       creer("div", "echange-titre", lireTexte(evaluation.titre) || "(sans intitulé)"),
       creer("div", "echange-detail", description),
@@ -235,14 +255,9 @@ function creerLignePlan(ligne: LignePlan, choisies: Set<string>, actualiser: () 
   titre.append(creer("span", `echange-pastille ${ligne.action}`, LIBELLES_ACTION[ligne.action]), creer("span", "", ligne.titre));
   texte.append(titre);
 
-  const dateFichier = `Dans le fichier : ${ecrireDate(ligne.modifieDansFichierLe)}`;
-  texte.append(
-    creer(
-      "div",
-      "echange-detail",
-      ligne.action === "creer" ? dateFichier : `Chez vous : ${ecrireDate(ligne.modifieIciLe)} · ${dateFichier}`,
-    ),
-  );
+  const dansFichier = `Dans le fichier : ${ecrireModification({ le: ligne.modifieDansFichierLe, par: ligne.modifieDansFichierPar })}`;
+  const chezVous = `Chez vous : ${ecrireModification({ le: ligne.modifieIciLe, par: ligne.modifieIciPar })}`;
+  texte.append(creer("div", "echange-detail", ligne.action === "creer" ? dansFichier : `${chezVous} · ${dansFichier}`));
   if (ligne.rubriquesModifiees.length > 0) {
     texte.append(creer("div", "echange-detail", `Ce qui change : ${ligne.rubriquesModifiees.join(", ")}.`));
   }
@@ -262,7 +277,7 @@ function creerLignePlan(ligne: LignePlan, choisies: Set<string>, actualiser: () 
   return element;
 }
 
-function montrerPlan(acces: AccesDonnees, entrees: Entrees, plan: readonly LignePlan[]): void {
+function montrerPlan(acces: AccesDonnees, entrees: Entrees, paquet: Paquet, plan: readonly LignePlan[]): void {
   const { boite, fermer } = ouvrirBoite("Ce que ce fichier changerait");
   if (plan.length === 0) {
     fermer();
@@ -270,6 +285,8 @@ function montrerPlan(acces: AccesDonnees, entrees: Entrees, plan: readonly Ligne
     return;
   }
   const choisies = new Set(plan.filter((ligne) => ligne.proposee).map((ligne) => ligne.identifiant));
+  const expediteur = paquet.expediteur === "" ? "un enseignant non identifié" : paquet.expediteur;
+  boite.append(creer("p", "", `Fichier créé par ${expediteur} le ${ecrireDate(paquet.creeLe)}.`));
   boite.append(
     creer(
       "p",
@@ -316,11 +333,11 @@ async function lancerImport(acces: AccesDonnees): Promise<void> {
     return;
   }
   const entrees = acces.lireEntrees();
-  montrerPlan(acces, entrees, await calculerPlan(entrees, paquet));
+  montrerPlan(acces, entrees, paquet, await calculerPlan(entrees, paquet));
 }
 
 function montrerChoix(acces: AccesDonnees): void {
-  const { boite, fermer } = ouvrirBoite("Échanger avec un collègue");
+  const { boite, fermer } = ouvrirBoite("Échanger avec d'autres enseignants");
   const choix = creer("div", "echange-choix");
   const envoyer = creerBouton("", "", () => {
     fermer();
@@ -353,6 +370,7 @@ export function installerEchange(acces: AccesDonnees): void {
     return;
   }
   bouton.hidden = false;
+  bouton.title = `Vous êtes identifié·e comme ${acces.identite.nom}`;
   bouton.addEventListener("click", () => {
     montrerChoix(acces);
   });

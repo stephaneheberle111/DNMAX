@@ -7,16 +7,20 @@ const MAINTENANT = new Date("2026-03-09T10:00:00.000Z");
 
 describe("construirePaquet", () => {
   it("ne contient que les évaluations choisies, avec leur date et leur base", async () => {
-    const entrees = creerEntrees([creerEvaluation(), creerEvaluation({ id: "eval2" })], { eval1: "2026-02-01T00:00:00.000Z" });
-    const paquet = await construirePaquet(entrees, new Set(["eval1"]), MAINTENANT);
+    const entrees = creerEntrees([creerEvaluation(), creerEvaluation({ id: "eval2" })], {
+      eval1: { le: "2026-02-01T00:00:00.000Z", par: "Noé Baptiste" },
+    });
+    const paquet = await construirePaquet(entrees, new Set(["eval1"]), MAINTENANT, "Camille Ferrand");
     expect(paquet.evaluations).toHaveLength(1);
     expect(paquet.evaluations[0]?.modifieLe).toBe("2026-02-01T00:00:00.000Z");
+    expect(paquet.evaluations[0]?.modifiePar).toBe("Noé Baptiste");
+    expect(paquet.expediteur).toBe("Camille Ferrand");
     expect(paquet.evaluations[0]?.base?.mention).toBe("Objet");
     expect(paquet.creeLe).toBe(MAINTENANT.toISOString());
   });
 
   it("n'écrit aucune donnée d'élève dans le fichier", async () => {
-    const paquet = await construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT);
+    const paquet = await construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand");
     const texte = JSON.stringify(paquet);
     expect(texte).not.toContain("Élève Fictif");
     expect(texte).not.toContain("eleve1");
@@ -24,14 +28,14 @@ describe("construirePaquet", () => {
   });
 
   it("rend un paquet vide quand rien n'est choisi", async () => {
-    const paquet = await construirePaquet(creerEntrees([creerEvaluation()]), new Set(), MAINTENANT);
+    const paquet = await construirePaquet(creerEntrees([creerEvaluation()]), new Set(), MAINTENANT, "Camille Ferrand");
     expect(paquet.evaluations).toEqual([]);
   });
 });
 
 describe("lirePaquet", () => {
   it("relit un paquet qu'il a lui-même construit", async () => {
-    const paquet = await construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT);
+    const paquet = await construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand");
     expect(lirePaquet(JSON.stringify(paquet))).toEqual(paquet);
   });
 
@@ -66,6 +70,18 @@ describe("lirePaquet", () => {
     expect(JSON.stringify(paquet)).not.toContain("vX");
   });
 
+  it("nettoie les noms d'enseignants venus du fichier", () => {
+    const texte = JSON.stringify({
+      format: "dnmax-echange",
+      version: 1,
+      expediteur: "  Camille \n Ferrand ",
+      evaluations: [{ modele: { id: "a" }, modifiePar: "x".repeat(500) }],
+    });
+    const paquet = lirePaquet(texte);
+    expect(paquet).toMatchObject({ expediteur: "Camille Ferrand" });
+    expect(typeof paquet === "object" && paquet.evaluations[0]?.modifiePar.length).toBe(80);
+  });
+
   it("écarte les éléments mal formés et les doublons sans rejeter le reste", () => {
     const texte = JSON.stringify({
       format: "dnmax-echange",
@@ -78,6 +94,9 @@ describe("lirePaquet", () => {
       ],
     });
     const paquet = lirePaquet(texte);
-    expect(paquet).toMatchObject({ evaluations: [{ modele: { id: "a", titre: "A" }, modifieLe: "", base: null }] });
+    expect(paquet).toMatchObject({
+      expediteur: "",
+      evaluations: [{ modele: { id: "a", titre: "A" }, modifieLe: "", modifiePar: "", base: null }],
+    });
   });
 });
