@@ -11,7 +11,12 @@ import {
 import { listerRubriquesModifiees, ontMemeModele, remplacerModele } from "./modele-evaluation";
 import type { EvaluationEchangee, Paquet } from "./paquet";
 import { comparerBase, type ComparaisonBase } from "./referentiel";
-import { CLE_DATES_MODIFICATION, lireDatesModification } from "./suivi-modifications";
+import {
+  CLE_DATES_MODIFICATION,
+  MODIFICATION_INCONNUE,
+  lireDatesModification,
+  type Modification,
+} from "./suivi-modifications";
 
 export type Action = "creer" | "modifier" | "aucune";
 
@@ -22,8 +27,12 @@ export interface LignePlan {
   action: Action;
   /** Date de dernière modification ici ; texte vide si l'évaluation est nouvelle ou la date inconnue. */
   modifieIciLe: string;
+  /** Enseignant qui a fait la dernière modification ici ; texte vide s'il est inconnu. */
+  modifieIciPar: string;
   /** Date de dernière modification dans le fichier ; texte vide si elle est inconnue. */
   modifieDansFichierLe: string;
+  /** Enseignant qui a fait la dernière modification dans le fichier ; texte vide s'il est inconnu. */
+  modifieDansFichierPar: string;
   /** Rubriques qui changeraient (action « modifier » seulement). */
   rubriquesModifiees: string[];
   referentiel: ComparaisonBase;
@@ -49,7 +58,7 @@ function lireTitre(evaluation: Evaluation): string {
  * Une évaluation absente d'ici serait créée ; une évaluation présente dont le
  * modèle diffère serait modifiée ; les autres sont identiques. Les
  * évaluations présentes ici mais absentes du fichier ne sont pas concernées :
- * un fichier d'échange ne contient que ce que le collègue a choisi d'envoyer.
+ * un fichier d'échange ne contient que ce que l'expéditeur a choisi d'envoyer.
  */
 export async function calculerPlan(entrees: Entrees, paquet: Paquet): Promise<LignePlan[]> {
   const locales = new Map(
@@ -63,7 +72,8 @@ export async function calculerPlan(entrees: Entrees, paquet: Paquet): Promise<Li
   for (const recue of paquet.evaluations) {
     const locale = locales.get(recue.modele.id);
     const action: Action = locale === undefined ? "creer" : ontMemeModele(locale, recue.modele) ? "aucune" : "modifier";
-    const modifieIciLe = locale === undefined ? "" : (dates[recue.modele.id] ?? "");
+    const modificationIci = locale === undefined ? MODIFICATION_INCONNUE : (dates[recue.modele.id] ?? MODIFICATION_INCONNUE);
+    const modifieIciLe = modificationIci.le;
     // Les dates ISO 8601 en temps universel se comparent comme des textes.
     const versionLocalePlusRecente =
       action === "modifier" && modifieIciLe !== "" && recue.modifieLe !== "" && modifieIciLe > recue.modifieLe;
@@ -72,7 +82,9 @@ export async function calculerPlan(entrees: Entrees, paquet: Paquet): Promise<Li
       titre: lireTitre(recue.modele),
       action,
       modifieIciLe,
+      modifieIciPar: modificationIci.par,
       modifieDansFichierLe: recue.modifieLe,
+      modifieDansFichierPar: recue.modifiePar,
       rubriquesModifiees:
         action === "modifier" && locale !== undefined ? listerRubriquesModifiees(locale, recue.modele) : [],
       referentiel: await comparerBase(recue.base, donnees),
@@ -92,8 +104,8 @@ export async function calculerPlan(entrees: Entrees, paquet: Paquet): Promise<Li
  * - une évaluation modifiée garde les élèves, résultats et suivi d'ici ;
  * - les évaluations non choisies, et tout le reste des données, sont intacts.
  *
- * La date de modification retenue est celle du fichier, pour qu'un nouvel
- * import du même fichier trouve les évaluations identiques.
+ * La date et l'auteur de modification retenus sont ceux du fichier : c'est
+ * bien cet enseignant qui a écrit cette version, et non celui qui l'importe.
  */
 export function appliquerPlan(
   entrees: Entrees,
@@ -109,7 +121,11 @@ export function appliquerPlan(
   if (choisies.size === 0) {
     return entrees;
   }
-  const dates: Record<string, string> = { ...lireDatesModification(entrees[CLE_DATES_MODIFICATION]) };
+  const dates: Record<string, Modification> = { ...lireDatesModification(entrees[CLE_DATES_MODIFICATION]) };
+  const modificationRecue = (ligne: LignePlan): Modification => ({
+    le: ligne.modifieDansFichierLe || maintenant.toISOString(),
+    par: ligne.modifieDansFichierPar,
+  });
   const dejaPresentes = new Set<string>();
   const conservees = lireEvaluationsBrutes(entrees).map((element): unknown => {
     if (!estEvaluation(element)) {
@@ -120,7 +136,7 @@ export function appliquerPlan(
     if (ligne === undefined) {
       return element;
     }
-    dates[element.id] = ligne.modifieDansFichierLe || maintenant.toISOString();
+    dates[element.id] = modificationRecue(ligne);
     return remplacerModele(element, ligne.recue.modele);
   });
   const creees: Evaluation[] = [];
@@ -128,7 +144,7 @@ export function appliquerPlan(
     if (!dejaPresentes.has(ligne.identifiant)) {
       const versionLocale = ligne.referentiel.etat === "identique" ? ligne.referentiel.versionId : "";
       creees.push(versionLocale === "" ? ligne.recue.modele : { ...ligne.recue.modele, refV: versionLocale });
-      dates[ligne.identifiant] = ligne.modifieDansFichierLe || maintenant.toISOString();
+      dates[ligne.identifiant] = modificationRecue(ligne);
     }
   }
   return {

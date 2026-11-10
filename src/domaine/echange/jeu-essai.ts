@@ -32,7 +32,7 @@ export function creerEvaluation(surcharge: Record<string, unknown> = {}): Evalua
   };
 }
 
-export function creerEntrees(evaluations: unknown[], dates: Record<string, string> = {}): Entrees {
+export function creerEntrees(evaluations: unknown[], dates: Record<string, unknown> = {}): Entrees {
   return {
     [CLE_EVALUATIONS]: JSON.stringify(evaluations),
     [CLE_PROMOTIONS]: JSON.stringify(PROMOTIONS),

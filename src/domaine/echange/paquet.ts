@@ -14,6 +14,7 @@ import {
 import { extraireModele } from "./modele-evaluation";
 import { decrireBase, type BaseReferentiel } from "./referentiel";
 import { CLE_DATES_MODIFICATION, lireDatesModification } from "./suivi-modifications";
+import { nettoyerNom } from "../identite";
 import type { Entrees } from "../magasin-memoire";
 
 const FORMAT = "dnmax-echange";
@@ -27,6 +28,8 @@ export interface EvaluationEchangee {
   modele: Evaluation;
   /** Date de dernière modification chez l'expéditeur, ou texte vide si elle est inconnue. */
   modifieLe: string;
+  /** Nom de l'enseignant qui a fait cette modification, ou texte vide s'il est inconnu. */
+  modifiePar: string;
   base: BaseReferentiel | null;
 }
 
@@ -34,6 +37,8 @@ export interface Paquet {
   format: typeof FORMAT;
   version: number;
   creeLe: string;
+  /** Nom de l'enseignant qui a créé le fichier, ou texte vide s'il est inconnu. */
+  expediteur: string;
   evaluations: EvaluationEchangee[];
 }
 
@@ -44,6 +49,7 @@ export async function construirePaquet(
   entrees: Entrees,
   identifiantsChoisis: ReadonlySet<string>,
   maintenant: Date,
+  expediteur: string,
 ): Promise<Paquet> {
   const promotions = lirePromotions(entrees[CLE_PROMOTIONS]);
   const donnees = lireDonneesEtablissement(entrees[CLE_DONNEES]);
@@ -53,12 +59,13 @@ export async function construirePaquet(
     if (identifiantsChoisis.has(evaluation.id)) {
       evaluations.push({
         modele: extraireModele(evaluation),
-        modifieLe: dates[evaluation.id] ?? "",
+        modifieLe: dates[evaluation.id]?.le ?? "",
+        modifiePar: dates[evaluation.id]?.par ?? "",
         base: await decrireBase(evaluation, promotions, donnees),
       });
     }
   }
-  return { format: FORMAT, version: VERSION_COURANTE, creeLe: maintenant.toISOString(), evaluations };
+  return { format: FORMAT, version: VERSION_COURANTE, creeLe: maintenant.toISOString(), expediteur, evaluations };
 }
 
 function lireBase(valeur: unknown): BaseReferentiel | null {
@@ -80,7 +87,7 @@ function lireBase(valeur: unknown): BaseReferentiel | null {
 }
 
 /**
- * Lit un fichier d'échange reçu d'un collègue.
+ * Lit un fichier d'échange reçu d'un autre enseignant.
  *
  * Le fichier vient de l'extérieur : sa forme est vérifiée, et tout modèle
  * reçu repasse par `extraireModele` pour qu'un fichier trafiqué ne puisse pas
@@ -110,6 +117,7 @@ export function lirePaquet(texte: string): Paquet | ErreurPaquet {
     evaluations.push({
       modele: extraireModele(element.modele),
       modifieLe: typeof element.modifieLe === "string" ? element.modifieLe : "",
+      modifiePar: typeof element.modifiePar === "string" ? nettoyerNom(element.modifiePar) : "",
       base: lireBase(element.base),
     });
   }
@@ -117,6 +125,7 @@ export function lirePaquet(texte: string): Paquet | ErreurPaquet {
     format: FORMAT,
     version: valeur.version,
     creeLe: typeof valeur.creeLe === "string" ? valeur.creeLe : "",
+    expediteur: typeof valeur.expediteur === "string" ? nettoyerNom(valeur.expediteur) : "",
     evaluations,
   };
 }
