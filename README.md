@@ -93,7 +93,7 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
 4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés proposeront la mise à jour à leur prochain lancement.
 
-Pousser soi-même une étiquette `v1.2.3` déclenche le même atelier.
+Si la construction macOS est annulée faute de machine disponible chez GitHub, relancer les jobs en échec depuis la page de l'exécution (« Re-run failed jobs »).
 
 Sous Linux, seule l'AppImage se met à jour d'elle-même.
 
