@@ -14,6 +14,10 @@
 - Un référentiel reçu crée son diplôme quand il n'existe pas encore sur le poste.
 - Site web du projet versionné dans `site/`, avec le référentiel DN MADE mention Objet en téléchargement.
 
+### Corrigé
+
+- Intégration continue : l'installation des bibliothèques système ne dépend plus d'un miroir de paquets défaillant.
+
 ### Modifié
 
 - L'application est livrée vide : plus de référentiel ni de brouillon d'évaluation préinstallés. Les installations existantes gardent leurs données.
