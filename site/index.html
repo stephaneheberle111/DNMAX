@@ -312,6 +312,11 @@ svg.dim .dot.off{opacity:.1}
 .sys p{margin:0;color:var(--ink-2);font-size:15px}
 .sys .fmt{font-family:var(--mono);font-size:13px;color:var(--ink)}
 @media (max-width:760px){.sys{grid-template-columns:1fr;gap:10px}}
+.referentiel{margin-top:16px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:24px;padding:22px 24px;background:var(--surface);border:1px dashed var(--line);border-radius:12px}
+.referentiel h3{margin:0 0 4px;font-size:17px}
+.referentiel p{margin:0 0 4px;color:var(--ink-2);font-size:15px}
+.referentiel .fmt{font-family:var(--mono);font-size:13px;color:var(--ink)}
+@media (max-width:760px){.referentiel{grid-template-columns:1fr;gap:12px}}
 .sources{margin-top:16px;color:var(--ink-2);font-size:15px}
 .sources h3{margin:0 0 4px;font-size:17px;color:var(--ink)}
 .sources p{margin:0}
@@ -685,6 +690,14 @@ footer a{color:var(--ink-2)}
           <div><p>L’AppImage se met à jour d’elle-même&nbsp;; le paquet .deb s’installe comme les autres.</p><p class="fmt">.AppImage, ou <a href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.deb">paquet .deb</a></p></div>
           <a class="btn primary" href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.AppImage">Télécharger pour Linux</a>
         </div>
+      </div>
+      <div class="referentiel">
+        <div>
+          <h3>Référentiel DN MADE mention Objet</h3>
+          <p>DNMAX est livré vide&nbsp;: importez ce référentiel pour commencer. Dans DNMAX, cliquez «&nbsp;Échanger…&nbsp;», puis «&nbsp;Recevoir&nbsp;», et choisissez ce fichier.</p>
+          <p class="fmt">dn-made-objet.dnmax</p>
+        </div>
+        <a class="btn" href="referentiels/dn-made-objet.dnmax" download>Télécharger le référentiel</a>
       </div>
       <div class="sources">
         <h3>Toutes les sources de téléchargement</h3>
