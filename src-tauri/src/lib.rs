@@ -208,6 +208,31 @@ fn ouvrir_coffre_par_secours(
     Ok(entrees)
 }
 
+/// Remplace le mot de passe du coffre ouvert, après vérification de l'ancien.
+#[tauri::command(async)]
+fn changer_mot_de_passe(
+    application: AppHandle,
+    session: State<'_, Session>,
+    ancien_mot_de_passe: String,
+    nouveau_mot_de_passe: String,
+) -> Result<(), ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let mut session = session.verrou();
+    if session.is_none() {
+        return Err(ErreurCommande::CoffreVerrouille);
+    }
+    let fichier = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
+    let (coffre, octets) = coffre::changer_mot_de_passe(
+        &fichier,
+        &ancien_mot_de_passe,
+        &nouveau_mot_de_passe,
+        &mut OsRng,
+    )?;
+    depot::ecrire(&dossier, &octets)?;
+    *session = Some(coffre);
+    Ok(())
+}
+
 /// Relit le contenu du coffre déjà ouvert (après un rechargement de la page, par exemple).
 #[tauri::command(async)]
 fn lire_coffre(
@@ -442,7 +467,8 @@ pub fn lancer() {
             enregistrer_fichier_protege,
             dechiffrer_fichier_echange,
             exporter_coffre,
-            installer_coffre
+            installer_coffre,
+            changer_mot_de_passe
         ])
         .setup(|application| {
             // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.

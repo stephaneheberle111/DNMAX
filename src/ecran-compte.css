@@ -1,0 +1,66 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.compte-contenu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: auto;
+}
+
+.compte-rubrique {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.compte-rubrique:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.compte-rubrique h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.compte-formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.compte-champ {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.compte-champ input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.echange-boite .compte-message {
+  color: var(--accent);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.compte-liens {
+  display: flex;
+  gap: 6px 18px;
+  flex-wrap: wrap;
+}

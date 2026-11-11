@@ -16,8 +16,9 @@ import {
   lireDatesModification,
   mettreAJourDates,
 } from "./domaine/echange/suivi-modifications";
-import { CLE_IDENTITE, lireIdentite } from "./domaine/identite";
+import { CLE_IDENTITE, creerIdentite, lireIdentite } from "./domaine/identite";
 import { proposerPremiersPas } from "./ecran-accueil";
+import { installerCompte } from "./ecran-compte";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
@@ -70,7 +71,7 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
 
   // Un coffre créé avant l'identification des enseignants n'a pas encore d'identité.
   const identiteConnue = lireIdentite(entrees[CLE_IDENTITE]);
-  const identite = identiteConnue ?? (await demanderIdentite(() => crypto.randomUUID()));
+  let identite = identiteConnue ?? (await demanderIdentite(() => crypto.randomUUID()));
 
   let evaluationsConnues = entrees[CLE_EVALUATIONS];
   const magasin: MagasinMemoire = new MagasinMemoire(entrees, (entreesAJour) => {
@@ -95,7 +96,18 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
   }
 
   const acces: AccesDonnees = {
-    identite,
+    get identite() {
+      return identite;
+    },
+    renommer: (nom) => {
+      const renommee = creerIdentite(nom, identite.id);
+      if (renommee === null) {
+        return false;
+      }
+      identite = renommee;
+      magasin.setItem(CLE_IDENTITE, JSON.stringify(identite));
+      return true;
+    },
     dresserCatalogue,
     enregistrerMaintenant: () => enregistreur.vider(),
     ecrireEntree: (cle, valeur) => {
@@ -142,6 +154,7 @@ async function demarrer(): Promise<void> {
   installerEchange(acces);
   proposerMiseAJour(() => acces.enregistrerMaintenant());
   suivreExemple(acces);
+  installerCompte(acces);
   await proposerPremiersPas(acces);
 }
 
