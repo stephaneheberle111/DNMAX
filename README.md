@@ -99,15 +99,20 @@ Sous Linux, seule l'AppImage se met à jour d'elle-même.
 
 ## Site web
 
-Le dossier `site/` contient le site public de DNMAX (<https://dnmax.pages.dev>) : une page unique, sans étape de construction, et les référentiels proposés au téléchargement (`site/referentiels/`).
+Le dossier `site/` contient le site public de DNMAX (<https://dnmax.fr>) : une page unique, sans étape de construction, et les référentiels proposés au téléchargement (`site/referentiels/`). Il est hébergé chez OVH ; `site/.htaccess` règle le serveur (HTTPS, téléchargement des référentiels).
 
-Pour que Cloudflare Pages le publie à chaque fusion dans `main`, relier le projet Pages au dépôt avec ces réglages :
+L'atelier « Site » (`.github/workflows/site.yml`) l'envoie sur l'hébergement à chaque fusion dans `main` qui touche `site/`, ou à la demande. Une seule fois, renseigner dans les réglages du dépôt (Settings → Secrets and variables → Actions) :
 
-| Réglage | Valeur |
-| --- | --- |
-| Branche de production | `main` |
-| Commande de construction | *(aucune)* |
-| Dossier de sortie | `site` |
+| Nom | Type | Valeur |
+| --- | --- | --- |
+| `OVH_SITE_SERVEUR` | variable | serveur FTP de l'hébergement (espace client OVH, onglet FTP-SSH) |
+| `OVH_SITE_PROTOCOLE` | variable | `sftp` si l'offre le propose, sinon `ftps` ; jamais de FTP en clair |
+| `OVH_SITE_DOSSIER` | variable | dossier racine du site, `www` par défaut |
+| `OVH_SITE_UTILISATEUR` | secret | identifiant FTP |
+| `OVH_SITE_MOT_DE_PASSE` | secret | son mot de passe |
+| `OVH_SITE_CLE_HOTE` | secret | en SFTP : la ligne `known_hosts` du serveur, obtenue par `ssh-keyscan -t ed25519 <serveur>` puis comparée à l'empreinte affichée par OVH |
+
+L'atelier supprime sur le serveur les fichiers absents du dépôt : le dossier distant doit être réservé au site.
 
 Le formulaire « Idées et bugs » de la page ouvre un ticket prérempli sur GitHub.
 

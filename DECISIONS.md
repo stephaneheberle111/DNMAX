@@ -224,3 +224,13 @@ Le nom se corrige dans « Mon compte » (décision 18).
 - **À propos** : version, licence, et trois liens ouverts dans le navigateur (idées et bugs, site, code source).
 
 **Canal de retours** : la page « Idées et bugs » du site, qui ouvre un ticket prérempli sur GitHub. Un enseignant sans compte GitHub ne peut donc pas déposer lui-même un retour par ce canal.
+
+## 19. Le site est hébergé chez OVH, en France
+
+**Retenu** : le site <https://dnmax.fr> est hébergé sur l'hébergement web gratuit qui accompagne le nom de domaine chez OVH, et publié par l'atelier « Site » (SFTP, ou FTP chiffré si l'offre n'a pas de SFTP).
+
+**Pourquoi** : un hébergeur français, soumis au droit européen, supprime le transfert des adresses IP des visiteurs vers les États-Unis qu'impliquait Cloudflare Pages ; le nom de domaine, l'adresse de contact et le site sont chez le même prestataire. Le site est statique et léger (moins d'un mégaoctet) : l'offre gratuite suffit.
+
+**Contreparties** : pas de déploiement intégré comme chez Cloudflare, d'où l'atelier d'envoi et ses secrets ; les réglages du serveur passent par `site/.htaccess` (Apache) au lieu de `site/_headers`, gardé tant que l'ancienne adresse sert de transition.
+
+**Non retenu** : les pages GitHub, qui auraient gardé un hébergeur américain.
