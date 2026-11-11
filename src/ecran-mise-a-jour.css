@@ -25,6 +25,8 @@
   margin: 0;
   color: var(--muted);
   font-size: 12.5px;
+  /* Les notes contiennent une adresse sans espace, plus large que l'annonce. */
+  overflow-wrap: anywhere;
 }
 
 .annonce-mise-a-jour .annonce-erreur {
