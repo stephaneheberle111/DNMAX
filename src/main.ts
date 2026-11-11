@@ -94,6 +94,7 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
   const acces: AccesDonnees = {
     identite,
     dresserCatalogue,
+    enregistrerMaintenant: () => enregistreur.vider(),
     lireEntrees: () => magasin.entrees(),
     remplacerEntrees: async (nouvelles) => {
       // Les dates en dernier : écrire les évaluations les redate à « maintenant »,

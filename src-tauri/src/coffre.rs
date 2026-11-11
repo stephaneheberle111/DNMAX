@@ -278,6 +278,17 @@ impl CoffreOuvert {
     }
 }
 
+/// Vérifie qu'un fichier a bien la forme d'un coffre que cette version sait
+/// ouvrir, sans le déchiffrer (aucun mot de passe n'est nécessaire).
+///
+/// # Errors
+///
+/// `FichierIllisible` si ce n'est pas un coffre, `VersionInconnue` s'il vient
+/// d'une version plus récente de l'application.
+pub fn verifier_forme(fichier: &[u8]) -> Result<(), ErreurCoffre> {
+    analyser(fichier).map(|_| ())
+}
+
 /// Clé sous laquelle un texte protégé est rangé dans son coffre.
 const CLE_TEXTE_PROTEGE: &str = "contenu";
 
@@ -812,6 +823,25 @@ mod tests {
         assert_eq!(
             lire_texte_protege(&fichier, MOT_DE_PASSE),
             Ok(String::new())
+        );
+    }
+
+    #[test]
+    fn reconnait_la_forme_d_un_coffre_sans_mot_de_passe() {
+        let (fichier, _) = coffre_scelle();
+        assert_eq!(verifier_forme(&fichier), Ok(()));
+    }
+
+    #[test]
+    fn refuse_la_forme_d_un_fichier_quelconque_ou_trop_recent() {
+        assert_eq!(
+            verifier_forme(b"{\"format\":\"dnmax-echange\",\"version\":1}"),
+            Err(ErreurCoffre::FichierIllisible)
+        );
+        assert_eq!(verifier_forme(b""), Err(ErreurCoffre::FichierIllisible));
+        assert_eq!(
+            verifier_forme(br#"{"format":"dnmax-coffre","version":9}"#),
+            Err(ErreurCoffre::VersionInconnue(9))
         );
     }
 

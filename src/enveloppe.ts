@@ -157,3 +157,22 @@ export async function dechiffrerFichierEchange(fichier: string, motDePasse: stri
   }
   return texte;
 }
+
+/**
+ * Fait enregistrer une copie complète et chiffrée des données, à emporter sur un autre ordinateur.
+ *
+ * @returns `true` si le fichier a été écrit, `false` si l'enseignant a annulé.
+ */
+export async function exporterCoffre(): Promise<boolean> {
+  return (await appelerCoffre("exporter_coffre")) === true;
+}
+
+/**
+ * Installe sur cet ordinateur, encore sans données, un fichier de transfert choisi par l'enseignant.
+ *
+ * @returns `true` si les données ont été installées, `false` si l'enseignant a annulé.
+ * @throws ErreurCoffre si le fichier n'est pas un fichier de transfert ou si des données existent déjà.
+ */
+export async function installerCoffre(): Promise<boolean> {
+  return (await appelerCoffre("installer_coffre")) === true;
+}
