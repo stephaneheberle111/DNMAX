@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # Installe, sur une machine d'intégration continue Ubuntu, les bibliothèques
-# système dont Tauri a besoin pour compiler ; ou, si des noms de paquets sont
-# passés en arguments, ces paquets-là (par exemple l'outil d'envoi du site).
+# système dont Tauri a besoin pour compiler.
 #
 # Les machines de GitHub pointent sur un miroir de paquets qui a déjà cessé de
 # répondre pendant des heures, en même temps que le miroir officiel d'Ubuntu :
@@ -54,10 +53,5 @@ if [ "$miroir_retenu" != "$MIROIR_PAR_DEFAUT" ]; then
 fi
 
 sudo apt-get "${OPTIONS_APT[@]}" update
-PAQUETS_TAURI=(libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev)
-if [ "$#" -gt 0 ]; then
-  paquets=("$@")
-else
-  paquets=("${PAQUETS_TAURI[@]}")
-fi
-sudo apt-get "${OPTIONS_APT[@]}" install -y --no-install-recommends "${paquets[@]}"
+sudo apt-get "${OPTIONS_APT[@]}" install -y --no-install-recommends \
+  libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev
