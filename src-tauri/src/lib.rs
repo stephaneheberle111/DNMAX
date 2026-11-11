@@ -14,6 +14,7 @@ use serde::Serialize;
 use tauri::ipc::{InvokeBody, Request};
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_opener::OpenerExt;
 use time::OffsetDateTime;
 
 use coffre::{CoffreOuvert, Entrees, ErreurCoffre};
@@ -30,7 +31,11 @@ const ENTETE_NOM_FICHIER: &str = "x-nom-fichier";
 ///
 /// Rend `true` si le fichier a été écrit, `false` si l'enseignant a annulé.
 #[tauri::command(async)]
-fn enregistrer_fichier(application: AppHandle, requete: Request<'_>) -> Result<bool, String> {
+fn enregistrer_fichier(
+    application: AppHandle,
+    dernier_export: State<'_, DernierExport>,
+    requete: Request<'_>,
+) -> Result<bool, String> {
     let contenu = extraire_octets(requete.body())?;
     let nom_propose = requete
         .headers()
@@ -39,20 +44,46 @@ fn enregistrer_fichier(application: AppHandle, requete: Request<'_>) -> Result<b
         .map(decoder_pourcents)
         .unwrap_or_default();
 
-    let choix = application
-        .dialog()
-        .file()
-        .set_file_name(export::nettoyer_nom_fichier(&nom_propose))
-        .blocking_save_file();
-    let Some(emplacement) = choix else {
+    let Some(chemin) = demander_emplacement(&application, &nom_propose) else {
         return Ok(false);
     };
-    let chemin = emplacement
-        .into_path()
-        .map_err(|erreur| format!("emplacement inutilisable : {erreur}"))?;
     export::ecrire_export(&chemin, &contenu)
         .map_err(|erreur| format!("écriture impossible : {erreur}"))?;
+    // Retenu pour pouvoir proposer d'ouvrir le document, sans que la page n'en connaisse le chemin.
+    *dernier_export.verrou() = Some(chemin);
     Ok(true)
+}
+
+/// Ouvre, avec le logiciel par défaut du système, le dernier document exporté.
+///
+/// La page ne fournit aucun chemin : seul un fichier que l'enseignant vient
+/// d'enregistrer lui-même par la boîte de dialogue peut être ouvert.
+#[tauri::command(async)]
+fn ouvrir_dernier_export(
+    application: AppHandle,
+    dernier_export: State<'_, DernierExport>,
+) -> Result<(), String> {
+    let chemin = dernier_export
+        .verrou()
+        .clone()
+        .ok_or_else(|| "aucun document n'a été exporté".to_owned())?;
+    application
+        .opener()
+        .open_path(chemin.to_string_lossy(), None::<&str>)
+        .map_err(|erreur| format!("ouverture impossible : {erreur}"))
+}
+
+/// Ouvre la boîte « Enregistrer sous », dans le dossier Documents de
+/// l'enseignant quand le système en indique un, et rend l'emplacement choisi.
+fn demander_emplacement(application: &AppHandle, nom_propose: &str) -> Option<PathBuf> {
+    let mut boite = application
+        .dialog()
+        .file()
+        .set_file_name(export::nettoyer_nom_fichier(nom_propose));
+    if let Ok(documents) = application.path().document_dir() {
+        boite = boite.set_directory(documents);
+    }
+    boite.blocking_save_file()?.into_path().ok()
 }
 
 /// Coffre déverrouillé pour la session en cours ; `None` tant que l'enseignant n'a pas saisi son mot de passe.
@@ -63,6 +94,18 @@ impl Session {
     fn verrou(&self) -> MutexGuard<'_, Option<CoffreOuvert>> {
         // Un verrou « empoisonné » signale qu'une autre commande a paniqué ; la valeur
         // protégée reste cohérente (elle n'est remplacée que d'un bloc), on la reprend.
+        self.0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+}
+
+/// Emplacement du dernier document exporté pendant la session, s'il y en a un.
+#[derive(Default)]
+struct DernierExport(Mutex<Option<PathBuf>>);
+
+impl DernierExport {
+    fn verrou(&self) -> MutexGuard<'_, Option<PathBuf>> {
         self.0
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -208,6 +251,31 @@ fn ouvrir_coffre_par_secours(
     Ok(entrees)
 }
 
+/// Remplace le mot de passe du coffre ouvert, après vérification de l'ancien.
+#[tauri::command(async)]
+fn changer_mot_de_passe(
+    application: AppHandle,
+    session: State<'_, Session>,
+    ancien_mot_de_passe: String,
+    nouveau_mot_de_passe: String,
+) -> Result<(), ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let mut session = session.verrou();
+    if session.is_none() {
+        return Err(ErreurCommande::CoffreVerrouille);
+    }
+    let fichier = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
+    let (coffre, octets) = coffre::changer_mot_de_passe(
+        &fichier,
+        &ancien_mot_de_passe,
+        &nouveau_mot_de_passe,
+        &mut OsRng,
+    )?;
+    depot::ecrire(&dossier, &octets)?;
+    *session = Some(coffre);
+    Ok(())
+}
+
 /// Relit le contenu du coffre déjà ouvert (après un rechargement de la page, par exemple).
 #[tauri::command(async)]
 fn lire_coffre(
@@ -280,17 +348,9 @@ fn exporter_coffre(
     // Le verrou garantit qu'aucun enregistrement n'est en cours pendant la copie.
     let _session = session.verrou();
     let coffre = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
-    let choix = application
-        .dialog()
-        .file()
-        .set_file_name(NOM_FICHIER_TRANSFERT)
-        .blocking_save_file();
-    let Some(emplacement) = choix else {
+    let Some(chemin) = demander_emplacement(&application, NOM_FICHIER_TRANSFERT) else {
         return Ok(false);
     };
-    let chemin = emplacement
-        .into_path()
-        .map_err(|_| ErreurCommande::DisqueInaccessible)?;
     export::ecrire_export(&chemin, &coffre)?;
     Ok(true)
 }
@@ -353,17 +413,9 @@ fn enregistrer_fichier_protege(
         coffre::PARAMETRES_PAR_DEFAUT,
         &mut OsRng,
     )?;
-    let choix = application
-        .dialog()
-        .file()
-        .set_file_name(export::nettoyer_nom_fichier(&nom_propose))
-        .blocking_save_file();
-    let Some(emplacement) = choix else {
+    let Some(chemin) = demander_emplacement(&application, &nom_propose) else {
         return Ok(false);
     };
-    let chemin = emplacement
-        .into_path()
-        .map_err(|_| ErreurCommande::DisqueInaccessible)?;
     export::ecrire_export(&chemin, &chiffre)?;
     Ok(true)
 }
@@ -426,11 +478,14 @@ fn decoder_pourcents(valeur: &str) -> String {
 pub fn lancer() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(Session::default())
+        .manage(DernierExport::default())
         .invoke_handler(tauri::generate_handler![
             enregistrer_fichier,
+            ouvrir_dernier_export,
             etat_coffre,
             creer_coffre,
             ouvrir_coffre,
@@ -441,7 +496,8 @@ pub fn lancer() {
             enregistrer_fichier_protege,
             dechiffrer_fichier_echange,
             exporter_coffre,
-            installer_coffre
+            installer_coffre,
+            changer_mot_de_passe
         ])
         .setup(|application| {
             // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.

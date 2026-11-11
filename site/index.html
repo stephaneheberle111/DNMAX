@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DNMAX — évaluations par compétences pour le DN MADE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3F5F9; --surface:#FFFFFF; --sunk:#E8ECF3;
+  --ink:#15181E; --ink-2:#4F5866; --line:#D7DBE2;
+  --accent:#1F4D8F; --accent-ink:#FFFFFF; --accent-soft:#E7EEF8;
+  --signal:#F0C24B; --signal-ink:#2B2100;
+  --bug:#B4432C; --ok:#1E7A4F; --focus:#F0C24B;
+  --l0:#ECEFF4; --l1:#EBB7A8; --l2:#F3D891; --l3:#A9C8EE; --l4:#1F4D8F;
+  --display:"Syne","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --body:"Schibsted Grotesk","Helvetica Neue",Arial,system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --surface:#1A1E25; --sunk:#232933;
+    --ink:#E9ECF1; --ink-2:#A2ABB8; --line:#2E3540;
+    --accent:#7FA9E6; --accent-ink:#0F1726; --accent-soft:#1D2836;
+    --bug:#E8795F; --ok:#5ACB92;
+    --l0:#272D37;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --surface:#1A1E25; --sunk:#232933;
+  --ink:#E9ECF1; --ink-2:#A2ABB8; --line:#2E3540;
+  --accent:#7FA9E6; --accent-ink:#0F1726; --accent-soft:#1D2836;
+  --bug:#E8795F; --ok:#5ACB92;
+  --l0:#272D37;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 72px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,svg{max-width:100%}
+a{color:var(--accent);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+[hidden]{display:none!important}
+
+/* En-tête */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:29;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:24px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font:800 22px/1 var(--display);letter-spacing:-.01em}
+.logo svg{width:26px;height:26px}
+nav.main{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+nav.main a{padding:8px 12px;border-radius:7px;color:var(--ink-2);text-decoration:none;font-weight:500;white-space:nowrap}
+nav.main a:hover{color:var(--ink);background:var(--sunk)}
+nav.main a[aria-current="page"]{color:var(--ink);background:var(--sunk)}
+nav.main a.cta{background:var(--accent);color:var(--accent-ink)}
+@media (max-width:720px){
+  header.top .wrap{height:auto;flex-wrap:wrap;padding-top:10px;padding-bottom:6px;gap:6px}
+  nav.main{margin-left:0;width:100%}
+  nav.main a{padding:6px 10px;font-size:15px}
+}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:9px;font:600 16px/1.2 var(--body);text-decoration:none;border:2px solid var(--accent);cursor:pointer;background:transparent;color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ---------- Accueil ---------- */
+.hero{position:relative;min-height:calc(100vh - 64px);display:flex;align-items:center;overflow:hidden;padding:56px 0 72px}
+.hero .wrap{position:relative;z-index:2;width:100%}
+.hero-txt{max-width:600px}
+.hero h1{font:800 clamp(38px,5.6vw,70px)/1.02 var(--display);letter-spacing:-.025em;margin:0 0 24px}
+.hero p.lead{font-size:20px;color:var(--ink-2);margin:0 0 34px;max-width:32em}
+.actions{display:flex;flex-wrap:wrap;gap:12px}
+.hero .meta{margin-top:26px;font-size:14px;color:var(--ink-2)}
+.hero-roue{position:absolute;z-index:1;top:50%;right:max(-24vw,-380px);width:min(62vw,860px);aspect-ratio:1;transform:translateY(-50%);pointer-events:none}
+.hero-roue svg{width:100%;height:100%}
+.hero-roue .tourne{transform-origin:380px 380px;animation:tourne 160s linear infinite}
+@keyframes tourne{to{transform:rotate(360deg)}}
+.defiler{position:absolute;left:50%;bottom:22px;z-index:2;transform:translateX(-50%);background:none;border:0;color:var(--ink-2);font:500 14px/1.2 var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.defiler svg{width:18px;height:18px;animation:respire 2.4s ease-in-out infinite}
+@keyframes respire{50%{transform:translateY(5px)}}
+@media (max-width:900px){
+  .hero{min-height:auto;padding:48px 0 96px}
+  .hero-roue{right:-45vw;width:110vw;opacity:.28}
+}
+
+/* Visite : texte à gauche, application à droite */
+.visite{position:relative;border-top:1px solid var(--line)}
+.visite .wrap{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:56px}
+.etapes{padding:20vh 0 30vh}
+.etape{min-height:78vh;display:flex;flex-direction:column;justify-content:center;opacity:.28;transition:opacity .4s ease}
+.etape.vu{opacity:1}
+.etape .quand{font:600 14px/1.2 var(--body);color:var(--accent);margin:0 0 12px}
+.etape h2{font:800 clamp(30px,3.4vw,44px)/1.06 var(--display);letter-spacing:-.02em;margin:0 0 16px}
+.etape p{margin:0 0 12px;color:var(--ink-2);font-size:18px;max-width:30em}
+.etape p strong{color:var(--ink)}
+.scene{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);height:calc(100vh - 64px);display:flex;align-items:center}
+.scene-in{width:100%}
+.reperes{display:flex;gap:6px;justify-content:center;margin-top:18px}
+.reperes i{width:22px;height:4px;border-radius:2px;background:var(--line);transition:background .3s}
+.reperes i.on{background:var(--accent)}
+@media (max-width:900px){
+  .visite .wrap{grid-template-columns:1fr;gap:0}
+  .scene{order:-1;height:auto;top:calc(env(safe-area-inset-top,0px) + 86px);z-index:5;padding:10px 0 8px;background:var(--paper);display:block}
+  .reperes{margin-top:8px}
+  .etapes{padding:4vh 0 20vh}
+  .etape{min-height:56vh;justify-content:flex-start;padding-top:2vh}
+  .etape h2{font-size:28px}
+  .etape p{font-size:16.5px}
+}
+
+/* La fenêtre de l’application (reconstitution) */
+.app{
+  --a-paper:#F3F4F6; --a-surface:#FFFFFF; --a-ink:#15181E; --a-muted:#5C6472; --a-line:#D7DBE2; --a-accent:#1F4D8F; --a-soft:#E7EEF8;
+  container-type:inline-size;position:relative;aspect-ratio:16/11;background:var(--a-paper);color:var(--a-ink);
+  border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 40px 80px -40px rgba(15,30,60,.45),0 2px 6px rgba(15,30,60,.06);font-family:"Public Sans",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .app{
+  --a-paper:#13161A; --a-surface:#1B1F25; --a-ink:#E9ECF1; --a-muted:#99A2B0; --a-line:#2B313A; --a-accent:#7FA9E6; --a-soft:#1D2836;
+  box-shadow:0 40px 80px -40px rgba(0,0,0,.8)}}
+:root[data-theme="dark"] .app{--a-paper:#13161A; --a-surface:#1B1F25; --a-ink:#E9ECF1; --a-muted:#99A2B0; --a-line:#2B313A; --a-accent:#7FA9E6; --a-soft:#1D2836}
+.app *{box-sizing:border-box}
+.app-fs{font-size:1.72cqw;line-height:1.45;display:flex;flex-direction:column;height:100%}
+.chrome{display:flex;align-items:center;gap:.5em;padding:.55em .9em;background:var(--a-surface);border-bottom:1px solid var(--a-line);font-size:.85em;color:var(--a-muted)}
+.chrome i{width:.85em;height:.85em;border-radius:50%;background:var(--a-line);display:inline-block}
+.chrome span{margin:0 auto;transform:translateX(-1.4em)}
+.onglets{display:flex;align-items:center;gap:.3em;padding:0 1em;background:var(--a-surface);border-bottom:1px solid var(--a-line);transition:opacity .4s}
+.onglets b{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;margin-right:1em;font-size:1.05em}
+.onglets span{padding:.7em .7em;color:var(--a-muted);border-bottom:2px solid transparent;white-space:nowrap}
+.onglets span.on{color:var(--a-ink);border-bottom-color:var(--a-accent);font-weight:600}
+.onglets .ech{margin-left:auto;border:1px solid var(--a-line);border-radius:.4em;padding:.25em .7em;color:var(--a-ink)}
+.app.ferme .onglets{opacity:0}
+.corps-app{position:relative;flex:1;overflow:hidden}
+.scr{position:absolute;inset:0;padding:1.3em 1.5em;opacity:0;transform:translateY(1em);transition:opacity .45s ease,transform .45s ease;pointer-events:none}
+.scr.on{opacity:1;transform:none}
+.scr .a{opacity:0;transform:translateY(.5em);transition:opacity .4s ease,transform .4s ease}
+.scr.on .a{opacity:1;transform:none;transition-delay:calc(var(--d,0)*1ms)}
+.app h4{font:700 1.25em/1.2 "Bricolage Grotesque",sans-serif;margin:0}
+.tb{display:flex;align-items:center;justify-content:space-between;margin-bottom:1em}
+.bt{display:inline-block;background:var(--a-accent);color:#fff;border-radius:.45em;padding:.45em .9em;font-weight:600;font-size:.95em}
+.bt.ghost{background:transparent;color:var(--a-ink);border:1px solid var(--a-line)}
+.mut{color:var(--a-muted)}
+.pan{background:var(--a-surface);border:1px solid var(--a-line);border-radius:.6em;padding:.9em 1em}
+.lab{font-size:.78em;font-weight:600;color:var(--a-muted);margin:0 0 .3em}
+.inp{border:1px solid var(--a-line);border-radius:.4em;padding:.4em .6em;background:var(--a-paper);min-height:2.1em;margin-bottom:.8em}
+.chip{display:inline-block;border-radius:99em;padding:.25em .7em;font-size:.85em;font-weight:600;background:var(--a-soft);color:var(--a-ink);margin:0 .3em .35em 0;border:1px solid transparent}
+.chip.off{background:transparent;border-color:var(--a-line);color:var(--a-muted);font-weight:500}
+.steps{display:flex;gap:.4em;margin-bottom:1em}
+.steps span{flex:1;display:flex;align-items:center;gap:.5em;padding:.45em .7em;border-radius:.5em;background:var(--a-surface);border:1px solid var(--a-line);color:var(--a-muted);font-weight:600;font-size:.9em;white-space:nowrap;overflow:hidden}
+.steps span b{display:inline-grid;place-items:center;width:1.6em;height:1.6em;border-radius:50%;background:var(--a-paper);font-size:.85em;flex:none}
+.steps span.on{border-color:var(--a-accent);color:var(--a-ink)}
+.steps span.on b{background:var(--a-accent);color:#fff}
+.steps span.fait b{background:var(--a-soft);color:var(--a-accent)}
+.cols{display:grid;grid-template-columns:1.15fr 1fr;gap:1em}
+
+/* Mes évaluations */
+.evs{list-style:none;margin:0;padding:0;display:grid;gap:.6em}
+.evs li{background:var(--a-surface);border:1px solid var(--a-line);border-radius:.6em;padding:.75em 1em;display:grid;grid-template-columns:1fr auto;gap:.2em 1em;align-items:center}
+.evs .t{font-weight:700}
+.evs .m{font-size:.85em;color:var(--a-muted)}
+.evs .s{grid-row:span 2;text-align:right;font-size:.85em;color:var(--a-muted)}
+.barre{width:7em;height:.45em;border-radius:1em;background:var(--a-paper);overflow:hidden;margin-top:.3em;margin-left:auto}
+.barre i{display:block;height:100%;width:0;background:var(--a-accent);transition:width .9s ease}
+.scr.on .barre i{width:var(--w);transition-delay:calc(var(--d,0)*1ms + 300ms)}
+.tag-s{display:inline-block;font-size:.8em;border-radius:99em;padding:.15em .6em;background:var(--a-paper);border:1px solid var(--a-line)}
+
+/* Référentiel */
+.ref{display:grid;grid-template-columns:1.25fr 1fr;gap:1em;height:100%}
+.ref svg{width:100%;height:auto;max-height:100%}
+.roue2{transform-origin:380px 380px}
+.scr.on .roue2{animation:entre 1.3s cubic-bezier(.2,.7,.2,1) both}
+@keyframes entre{from{opacity:0;transform:rotate(-70deg) scale(.85)}to{opacity:1;transform:none}}
+.grp{transition:transform .5s ease,opacity .4s ease}
+svg.dim .grp:not(.on){opacity:.18}
+.dot{transition:opacity .3s}
+svg.dim .dot.off{opacity:.1}
+.dot.hit{stroke:#15181E;stroke-width:2}
+.ref .info{align-self:center}
+.ref .info .lab{margin-top:.6em}
+.ref .info .big{font:700 1.2em/1.25 "Bricolage Grotesque",sans-serif;margin:.1em 0 .3em}
+.ref .info p{margin:0 0 .5em;font-size:.92em}
+.fondu{transition:opacity .3s}
+
+/* Compétences */
+.blocs{display:grid;gap:.6em}
+.bloc-l{font-weight:700;font-size:.9em;margin:0 0 .3em}
+.cp{display:flex;align-items:center;gap:.6em;padding:.3em .5em;border-radius:.4em;font-size:.9em;white-space:nowrap;overflow:hidden}
+.cp .cb{width:1.15em;height:1.15em;border-radius:.25em;border:1.5px solid var(--a-line);flex:none;display:grid;place-items:center;transition:background .25s,border-color .25s}
+.cp .cb::after{content:"";width:.55em;height:.3em;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(.05em,-.05em);opacity:0}
+.cp code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.88em;font-weight:600;flex:none}
+.cp span{overflow:hidden;text-overflow:ellipsis;color:var(--a-muted)}
+.scr.on .cp.pris{background:var(--a-soft);transition:background .3s calc(var(--d)*1ms)}
+.scr.on .cp.pris .cb{background:var(--a-accent);border-color:var(--a-accent);transition-delay:calc(var(--d)*1ms)}
+.scr.on .cp.pris .cb::after{opacity:1;transition:opacity .2s calc(var(--d)*1ms)}
+.compteur{font:800 2.4em/1 "Bricolage Grotesque",sans-serif;color:var(--a-accent)}
+
+/* Formulation */
+.lignes{display:grid;gap:.5em}
+.lg{display:grid;grid-template-columns:1fr 7.5em 9.5em;gap:.8em;align-items:center;background:var(--a-surface);border:1px solid var(--a-line);border-radius:.55em;padding:.6em .8em}
+.lg.groupe{border-left:.3em solid var(--a-accent)}
+.lg .crit{font-weight:600;font-size:.92em}
+.lg .crit em{font-weight:400;color:var(--a-muted)}
+.lg .codes{display:flex;flex-wrap:wrap;gap:.25em}
+.lg .codes code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.8em;font-weight:600;background:var(--a-paper);border:1px solid var(--a-line);border-radius:.3em;padding:.05em .35em}
+.entete{display:grid;grid-template-columns:1fr 7.5em 9.5em;gap:.8em;font-size:.78em;font-weight:600;color:var(--a-muted);padding:0 .9em .2em}
+
+/* Exporter */
+.choix{display:grid;grid-template-columns:.85fr 1.15fr;gap:1.2em;height:100%;align-items:center}
+.exp{display:grid;gap:.5em}
+.exp .bt{text-align:center;padding:.65em}
+.module{display:flex;align-items:center;gap:.7em;margin-top:1em;padding:.8em;border:1px dashed var(--a-line);border-radius:.6em;font-size:.9em}
+.bascule-a{width:2.4em;height:1.35em;border-radius:1em;background:var(--a-line);position:relative;flex:none;transition:background .3s}
+.bascule-a::after{content:"";position:absolute;top:.17em;left:.17em;width:1em;height:1em;border-radius:50%;background:#fff;transition:transform .3s}
+.scr.on .bascule-a.va{background:var(--a-accent);transition-delay:2.2s}
+.scr.on .bascule-a.va::after{transform:translateX(1.05em);transition-delay:2.2s}
+.feuille{background:#fff;color:#15181E;border-radius:.3em;box-shadow:0 1.2em 2.4em -1.2em rgba(0,0,0,.35);padding:1.2em 1.3em;transform:rotate(2deg) translateX(20%);opacity:0;transition:transform .8s cubic-bezier(.2,.7,.2,1) .5s,opacity .5s .5s;position:relative}
+.scr.on .feuille{transform:rotate(1.5deg);opacity:1}
+.feuille .nom{position:absolute;top:-1.1em;right:.8em;font-size:.75em;font-weight:700;background:#2B579A;color:#fff;border-radius:.3em .3em 0 0;padding:.2em .6em}
+.feuille h5{font:700 1em/1.25 "Bricolage Grotesque",sans-serif;margin:0 0 .2em}
+.feuille .m{font-size:.75em;color:#5C6472;margin:0 0 .7em}
+.feuille table{width:100%;border-collapse:collapse;font-size:.68em}
+.feuille th,.feuille td{border:1px solid #CBD1DA;padding:.35em .4em;text-align:left;vertical-align:top}
+.feuille th{background:#EEF1F5}
+.feuille td.v{width:12%}
+
+/* Élèves */
+.grille-a{width:100%;border-collapse:separate;border-spacing:.25em;font-size:.88em}
+.grille-a th{font-weight:600;text-align:left;color:var(--a-muted);font-size:.85em;padding:0 .3em .2em;white-space:nowrap}
+.grille-a th.n{color:var(--a-ink);font-size:1em;white-space:nowrap}
+.grille-a td{height:2em;border-radius:.3em;background:var(--l0);transition:background .35s;text-align:center;font-size:.8em;font-weight:600}
+.scr.on .grille-a td[data-l="1"]{background:var(--l1);transition-delay:calc(var(--d)*1ms)}
+.scr.on .grille-a td[data-l="2"]{background:var(--l2);transition-delay:calc(var(--d)*1ms)}
+.scr.on .grille-a td[data-l="3"]{background:var(--l3);transition-delay:calc(var(--d)*1ms)}
+.scr.on .grille-a td[data-l="4"]{background:var(--l4);color:#fff;transition-delay:calc(var(--d)*1ms)}
+.grille-a td.nr{background:transparent;border:1px dashed var(--a-line);color:var(--a-muted)}
+.leg{display:flex;flex-wrap:wrap;gap:.9em;font-size:.78em;color:var(--a-muted);margin-top:.7em}
+.leg span{display:inline-flex;align-items:center;gap:.35em}
+.leg i{width:.9em;height:.9em;border-radius:.2em;display:inline-block}
+.seg2{display:inline-flex;border:1px solid var(--a-line);border-radius:.45em;overflow:hidden;font-size:.85em}
+.seg2 span{padding:.3em .8em}
+.seg2 span.on{background:var(--a-accent);color:#fff}
+.appr{margin-top:.8em;font-size:.85em}
+.appr b{display:block;margin-bottom:.15em}
+
+/* Progression */
+.prog .lgp{display:grid;grid-template-columns:4em 1fr repeat(4,2.6em) 7.5em;gap:.4em;align-items:center;padding:.35em 0;border-bottom:1px solid var(--a-line);font-size:.9em}
+.prog .lgp.h{font-size:.78em;font-weight:600;color:var(--a-muted);border:0}
+.prog code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;font-size:.88em}
+.prog .lib{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--a-muted)}
+.prog .c{height:1.5em;border-radius:.3em;background:var(--l0);transition:background .35s}
+.scr.on.prog .c[data-l="1"]{background:var(--l1);transition-delay:calc(var(--d)*1ms)}
+.scr.on.prog .c[data-l="2"]{background:var(--l2);transition-delay:calc(var(--d)*1ms)}
+.scr.on.prog .c[data-l="3"]{background:var(--l3);transition-delay:calc(var(--d)*1ms)}
+.scr.on.prog .c[data-l="4"]{background:var(--l4);transition-delay:calc(var(--d)*1ms)}
+.niv{font-size:.78em;font-weight:700;border-radius:99em;padding:.15em .55em;background:var(--a-soft);color:var(--a-accent);justify-self:start;white-space:nowrap}
+
+/* Échanger */
+.voile{position:absolute;inset:0;background:rgba(10,15,25,.35)}
+.modale{position:absolute;left:50%;top:50%;width:76%;transform:translate(-50%,-46%);opacity:0;transition:transform .5s cubic-bezier(.2,.7,.2,1) .2s,opacity .4s .2s;background:var(--a-surface);border:1px solid var(--a-line);border-radius:.8em;padding:1.2em 1.3em;box-shadow:0 2em 4em -2em rgba(0,0,0,.5)}
+.scr.on .modale{transform:translate(-50%,-50%);opacity:1}
+.fichier{display:flex;align-items:center;gap:.7em;padding:.6em .8em;background:var(--a-paper);border-radius:.5em;margin:.7em 0;font-size:.9em}
+.fichier .ic{width:2em;height:2.4em;border-radius:.25em;background:var(--a-accent);color:#fff;display:grid;place-items:center;font-size:.65em;font-weight:700;flex:none}
+.plan{display:grid;gap:.35em;margin:.6em 0 1em}
+.plan div{display:flex;justify-content:space-between;align-items:center;gap:1em;padding:.45em .7em;border:1px solid var(--a-line);border-radius:.45em;font-size:.9em}
+.st{font-size:.8em;font-weight:700;border-radius:99em;padding:.12em .6em;white-space:nowrap}
+.st.nv{background:#DDF1E4;color:#1E6B45}
+.st.md{background:#FBEBC8;color:#7A5410}
+.st.id{background:var(--a-paper);color:var(--a-muted);border:1px solid var(--a-line)}
+.ok-ref{font-size:.85em;color:#1E7A4F;font-weight:600}
+
+/* Coffre */
+.coffre-a{position:absolute;inset:0;display:grid;place-items:center;background:var(--a-paper)}
+.coffre-a .carte-c{width:52%;text-align:center}
+.coffre-a .cad{width:3.2em;height:3.2em;margin:0 auto .8em;border-radius:50%;background:var(--a-soft);display:grid;place-items:center;color:var(--a-accent)}
+.coffre-a .cad svg{width:1.6em;height:1.6em}
+.coffre-a .mdp{border:1px solid var(--a-line);border-radius:.5em;padding:.6em .8em;background:var(--a-surface);text-align:left;letter-spacing:.25em;min-height:2.4em;margin:.8em 0 .7em;font-size:1.05em}
+.coffre-a .bt{display:block;padding:.65em}
+.coffre-a .sec{font-size:.85em;margin-top:.8em;color:var(--a-muted)}
+
+/* Dernier appel */
+.fin{padding:96px 0;border-top:1px solid var(--line);text-align:center}
+.fin h2{font:800 clamp(34px,4.5vw,56px)/1.05 var(--display);letter-spacing:-.025em;margin:0 0 16px}
+.fin p{color:var(--ink-2);font-size:19px;max-width:36em;margin:0 auto 32px}
+.fin .actions{justify-content:center}
+
+/* ---------- Pages intérieures ---------- */
+.page{padding:64px 0 96px;min-height:calc(100vh - 64px)}
+.page h1{font:800 clamp(38px,5vw,60px)/1.04 var(--display);letter-spacing:-.025em;margin:0 0 14px}
+.page .intro{color:var(--ink-2);font-size:19px;max-width:40em;margin:0 0 44px}
+
+.systemes{display:grid;gap:12px}
+.sys{display:grid;grid-template-columns:180px 1fr auto;align-items:center;gap:24px;padding:22px 24px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.sys.reco{border:2px solid var(--accent)}
+.sys h3{margin:0;font:700 22px/1.2 var(--display)}
+.sys .badge{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;background:var(--signal);color:var(--signal-ink);padding:2px 8px;border-radius:99px}
+.sys p{margin:0;color:var(--ink-2);font-size:15px}
+.sys .fmt{font-family:var(--mono);font-size:13px;color:var(--ink)}
+@media (max-width:760px){.sys{grid-template-columns:1fr;gap:10px}}
+.note{margin-top:28px;padding:20px 24px;border-left:4px solid var(--signal);background:var(--sunk);border-radius:0 10px 10px 0}
+.note h3{margin:0 0 8px;font-size:17px}
+.note ul{margin:0;padding-left:20px}
+.note li{margin:4px 0}
+.apres{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.apres h3{font:700 18px/1.3 var(--body);margin:0 0 6px;padding-top:12px;border-top:3px solid var(--accent)}
+.apres p{margin:0;color:var(--ink-2);font-size:16px}
+@media (max-width:860px){.apres{grid-template-columns:1fr}}
+
+.doc{display:grid;grid-template-columns:250px 1fr;gap:48px;align-items:start}
+.doc-nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 88px);display:flex;flex-direction:column;gap:2px}
+.doc-nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:6px;color:var(--ink-2);font-weight:500;border-left:3px solid transparent}
+.doc-nav button:hover{background:var(--sunk);color:var(--ink)}
+.doc-nav button[aria-selected="true"]{color:var(--ink);background:var(--surface);border-left-color:var(--accent)}
+.doc-nav button:focus-visible{outline:3px solid var(--focus)}
+.doc-page{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:36px 40px;max-width:800px}
+.doc-page h3{font:700 28px/1.2 var(--display);margin:0 0 16px}
+.doc-page h4{font-size:18px;margin:28px 0 8px}
+.doc-page p,.doc-page li{max-width:66ch}
+.doc-page ol,.doc-page ul{padding-left:22px}
+.doc-page li{margin:6px 0}
+.doc-page code{font-family:var(--mono);font-size:.88em;background:var(--sunk);padding:1px 6px;border-radius:4px;word-break:break-word}
+.doc-page pre{background:var(--sunk);padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:14px}
+.doc-page pre code{background:none;padding:0}
+.doc-page .tbl{overflow-x:auto}
+.doc-page table{border-collapse:collapse;width:100%;font-size:15px}
+.doc-page th,.doc-page td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.alerte{border-left:4px solid var(--bug);background:color-mix(in srgb,var(--bug) 9%,transparent);padding:14px 18px;border-radius:0 8px 8px 0;margin:14px 0}
+.alerte p{margin:0}
+.doc-select{display:none;width:100%;margin-bottom:16px}
+@media (max-width:860px){
+  .doc{grid-template-columns:1fr;gap:0}
+  .doc-nav{display:none}
+  .doc-select{display:block}
+  .doc-page{padding:24px 20px}
+}
+
+.retours{display:grid;grid-template-columns:420px 1fr;gap:40px;align-items:start}
+@media (max-width:960px){.retours{grid-template-columns:1fr}}
+form.depot{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px}
+.bascule{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border-radius:10px;padding:4px;margin-bottom:20px}
+.bascule label{text-align:center;padding:10px;border-radius:8px;cursor:pointer;font-weight:600;color:var(--ink-2)}
+.bascule input{position:absolute;opacity:0;pointer-events:none}
+.bascule input:checked+label{background:var(--surface);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.bascule input:focus-visible+label{outline:3px solid var(--focus)}
+.champ{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.champ label{font-weight:600;font-size:15px}
+.champ small{color:var(--ink-2);font-size:13px}
+input[type=text],textarea,select{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+textarea{min-height:110px;resize:vertical}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-pied{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:6px}
+.form-pied a{font-size:15px}
+.etat{margin-top:14px;font-size:14px;color:var(--ink-2);min-height:1.4em}
+.etat.ok{color:var(--ok)}
+.etat.err{color:var(--bug)}
+.liste-tete{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.liste-tete h3{margin:0;font:700 22px/1.2 var(--display)}
+.filtres{display:flex;gap:8px;flex-wrap:wrap}
+.filtres select{width:auto;padding:7px 10px;font-size:15px}
+.item{display:grid;grid-template-columns:62px 1fr;gap:16px;padding:18px 0;border-top:1px solid var(--line)}
+.vote{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:58px;height:62px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-weight:700;font-size:18px}
+.vote small{font-weight:500;font-size:11px;color:var(--ink-2)}
+.vote[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.vote[aria-pressed="true"] small{color:inherit}
+.vote:focus-visible{outline:3px solid var(--focus)}
+.vote[disabled]{cursor:default;opacity:.6}
+.item h4{margin:0 0 4px;font-size:18px;line-height:1.35}
+.item .corps{margin:6px 0 0;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:anywhere}
+.item .details{margin-top:6px;font-size:14px;color:var(--ink-2)}
+.item .pied{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px;font-size:13px;color:var(--ink-2)}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px}
+.tag.idee{background:var(--l3);color:#15181E}
+.tag.bug{background:color-mix(in srgb,var(--bug) 18%,transparent);color:var(--bug)}
+.tag.statut{background:var(--sunk);color:var(--ink)}
+.lien-mini{all:unset;cursor:pointer;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.vide{padding:28px;border:1px dashed var(--line);border-radius:12px;color:var(--ink-2)}
+.statut-sel{width:auto;padding:3px 8px;font-size:13px}
+
+footer{border-top:1px solid var(--line);padding:40px 0 56px;color:var(--ink-2);font-size:15px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px 40px;justify-content:space-between}
+footer a{color:var(--ink-2)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .etape{opacity:1}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#accueil" aria-label="DNMAX, accueil">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15" fill="#A9C8EE"/><path d="M16 16 L16 1 A15 15 0 0 1 30.3 11.4 Z" fill="#91CC78"/><path d="M16 16 L30.3 11.4 A15 15 0 0 1 21 30.1 Z" fill="#ECA765"/><path d="M16 16 L21 30.1 A15 15 0 0 1 3.2 23.8 Z" fill="#79A9D3"/><path d="M16 16 L3.2 23.8 A15 15 0 0 1 16 1 Z" fill="#D394B5"/><circle cx="16" cy="16" r="6.5" fill="#1F4D8F"/></svg>
+      DNMAX
+    </a>
+    <nav class="main" aria-label="Pages">
+      <a href="#accueil" data-lien="accueil">Présentation</a>
+      <a href="#documentation" data-lien="documentation">Documentation</a>
+      <a href="#idees" data-lien="idees">Idées et bugs</a>
+      <a class="cta" href="#telecharger" data-lien="telecharger">Télécharger</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<!-- ================= ACCUEIL ================= -->
+<div data-vue="accueil">
+  <section class="hero">
+    <div class="hero-roue" aria-hidden="true"><svg id="roue-hero" viewBox="0 0 760 760"></svg></div>
+    <div class="wrap">
+      <div class="hero-txt">
+        <h1>Vos évaluations DN MADE, de la grille à la fiche rendue.</h1>
+        <p class="lead">DNMAX aide les enseignants à construire, suivre et restituer leurs évaluations par compétences, directement sur le référentiel du diplôme. Une application de bureau, sans compte ni serveur&nbsp;: vos données restent sur votre ordinateur.</p>
+        <div class="actions">
+          <a class="btn primary" href="#telecharger">Télécharger DNMAX</a>
+          <button class="btn" type="button" id="vers-visite">Parcourir l’application</button>
+        </div>
+        <p class="meta">Version 0.1.0 · Windows, macOS et Linux · Logiciel libre</p>
+      </div>
+    </div>
+    <button class="defiler" type="button" id="defiler" aria-label="Commencer la visite">Faites défiler
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+  </section>
+
+  <section class="visite" id="visite" aria-label="Visite de l’application">
+    <div class="wrap">
+      <div class="etapes">
+        <article class="etape" data-scr="saved" data-tab="0">
+          <p class="quand">Vos évaluations</p>
+          <h2>Tout votre semestre sur une seule page.</h2>
+          <p>Chaque évaluation garde sa promotion, son semestre, son échelle et l’avancement de la saisie. Vous voyez qui l’a modifiée en dernier, et quand.</p>
+        </article>
+        <article class="etape" data-scr="eval" data-tab="0">
+          <p class="quand">Étape 1, l’évaluation</p>
+          <h2>Décrivez ce que vous demandez.</h2>
+          <p>Intitulé, consignes, livrables attendus, promotion, semestre&nbsp;: l’évaluation se rattache aux unités et aux enseignements du diplôme. Vous choisissez l’échelle&nbsp;: niveaux de maîtrise, degrés d’acquisition, note chiffrée ou la vôtre.</p>
+        </article>
+        <article class="etape" data-scr="ref" data-tab="2">
+          <p class="quand">Le référentiel, toujours sous la main</p>
+          <h2>Voyez où chaque compétence se travaille.</h2>
+          <p>Unités, enseignements, années et compétences sont reliés. Avant de choisir, vous savez dans quels enseignements et à quelle année une compétence est mobilisée.</p>
+        </article>
+        <article class="etape" data-scr="comp" data-tab="0">
+          <p class="quand">Étape 2, les compétences</p>
+          <h2>Cochez ce que vous évaluez.</h2>
+          <p>La liste ne propose que les compétences du référentiel, classées par bloc. Pas de recopie, pas de libellé approximatif.</p>
+        </article>
+        <article class="etape" data-scr="form" data-tab="0">
+          <p class="quand">Étape 3, la formulation</p>
+          <h2>Écrivez-la avec vos mots.</h2>
+          <p>Reformulez chaque ligne en critère observable, regroupez plusieurs compétences sous une même attente et associez chaque ligne au livrable qui la montre.</p>
+        </article>
+        <article class="etape" data-scr="export" data-tab="0">
+          <p class="quand">Ensuite, vous choisissez</p>
+          <h2>Évaluez dans DNMAX, ou ailleurs.</h2>
+          <p><strong>Sans élèves&nbsp;:</strong> exportez la grille en Word, Excel ou OpenDocument et évaluez comme vous en avez l’habitude, sur papier ou dans vos outils.</p>
+          <p><strong>Avec élèves&nbsp;:</strong> activez le module Élèves et faites tout dans l’application. Le choix se fait évaluation par évaluation.</p>
+        </article>
+        <article class="etape" data-scr="eleves" data-tab="0">
+          <p class="quand">Étape 4, les élèves</p>
+          <h2>Saisissez toute la promo d’un coup.</h2>
+          <p>Remplissez la grille de la promotion ou passez fiche par fiche, avec observations, appréciation et non-rendus. Chaque élève reçoit son propre document Word.</p>
+        </article>
+        <article class="etape" data-scr="prog" data-tab="1">
+          <p class="quand">Progression</p>
+          <h2>Sachez où en est chacun.</h2>
+          <p>Semestre après semestre, chaque compétence évaluée s’inscrit dans le parcours de l’élève. Vous voyez ce qui est acquis, ce qui reste fragile, et le niveau DN MADE atteint.</p>
+        </article>
+        <article class="etape" data-scr="echange" data-tab="0">
+          <p class="quand">Entre enseignants</p>
+          <h2>Partagez sans tout recopier.</h2>
+          <p>Envoyez une évaluation ou un référentiel par simple fichier. À la réception, un plan indique ce qui est nouveau, modifié ou identique, et DNMAX vérifie que vous travaillez sur le même référentiel. Avec les résultats des élèves, le fichier est chiffré.</p>
+        </article>
+        <article class="etape" data-scr="coffre" data-tab="-1">
+          <p class="quand">Vos données</p>
+          <h2>Elles restent chez vous, sous clé.</h2>
+          <p>Tout est chiffré dans un seul fichier sur votre ordinateur, protégé par votre mot de passe. Pas de compte, pas de serveur&nbsp;: une copie est mise de côté chaque jour d’utilisation.</p>
+          <p>En contrepartie, <strong>personne d’autre que vous ne peut rouvrir ce coffre.</strong> Gardez précieusement votre code de secours.</p>
+        </article>
+      </div>
+
+      <div class="scene">
+        <div class="scene-in">
+          <div class="app" id="app" role="img" aria-label="Reconstitution animée de l’application DNMAX, qui change à chaque étape de la visite">
+            <div class="app-fs">
+              <div class="chrome" aria-hidden="true"><i></i><i></i><i></i><span>DNMAX 0.1.0</span></div>
+              <div class="onglets" aria-hidden="true"><b>DNMAX</b><span>Mes évaluations</span><span>Progression</span><span>Référentiel</span><span>Mon établissement</span><span>Paramètres</span></div>
+              <div class="corps-app" aria-hidden="true">
+
+                <div class="scr" data-scr="saved">
+                  <div class="tb a"><h4>Mes évaluations</h4><span class="bt">+ Nouvelle évaluation</span></div>
+                  <ul class="evs">
+                    <li class="a" style="--d:120"><div class="t">Évaluation intermédiaire — Mobilier modulaire en frêne</div><div class="s">11 / 14 élèves<div class="barre"><i style="--w:78%"></i></div></div><div class="m">DN MADE 2 Objet · S3 · Degrés d’acquisition · modifiée par S. Hébérlé</div></li>
+                    <li class="a" style="--d:240"><div class="t">Fiche de lecture</div><div class="s">12 / 12 élèves<div class="barre"><i style="--w:100%"></i></div></div><div class="m">DN MADE 1 Objet · S1 · Niveaux de maîtrise · modifiée par A. Benali</div></li>
+                    <li class="a" style="--d:360"><div class="t">Oral de présentation de projet</div><div class="s"><span class="tag-s">Exportée en Word</span></div><div class="m">DN MADE 2 Objet · S3 · Niveaux de maîtrise · modifiée par M. Lenoir</div></li>
+                    <li class="a" style="--d:480"><div class="t">Carnet d’exposition</div><div class="s">6 / 14 élèves<div class="barre"><i style="--w:43%"></i></div></div><div class="m">DN MADE 3 Objet · S5 · Degrés d’acquisition · modifiée par S. Hébérlé</div></li>
+                  </ul>
+                </div>
+
+                <div class="scr" data-scr="eval">
+                  <div class="steps a"><span class="on"><b>1</b>L’évaluation</span><span><b>2</b>Compétences</span><span><b>3</b>Formulation</span><span><b>4</b>Élèves</span></div>
+                  <div class="cols">
+                    <div class="pan a" style="--d:100">
+                      <p class="lab">Intitulé de l’évaluation</p>
+                      <div class="inp"><span id="tw"></span></div>
+                      <p class="lab">Consignes données aux élèves</p>
+                      <div class="inp a mut" style="--d:1500;font-size:.88em">Carnet de projet tenu depuis le lancement, trois maquettes de recherche au 1/5 sur l’assemblage, deux planches A2. Oral de cinq minutes.</div>
+                      <p class="lab">Livrables attendus</p>
+                      <div><span class="chip a" style="--d:1900">Carnet de projet</span><span class="chip a" style="--d:2050">Maquettes de recherches</span><span class="chip a" style="--d:2200">Planches de projet</span><span class="chip off">Diaporama</span><span class="chip off">Fiche de lecture</span></div>
+                    </div>
+                    <div class="pan a" style="--d:250">
+                      <p class="lab">Promotion et semestre</p>
+                      <div><span class="chip">DN MADE 2 Objet</span><span class="chip">S3</span></div>
+                      <p class="lab" style="margin-top:.5em">Unité d’enseignement</p>
+                      <div><span class="chip a" style="--d:2400">Ateliers de création</span></div>
+                      <p class="lab" style="margin-top:.5em">Enseignements constitutifs</p>
+                      <div><span class="chip a" style="--d:2550">EC 11.1 Techniques et savoir-faire</span><span class="chip a" style="--d:2700">EC 11.2 Mise en œuvre du projet</span></div>
+                      <p class="lab" style="margin-top:.5em">Échelle</p>
+                      <div class="a" style="--d:2900"><span class="chip off">1. Non acquis</span><span class="chip off">2. En cours</span><span class="chip off">3. Acquis</span><span class="chip off">4. Maîtrisé</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="scr" data-scr="ref">
+                  <div class="ref">
+                    <svg id="roue-app" viewBox="0 0 760 760"></svg>
+                    <div class="info">
+                      <p class="lab">DN MADE mention Objet</p>
+                      <div id="ref-info" class="fondu">
+                        <p class="big">4 unités, 13 enseignements, 37 compétences</p>
+                        <p class="mut">Les points autour de la roue sont les compétences.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="scr" data-scr="comp">
+                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="on"><b>2</b>Compétences</span><span><b>3</b>Formulation</span><span><b>4</b>Élèves</span></div>
+                  <div class="cols" style="grid-template-columns:1fr 9em">
+                    <div class="pan blocs" id="liste-comp"></div>
+                    <div class="a" style="--d:200"><p class="lab">Compétences à évaluer</p><div class="compteur" id="compteur">0</div></div>
+                  </div>
+                </div>
+
+                <div class="scr" data-scr="form">
+                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="fait"><b>2</b>Compétences</span><span class="on"><b>3</b>Formulation</span><span><b>4</b>Élèves</span></div>
+                  <div class="entete a"><span>Critère observable</span><span>Compétences</span><span>Livrable</span></div>
+                  <div class="lignes">
+                    <div class="lg groupe a" style="--d:150"><div class="crit a" style="--d:900">Constituer un corpus de références et en tirer des principes formels réutilisables</div><div class="codes"><code>C4.1</code><code>C4.3</code></div><div><span class="chip a" style="--d:1700">Carnet de projet</span></div></div>
+                    <div class="lg groupe a" style="--d:300"><div class="crit a" style="--d:1150">Éprouver les assemblages par la maquette et en dégager un principe technique viable</div><div class="codes"><code>C10.3</code><code>C11.2</code></div><div><span class="chip a" style="--d:1850">Maquettes de recherches</span></div></div>
+                    <div class="lg a" style="--d:450"><div class="crit a" style="--d:1400">Présenter le principe d’assemblage sur deux planches lisibles à un mètre</div><div class="codes"><code>C10.6</code></div><div><span class="chip a" style="--d:2000">Planches de projet</span></div></div>
+                    <div class="lg a" style="--d:600"><div class="crit"><em>Se servir aisément des différents registres d’expression écrite et orale</em></div><div class="codes"><code>C2.1</code></div><div><span class="chip a" style="--d:2150">Carnet de projet</span></div></div>
+                  </div>
+                </div>
+
+                <div class="scr" data-scr="export">
+                  <div class="choix">
+                    <div>
+                      <p class="lab a">Exporter la grille</p>
+                      <div class="exp">
+                        <span class="bt a" style="--d:150">Word</span>
+                        <span class="bt ghost a" style="--d:250">Excel</span>
+                        <span class="bt ghost a" style="--d:350">OpenDocument</span>
+                      </div>
+                      <div class="module a" style="--d:1400"><span class="bascule-a va"></span><span><b>Module Élèves</b><br><span class="mut">évaluer chaque élève dans DNMAX</span></span></div>
+                    </div>
+                    <div class="feuille">
+                      <span class="nom">Mobilier_modulaire.docx</span>
+                      <h5>Évaluation intermédiaire — Mobilier modulaire en frêne</h5>
+                      <p class="m">DN MADE 2 Objet, S3. Livrables&nbsp;: carnet de projet, maquettes, planches.</p>
+                      <table>
+                        <tr><th>Critère observable</th><th>Non acquis</th><th>En cours</th><th>Acquis</th><th>Maîtrisé</th></tr>
+                        <tr><td>Constituer un corpus de références… <b>C4.1 C4.3</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
+                        <tr><td>Éprouver les assemblages par la maquette… <b>C10.3 C11.2</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
+                        <tr><td>Présenter le principe d’assemblage… <b>C10.6</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
+                        <tr><td>Registres d’expression écrite et orale <b>C2.1</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="scr" data-scr="eleves">
+                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="fait"><b>2</b>Compétences</span><span class="fait"><b>3</b>Formulation</span><span class="on"><b>4</b>Élèves</span></div>
+                  <div class="tb a" style="margin-bottom:.6em"><span class="lab" style="margin:0">DN MADE 2 Objet, 14 élèves</span><span class="seg2"><span>Fiche par élève</span><span class="on">Grille de la promo</span></span></div>
+                  <table class="grille-a a" style="--d:100" id="grille-promo">
+                    <thead><tr><th></th><th>Corpus</th><th>Assemblages</th><th>Planches</th><th>Expression</th></tr></thead>
+                    <tbody></tbody>
+                  </table>
+                  <div class="leg a" style="--d:300"><span><i style="background:var(--l1)"></i>Non acquis</span><span><i style="background:var(--l2)"></i>En cours d’acquisition</span><span><i style="background:var(--l3)"></i>Acquis</span><span><i style="background:var(--l4)"></i>Maîtrisé</span></div>
+                </div>
+
+                <div class="scr prog" data-scr="prog">
+                  <div class="tb a"><h4>Progression élève</h4><span class="chip">Camille Ferrand, DN MADE 2 Objet</span></div>
+                  <div class="lgp h a"><span></span><span>Compétence</span><span>S1</span><span>S2</span><span>S3</span><span>S4</span><span>Niveau DN MADE</span></div>
+                  <div id="prog-lignes"></div>
+                </div>
+
+                <div class="scr" data-scr="echange">
+                  <div class="tb"><h4>Mes évaluations</h4><span class="bt">+ Nouvelle évaluation</span></div>
+                  <div class="voile"></div>
+                  <div class="modale">
+                    <h4>Importer des évaluations</h4>
+                    <div class="fichier"><span class="ic">.dnmax</span><div><b>evaluations-lenoir.dnmax</b><br><span class="mut">Envoyé par M. Lenoir</span></div></div>
+                    <div class="ok-ref a" style="--d:700">✓ Construites sur le même référentiel que le vôtre</div>
+                    <div class="plan">
+                      <div class="a" style="--d:1000"><span>Fiche de lecture — corpus critique</span><span class="st nv">nouvelle</span></div>
+                      <div class="a" style="--d:1200"><span>Oral de présentation de projet</span><span class="st md">modifiée</span></div>
+                      <div class="a" style="--d:1400"><span>Carnet d’exposition</span><span class="st id">identique</span></div>
+                    </div>
+                    <div class="a" style="display:flex;justify-content:flex-end;gap:.5em;--d:1600"><span class="bt ghost">Annuler</span><span class="bt">Importer</span></div>
+                  </div>
+                </div>
+
+                <div class="scr" data-scr="coffre">
+                  <div class="coffre-a">
+                    <div class="carte-c">
+                      <div class="cad a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+                      <h4 class="a" style="--d:100">Ouvrir votre coffre</h4>
+                      <div class="mdp a" style="--d:200"><span id="mdp"></span></div>
+                      <span class="bt a" style="--d:300">Ouvrir</span>
+                      <p class="sec a" style="--d:400">Mot de passe oublié&nbsp;? Utilisez votre code de secours.</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          <div class="reperes" id="reperes" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="fin">
+    <div class="wrap">
+      <h2>Essayez-le sur votre prochaine évaluation.</h2>
+      <p>Une fois installé, ouvrez Paramètres puis «&nbsp;Charger un exemple&nbsp;»&nbsp;: une évaluation complète avec deux promotions fictives vous montre l’application en situation.</p>
+      <div class="actions">
+        <a class="btn primary" href="#telecharger">Télécharger DNMAX</a>
+        <a class="btn" href="#documentation">Lire la documentation</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= TÉLÉCHARGER ================= -->
+<div data-vue="telecharger" hidden>
+  <section class="page">
+    <div class="wrap">
+      <h1>Télécharger DNMAX</h1>
+      <p class="intro">Version 0.1.0, publiée le 11 novembre 2026. Choisissez l’installeur de votre système&nbsp;; les fichiers sont hébergés sur GitHub.</p>
+      <div class="systemes" id="systemes">
+        <div class="sys" data-os="win">
+          <div><h3>Windows</h3></div>
+          <div><p>Windows 10 et 11.</p><p class="fmt">.exe</p></div>
+          <a class="btn primary" href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-windows.exe">Télécharger pour Windows</a>
+        </div>
+        <div class="sys" data-os="mac">
+          <div><h3>macOS</h3></div>
+          <div><p>Processeurs Apple et Intel.</p><p class="fmt">.dmg</p></div>
+          <a class="btn primary" href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-macos.dmg">Télécharger pour macOS</a>
+        </div>
+        <div class="sys" data-os="linux">
+          <div><h3>Linux</h3></div>
+          <div><p>L’AppImage se met à jour d’elle-même&nbsp;; le paquet .deb s’installe comme les autres.</p><p class="fmt">.AppImage, ou <a href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.deb">paquet .deb</a></p></div>
+          <a class="btn primary" href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.AppImage">Télécharger pour Linux</a>
+        </div>
+      </div>
+      <div class="note">
+        <h3>Votre système affiche un avertissement au premier lancement&nbsp;?</h3>
+        <p style="margin:0 0 8px">Les versions d’essai ne sont pas encore signées par Microsoft ni Apple. C’est attendu&nbsp;:</p>
+        <ul>
+          <li><strong>Windows</strong>&nbsp;: à «&nbsp;Windows a protégé votre ordinateur&nbsp;», cliquez «&nbsp;Informations complémentaires&nbsp;» puis «&nbsp;Exécuter quand même&nbsp;».</li>
+          <li><strong>macOS</strong>&nbsp;: si l’ouverture est refusée, allez dans Réglages Système → Confidentialité et sécurité, puis «&nbsp;Ouvrir quand même&nbsp;».</li>
+          <li><strong>Linux</strong>&nbsp;: installez le .deb, ou rendez le fichier .AppImage exécutable puis lancez-le.</li>
+        </ul>
+      </div>
+      <div class="apres">
+        <div><h3>Au premier lancement</h3><p>Choisissez un mot de passe, notez votre code de secours hors de l’ordinateur, puis indiquez votre nom. <a href="#documentation" data-doc-lien="demarrer">Voir le détail</a>.</p></div>
+        <div><h3>Pour découvrir</h3><p>Paramètres → «&nbsp;Charger un exemple&nbsp;» remplit une évaluation complète avec des données fictives.</p></div>
+        <div><h3>Les mises à jour</h3><p>Elles vous sont proposées au lancement et ne s’installent qu’avec votre accord. Toutes les versions sont sur la <a href="https://github.com/stephaneheberle111/DNMAX/releases" target="_blank" rel="noopener">page des versions</a>.</p></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= DOCUMENTATION ================= -->
+<div data-vue="documentation" hidden>
+  <section class="page">
+    <div class="wrap">
+      <h1>Documentation</h1>
+      <p class="intro">De l’installation au partage avec d’autres enseignants.</p>
+      <div class="doc">
+        <div class="doc-nav" role="tablist" aria-label="Rubriques" aria-orientation="vertical" id="doc-nav"></div>
+        <div>
+          <label class="sr" for="doc-select">Rubrique</label>
+          <select class="doc-select" id="doc-select"></select>
+          <article class="doc-page" id="doc-page">
+
+<div data-doc="demarrer" data-titre="Premier lancement">
+<h3>Premier lancement</h3>
+<p>Au premier démarrage, DNMAX vous guide en trois étapes&nbsp;:</p>
+<ol>
+<li><strong>Choisissez un mot de passe.</strong> Il protège le fichier qui contient toutes vos données. Il vous sera demandé à chaque ouverture.</li>
+<li><strong>Notez votre code de secours, et gardez-le en lieu sûr.</strong> C’est votre seul recours si vous oubliez votre mot de passe.</li>
+<li><strong>Indiquez votre nom.</strong> Il signe les fichiers que vous envoyez à d’autres enseignants et apparaît dans leur plan d’import.</li>
+</ol>
+<div class="alerte"><p><strong>Personne ne pourra vous aider si vous perdez à la fois votre mot de passe et votre code de secours.</strong> DNMAX n’a ni compte ni serveur&nbsp;: ni l’auteur de l’application, ni votre établissement, ni un service technique n’ont de copie de vos données ou de moyen de les déchiffrer. Notez ce code sur papier, ou dans un gestionnaire de mots de passe, mais pas dans un fichier posé à côté de DNMAX.</p></div>
+<p>Pour voir l’application en situation, ouvrez Paramètres puis «&nbsp;Charger un exemple&nbsp;». Une évaluation complète, deux promotions fictives et leurs résultats sont créés. Attention, l’évaluation en cours est remplacée.</p>
+<p>Si vous changez d’ordinateur, vous pouvez aussi, à cette étape, installer la copie de vos données faite sur l’ancien poste (voir «&nbsp;Changer d’ordinateur&nbsp;»).</p>
+</div>
+
+<div data-doc="evaluer" data-titre="Construire une évaluation">
+<h3>Construire une évaluation</h3>
+<p>Depuis «&nbsp;Mes évaluations&nbsp;», le bouton «&nbsp;Nouvelle évaluation&nbsp;» ouvre un parcours en étapes.</p>
+<h4>1. L’évaluation</h4>
+<p>Intitulé, consignes données aux élèves, livrables attendus, promotions, dates prévues, semestre et enseignants. Vous la rattachez à une unité d’enseignement et à un ou plusieurs enseignements constitutifs, et vous choisissez son échelle.</p>
+<h4>2. Les compétences</h4>
+<p>Cochez les compétences évaluées. Elles viennent du référentiel du diplôme.</p>
+<h4>3. La formulation</h4>
+<p>Formulez chaque ligne avec vos mots, cochez plusieurs lignes et liez-les pour les regrouper sous une même attente, puis faites glisser les livrables sur les lignes qu’ils permettent d’évaluer. Le nom de la colonne («&nbsp;Critère observable&nbsp;», «&nbsp;Indicateur de réussite&nbsp;»…) se règle dans Paramètres, rubrique Vocabulaire&nbsp;; il est repris dans les exports.</p>
+<h4>4. Les élèves</h4>
+<p>Cette étape n’apparaît qu’avec le module Élèves (voir «&nbsp;Avec ou sans élèves&nbsp;»).</p>
+<h4>Les échelles</h4>
+<p>Quatre échelles sont proposées&nbsp;: niveaux de maîtrise, degrés d’acquisition, note chiffrée, ou une échelle personnalisée. Choisissez dans Paramètres celles qui sont actives et celle qui s’applique par défaut. Une évaluation déjà enregistrée garde son échelle.</p>
+<p>Chaque évaluation garde la date et l’auteur de sa dernière modification. Vos changements sont enregistrés automatiquement, y compris quand vous fermez la fenêtre.</p>
+</div>
+
+<div data-doc="eleves" data-titre="Avec ou sans élèves">
+<h3>Avec ou sans élèves&nbsp;: vous choisissez</h3>
+<p>DNMAX ne vous impose pas de saisir vos élèves. Deux façons de travailler sont possibles, et vous pouvez les mélanger selon les évaluations.</p>
+<h4>En dehors de DNMAX</h4>
+<p>Vous construisez l’évaluation sur le référentiel, puis vous l’exportez en Word, Excel ou OpenDocument. L’évaluation individuelle se fait ensuite sur papier ou avec vos propres outils. C’est le fonctionnement par défaut.</p>
+<h4>Dans DNMAX</h4>
+<p>Activez le module <strong>Élèves</strong> dans Paramètres, rubrique Modules. Vous pouvez alors&nbsp;:</p>
+<ul>
+<li>tenir des promotions nominatives&nbsp;;</li>
+<li>saisir chaque élève ligne par ligne, dans la grille de la promotion ou dans sa fiche individuelle, avec observations, appréciation et non-rendus&nbsp;;</li>
+<li>produire un document Word par élève&nbsp;;</li>
+<li>suivre chacun dans la page «&nbsp;Progression élève&nbsp;».</li>
+</ul>
+<p>Le module <strong>Niveaux DN MADE</strong>, qui nécessite le module Élèves, attribue à chaque élève le niveau atteint sur chaque compétence&nbsp;: Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu’il y est évalué avec un niveau de maîtrise suffisant.</p>
+</div>
+
+<div data-doc="explorer" data-titre="Explorer le référentiel">
+<h3>Explorer le référentiel</h3>
+<p>L’espace <strong>Référentiel</strong> s’ouvre sur le diplôme et la mention choisis. Les tuiles du haut filtrent tout l’affichage par unité, enseignement, bloc ou compétence. Cinq vues sont proposées.</p>
+<h4>Carte radiale</h4>
+<p>Trois couronnes autour du diplôme&nbsp;: les unités d’enseignement, les enseignements constitutifs, puis les années, une part par année avec ses deux semestres réunis. Les points extérieurs sont les compétences. Survoler une portion l’éclate et étale ses compétences autour de la roue&nbsp;; un clic fige la carte. La roue tourne quand vous survolez l’une des deux flèches qui l’entourent, et la molette zoome.</p>
+<h4>Carte heuristique</h4>
+<p>Cinq colonnes, de la compétence au diplôme, le semestre entre la compétence et l’enseignement. Survoler une case éclaire son chemin.</p>
+<h4>Tableaux</h4>
+<p>Le tableau enseignements × semestres donne le code que porte chaque enseignement à chaque semestre. Le tableau compétences × semestres donne les enseignements qui portent chaque compétence&nbsp;; une case vide signifie qu’elle n’y est pas mobilisable.</p>
+<h4>Recherche</h4>
+<p>Par code, unité ou mot-clé, avec regroupement au choix et filtres d’année et de semestres.</p>
+</div>
+
+<div data-doc="echanger" data-titre="Échanger entre enseignants">
+<h3>Échanger entre enseignants</h3>
+<p>Les échanges passent par des fichiers <code>.dnmax</code> que vous transmettez comme vous voulez&nbsp;: courriel, clé USB, espace partagé.</p>
+<h4>Une évaluation, sans élèves</h4>
+<p>Vous choisissez les évaluations à envoyer. À la réception, un plan marque chacune comme nouvelle, modifiée ou identique, et l’import attend votre validation. DNMAX vérifie aussi que l’évaluation a été construite sur le même référentiel.</p>
+<h4>Une évaluation avec élèves et résultats</h4>
+<p>Le fichier est chiffré par un mot de passe que vous communiquez séparément. À l’import, promotions et élèves sont rapprochés par leur nom, et les résultats sont fusionnés élève par élève, sans écraser ceux déjà saisis par le destinataire. Un fichier non chiffré ne peut jamais faire entrer de données d’élèves.</p>
+<h4>Un référentiel</h4>
+<p>À la réception, les écarts avec votre référentiel s’affichent en détail. Le référentiel reçu est ajouté comme nouvelle version, sans être activé&nbsp;: vous décidez quand l’utiliser.</p>
+</div>
+
+<div data-doc="exporter" data-titre="Exporter des documents">
+<h3>Exporter des documents</h3>
+<p>Les évaluations s’exportent en <strong>Word</strong>, <strong>Excel</strong> ou <strong>OpenDocument</strong>. La boîte de dialogue «&nbsp;Enregistrer sous&nbsp;» de votre système vous laisse choisir le nom et l’emplacement. Avec le module Élèves, vous pouvez aussi produire un document Word par élève.</p>
+<p><strong>Attention&nbsp;:</strong> les documents exportés ne sont pas chiffrés. Rangez-les en conséquence s’ils contiennent des résultats d’élèves.</p>
+</div>
+
+<div data-doc="donnees" data-titre="Données et sauvegardes">
+<h3>Données et sauvegardes</h3>
+<p>Toutes vos données sont dans le fichier chiffré <code>coffre.dnmax</code>. À côté, le dossier <code>sauvegardes/</code> garde une copie chiffrée par jour d’utilisation, dix au plus.</p>
+<div class="tbl"><table>
+<thead><tr><th>Système</th><th>Dossier</th></tr></thead>
+<tbody>
+<tr><td>Windows</td><td><code>%APPDATA%\fr.dnmax.app\</code></td></tr>
+<tr><td>macOS</td><td><code>~/Library/Application Support/fr.dnmax.app/</code></td></tr>
+<tr><td>Linux</td><td><code>~/.local/share/fr.dnmax.app/</code></td></tr>
+</tbody></table></div>
+<h4>Revenir à une sauvegarde</h4>
+<ol>
+<li>Quittez DNMAX.</li>
+<li>Dans <code>sauvegardes/</code>, copiez le fichier du jour voulu à la place de <code>coffre.dnmax</code>.</li>
+<li>Relancez DNMAX avec le mot de passe qui était en vigueur ce jour-là.</li>
+</ol>
+<div class="alerte"><p>Les sauvegardes sont chiffrées comme le coffre&nbsp;: elles ne vous seront d’aucune aide sans votre mot de passe ou votre code de secours.</p></div>
+</div>
+
+<div data-doc="ordinateur" data-titre="Changer d’ordinateur">
+<h3>Changer d’ordinateur</h3>
+<ol>
+<li>Sur l’ancien poste, créez une copie complète de vos données. Elle est chiffrée.</li>
+<li>Transférez ce fichier sur le nouvel ordinateur.</li>
+<li>Installez DNMAX sur le nouveau poste et, au premier lancement, choisissez d’installer cette copie.</li>
+</ol>
+</div>
+
+<div data-doc="maj" data-titre="Mises à jour">
+<h3>Mises à jour</h3>
+<p>Quand une version plus récente existe, DNMAX vous la propose au lancement. Elle ne s’installe qu’avec votre accord.</p>
+<p>Le risque&nbsp;: qu’une version modifiée par un tiers, contenant un programme malveillant ou détournant vos données, se fasse passer pour une mise à jour. Pour l’éviter, chaque mise à jour est signée par l’auteur de DNMAX, et l’application refuse toute version dont la signature ne correspond pas.</p>
+<p>Sous Linux, seule l’AppImage se met à jour d’elle-même. Avec le paquet .deb, téléchargez la nouvelle version depuis la page Télécharger.</p>
+</div>
+
+<div data-doc="contribuer" data-titre="Contribuer au code">
+<h3>Contribuer au code</h3>
+<p>DNMAX est construit avec Tauri 2 (Rust), TypeScript et Vite. Il vous faut Node.js 22 et npm, Rust (installé par <code>rustup</code>) et les bibliothèques système de Tauri. Sous Debian ou Ubuntu&nbsp;:</p>
+<pre><code>sudo apt-get install libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev</code></pre>
+<p>Puis, dans le dépôt&nbsp;:</p>
+<pre><code>npm ci
+npm run dev</code></pre>
+<div class="tbl"><table>
+<thead><tr><th>Contrôle</th><th>Commande</th></tr></thead>
+<tbody>
+<tr><td>Tests</td><td><code>npm test</code></td></tr>
+<tr><td>Linter</td><td><code>npm run lint</code></td></tr>
+<tr><td>Typage</td><td><code>npm run typecheck</code></td></tr>
+<tr><td>Tests Rust</td><td><code>cargo test --locked</code> (dans <code>src-tauri/</code>)</td></tr>
+<tr><td>Installeur</td><td><code>npm run build</code></td></tr>
+</tbody></table></div>
+<p>L’organisation du code, les pièges connus et la procédure de publication sont détaillés dans le <a href="https://github.com/stephaneheberle111/DNMAX#readme" target="_blank" rel="noopener">README</a> et dans <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/DECISIONS.md" target="_blank" rel="noopener">DECISIONS.md</a>.</p>
+</div>
+
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= IDÉES ET BUGS ================= -->
+<div data-vue="idees" hidden>
+  <section class="page">
+    <div class="wrap">
+      <h1>Idées et bugs</h1>
+      <p class="intro">Une fonction vous manque, quelque chose ne marche pas&nbsp;? Déposez-le ici. Votez pour les propositions des autres&nbsp;: les plus demandées passent en premier.</p>
+      <div class="retours">
+<form class="depot" id="depot" novalidate>
+        <div class="bascule" role="radiogroup" aria-label="Type de retour">
+          <input type="radio" name="type" id="t-idee" value="idee" checked><label for="t-idee">Proposer une idée</label>
+          <input type="radio" name="type" id="t-bug" value="bug"><label for="t-bug">Signaler un bug</label>
+        </div>
+        <div class="champ">
+          <label for="f-titre" id="l-titre">Votre idée en une phrase</label>
+          <input type="text" id="f-titre" maxlength="140" required>
+        </div>
+        <div class="champ">
+          <label for="f-texte" id="l-texte">Pourquoi serait-elle utile&nbsp;?</label>
+          <textarea id="f-texte" maxlength="3000"></textarea>
+          <small id="h-texte">Décrivez la situation de classe où elle vous servirait.</small>
+        </div>
+        <div class="bug-only" hidden>
+          <div class="duo">
+            <div class="champ">
+              <label for="f-sys">Système</label>
+              <select id="f-sys"><option>Windows</option><option>macOS</option><option>Linux</option></select>
+            </div>
+            <div class="champ">
+              <label for="f-version">Version de DNMAX</label>
+              <input type="text" id="f-version" value="0.1.1" maxlength="20">
+            </div>
+          </div>
+          <div class="champ">
+            <label for="f-etapes">Comment reproduire le problème</label>
+            <textarea id="f-etapes" maxlength="3000" placeholder="1. J’ouvre…&#10;2. Je clique sur…&#10;3. Il se passe…"></textarea>
+          </div>
+        </div>
+        <div class="form-pied">
+          <button class="btn primary" type="submit" id="envoyer">Envoyer</button>
+          <a href="#" id="vers-github" target="_blank" rel="noopener">Ouvrir plutôt un ticket GitHub</a>
+        </div>
+        <p class="etat" id="etat" role="status" aria-live="polite"></p>
+      </form>
+
+      <div>
+        <div class="liste-tete">
+          <h3 id="compte">Propositions</h3>
+          <div class="filtres">
+            <label class="sr" for="filtre">Afficher</label>
+            <select id="filtre"><option value="tout">Tout</option><option value="idee">Idées</option><option value="bug">Bugs</option></select>
+            <label class="sr" for="tri">Trier</label>
+            <select id="tri"><option value="votes">Les plus votées</option><option value="recent">Les plus récentes</option></select>
+          </div>
+        </div>
+        <div id="liste"><div class="vide">Chargement des propositions…</div>
+</div>
+</div>
+      </div>
+    </div>
+  </section>
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>DNMAX, logiciel libre sous licence AGPL-3.0-or-later.</div>
+    <div><a href="https://github.com/stephaneheberle111/DNMAX" target="_blank" rel="noopener">Code source</a> &nbsp; <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Journal des modifications</a></div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const REPO = "https://github.com/stephaneheberle111/DNMAX";
+  const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const REF = {"ues":[{"n":"Humanités et culture","c":"#91CC78"},{"n":"Méthodologies, techniques et langues","c":"#ECA765"},{"n":"Ateliers de création","c":"#79A9D3"},{"n":"Professionnalisation","c":"#D394B5"}],"ecs":[{"n":"Humanités","l":"Humanités","u":0,"c":"#91CC78","y":{"1":"EC 1.1","2":"EC 9.1","3":"EC 17.1"},"k":{"1":["C2.1","C4.3","C4.4","C7.1","C8.1","C8.2"],"2":["C2.1","C4.3","C4.4","C7.1"],"3":["C2.1","C4.1","C4.2","C5.2","C6.1"]}},{"n":"Culture des arts, du design et des techniques","l":"Culture des arts et du design","u":0,"c":"#B8E778","y":{"2":"EC 9.2","3":"EC 17.2","1":"EC 1.2"},"k":{"2":["C2.1","C3.1","C4.1","C4.2","C4.3","C4.4","C6.1","C6.2"],"3":["C2.1","C3.1","C4.1","C4.2","C4.3","C4.4","C6.1","C6.2"],"1":["C3.1","C4.1","C4.2","C4.3"]}},{"n":"Outils d’expression et d’exploration créative","l":"Outils d’expression","u":1,"c":"#E4E432","y":{"1":"EC 2.1","2":"EC 10.1","3":"EC 18.1"},"k":{"1":["C3.2","C4.1","C4.2","C4.4","C9.1","C9.2","C10.3"],"2":["C3.2","C4.1","C4.2","C4.4","C9.1","C9.2","C9.3","C10.3"],"3":["C3.2","C4.1","C4.2","C4.4","C9.1","C9.2","C9.3","C10.3"]}},{"n":"Technologies et matériaux","l":"Technologies et matériaux","u":1,"c":"#D1D174","y":{"1":"EC 2.2","2":"EC 10.2","3":"EC 18.2"},"k":{"1":["C3.1","C4.1","C4.2","C4.3","C10.7"],"2":["C3.1","C4.1","C4.2","C4.3","C6.1","C6.2","C10.4","C10.7","C11.2","C11.5"],"3":["C3.1","C4.1","C4.2","C4.3","C6.1","C6.2","C10.4","C10.7","C11.2","C11.5"]}},{"n":"Outils et langages numériques","l":"Outils numériques","u":1,"c":"#F0BB39","y":{"1":"EC 2.3","2":"EC 10.3","3":"EC 18.3"},"k":{"1":["C1.1","C7.1","C10.6"],"2":["C1.1","C2.1","C7.1","C8.1","C8.2","C8.3","C10.6","C10.7","C11.5"],"3":["C1.1","C3.3"]}},{"n":"Langues vivantes","l":"Langues vivantes","u":1,"c":"#F5AB66","y":{"1":"EC 2.4","2":"EC 10.4","3":"EC 18.4"},"k":{"1":["C2.2","C4.1","C4.2"],"2":["C2.2","C4.4","C10.6"],"3":["C2.2","C4.4","C10.6"]}},{"n":"Contextes économiques et juridiques","l":"Contextes éco. et juridiques","u":1,"c":"#F09569","y":{"1":"EC 2.5","3":"EC 18.5","2":"EC 10.5"},"k":{"1":["C2.1","C4.2","C4.3","C4.4","C5.1","C8.1","C9.3"],"3":["C3.3","C4.1","C5.3","C5.4","C8.1"],"2":["C4.2","C5.1","C5.2","C5.3","C5.4"]}},{"n":"Techniques et savoir-faire","l":"Techniques et savoir-faire","u":2,"c":"#8DABC7","y":{"2":"EC 11.1","1":"EC 3.1","3":"EC 19.1"},"k":{"2":["C1.1","C7.1","C10.3","C10.4","C10.6","C10.7","C11.2"],"1":["C7.1","C10.3","C10.4","C10.6","C10.7","C11.2"],"3":["C7.1","C10.3","C10.4","C10.6","C10.7","C11.2"]}},{"n":"Pratiques et mises en œuvre du projet","l":"Mise en œuvre du projet","u":2,"c":"#79A9D3","y":{"1":"EC 3.2","2":"EC 11.2","3":"EC 19.2"},"k":{"1":["C4.1","C4.2","C4.3","C4.4","C8.1","C8.2","C8.3","C10.2","C10.3","C10.4","C10.5","C10.6","C10.7","C11.1","C11.3","C11.4","C11.5"],"2":["C4.1","C4.2","C4.3","C4.4","C5.1","C5.2","C5.3","C5.4","C6.1","C6.2","C8.1","C8.2","C8.3","C9.1","C9.2","C9.3","C10.1","C10.2","C10.3","C10.4","C10.5","C10.6","C10.7","C11.1","C11.2","C11.3","C11.4","C11.5","C11.6"],"3":["C4.1","C4.2","C4.3","C4.4","C5.1","C5.2","C5.3","C5.4","C6.1","C6.2","C7.1","C8.3","C9.1","C9.2","C9.3","C10.1","C10.2","C10.3","C10.4","C10.5","C10.6","C10.7","C11.5"]}},{"n":"Communication et médiation du projet","l":"Communication du projet","u":2,"c":"#9FDBE8","y":{"1":"EC 3.3","2":"EC 11.3","3":"EC 19.3"},"k":{"1":["C1.1","C2.1","C3.3","C4.4","C7.1","C9.2","C9.3","C10.6"],"2":["C1.1","C2.1","C3.3","C4.4","C6.2","C7.1","C9.1","C9.2","C9.3","C10.6"],"3":["C1.1","C2.1","C3.3","C7.1","C9.1","C9.2","C9.3","C10.6"]}},{"n":"Démarche de recherche en lien avec la pratique de projet","l":"Démarche de recherche","u":2,"c":"#96C8D1","y":{"2":"EC 11.4","3":"EC 19.4"},"k":{"2":["C1.1","C3.1","C3.3","C4.1","C4.2","C4.3","C4.4","C5.3","C5.4","C6.1","C6.2","C8.3","C10.1"],"3":["C1.1","C4.1","C4.2","C4.3","C4.4","C6.1","C6.2","C7.1","C7.2","C8.1","C8.2","C8.3","C10.1","C10.2","C11.6"]}},{"n":"Parcours de professionnalisation et poursuite d’étude","l":"Parcours et poursuite d’études","u":3,"c":"#E260A4","y":{"2":"EC 12","3":"EC 20.1","1":"EC 4"},"k":{"2":["C3.1","C3.3","C5.3","C5.4","C9.1","C9.2"],"3":["C3.3","C5.3","C5.4","C9.1","C9.2"],"1":["C5.3","C5.4","C8.2","C9.3"]}},{"n":"Stage","l":"Stage","u":3,"c":"#D394B5","y":{"2":"NE","3":"EC 20.2"},"k":{"2":["C5.1","C5.2","C5.3","C5.4","C7.1","C8.1","C8.2","C8.3","C9.3"],"3":["C5.1","C5.2","C5.3","C5.4","C7.1","C7.2","C8.1","C8.2","C8.3","C9.3"]}}],"comps":{"C1.1":["Utiliser les outils numériques de référence et les règles de sécurité informatique pour acquérir, traiter, produire et diffuser de l’information ainsi que pour collaborer en interne et en externe.","1"],"C2.1":["Se servir aisément des différents registres d’expression écrite et orale de la langue française.","2"],"C2.2":["Communiquer par oral et par écrit, de façon claire et non ambiguë, dans au moins une langue vivante étrangère.","2"],"C3.1":["Désigner les ressources, mettre en oeuvre les outils et les méthodes de recherche propres au champ professionnel abordé.","3"],"C3.2":["Expérimenter des outils de création et de recherche plastique et conceptuelle permettant de structurer les étapes d’un projet et leurs interactions.","3"],"C3.3":["Caractériser et valoriser son identité, ses compétences et son projet professionnel.","3"],"C4.1":["Identifier, sélectionner et analyser avec esprit critique diverses ressources dans son domaine de spécialité.","4"],"C4.2":["Recueillir des ressources pour documenter un sujet et synthétiser ces données en vue de leur exploitation.","4"],"C4.3":["Analyser et synthétiser des données en vue de leur exploitation.","4"],"C4.4":["Développer une argumentation avec un esprit critique.","4"],"C5.1":["Situer son rôle et sa mission au sein d’une organisation pour s’adapter et prendre des initiatives.","5"],"C5.2":["Respecter les principes d’éthique, de déontologie et de responsabilité environnementale.","5"],"C5.3":["Identifier et situer les champs professionnels potentiellement en relation avec les acquis de la mention ainsi que les parcours possibles pour y accéder.","5"],"C5.4":["Prendre en compte l’environnement économique de l’activité professionnelle et appréhender des démarches entrepreneuriales.","5"],"C6.1":["Identifier les enjeux du domaine et des métiers au regard de l’actualité et des perspectives d’évolution, dans une démarche prospective.","6"],"C6.2":["S’informer des pratiques d’atelier et des productions émergentes associant ou non le numérique et la CFAO.","6"],"C7.1":["Développer ses propres ressources, méthodes et outils de médiation et de communication.","7"],"C7.2":["Veiller à l’adéquation des connaissances et compétences aux évolutions et besoin du métier.","7"],"C8.1":["Entretenir des liens et dialoguer au sein des équipes, avec les partenaires du projet et les experts associés.","8"],"C8.2":["Partager ses connaissances au sein d’une équipe et d’un réseau d’acteurs professionnels pluridisciplinaires.","8"],"C8.3":["Engager sa responsabilité au service du projet en prenant en compte les outils et méthodes de conception, de création et de réalisation.","8"],"C9.1":["Faire état d’une écriture et d’une pratique expérimentale personnelle : des dimensions plastique, sensorielle, graphique, volumique,fonctionnelles technologique, structurelle et signifiante des objets et de leur structuration.","9"],"C9.2":["Formaliser et rendre visible ses expériences pour valoriser son identité personnelle : - dans la conception et le pilotage de projets relatifs à l’objet. - dans la gestion de projet et la réalisation d’objets.","9"],"C9.3":["S’auto évaluer et se remettre en question pour apprendre : - Maîtrise des outils, protocoles et techniques relevant de l’objet. - Développement d’une culture professionnelle de l’objet.","9"],"C10.1":["Définir une approche collaborative avec l’ensemble des acteurs concernés : client, service marketing, recherche et développement, ergonomes, fabricant, technicien, artisans, usager et, selon l’échelle du programme, sémiologue, sociologue, philosophe, historien…","10"],"C10.2":["Proposer des orientations créatives et prospectives relevant du domaine de l’objet.","10"],"C10.3":["Expérimenter les différents champs d’hypothèses en prenant en compte l’aspect formel (plastique, volumique, technologique), l’aspect structurel (organisation, articulation des systèmes), leur sens (dimension sémantique), l’usage, le rapport à l’utilisateur (expérience, ergonomie), les matériaux, les process et le rapport à l’environnement (cycle de vie, écoconception).","10"],"C10.4":["Au regard de la demande initiale cahier des charges, commande, vérifier la faisabilité technique et économique de production du projet relevant de l’objet.","10"],"C10.5":["Veiller au respect des échéances et au contrôle technique et artistique selon les contraintes budgétaires, administratives, techniques, légales.","10"],"C10.6":["Énoncer ses idées d’objets et de services, argumenter ses choix au travers de supports et de média adaptés 2D et/ou 3D et/ou supports vidéos et/ou interactifs.","10"],"C10.7":["Mettre en oeuvre les matériaux, les techniques et les technologies innovantes ou traditionnelles, dans le cadre de la conception et de la réalisation partielle d’un projet et dans l’adaptation des process de fabrication, en prenant en compte le cycle de vie et la durabilité (conception d’objets et de leur environnement: produits, procédés, services ou systèmes).","10"],"C11.1":["Saisir les éléments caractéristiques d’un projet relevant de l’objet au travers de maquettes et d’échantillons en prenant en compte les étapes de fabrication.","11"],"C11.2":["Prototyper ou réaliser tout ou partie du projet en incluant les outils numériques CAO, DAO, PAO.","11"],"C11.3":["Établir des principes d’évolution du projet relevant de l’’objet selon des critères explicités.","11"],"C11.4":["Faire la démonstration que le projet relevant de l’objet est bien en adéquation avec la demande initiale et son économie générale.","11"],"C11.5":["Planifier et gérer les différentes étapes d’un projet jusqu’à son rendu et sa validation en prenant en compte les aspects techniques et réglementaires.","11"],"C11.6":["Favoriser le dialogue au sein des équipes et avec les partenaires du projet et les experts associés: client, service marketing, recherche et développement, ergonomes, fabricant, technicien, artisans, usager et, selon l’échelle du programme, sémiologue, sociologue, philosophe, historien…","11"]},"blocs":{"1":"Utiliser les outils numériques de référence","2":"S’exprimer et communiquer à l’oral, à l’écrit et dans au moins une langue étrangère","3":"Se positionner vis-à-vis d’un champ professionnel","4":"Exploiter des données à des fins d’analyse","5":"Agir en tant que professionnel dans le domaine Objet","6":"Exercer des activités de veille professionnelle en design et métiers d’art","7":"Employer différentes techniques d’information et de communication en design et métiers d’art","8":"Coopérer et travailler en équipe","9":"Elaborer une stratégie personnelle relative aux métiers de design d’objet","10":"Développer et mettre en œuvre des outils de création et de recherche relevant du design d’objet","11":"Concevoir, conduire et superviser une production relevant du design d’objet"}};
+
+  /* ---------- Pages ---------- */
+  const VUES = ["accueil","telecharger","documentation","idees"];
+  const TITRES = {accueil:"DNMAX — évaluations par compétences pour le DN MADE",telecharger:"Télécharger DNMAX",documentation:"Documentation de DNMAX",idees:"Idées et bugs — DNMAX"};
+  function route(){
+    const h = location.hash.slice(1);
+    const v = VUES.includes(h) ? h : "accueil";
+    document.querySelectorAll("[data-vue]").forEach(el=>el.hidden = el.dataset.vue!==v);
+    document.querySelectorAll("[data-lien]").forEach(a=>{ if (a.dataset.lien===v) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
+    document.title = TITRES[v];
+    window.scrollTo(0,0);
+  }
+  window.addEventListener("hashchange",route);
+  route();
+
+  /* ---------- La roue du référentiel ---------- */
+  const NS = "http://www.w3.org/2000/svg";
+  const C = 380, RR = {hub:70, ue:[76,166], ec:[172,266], an:[272,312], dot:326};
+  const f2 = n => n.toFixed(2);
+  const mk = (t,a,p) => { const e=document.createElementNS(NS,t); for (const k in a) e.setAttribute(k,a[k]); if (p) p.appendChild(e); return e; };
+  const pt = (r,a) => [C+r*Math.cos(a), C+r*Math.sin(a)];
+  const numCode = c => (c.match(/\d+/g)||[]).map(Number);
+  const cmpCode = (a,b) => { const x=numCode(a), y=numCode(b); for (let i=0;i<Math.max(x.length,y.length);i++){ const d=(x[i]||0)-(y[i]||0); if(d) return d; } return 0; };
+  function secteur(r0,r1,a0,a1){
+    const L=(a1-a0)>Math.PI?1:0, [x0,y0]=pt(r1,a0), [x1,y1]=pt(r1,a1), [x2,y2]=pt(r0,a1), [x3,y3]=pt(r0,a0);
+    return `M${f2(x0)} ${f2(y0)}A${r1} ${r1} 0 ${L} 1 ${f2(x1)} ${f2(y1)}L${f2(x2)} ${f2(y2)}A${r0} ${r0} 0 ${L} 0 ${f2(x3)} ${f2(y3)}Z`;
+  }
+  function teinte(hex,t){ const n=parseInt(hex.slice(1),16), m=v=>Math.round(255-(255-v)*t); return `rgb(${m(n>>16)},${m(n>>8&255)},${m(n&255)})`; }
+  function construireRoue(svg, classe, hub){
+    const racine = mk("g",{class:classe},svg);
+    const N=REF.ecs.length, pas=2*Math.PI/N, GAP=0.012, ecG={}, ueG=[];
+    let a=-Math.PI/2;
+    REF.ues.forEach((u,ui)=>{
+      const ecsU=REF.ecs.map((e,i)=>({e,i})).filter(x=>x.e.u===ui);
+      const a0=a, a1=a+pas*ecsU.length;
+      const g=mk("g",{class:"grp"},racine); g.dataset.am=(a0+a1)/2;
+      mk("path",{d:secteur(RR.ue[0],RR.ue[1],a0+GAP,a1-GAP),fill:teinte(u.c,.85)},g);
+      ueG.push(g);
+      ecsU.forEach(({e,i},k)=>{
+        const b0=a0+k*pas+GAP/2, b1=a0+(k+1)*pas-GAP/2;
+        const g2=mk("g",{class:"grp"},racine); g2.dataset.am=(b0+b1)/2;
+        mk("path",{d:secteur(RR.ec[0],RR.ec[1],b0,b1),fill:teinte(e.c,.62)},g2);
+        const ps=(b1-b0)/3;
+        [1,2,3].forEach(an=>{ if (!e.y[an]) return; mk("path",{d:secteur(RR.an[0],RR.an[1],b0+(an-1)*ps+GAP/4,b0+an*ps-GAP/4),fill:teinte(e.c,.36)},g2); });
+        const toutes=[...new Set([].concat(...Object.values(e.k)))].sort(cmpCode);
+        toutes.forEach((code,j)=>{
+          const ang=b0+((j+.5)/toutes.length)*(b1-b0), [dx,dy]=pt(RR.dot+(j%3)*11,ang);
+          const d=mk("circle",{class:"dot",cx:f2(dx),cy:f2(dy),r:"3.8",fill:e.c},g2); d.dataset.comp=code;
+        });
+        ecG[i]=g2;
+      });
+      a=a1;
+    });
+    mk("circle",{cx:C,cy:C,r:RR.hub,fill:"#1F4D8F"},racine);
+    if (hub){
+      const t=mk("text",{x:C,y:C-4,"text-anchor":"middle",fill:"#fff","font-family":"Bricolage Grotesque, sans-serif","font-weight":"800","font-size":"21"},racine); t.textContent="DN MADE";
+      const t2=mk("text",{x:C,y:C+18,"text-anchor":"middle",fill:"#fff","font-family":"Public Sans, sans-serif","font-size":"13"},racine); t2.textContent="mention Objet";
+    }
+    return {racine, ecG, ueG, dots:[...racine.querySelectorAll(".dot")]};
+  }
+  construireRoue(document.getElementById("roue-hero"),"tourne",false);
+  const roueApp = construireRoue(document.getElementById("roue-app"),"roue2",true);
+
+  /* ---------- Contenus générés de la visite ---------- */
+  const CHOISIES = ["C4.1","C4.3","C10.3","C10.6","C11.2","C2.1"];
+  (function listeComp(){
+    const hote=document.getElementById("liste-comp");
+    let n=0;
+    ["4","10","11","2"].forEach(b=>{
+      const codes=Object.keys(REF.comps).filter(c=>REF.comps[c][1]===b).sort(cmpCode);
+      const montrer=codes.filter((c,i)=>CHOISIES.includes(c)||i<2).slice(0,4);
+      const bl=document.createElement("div");
+      const t=document.createElement("p"); t.className="bloc-l"; t.textContent="Bloc "+b+" — "+REF.blocs[b]; bl.appendChild(t);
+      montrer.forEach(c=>{
+        const l=document.createElement("div"); l.className="cp"+(CHOISIES.includes(c)?" pris":"");
+        if (CHOISIES.includes(c)) l.style.setProperty("--d", 500+(n++)*380);
+        const cb=document.createElement("i"); cb.className="cb";
+        const co=document.createElement("code"); co.textContent=c;
+        const s=document.createElement("span"); s.textContent=REF.comps[c][0];
+        l.append(cb,co,s); bl.appendChild(l);
+      });
+      hote.appendChild(bl);
+    });
+  })();
+  (function grillePromo(){
+    const noms=["Camille Ferrand","Yasmine Haddad","Noé Baptiste","Linh Tran","Timothée Vasseur","Aïssatou Konaté","Sacha Delaunay"];
+    const nv=[[3,4,3,3],[2,3,3,4],[3,2,2,3],[4,4,3,3],[1,2,0,2],[3,3,4,3],[2,2,3,2]];
+    const tb=document.querySelector("#grille-promo tbody");
+    let d=400;
+    noms.forEach((nom,r)=>{
+      const tr=document.createElement("tr");
+      const th=document.createElement("th"); th.className="n"; th.textContent=nom; tr.appendChild(th);
+      nv[r].forEach(l=>{
+        const td=document.createElement("td");
+        if (l===0){ td.className="nr"; td.textContent="non rendu"; }
+        else { td.dataset.l=l; td.style.setProperty("--d",d); d+=55; }
+        tr.appendChild(td);
+      });
+      tb.appendChild(tr);
+    });
+  })();
+  (function progression(){
+    const lignes=[["C4.1",[2,3,3,0],"Guidé — DN2"],["C4.3",[1,2,3,0],"Guidé — DN2"],["C10.3",[0,2,2,0],"Initié — DN1"],["C10.6",[2,2,4,0],"Guidé — DN2"],["C11.2",[0,1,3,0],"Guidé — DN2"],["C2.1",[3,3,3,0],"Guidé — DN2"],["C8.1",[2,0,0,0],"Initié — DN1"]];
+    const hote=document.getElementById("prog-lignes");
+    let d=300;
+    lignes.forEach(([c,ls,niv],r)=>{
+      const l=document.createElement("div"); l.className="lgp a"; l.style.setProperty("--d",100+r*80);
+      const co=document.createElement("code"); co.textContent=c;
+      const lib=document.createElement("span"); lib.className="lib"; lib.textContent=REF.comps[c][0];
+      l.append(co,lib);
+      ls.forEach(v=>{ const s=document.createElement("span"); s.className="c"; if(v){ s.dataset.l=v; s.style.setProperty("--d",d); d+=60; } l.appendChild(s); });
+      const n=document.createElement("span"); n.className="niv"; n.textContent=niv; l.appendChild(n);
+      hote.appendChild(l);
+    });
+  })();
+
+  /* ---------- La visite au défilement ---------- */
+  const app=document.getElementById("app");
+  const etapes=[...document.querySelectorAll(".etape")];
+  const ecrans=[...document.querySelectorAll(".scr")];
+  const onglets=[...app.querySelectorAll(".onglets span")];
+  const reperes=document.getElementById("reperes");
+  etapes.forEach(()=>reperes.appendChild(document.createElement("i")));
+  let actif=null, jeton=0;
+  const plus=(ms,fn,t)=>setTimeout(()=>{ if(t===jeton) fn(); }, reduit?0:ms);
+
+  function sequence(id){
+    const t=++jeton;
+    if (id==="eval"){
+      const cible="Évaluation intermédiaire — Mobilier modulaire en frêne", el=document.getElementById("tw");
+      if (reduit){ el.textContent=cible; return; }
+      el.textContent="";
+      let i=0; const tape=()=>{ if(t!==jeton) return; el.textContent=cible.slice(0,++i); if(i<cible.length) setTimeout(tape,28); };
+      setTimeout(tape,500);
+    }
+    if (id==="comp"){
+      const c=document.getElementById("compteur"); c.textContent="0";
+      CHOISIES.forEach((_,i)=>plus(500+i*380+200,()=>{ c.textContent=String(i+1); },t));
+    }
+    if (id==="ref"){
+      const svg=document.getElementById("roue-app"), info=document.getElementById("ref-info");
+      const remettre=()=>{ svg.classList.remove("dim"); roueApp.racine.querySelectorAll(".grp").forEach(g=>{g.classList.remove("on");g.style.transform="";}); roueApp.dots.forEach(d=>{d.classList.remove("off","hit");d.setAttribute("r","3.8");}); };
+      const ecrire=(titre,texte)=>{ info.style.opacity=0; plus(250,()=>{ info.replaceChildren(); const a=document.createElement("p"); a.className="big"; a.textContent=titre; const b=document.createElement("p"); b.className="mut"; b.textContent=texte; info.append(a,b); info.style.opacity=1; },t); };
+      remettre();
+      info.replaceChildren(); const p0=document.createElement("p"); p0.className="big"; p0.textContent="4 unités, 13 enseignements, 37 compétences"; const p1=document.createElement("p"); p1.className="mut"; p1.textContent="Les points autour de la roue sont les compétences."; info.append(p0,p1);
+      const iEc=REF.ecs.findIndex(e=>e.l==="Mise en œuvre du projet");
+      plus(1800,()=>{
+        svg.classList.add("dim"); const g=roueApp.ecG[iEc]; g.classList.add("on");
+        const am=+g.dataset.am; g.style.transform=`translate(${(Math.cos(am)*18).toFixed(1)}px,${(Math.sin(am)*18).toFixed(1)}px)`;
+        const e=REF.ecs[iEc]; const n=new Set([].concat(...Object.values(e.k))).size;
+        ecrire("Pratiques et mises en œuvre du projet", `${e.y[1]}, ${e.y[2]} puis ${e.y[3]} selon l’année. ${n} compétences y sont mobilisées.`);
+      },t);
+      plus(4200,()=>{
+        remettre(); svg.classList.add("dim");
+        const code="C10.6"; let nb=0;
+        REF.ecs.forEach((e,i)=>{ if(Object.values(e.k).some(l=>l.includes(code))){ nb++; const g=roueApp.ecG[i]; g.classList.add("on"); const am=+g.dataset.am; g.style.transform=`translate(${(Math.cos(am)*10).toFixed(1)}px,${(Math.sin(am)*10).toFixed(1)}px)`; } });
+        roueApp.dots.forEach(d=>{ if(d.dataset.comp===code){ d.classList.add("hit"); d.setAttribute("r","8"); } else d.classList.add("off"); });
+        ecrire("Compétence "+code, `Travaillée dans ${nb} enseignements. ${REF.comps[code][0]}`);
+      },t);
+    }
+    if (id==="coffre"){
+      const m=document.getElementById("mdp"); m.textContent="";
+      for (let i=0;i<10;i++) plus(600+i*110,()=>{ m.textContent+="•"; },t);
+    }
+  }
+  function activer(id){
+    if (id===actif) return;
+    actif=id;
+    const st=etapes.find(e=>e.dataset.scr===id);
+    ecrans.forEach(s=>s.classList.toggle("on",s.dataset.scr===id));
+    etapes.forEach(e=>e.classList.toggle("vu",e===st));
+    const tab=+st.dataset.tab;
+    onglets.forEach((o,i)=>o.classList.toggle("on",i===tab));
+    app.classList.toggle("ferme",id==="coffre");
+    [...reperes.children].forEach((r,i)=>r.classList.toggle("on",etapes[i]===st));
+    sequence(id);
+  }
+  const mobile=window.matchMedia("(max-width:900px)").matches;
+  // L’étape active est celle qui croise la ligne de lecture, dans les deux sens de défilement.
+  let rafEtape=0;
+  const majEtape=()=>{
+    rafEtape=0;
+    const ligne=window.innerHeight*(mobile?0.7:0.5);
+    let choix=null, meilleur=Infinity;
+    for (const e of etapes){
+      const r=e.getBoundingClientRect();
+      if (r.height===0) continue;
+      const d = ligne<r.top ? r.top-ligne : (ligne>r.bottom ? ligne-r.bottom : 0);
+      if (d<meilleur){ meilleur=d; choix=e; }
+    }
+    if (choix) activer(choix.dataset.scr);
+  };
+  const demanderEtape=()=>{ if(!rafEtape) rafEtape=requestAnimationFrame(majEtape); };
+  window.addEventListener("scroll",demanderEtape,{passive:true});
+  window.addEventListener("resize",demanderEtape);
+  requestAnimationFrame(majEtape);
+  activer("saved");
+  const versVisite=()=>document.getElementById("visite").scrollIntoView({behavior:reduit?"auto":"smooth"});
+  document.getElementById("vers-visite").addEventListener("click",versVisite);
+  document.getElementById("defiler").addEventListener("click",versVisite);
+
+  /* ---------- Système détecté ---------- */
+  const ua = navigator.userAgent;
+  const os = /Windows/i.test(ua) ? "win" : /Mac/i.test(ua) && !/iPhone|iPad/i.test(ua) ? "mac" : /Linux/i.test(ua) && !/Android/i.test(ua) ? "linux" : null;
+  if (os){
+    const ligne = document.querySelector('.sys[data-os="'+os+'"]');
+    ligne.classList.add("reco");
+    const b = document.createElement("span"); b.className="badge"; b.textContent="Votre système";
+    ligne.querySelector("div").appendChild(b);
+    document.getElementById("systemes").prepend(ligne);
+    document.getElementById("f-sys").value = {win:"Windows",mac:"macOS",linux:"Linux"}[os];
+  }
+
+  /* ---------- Documentation ---------- */
+  const pages = [...document.querySelectorAll("[data-doc]")];
+  const nav = document.getElementById("doc-nav");
+  const sel = document.getElementById("doc-select");
+  function montrer(id, focus){
+    pages.forEach(p=>p.hidden = p.dataset.doc!==id);
+    nav.querySelectorAll("button").forEach(b=>{ const on=b.dataset.cible===id; b.setAttribute("aria-selected",on); b.tabIndex=on?0:-1; if(on&&focus) b.focus(); });
+    sel.value = id;
+  }
+  pages.forEach(p=>{
+    p.setAttribute("role","tabpanel"); p.id="doc-"+p.dataset.doc;
+    const b=document.createElement("button"); b.type="button"; b.setAttribute("role","tab"); b.dataset.cible=p.dataset.doc; b.textContent=p.dataset.titre; b.setAttribute("aria-controls",p.id);
+    b.addEventListener("click",()=>montrer(p.dataset.doc));
+    nav.appendChild(b);
+    const o=document.createElement("option"); o.value=p.dataset.doc; o.textContent=p.dataset.titre; sel.appendChild(o);
+  });
+  nav.addEventListener("keydown",e=>{
+    if(!["ArrowDown","ArrowUp"].includes(e.key)) return;
+    e.preventDefault();
+    const ids=pages.map(p=>p.dataset.doc); const i=ids.indexOf(sel.value);
+    montrer(ids[(i+(e.key==="ArrowDown"?1:-1)+ids.length)%ids.length], true);
+  });
+  sel.addEventListener("change",()=>montrer(sel.value));
+  document.querySelectorAll("[data-doc-lien]").forEach(a=>a.addEventListener("click",()=>montrer(a.dataset.docLien)));
+  montrer("demarrer");
+
+  /* Formulaire */
+  const form = document.getElementById("depot");
+  const f = id => document.getElementById(id);
+  const etat = f("etat");
+  function typeChoisi(){ return form.querySelector('input[name=type]:checked').value; }
+  function majType(){
+    const bug = typeChoisi()==="bug";
+    form.querySelector(".bug-only").hidden = !bug;
+    f("l-titre").textContent = bug ? "Le problème en une phrase" : "Votre idée en une phrase";
+    f("l-texte").textContent = bug ? "Ce qui se passe, et ce que vous attendiez" : "Pourquoi serait-elle utile ?";
+    f("h-texte").textContent = bug ? "Recopiez le message d’erreur s’il y en a un." : "Décrivez la situation de classe où elle vous servirait.";
+    majLienGithub();
+  }
+  function lienGithub(){
+    const bug = typeChoisi()==="bug";
+    const titre = (bug?"[Bug] ":"[Idée] ") + (f("f-titre").value.trim() || "");
+    let corps = f("f-texte").value.trim();
+    if (bug) corps += "\n\n**Système :** "+f("f-sys").value+"\n**Version :** "+f("f-version").value.trim()+"\n\n**Pour reproduire :**\n"+f("f-etapes").value.trim();
+    return REPO+"/issues/new?title="+encodeURIComponent(titre)+"&body="+encodeURIComponent(corps);
+  }
+  function majLienGithub(){ f("vers-github").href = lienGithub(); }
+  form.addEventListener("change",e=>{ if(e.target.name==="type") majType(); majLienGithub(); });
+  form.addEventListener("input",majLienGithub);
+  majType();
+
+  /* Boîte à idées partagée */
+  const liste = f("liste");
+  let db=null, user=null, uid=null, proprio=false, peutEcrire=false;
+  const retours = new Map();   // id de l’auteur → éléments
+  const votes = new Map();     // id du votant → identifiants votés
+  let statuts = {};
+  let noms = {};
+  let charge = {retours:false, votes:false};
+  let file = Promise.resolve();
+  const STATUTS = ["Nouveau","Retenu","En cours","Fait","Écarté"];
+
+  function enFile(fn){ file = file.then(fn,fn); return file; }
+  function cle(auteur,id){ return auteur+":"+id; }
+  function tous(){
+    const out=[];
+    retours.forEach((items,auteur)=>items.forEach(it=>out.push({...it,auteur,cle:cle(auteur,it.id)})));
+    const total={};
+    votes.forEach(ids=>ids.forEach(k=>total[k]=(total[k]||0)+1));
+    out.forEach(it=>it.votes=total[it.cle]||0);
+    return out;
+  }
+  function dateFr(iso){ try{ return new Date(iso).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}); }catch(e){ return ""; } }
+
+  function rendre(){
+    if (!db){ return; }
+    if (!charge.retours){ return; }
+    let items = tous();
+    const filtre=f("filtre").value, tri=f("tri").value;
+    if (filtre!=="tout") items = items.filter(i=>i.type===filtre);
+    items.sort((a,b)=> tri==="votes" ? (b.votes-a.votes)||(b.cree>a.cree?1:-1) : (b.cree>a.cree?1:-1));
+    const n = tous().length;
+    f("compte").textContent = n ? n+(n>1?" propositions":" proposition") : "Propositions";
+    liste.replaceChildren();
+    if (!items.length){
+      const v=document.createElement("div"); v.className="vide";
+      v.textContent = filtre==="tout" ? "Rien pour l’instant. Votre proposition sera la première de la liste." : "Aucune proposition de ce type pour l’instant.";
+      liste.appendChild(v); return;
+    }
+    const mesVotes = new Set(votes.get(uid)||[]);
+    items.forEach(it=>{
+      const el=document.createElement("article"); el.className="item";
+      const vb=document.createElement("button"); vb.className="vote"; vb.type="button";
+      const vote=mesVotes.has(it.cle);
+      vb.setAttribute("aria-pressed",vote);
+      vb.setAttribute("aria-label",(vote?"Retirer mon vote":"Voter")+" pour : "+it.titre+" ("+it.votes+" votes)");
+      vb.disabled = !peutEcrire;
+      const nb=document.createElement("span"); nb.textContent=it.votes;
+      const lb=document.createElement("small"); lb.textContent=vote?"voté":"voter";
+      vb.append(nb,lb);
+      vb.addEventListener("click",()=>basculerVote(it.cle));
+      const c=document.createElement("div");
+      const h=document.createElement("h4"); h.textContent=it.titre;
+      c.appendChild(h);
+      if (it.texte){ const p=document.createElement("p"); p.className="corps"; p.textContent=it.texte; c.appendChild(p); }
+      if (it.type==="bug"){
+        const d=document.createElement("div"); d.className="details";
+        d.textContent=[it.systeme, it.version?("version "+it.version):""].filter(Boolean).join(", ");
+        c.appendChild(d);
+        if (it.etapes){ const p=document.createElement("p"); p.className="corps"; p.textContent=it.etapes; c.appendChild(p); }
+      }
+      const pied=document.createElement("div"); pied.className="pied";
+      const tg=document.createElement("span"); tg.className="tag "+(it.type==="bug"?"bug":"idee"); tg.textContent=it.type==="bug"?"Bug":"Idée";
+      pied.appendChild(tg);
+      const st=statuts[it.cle]||"Nouveau";
+      if (proprio){
+        const s=document.createElement("select"); s.className="statut-sel"; s.setAttribute("aria-label","Statut");
+        STATUTS.forEach(x=>{const o=document.createElement("option"); o.textContent=x; s.appendChild(o);}); s.value=st;
+        s.addEventListener("change",()=>changerStatut(it.cle,s.value));
+        pied.appendChild(s);
+      } else {
+        const ts=document.createElement("span"); ts.className="tag statut"; ts.textContent=st; pied.appendChild(ts);
+      }
+      const qui=document.createElement("span");
+      qui.textContent=(it.auteur===uid?"Vous":(noms[it.auteur]||"Un enseignant"))+", le "+dateFr(it.cree);
+      pied.appendChild(qui);
+      if (it.auteur===uid){
+        const sup=document.createElement("button"); sup.type="button"; sup.className="lien-mini"; sup.textContent="Supprimer";
+        sup.addEventListener("click",()=>supprimer(it.id));
+        pied.appendChild(sup);
+      }
+      c.appendChild(pied);
+      el.append(vb,c);
+      liste.appendChild(el);
+    });
+    resoudreNoms();
+  }
+
+  async function resoudreNoms(){
+    if (!user || !user.profiles) return;
+    const ids=[...retours.keys()].filter(i=>i!==uid && !(i in noms));
+    if (!ids.length) return;
+    try{
+      const ps=await user.profiles(ids);
+      let change=false;
+      ids.forEach(i=>{ noms[i]=(ps[i]&&ps[i].name)||"Un enseignant"; change=true; });
+      if (change) rendre();
+    }catch(e){}
+  }
+
+  function horsLigne(){
+    f("compte").textContent="Propositions";
+    liste.replaceChildren();
+    const v=document.createElement("div"); v.className="vide";
+    v.innerHTML="";
+    const p1=document.createElement("p"); p1.style.margin="0 0 10px";
+    p1.textContent="Les idées et les bugs signalés sont suivis publiquement sur GitHub.";
+    const p2=document.createElement("p"); p2.style.margin="0";
+    p2.append("Le bouton Envoyer ouvre un ticket prérempli sur ");
+    const a=document.createElement("a"); a.href=REPO+"/issues"; a.target="_blank"; a.rel="noopener"; a.textContent="GitHub"; p2.append(a,".");
+    v.append(p1,p2); liste.appendChild(v);
+    f("envoyer").textContent="Envoyer sur GitHub";
+    f("vers-github").hidden=true;
+  }
+
+  async function demarrer(){
+    // Sur ce site, il n'y a pas de liste partagée : les propositions passent par GitHub.
+    // La suite de cette fonction attend un service de données (user, db) qui reste à brancher.
+    if (!db || !user){ db=null; horsLigne(); return; }
+    try{ uid = await user.id(); }catch(e){ db=null; horsLigne(); return; }
+    proprio = !!(user.isOwner && user.isOwner());
+    let peut=null; try{ peut = user.can ? await user.can("data.write") : null; }catch(e){}
+    peutEcrire = peut!==false;
+    if (!peutEcrire){
+      f("envoyer").textContent="Envoyer sur GitHub";
+      f("vers-github").hidden=true;
+    }
+    const minuterie=setTimeout(()=>{
+      if (!charge.retours){ liste.replaceChildren(); const v=document.createElement("div"); v.className="vide"; v.textContent="Les propositions ne répondent pas pour l’instant. Elles apparaîtront dès que la connexion sera rétablie."; liste.appendChild(v); }
+    },10000);
+    db.collection("retours").onSnapshot(s=>{
+      retours.clear();
+      s.docs.forEach(d=>{ const x=d.data(); if (x && Array.isArray(x.items)) retours.set(d.id,x.items); });
+      if (!s.metadata.fromCache){ charge.retours=true; clearTimeout(minuterie); }
+      else charge.retours=true;
+      rendre();
+    },()=>{ clearTimeout(minuterie); liste.replaceChildren(); const v=document.createElement("div"); v.className="vide"; v.textContent="Impossible de lire les propositions. Rechargez la page plus tard, ou passez par GitHub."; liste.appendChild(v); });
+    db.collection("votes").onSnapshot(s=>{
+      votes.clear();
+      s.docs.forEach(d=>{ const x=d.data(); if (x && Array.isArray(x.ids)) votes.set(d.id,x.ids); });
+      rendre();
+    },()=>{});
+    db.doc("statuts/liste").onSnapshot(s=>{
+      statuts = (s.exists && s.data().map) ? {...s.data().map} : {};
+      rendre();
+    },()=>{});
+  }
+
+  function message(txt,classe){ etat.textContent=txt; etat.className="etat"+(classe?" "+classe:""); }
+
+  form.addEventListener("submit",e=>{
+    e.preventDefault();
+    const titre=f("f-titre").value.trim();
+    if (!titre){ message("Écrivez au moins une phrase dans le premier champ.","err"); f("f-titre").focus(); return; }
+    if (!db || !peutEcrire){ window.open(lienGithub(),"_blank","noopener"); return; }
+    const bug=typeChoisi()==="bug";
+    const item={ id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), type:bug?"bug":"idee", titre, texte:f("f-texte").value.trim(), cree:new Date().toISOString() };
+    if (bug){ item.systeme=f("f-sys").value; item.version=f("f-version").value.trim(); item.etapes=f("f-etapes").value.trim(); }
+    f("envoyer").disabled=true; message("Envoi…");
+    enFile(async()=>{
+      const miens=retours.get(uid)||[];
+      await db.doc("retours/"+uid).set({items:[...miens,item]});
+    }).then(()=>{
+      message(bug?"Bug signalé. Merci, il apparaît dans la liste.":"Idée envoyée. Merci, elle apparaît dans la liste.","ok");
+      f("f-titre").value=""; f("f-texte").value=""; f("f-etapes").value=""; majLienGithub();
+    }).catch(err=>{
+      message("L’envoi n’a pas abouti ("+(err&&err.code||"erreur")+"). Réessayez, ou utilisez le lien GitHub.","err");
+    }).finally(()=>{ f("envoyer").disabled=false; });
+  });
+
+  function basculerVote(k){
+    if (!db || !peutEcrire) return;
+    const s=new Set(votes.get(uid)||[]);
+    s.has(k)?s.delete(k):s.add(k);
+    const ids=[...s];
+    votes.set(uid,ids); rendre();
+    enFile(()=>db.doc("votes/"+uid).set({ids})).catch(()=>message("Votre vote n’a pas été enregistré. Réessayez.","err"));
+  }
+  function supprimer(id){
+    if (!confirm("Supprimer cette proposition ?")) return;
+    enFile(async()=>{
+      const reste=(retours.get(uid)||[]).filter(x=>x.id!==id);
+      await db.doc("retours/"+uid).set({items:reste});
+    }).catch(()=>message("La suppression n’a pas abouti. Réessayez.","err"));
+  }
+  function changerStatut(k,v){
+    const map={...statuts,[k]:v};
+    statuts=map;
+    enFile(()=>db.doc("statuts/liste").set({map})).catch(()=>message("Le statut n’a pas été enregistré.","err"));
+  }
+
+  f("filtre").addEventListener("change",rendre);
+  f("tri").addEventListener("change",rendre);
+  demarrer();
+
+})();
+</script>
+</body>
+</html>

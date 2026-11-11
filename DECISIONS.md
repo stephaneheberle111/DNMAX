@@ -67,6 +67,8 @@ L'icône est un simple pavé « DN » généré depuis `src-tauri/icone-source.s
 
 L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom proposé et des octets, l'enveloppe nettoie le nom, ouvre « Enregistrer sous » et écrit là où l'enseignant l'a décidé. Aucun droit d'accès général aux fichiers n'est accordé à la page.
 
+La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en indique un. Après l'enregistrement, l'application propose d'ouvrir le document avec le logiciel par défaut du système : l'enveloppe retient pour cela l'emplacement du dernier export, que la page ne connaît jamais — elle ne peut donc faire ouvrir que ce que l'enseignant vient d'enregistrer lui-même.
+
 ## 8. Les données sont chiffrées par un mot de passe
 
 **Retenu** : tout ce que l'enseignant saisit est enregistré dans un seul fichier chiffré, `coffre.dnmax`, déverrouillé par un mot de passe demandé à chaque ouverture. Un code de secours, affiché une seule fois à la création, permet de choisir un nouveau mot de passe en cas d'oubli.
@@ -92,7 +94,7 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 
 **Conséquence assumée** : mot de passe **et** code de secours perdus, les données sont irrécupérables, y compris par l'auteur de l'application.
 
-**Reste à faire** : changer de mot de passe sans passer par le code de secours, restaurer une sauvegarde depuis l'application, verrouiller sans quitter.
+**Reste à faire** : restaurer une sauvegarde depuis l'application, verrouiller sans quitter. (Le changement de mot de passe est décrit dans la décision 18.)
 
 ## 9. Installeurs construits par l'intégration continue, sans certificat
 
@@ -131,7 +133,7 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 
 **Limite assumée** : le nom est déclaratif. Rien n'empêche de saisir le nom d'un autre, ni de retoucher un fichier d'échange : c'est une information entre personnes de confiance, pas une preuve. Une signature vérifiable demanderait d'échanger des clés entre enseignants.
 
-**Reste à faire** : changer son nom depuis l'application.
+Le nom se corrige dans « Mon compte » (décision 18).
 
 ## 12. Un référentiel reçu devient une nouvelle version, jamais activée d'office
 
@@ -143,7 +145,7 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 
 **Évaluations du même fichier** : une évaluation construite sur le référentiel reçu est rattachée à la version créée.
 
-**Limite** : un référentiel dont le diplôme ou la mention n'existe pas chez le destinataire n'est pas importable ; il faut d'abord créer ce diplôme dans « Mon établissement ».
+**Diplôme absent chez le destinataire** : le référentiel reçu crée alors ce diplôme, dont il devient le référentiel de travail et la version en vigueur — il n'y a rien d'existant à protéger, et le diplôme doit être utilisable tout de suite. Sur une installation neuve, le diplôme vide créé d'office est renseigné plutôt que doublé.
 
 ## 13. Les élèves et leurs résultats ne voyagent que dans un fichier chiffré
 
@@ -188,3 +190,37 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 
 - sous Linux, seule l'AppImage se met à jour d'elle-même ; un paquet `.deb` se remplace à la main ;
 - la perte de la clé privée empêcherait de publier des mises à jour acceptées par les postes déjà installés : il faudrait leur faire réinstaller l'application.
+
+## 16. L'application est livrée vide
+
+**Retenu** : une installation neuve ne contient ni référentiel, ni diplôme renseigné, ni évaluation d'exemple, ni brouillon prérempli. Seule subsiste la liste générique des types de livrables, modifiable dans « Mon établissement ».
+
+**Pourquoi** : le référentiel d'un diplôme n'est pas une donnée de l'application ; il évolue, diffère d'une mention à l'autre, et ne concerne pas tous les enseignants. Le livrer d'office l'aurait figé dans chaque version.
+
+**Comment obtenir un référentiel** : sur une installation vide, un encart propose de télécharger celui du DN MADE mention Objet (fichier `site/referentiels/dn-made-objet.dnmax`, ouvert dans le navigateur) puis de le recevoir par le circuit habituel de l'échange, qui crée le diplôme (décision 12). On peut aussi recevoir celui d'un autre enseignant ou le construire dans l'onglet Référentiel.
+
+**L'application n'ouvre aucune connexion pour cela** : elle demande au système d'ouvrir l'adresse dans le navigateur. Seules les adresses du site et du dépôt du projet sont autorisées (`src-tauri/capabilities/default.json`, `src/configuration.ts`).
+
+**Exemple** : « charge un exemple » reste disponible pour découvrir l'application ; faute de référentiel, il installe celui du DN MADE mention Objet, toujours présent dans le code à cette seule fin.
+
+**Adaptations de l'interface historique** : référentiel de départ vide (`REF_VIDE`), brouillon de départ vide, et installation du référentiel d'origine par `loadDemo` quand il n'y en a aucun.
+
+## 17. L'exemple se retire sans toucher au travail de l'enseignant
+
+**Retenu** : au moment où l'enseignant charge l'exemple, l'application note l'état de ses données juste avant et juste après (clé `dnmax.exemple`, dans le coffre). Un bouton « Retirer l'exemple » apparaît alors ; il annonce ce qui sera retiré avant de le faire.
+
+**Règle** : la différence entre « avant » et « après » dit exactement ce que l'exemple a apporté. Ne sont retirées que les évaluations et promotions créées par l'exemple ; tout ce que l'enseignant a créé ensuite est conservé. Une promotion d'exemple à laquelle il a rattaché une évaluation est gardée. L'établissement, le référentiel et les réglages reviennent à leur état d'avant **seulement s'ils n'ont pas été modifiés depuis** ; sinon ils sont laissés tels quels et l'enseignant en est prévenu.
+
+**Pourquoi pas un simple retour à l'état d'avant** : il effacerait aussi ce que l'enseignant a saisi après avoir chargé l'exemple.
+
+**Limite** : l'exemple chargé avant cette version n'a pas d'état « avant » enregistré et ne peut pas être retiré par ce bouton.
+
+## 18. « Mon compte » : nom, mot de passe, à propos et retours
+
+**Retenu** : un bouton « Mon compte… » ouvre trois rubriques.
+
+- **Nom** : l'enseignant peut le corriger ; son identifiant d'installation ne change pas, et les modifications déjà signées gardent l'ancien nom.
+- **Mot de passe** : il se change en fournissant l'ancien. Seule la clé de données est ré-enfermée sous le nouveau mot de passe ; le contenu n'est pas rechiffré et le code de secours reste valable. Les sauvegardes antérieures s'ouvrent toujours avec le mot de passe en vigueur le jour où elles ont été faites.
+- **À propos** : version, licence, et trois liens ouverts dans le navigateur (idées et bugs, site, code source).
+
+**Canal de retours** : la page « Idées et bugs » du site, qui ouvre un ticket prérempli sur GitHub. Un enseignant sans compte GitHub ne peut donc pas déposer lui-même un retour par ce canal.

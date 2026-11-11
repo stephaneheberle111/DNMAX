@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { getVersion } from "@tauri-apps/api/app";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 import type { Entrees } from "./domaine/magasin-memoire";
@@ -213,4 +215,44 @@ export async function chercherMiseAJour(): Promise<MiseAJour | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Ouvre une adresse du projet dans le navigateur de l'enseignant.
+ * Seules les adresses autorisées par l'enveloppe (voir `src/configuration.ts`) sont acceptées.
+ *
+ * @throws si l'adresse n'est pas autorisée ou si aucun navigateur ne peut être ouvert.
+ */
+export async function ouvrirDansNavigateur(adresse: string): Promise<void> {
+  await openUrl(adresse);
+}
+
+/**
+ * Remplace le mot de passe des données, après vérification de l'ancien.
+ * Le code de secours reste valable.
+ *
+ * @throws ErreurCoffre « acces-refuse » si l'ancien mot de passe est incorrect,
+ *   « mot-de-passe-trop-court » si le nouveau ne convient pas.
+ */
+export async function changerMotDePasse(ancienMotDePasse: string, nouveauMotDePasse: string): Promise<void> {
+  await appelerCoffre("changer_mot_de_passe", { ancienMotDePasse, nouveauMotDePasse });
+}
+
+/** Lit la version de l'application ; texte vide si elle ne peut pas être lue. */
+export async function lireVersion(): Promise<string> {
+  try {
+    return await getVersion();
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Ouvre le dernier document exporté avec le logiciel par défaut du système
+ * (traitement de texte, tableur…).
+ *
+ * @throws si aucun document n'a été exporté ou si le système ne sait pas l'ouvrir.
+ */
+export async function ouvrirDernierExport(): Promise<void> {
+  await invoke("ouvrir_dernier_export");
 }

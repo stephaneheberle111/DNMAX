@@ -2,7 +2,9 @@
 import { describe, expect, it } from "vitest";
 import {
   comparerContenus,
+  creerDiplome,
   integrerVersion,
+  trouverDiplomeVierge,
   lireListes,
   preparerEnvoi,
   type Partie,
@@ -28,7 +30,7 @@ const STRUCTURE = {
   competences: [{ id: "c0", bloc: "1", ecs: [{ id: "e0", sems: ["S1"] }] }],
 };
 
-function compteur(): (partie: Partie) => string {
+function compteur(): (partie: Partie | "diplome") => string {
   let numero = 0;
   return (partie) => {
     numero += 1;
@@ -152,6 +154,74 @@ describe("integrerVersion", () => {
   it("rend null quand les données locales n'ont pas la forme attendue", () => {
     expect(integrerVersion(null, "d0", recu(), VERSION, compteur())).toBeNull();
     expect(integrerVersion({ dico: "illisible" }, "d0", recu(), VERSION, compteur())).toBeNull();
+  });
+});
+
+describe("trouverDiplomeVierge", () => {
+  const VIDE = { ues: [], ecs: [], blocs: [], competences: [] };
+  const vierge = { diplomes: [{ id: "d0", nom: "Diplôme", mention: "" }], dico: VIDE, refs: { d0: VIDE }, versions: {} };
+
+  it("reconnaît le diplôme vide d'une installation neuve", () => {
+    expect(trouverDiplomeVierge(vierge, new Set())).toBe("d0");
+    expect(trouverDiplomeVierge({ diplomes: vierge.diplomes }, new Set())).toBe("d0");
+  });
+
+  it("ne le propose pas s'il a un référentiel, une version ou une promotion", () => {
+    expect(trouverDiplomeVierge({ ...vierge, refs: { d0: STRUCTURE } }, new Set())).toBeNull();
+    expect(trouverDiplomeVierge({ ...vierge, versions: { d0: [{ id: "v1" }] } }, new Set())).toBeNull();
+    expect(trouverDiplomeVierge(vierge, new Set(["d0"]))).toBeNull();
+  });
+
+  it("ne propose rien quand il y a plusieurs diplômes ou aucun", () => {
+    expect(trouverDiplomeVierge({ ...vierge, diplomes: [...vierge.diplomes, { id: "d1" }] }, new Set())).toBeNull();
+    expect(trouverDiplomeVierge({ ...vierge, diplomes: [] }, new Set())).toBeNull();
+    expect(trouverDiplomeVierge(null, new Set())).toBeNull();
+  });
+});
+
+describe("creerDiplome", () => {
+  const VIDE = { ues: [], ecs: [], blocs: [], competences: [] };
+  const vierge = {
+    diplomes: [{ id: "d0", nom: "Diplôme", mention: "" }],
+    activeDiplome: "d0",
+    dico: VIDE,
+    refs: { d0: VIDE },
+    versions: {},
+    valide: {},
+    niveaux: [],
+  };
+  const NIVEAUX = [{ label: "Initié", annee: 1 }];
+
+  it("renseigne le diplôme vierge : nom, référentiel de travail, version en vigueur, niveaux", () => {
+    const apres = creerDiplome(vierge, recu({ contenuLisible: { meta: { niveaux: NIVEAUX } } }), VERSION, "d0", compteur());
+    expect(apres).toMatchObject({
+      diplomes: [{ id: "d0", nom: "DN MADE", mention: "Objet" }],
+      activeDiplome: "d0",
+      dico: { competences: [{ id: "c0", code: "C1.1", libelle: "Analyser" }] },
+      refs: { d0: STRUCTURE },
+      versions: { d0: [{ ...VERSION, snap: STRUCTURE }] },
+      valide: { d0: "vNouvelle" },
+      niveaux: NIVEAUX,
+    });
+  });
+
+  it("ajoute un diplôme à côté des autres sans changer le diplôme affiché ni leurs données", () => {
+    const existant = { ...vierge, refs: { d0: STRUCTURE }, dico: DICTIONNAIRE, valide: { d0: "v1" }, niveaux: [{ label: "Local" }] };
+    const apres = creerDiplome(existant, recu({ mention: "Graphisme", contenuLisible: { meta: { niveaux: NIVEAUX } } }), VERSION, null, compteur());
+    expect(apres).toMatchObject({
+      diplomes: [{ id: "d0" }, { id: "diplome-neuf-1", nom: "DN MADE", mention: "Graphisme" }],
+      activeDiplome: "d0",
+      refs: { d0: STRUCTURE, "diplome-neuf-1": STRUCTURE },
+      valide: { d0: "v1", "diplome-neuf-1": "vNouvelle" },
+      niveaux: [{ label: "Local" }],
+    });
+  });
+
+  it("ne modifie pas les données reçues en paramètre et refuse des données illisibles", () => {
+    const avant = JSON.stringify(vierge);
+    creerDiplome(vierge, recu(), VERSION, "d0", compteur());
+    expect(JSON.stringify(vierge)).toBe(avant);
+    expect(creerDiplome({ dico: 3 }, recu(), VERSION, null, compteur())).toBeNull();
   });
 });
 

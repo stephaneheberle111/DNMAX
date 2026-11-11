@@ -45,13 +45,20 @@ import {
 /** Ce dont l'écran d'échange a besoin de l'application. */
 export interface AccesDonnees {
   /** L'enseignant qui utilise l'application : son nom signe les fichiers qu'il envoie. */
-  identite: Identite;
+  readonly identite: Identite;
+  /** Change le nom de l'enseignant ; rend `false` si le nom proposé est vide. */
+  renommer(nom: string): boolean;
   lireEntrees(): Entrees;
   /** Référentiels présents sur ce poste, avec leur empreinte. */
   dresserCatalogue(entrees: Entrees): Promise<ReferentielLocal[]>;
   /** Écrit sur le disque, sans attendre, les modifications encore en attente. */
   enregistrerMaintenant(): Promise<void>;
-  /** Enregistre les nouvelles entrées puis recharge l'interface pour qu'elle les affiche. */
+  /** Écrit une entrée, enregistrée comme toute autre modification. */
+  ecrireEntree(cle: string, valeur: string): void;
+  /**
+   * Remplace toutes les entrées par celles fournies (une clé absente est supprimée),
+   * les enregistre, puis recharge l'interface pour qu'elle les affiche.
+   */
   remplacerEntrees(entrees: Entrees): Promise<void>;
 }
 
@@ -80,7 +87,7 @@ const MESSAGES_REFERENTIEL: Record<ComparaisonBase["etat"], { texte: string; ale
 };
 
 /** Crée un élément ; le texte passe par `textContent`, jamais interprété comme du HTML. */
-function creer<Balise extends keyof HTMLElementTagNameMap>(
+export function creer<Balise extends keyof HTMLElementTagNameMap>(
   balise: Balise,
   classe = "",
   texte = "",
@@ -91,7 +98,7 @@ function creer<Balise extends keyof HTMLElementTagNameMap>(
   return element;
 }
 
-function creerBouton(texte: string, classe: string, action: () => void): HTMLButtonElement {
+export function creerBouton(texte: string, classe: string, action: () => void): HTMLButtonElement {
   const bouton = creer("button", classe, texte);
   bouton.type = "button";
   bouton.addEventListener("click", action);
@@ -121,7 +128,7 @@ function lireTexte(valeur: unknown): string {
 }
 
 /** Ouvre une boîte de dialogue vide et rend de quoi la remplir et la fermer. */
-function ouvrirBoite(titre: string): { boite: HTMLElement; fermer: () => void } {
+export function ouvrirBoite(titre: string): { boite: HTMLElement; fermer: () => void } {
   const fond = creer("div", "echange-fond");
   const boite = creer("div", "echange-boite");
   boite.setAttribute("role", "dialog");
@@ -474,7 +481,7 @@ function creerLignePlan(
 const LIBELLES_ACTION_REFERENTIEL: Record<ActionReferentiel, string> = {
   ajouter: "Nouvelle version",
   aucune: "Identique",
-  impossible: "Diplôme absent",
+  "creer-diplome": "Nouveau diplôme",
 };
 
 const LIBELLES_PARTIES: Record<keyof Differences, string> = {
@@ -510,11 +517,11 @@ function decrireDifferences(differences: Differences): string[] {
 }
 
 function creerLigneReferentiel(ligne: LigneReferentiel, choisis: Set<string>, actualiser: () => void): HTMLElement {
-  const element = creer("label", ligne.action === "ajouter" ? "echange-ligne" : "echange-ligne inactive");
+  const element = creer("label", ligne.action === "aucune" ? "echange-ligne inactive" : "echange-ligne");
   const case_ = creer("input");
   case_.type = "checkbox";
-  case_.checked = ligne.action === "ajouter";
-  case_.disabled = ligne.action !== "ajouter";
+  case_.checked = ligne.action !== "aucune";
+  case_.disabled = ligne.action === "aucune";
   case_.addEventListener("change", () => {
     if (case_.checked) {
       choisis.add(ligne.identifiant);
@@ -526,7 +533,7 @@ function creerLigneReferentiel(ligne: LigneReferentiel, choisis: Set<string>, ac
   const texte = creer("div");
   const titre = creer("div", "echange-titre");
   titre.append(
-    creer("span", `echange-pastille ${ligne.action === "ajouter" ? "creer" : ""}`, LIBELLES_ACTION_REFERENTIEL[ligne.action]),
+    creer("span", `echange-pastille ${ligne.action === "aucune" ? "" : "creer"}`, LIBELLES_ACTION_REFERENTIEL[ligne.action]),
     creer("span", "", `Référentiel ${ligne.diplome} — ${ligne.mention}`),
   );
   texte.append(titre);
@@ -550,9 +557,13 @@ function creerLigneReferentiel(ligne: LigneReferentiel, choisis: Set<string>, ac
       ),
     );
   }
-  if (ligne.action === "impossible") {
+  if (ligne.action === "creer-diplome") {
     texte.append(
-      creer("div", "echange-detail alerte", "Créez d'abord ce diplôme et cette mention dans « Mon établissement » pour le recevoir."),
+      creer(
+        "div",
+        "echange-detail",
+        "Ce diplôme n'existe pas encore chez vous : il sera créé avec ce référentiel, prêt à l'emploi.",
+      ),
     );
   }
   element.append(case_, texte);
@@ -575,7 +586,7 @@ function montrerPlan(
   }
   const choisies = new Set(plan.filter((ligne) => ligne.proposee).map((ligne) => ligne.identifiant));
   const referentielsChoisis = new Set(
-    planReferentiels.filter((ligne) => ligne.action === "ajouter").map((ligne) => ligne.identifiant),
+    planReferentiels.filter((ligne) => ligne.action !== "aucune").map((ligne) => ligne.identifiant),
   );
   const lignesResultats = calculerPlanResultats(entrees, paquet, catalogue);
   const choixResultats: ChoixResultats = {
@@ -784,9 +795,7 @@ function montrerChoix(acces: AccesDonnees): void {
   );
   const recevoir = creerBouton("", "", () => {
     fermer();
-    lancerImport(acces).catch((erreur: unknown) => {
-      afficherMessage("Recevoir", messagePourErreur(erreur));
-    });
+    ouvrirReception(acces);
   });
   recevoir.append(
     creer("b", "", "Recevoir"),
@@ -804,6 +813,13 @@ function montrerChoix(acces: AccesDonnees): void {
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(choix, actions);
+}
+
+/** Ouvre le sélecteur de fichier puis le plan de réception ; toute erreur est affichée à l'enseignant. */
+export function ouvrirReception(acces: AccesDonnees): void {
+  lancerImport(acces).catch((erreur: unknown) => {
+    afficherMessage("Recevoir", messagePourErreur(erreur));
+  });
 }
 
 /** Rend visible le bouton « Échanger… » de l'en-tête et le branche. */
