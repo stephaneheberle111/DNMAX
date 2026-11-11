@@ -88,7 +88,7 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 
 ### À chaque version
 
-1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), dater la section du `CHANGELOG.md`, et mettre à jour la version proposée par défaut dans le formulaire « Idées et bugs » de `site/index.html`. Fusionner.
+1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
 2. Sur GitHub, onglet Actions → atelier « Publication » → « Run workflow » sur la branche `main`.
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
 4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés proposeront la mise à jour à leur prochain lancement.
@@ -99,15 +99,15 @@ Sous Linux, seule l'AppImage se met à jour d'elle-même.
 
 ## Site web
 
-Le dossier `site/` contient le site public de DNMAX (<https://dnmax.pages.dev>) : une page unique, sans étape de construction, et les référentiels proposés au téléchargement (`site/referentiels/`).
+Le dossier `site/` contient le site public de DNMAX (<https://dnmax.fr>) : une page unique, sans étape de construction, et les référentiels proposés au téléchargement (`site/referentiels/`). Il est hébergé chez OVH ; `site/.htaccess` règle le serveur (HTTPS, téléchargement des référentiels).
 
-Pour que Cloudflare Pages le publie à chaque fusion dans `main`, relier le projet Pages au dépôt avec ces réglages :
+Le site se publie **à la main**, par FTP, après chaque fusion qui touche `site/` :
 
-| Réglage | Valeur |
-| --- | --- |
-| Branche de production | `main` |
-| Commande de construction | *(aucune)* |
-| Dossier de sortie | `site` |
+1. Dans l'espace client OVH, onglet « FTP-SSH » de l'hébergement : relever le serveur FTP et l'identifiant (le mot de passe se change au même endroit).
+2. Dans un client FTP (FileZilla, par exemple), choisir **« Connexion FTP explicite sur TLS »** : jamais de FTP en clair, qui ferait circuler le mot de passe lisiblement.
+3. Copier le **contenu** du dossier `site/` dans le dossier `www` du serveur, en remplaçant les fichiers existants, **y compris `.htaccess`** (fichier caché : afficher les fichiers cachés si besoin). `_headers` ne sert qu'à Cloudflare et peut être ignoré.
+4. Supprimer côté serveur un fichier retiré du dépôt, s'il y en a un.
+5. Vérifier <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
 
 Le formulaire « Idées et bugs » de la page ouvre un ticket prérempli sur GitHub.
 
