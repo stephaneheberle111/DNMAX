@@ -263,6 +263,79 @@ fn ouvrir_fichier_echange(application: AppHandle) -> Result<Option<String>, Erre
     }
 }
 
+/// Nom proposé pour le fichier de transfert vers un autre ordinateur.
+const NOM_FICHIER_TRANSFERT: &str = "mes-donnees-dnmax.dnmax";
+
+/// Fait enregistrer une copie complète du coffre, pour l'emporter sur un autre
+/// ordinateur. La copie reste chiffrée : elle s'ouvre avec le mot de passe (ou
+/// le code de secours) de l'enseignant.
+///
+/// Rend `true` si le fichier a été écrit, `false` si l'enseignant a annulé.
+#[tauri::command(async)]
+fn exporter_coffre(
+    application: AppHandle,
+    session: State<'_, Session>,
+) -> Result<bool, ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    // Le verrou garantit qu'aucun enregistrement n'est en cours pendant la copie.
+    let _session = session.verrou();
+    let coffre = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
+    let choix = application
+        .dialog()
+        .file()
+        .set_file_name(NOM_FICHIER_TRANSFERT)
+        .blocking_save_file();
+    let Some(emplacement) = choix else {
+        return Ok(false);
+    };
+    let chemin = emplacement
+        .into_path()
+        .map_err(|_| ErreurCommande::DisqueInaccessible)?;
+    export::ecrire_export(&chemin, &coffre)?;
+    Ok(true)
+}
+
+/// Installe sur cet ordinateur un fichier de transfert choisi par l'enseignant.
+///
+/// N'est possible que sur une installation sans données : un coffre déjà
+/// présent n'est jamais remplacé. Rend `true` si le coffre a été installé,
+/// `false` si l'enseignant a annulé.
+#[tauri::command(async)]
+fn installer_coffre(
+    application: AppHandle,
+    session: State<'_, Session>,
+) -> Result<bool, ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let _session = session.verrou();
+    if depot::coffre_existe(&dossier) {
+        return Err(ErreurCommande::CoffreDejaPresent);
+    }
+    let choix = application
+        .dialog()
+        .file()
+        .add_filter("Fichier de transfert DNMAX", &[EXTENSION_ECHANGE])
+        .blocking_pick_file();
+    let Some(emplacement) = choix else {
+        return Ok(false);
+    };
+    let chemin = emplacement
+        .into_path()
+        .map_err(|_| ErreurCommande::DisqueInaccessible)?;
+    let texte = match import::lire_texte_limite(&chemin, import::TAILLE_MAXIMALE_TRANSFERT) {
+        Ok(texte) => texte,
+        Err(import::ErreurLecture::TropVolumineux) => {
+            return Err(ErreurCommande::FichierTropVolumineux)
+        }
+        Err(import::ErreurLecture::PasDuTexte) => return Err(ErreurCommande::FichierIllisible),
+        Err(import::ErreurLecture::Inaccessible(_)) => {
+            return Err(ErreurCommande::DisqueInaccessible)
+        }
+    };
+    coffre::verifier_forme(texte.as_bytes())?;
+    depot::creer(&dossier, texte.as_bytes())?;
+    Ok(true)
+}
+
 /// Chiffre le texte d'un fichier d'échange sous le mot de passe convenu entre les
 /// deux enseignants, puis le fait enregistrer là où l'expéditeur le décide.
 ///
@@ -364,7 +437,9 @@ pub fn lancer() {
             enregistrer_coffre,
             ouvrir_fichier_echange,
             enregistrer_fichier_protege,
-            dechiffrer_fichier_echange
+            dechiffrer_fichier_echange,
+            exporter_coffre,
+            installer_coffre
         ])
         .setup(|application| {
             // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.

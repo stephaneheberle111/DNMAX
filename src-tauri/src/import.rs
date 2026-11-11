@@ -10,6 +10,10 @@ use std::path::Path;
 /// Un fichier légitime pèse quelques centaines de kilo-octets.
 pub const TAILLE_MAXIMALE_ECHANGE: u64 = 20 * 1024 * 1024;
 
+/// Taille au-delà de laquelle un fichier de transfert est refusé sans être lu.
+/// Le coffre d'un enseignant pèse au plus quelques méga-octets.
+pub const TAILLE_MAXIMALE_TRANSFERT: u64 = 200 * 1024 * 1024;
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum ErreurLecture {
     /// Le fichier dépasse la taille admise.

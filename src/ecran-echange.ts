@@ -36,6 +36,7 @@ import type { Entrees } from "./domaine/magasin-memoire";
 import { messagePourErreur } from "./ecran-coffre";
 import {
   dechiffrerFichierEchange,
+  exporterCoffre,
   enregistrerFichier,
   enregistrerFichierProtege,
   ouvrirFichierEchange,
@@ -48,6 +49,8 @@ export interface AccesDonnees {
   lireEntrees(): Entrees;
   /** Référentiels présents sur ce poste, avec leur empreinte. */
   dresserCatalogue(entrees: Entrees): Promise<ReferentielLocal[]>;
+  /** Écrit sur le disque, sans attendre, les modifications encore en attente. */
+  enregistrerMaintenant(): Promise<void>;
   /** Enregistre les nouvelles entrées puis recharge l'interface pour qu'elle les affiche. */
   remplacerEntrees(entrees: Entrees): Promise<void>;
 }
@@ -720,6 +723,46 @@ async function lancerImport(acces: AccesDonnees): Promise<void> {
   );
 }
 
+function montrerTransfert(acces: AccesDonnees): void {
+  const { boite, fermer } = ouvrirBoite("Changer d'ordinateur");
+  boite.append(
+    creer(
+      "p",
+      "",
+      "Le fichier de transfert contient toutes vos données. Il reste chiffré : il s'ouvre avec votre mot de passe actuel, ou votre code de secours.",
+    ),
+    creer(
+      "p",
+      "",
+      "Sur le nouvel ordinateur, installez DNMAX puis, au premier lancement, choisissez « J'ai déjà mes données sur un autre ordinateur ». " +
+        "Cela n'est possible que sur une installation qui ne contient encore rien.",
+    ),
+  );
+  const erreur = creer("p", "echange-erreur");
+  erreur.hidden = true;
+  const boutonCreer = creerBouton("Créer le fichier de transfert", "btn primary", () => {
+    boutonCreer.disabled = true;
+    acces
+      .enregistrerMaintenant()
+      .then(() => exporterCoffre())
+      .then((fichierEcrit) => {
+        if (fichierEcrit) {
+          fermer();
+        }
+      })
+      .catch((erreurTransfert: unknown) => {
+        erreur.textContent = messagePourErreur(erreurTransfert);
+        erreur.hidden = false;
+      })
+      .finally(() => {
+        boutonCreer.disabled = false;
+      });
+  });
+  const actions = creer("div", "echange-actions");
+  actions.append(creerBouton("Fermer", "btn ghost", fermer), boutonCreer);
+  boite.append(erreur, actions);
+}
+
 function montrerChoix(acces: AccesDonnees): void {
   const { boite, fermer } = ouvrirBoite("Échanger avec d'autres enseignants");
   const choix = creer("div", "echange-choix");
@@ -737,7 +780,7 @@ function montrerChoix(acces: AccesDonnees): void {
   });
   envoyer.append(
     creer("b", "", "Envoyer"),
-    creer("span", "", "Créer un fichier d'évaluations et de référentiels à transmettre par courriel, clé USB ou l'ENT. Sans élèves ni résultats."),
+    creer("span", "", "Créer un fichier d'évaluations et de référentiels à transmettre par courriel, clé USB ou l'ENT. Élèves et résultats sur option, dans un fichier chiffré."),
   );
   const recevoir = creerBouton("", "", () => {
     fermer();
@@ -749,7 +792,15 @@ function montrerChoix(acces: AccesDonnees): void {
     creer("b", "", "Recevoir"),
     creer("span", "", "Ouvrir un fichier reçu et choisir, ligne par ligne, ce que vous en gardez."),
   );
-  choix.append(envoyer, recevoir);
+  const transferer = creerBouton("", "", () => {
+    fermer();
+    montrerTransfert(acces);
+  });
+  transferer.append(
+    creer("b", "", "Changer d'ordinateur"),
+    creer("span", "", "Emporter toutes vos données, élèves et résultats compris, vers une nouvelle installation de DNMAX."),
+  );
+  choix.append(envoyer, recevoir, transferer);
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(choix, actions);

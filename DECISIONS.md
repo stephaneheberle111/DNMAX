@@ -163,3 +163,11 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 - la fusion se décide par évaluation, pas élève par élève.
 
 **Adaptation de l'interface historique** : ses données d'établissement n'étaient enregistrées qu'à leur première modification ; elles le sont maintenant dès le chargement (`persistData()` en fin de script), sans quoi une installation neuve ne connaissait pas son propre diplôme lors d'un import.
+
+## 14. Changer d'ordinateur : une copie du coffre, installable seulement sur une installation vide
+
+**Retenu** : « Échanger… → Changer d'ordinateur » enregistre une copie complète du coffre. Elle reste chiffrée et s'ouvre avec le mot de passe (ou le code de secours) de l'enseignant ; son nom, ses élèves, ses résultats et ses référentiels voyagent avec elle. Sur le nouvel ordinateur, le premier lancement propose « J'ai déjà mes données sur un autre ordinateur ».
+
+**Pourquoi seulement sur une installation vide** : installer un coffre par-dessus des données existantes les détruirait en bloc. Un coffre déjà présent n'est donc jamais remplacé. Pour réunir deux jeux de données, on passe par l'échange, qui montre ce qui change ligne par ligne.
+
+**Conséquence** : il n'y a pas de synchronisation entre deux ordinateurs utilisés en parallèle ; le transfert est un déménagement.

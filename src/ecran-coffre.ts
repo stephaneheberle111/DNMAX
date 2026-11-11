@@ -9,6 +9,7 @@ import {
 } from "./domaine/saisie-coffre";
 import {
   creerCoffre,
+  installerCoffre,
   ErreurCoffre,
   ouvrirCoffre,
   ouvrirCoffreParSecours,
@@ -19,7 +20,7 @@ const MESSAGES_ERREUR: Record<CodeErreurCoffre, string> = {
   "mot-de-passe-trop-court": `Le mot de passe doit compter au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères.`,
   "acces-refuse": "Mot de passe ou code de secours incorrect.",
   "fichier-illisible":
-    "Le fichier de données est illisible ou endommagé. Des copies quotidiennes se trouvent dans le dossier « sauvegardes », à côté de lui.",
+    "Ce fichier de données est illisible, endommagé, ou n'est pas un fichier DNMAX. Pour vos propres données, des copies quotidiennes se trouvent dans le dossier « sauvegardes ».",
   "version-inconnue":
     "Ces données ont été enregistrées par une version plus récente de DNMAX. Mettez l'application à jour pour les ouvrir.",
   "coffre-deja-present": "Des données protégées existent déjà sur cet ordinateur. Relancez l'application.",
@@ -50,7 +51,9 @@ const GABARIT_CREATION = `
   <p class="coffre-avertissement">Sans ce mot de passe ni le code de secours affiché à l'étape suivante, vos données
      sont définitivement illisibles : personne ne peut les récupérer.</p>
   <p class="coffre-erreur" role="alert" hidden></p>
-  <div class="coffre-actions"><span></span><button type="submit" class="btn primary">Créer mon espace protégé</button></div>`;
+  <div class="coffre-actions">
+    <button type="button" class="lnk" data-role="transfert">J'ai déjà mes données sur un autre ordinateur</button>
+    <button type="submit" class="btn primary">Créer mon espace protégé</button></div>`;
 
 const GABARIT_CODE_SECOURS = `
   <h1>Notez votre code de secours</h1>
@@ -150,6 +153,18 @@ function montrerCreation(ecran: HTMLElement, terminer: (entrees: Entrees) => voi
     }
     const codeSecours = await creerCoffre(lireChamp(formulaire, "motDePasse"));
     montrerCodeSecours(ecran, codeSecours, terminer);
+  });
+  formulaire.querySelector("[data-role=transfert]")?.addEventListener("click", () => {
+    installerCoffre()
+      .then((installe) => {
+        if (installe) {
+          // Les données transférées s'ouvrent avec le mot de passe de l'ancien ordinateur.
+          montrerOuverture(ecran, terminer);
+        }
+      })
+      .catch((erreur: unknown) => {
+        afficherErreur(formulaire, messagePourErreur(erreur));
+      });
   });
 }
 
