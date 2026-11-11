@@ -20,6 +20,7 @@ import { CLE_IDENTITE, lireIdentite } from "./domaine/identite";
 import { proposerPremiersPas } from "./ecran-accueil";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
+import { suivreExemple } from "./ecran-exemple";
 import { proposerMiseAJour } from "./ecran-mise-a-jour";
 import {
   attendreAvantFermeture,
@@ -97,6 +98,9 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
     identite,
     dresserCatalogue,
     enregistrerMaintenant: () => enregistreur.vider(),
+    ecrireEntree: (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    },
     lireEntrees: () => magasin.entrees(),
     remplacerEntrees: async (nouvelles) => {
       // Les dates en dernier : écrire les évaluations les redate à « maintenant »,
@@ -108,6 +112,11 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
         const valeur = nouvelles[cle];
         if (valeur !== undefined) {
           magasin.setItem(cle, valeur);
+        }
+      }
+      for (const cle of Object.keys(magasin.entrees())) {
+        if (!(cle in nouvelles)) {
+          magasin.removeItem(cle);
         }
       }
       await enregistreur.vider();
@@ -132,6 +141,7 @@ async function demarrer(): Promise<void> {
   await chargerInterfaceHistorique(magasin);
   installerEchange(acces);
   proposerMiseAJour(() => acces.enregistrerMaintenant());
+  suivreExemple(acces);
   await proposerPremiersPas(acces);
 }
 

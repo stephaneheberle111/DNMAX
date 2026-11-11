@@ -202,3 +202,13 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 **Exemple** : « charge un exemple » reste disponible pour découvrir l'application ; faute de référentiel, il installe celui du DN MADE mention Objet, toujours présent dans le code à cette seule fin.
 
 **Adaptations de l'interface historique** : référentiel de départ vide (`REF_VIDE`), brouillon de départ vide, et installation du référentiel d'origine par `loadDemo` quand il n'y en a aucun.
+
+## 17. L'exemple se retire sans toucher au travail de l'enseignant
+
+**Retenu** : au moment où l'enseignant charge l'exemple, l'application note l'état de ses données juste avant et juste après (clé `dnmax.exemple`, dans le coffre). Un bouton « Retirer l'exemple » apparaît alors ; il annonce ce qui sera retiré avant de le faire.
+
+**Règle** : la différence entre « avant » et « après » dit exactement ce que l'exemple a apporté. Ne sont retirées que les évaluations et promotions créées par l'exemple ; tout ce que l'enseignant a créé ensuite est conservé. Une promotion d'exemple à laquelle il a rattaché une évaluation est gardée. L'établissement, le référentiel et les réglages reviennent à leur état d'avant **seulement s'ils n'ont pas été modifiés depuis** ; sinon ils sont laissés tels quels et l'enseignant en est prévenu.
+
+**Pourquoi pas un simple retour à l'état d'avant** : il effacerait aussi ce que l'enseignant a saisi après avoir chargé l'exemple.
+
+**Limite** : l'exemple chargé avant cette version n'a pas d'état « avant » enregistré et ne peut pas être retiré par ce bouton.
