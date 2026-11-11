@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { CLE_BROUILLON, effacerEleve } from "./droits-eleve";
 import { CLE_DONNEES, CLE_EVALUATIONS, CLE_PROMOTIONS, analyserJson, estObjet, type ObjetJson } from "./echange/modele";
+import { normaliserNom } from "./echange/referentiel";
 import type { Entrees } from "./magasin-memoire";
 import { CLE_INSTANTANE_EXEMPLE } from "./retrait-exemple";
 
@@ -9,8 +10,14 @@ import { CLE_INSTANTANE_EXEMPLE } from "./retrait-exemple";
  *
  * Une promotion « sort » à la fin de l'année scolaire où s'achève son diplôme.
  * Ses données d'élèves sont échues quand la durée de conservation est passée
- * depuis cette sortie : DNMAX propose alors de les effacer, sans jamais le
- * faire seul. Les évaluations elles-mêmes (grilles, consignes) sont gardées.
+ * depuis cette sortie : DNMAX le rappelle et propose de les effacer ou de les
+ * anonymiser, sans jamais le faire seul. Les évaluations elles-mêmes (grilles,
+ * consignes) sont gardées.
+ *
+ * Un élève qui redouble change de promotion : déplacé, il garde son
+ * identifiant et n'appartient plus à l'ancienne ; ressaisi, il figure dans les
+ * deux, et c'est son nom, retrouvé dans une promotion encore en cours, qui le
+ * signale. Il est alors proposé à garder.
  */
 
 /** Durée d'un diplôme quand elle n'est pas renseignée (même règle que l'interface historique). */
@@ -20,6 +27,16 @@ const JOUR_DE_SORTIE = "07-01";
 /** Préfixe des identifiants d'élèves de promotion (« s » suivi d'un horodatage ou d'un tirage). */
 const PREFIXE_ELEVE_PROMOTION = "s";
 const PREFIXE_LIBRE = "libre";
+/** Préfixe du nom donné à un élève anonymisé, suivi de son rang dans la promotion. */
+export const NOM_ANONYME = "Élève anonyme";
+
+/** Élève d'une promotion échue dont le nom figure aussi dans une promotion encore en cours. */
+export interface RedoublantProbable {
+  id: string;
+  nom: string;
+  /** Nom de la promotion en cours où son nom figure. */
+  autrePromotion: string;
+}
 
 export interface PromotionEchue {
   id: string;
@@ -28,7 +45,9 @@ export interface PromotionEchue {
   sortie: string;
   /** Date à partir de laquelle ses données d'élèves sont échues, AAAA-MM-JJ. */
   echeance: string;
+  /** Élèves encore identifiables (les élèves déjà anonymisés ne comptent pas). */
   eleves: number;
+  redoublants: RedoublantProbable[];
 }
 
 function lireListe(texte: string | undefined): unknown[] {
@@ -47,37 +66,75 @@ function dureesDiplomes(entrees: Entrees): Map<string, number> {
   );
 }
 
-function identifiantsEleves(promotion: ObjetJson): string[] {
+function elevesDe(promotion: ObjetJson): { id: string; nom: string }[] {
   return (Array.isArray(promotion.liste) ? promotion.liste : [])
     .filter(estObjet)
-    .map((eleve) => eleve.id)
-    .filter((id): id is string => typeof id === "string" && id !== "");
+    .filter((eleve) => typeof eleve.id === "string" && eleve.id !== "")
+    .map((eleve) => ({ id: eleve.id as string, nom: typeof eleve.nom === "string" ? eleve.nom : "" }));
+}
+
+function identifiantsEleves(promotion: ObjetJson): string[] {
+  return elevesDe(promotion).map((eleve) => eleve.id);
+}
+
+function estAnonyme(nom: string): boolean {
+  return nom.startsWith(`${NOM_ANONYME} `);
+}
+
+function texte(valeur: unknown): string {
+  return typeof valeur === "string" ? valeur : "";
 }
 
 /**
- * Promotions dont les données d'élèves ont dépassé la durée de conservation.
- * Une promotion sans élève, ou sans année d'entrée, n'est jamais proposée.
+ * Promotions dont les données d'élèves ont dépassé la durée de conservation,
+ * avec leurs redoublants probables. Une promotion sans élève, ou sans année
+ * d'entrée, n'est jamais proposée.
  *
  * @param aujourdHui date du jour, AAAA-MM-JJ
  * @param anneesConservation années de conservation après la sortie
  */
 export function promotionsEchues(entrees: Entrees, aujourdHui: string, anneesConservation: number): PromotionEchue[] {
   const durees = dureesDiplomes(entrees);
-  const echues: PromotionEchue[] = [];
+  const echues: Omit<PromotionEchue, "redoublants">[] = [];
+  const enCours: ObjetJson[] = [];
   for (const promotion of lireListe(entrees[CLE_PROMOTIONS]).filter(estObjet)) {
     const debut = Number(promotion.debut);
-    const eleves = identifiantsEleves(promotion).length;
+    // Un élève déjà anonymisé n'a plus rien à traiter.
+    const eleves = elevesDe(promotion).filter((eleve) => !estAnonyme(eleve.nom)).length;
     if (typeof promotion.id !== "string" || !Number.isInteger(debut) || eleves === 0) {
+      enCours.push(promotion);
       continue;
     }
-    const duree = durees.get(typeof promotion.diplomeId === "string" ? promotion.diplomeId : "") ?? DUREE_DIPLOME_PAR_DEFAUT;
+    const duree = durees.get(texte(promotion.diplomeId)) ?? DUREE_DIPLOME_PAR_DEFAUT;
     const sortie = `${String(debut + duree)}-${JOUR_DE_SORTIE}`;
     const echeance = `${String(debut + duree + anneesConservation)}-${JOUR_DE_SORTIE}`;
     if (aujourdHui >= echeance) {
-      echues.push({ id: promotion.id, nom: typeof promotion.nom === "string" ? promotion.nom : "", sortie, echeance, eleves });
+      echues.push({ id: promotion.id, nom: texte(promotion.nom), sortie, echeance, eleves });
+    } else {
+      enCours.push(promotion);
     }
   }
-  return echues;
+  const promotionsEnCoursParNom = new Map<string, string>();
+  for (const promotion of enCours) {
+    for (const eleve of elevesDe(promotion)) {
+      const nom = normaliserNom(eleve.nom);
+      if (nom !== "" && !promotionsEnCoursParNom.has(nom)) {
+        promotionsEnCoursParNom.set(nom, texte(promotion.nom));
+      }
+    }
+  }
+  const brutes = lireListe(entrees[CLE_PROMOTIONS]).filter(estObjet);
+  return echues.map((echue) => {
+    const promotion = brutes.find((brute) => brute.id === echue.id) ?? {};
+    const redoublants = elevesDe(promotion).flatMap((eleve) => {
+      if (estAnonyme(eleve.nom)) {
+        return [];
+      }
+      const autrePromotion = promotionsEnCoursParNom.get(normaliserNom(eleve.nom));
+      return autrePromotion === undefined ? [] : [{ id: eleve.id, nom: eleve.nom, autrePromotion }];
+    });
+    return { ...echue, redoublants };
+  });
 }
 
 function evaluationsEtBrouillon(entrees: Entrees): ObjetJson[] {
@@ -111,75 +168,163 @@ function estRattachee(evaluation: ObjetJson, promotion: ObjetJson): boolean {
   return evaluation.promoId === promotion.id || (typeof promotion.nom === "string" && classes.includes(promotion.nom));
 }
 
+function lireTextes(valeur: unknown): Entrees {
+  return estObjet(valeur)
+    ? Object.fromEntries(Object.entries(valeur).filter((paire): paire is [string, string] => typeof paire[1] === "string"))
+    : {};
+}
+
+/**
+ * Applique une transformation aux promotions, aux évaluations et au brouillon,
+ * ainsi qu'aux copies gardées pour retirer l'exemple.
+ */
+function transformer(
+  entrees: Entrees,
+  promotion: (promotion: ObjetJson) => ObjetJson,
+  evaluation: (evaluation: ObjetJson) => ObjetJson,
+): Entrees {
+  const appliquer = (donnees: Entrees): Record<string, string> => {
+    const resultat: Record<string, string> = { ...donnees };
+    if (CLE_PROMOTIONS in donnees) {
+      resultat[CLE_PROMOTIONS] = JSON.stringify(
+        lireListe(donnees[CLE_PROMOTIONS]).map((element): unknown => (estObjet(element) ? promotion(element) : element)),
+      );
+    }
+    if (CLE_EVALUATIONS in donnees) {
+      resultat[CLE_EVALUATIONS] = JSON.stringify(
+        lireListe(donnees[CLE_EVALUATIONS]).map((element): unknown => (estObjet(element) ? evaluation(element) : element)),
+      );
+    }
+    const brouillon = analyserJson(donnees[CLE_BROUILLON]);
+    if (estObjet(brouillon)) {
+      resultat[CLE_BROUILLON] = JSON.stringify(evaluation(brouillon));
+    }
+    return resultat;
+  };
+  const resultat = appliquer(entrees);
+  const instantane = analyserJson(entrees[CLE_INSTANTANE_EXEMPLE]);
+  if (estObjet(instantane)) {
+    resultat[CLE_INSTANTANE_EXEMPLE] = JSON.stringify({
+      avant: appliquer(lireTextes(instantane.avant)),
+      apres: appliquer(lireTextes(instantane.apres)),
+    });
+  }
+  return resultat;
+}
+
 /**
  * Dans les évaluations rattachées à ces promotions, retire la liste d'élèves
  * saisie à la main et ses résultats : l'interface historique ne s'en sert plus
  * dès qu'une promotion est choisie, mais les noms y restent écrits.
  */
-function viderListesSaisies(entrees: Entrees, promotions: ObjetJson[]): Record<string, string> {
-  const resultat: Record<string, string> = { ...entrees };
-  const nettoyer = (evaluation: ObjetJson): ObjetJson => {
-    if (!promotions.some((promotion) => estRattachee(evaluation, promotion))) {
-      return evaluation;
-    }
-    const copie: ObjetJson = { ...evaluation };
-    if (typeof copie.eleves === "string") {
-      copie.eleves = "";
-    }
-    if (estObjet(copie.res)) {
-      copie.res = Object.fromEntries(Object.entries(copie.res).filter(([id]) => !id.startsWith(PREFIXE_LIBRE)));
-    }
-    return copie;
-  };
-  if (CLE_EVALUATIONS in entrees) {
-    resultat[CLE_EVALUATIONS] = JSON.stringify(
-      lireListe(entrees[CLE_EVALUATIONS]).map((evaluation): unknown => (estObjet(evaluation) ? nettoyer(evaluation) : evaluation)),
-    );
+function sansListeSaisie(evaluation: ObjetJson, promotions: ObjetJson[]): ObjetJson {
+  if (!promotions.some((promotion) => estRattachee(evaluation, promotion))) {
+    return evaluation;
   }
-  const brouillon = analyserJson(entrees[CLE_BROUILLON]);
-  if (estObjet(brouillon)) {
-    resultat[CLE_BROUILLON] = JSON.stringify(nettoyer(brouillon));
+  const copie: ObjetJson = { ...evaluation };
+  if (typeof copie.eleves === "string") {
+    copie.eleves = "";
   }
-  return resultat;
+  if (estObjet(copie.res)) {
+    copie.res = Object.fromEntries(Object.entries(copie.res).filter(([id]) => !id.startsWith(PREFIXE_LIBRE)));
+  }
+  return copie;
 }
 
-export interface BilanPurge {
-  /** Élèves effacés, ceux des promotions et les identifiants orphelins confondus. */
+/** Champs de résultat en texte libre, qui peuvent identifier un élève. */
+const CHAMPS_TEXTE_LIBRE = ["appr", "obs"];
+
+function sansTexteLibre(resultat: unknown): unknown {
+  if (!estObjet(resultat)) {
+    return resultat;
+  }
+  return Object.fromEntries(Object.entries(resultat).filter(([champ]) => !CHAMPS_TEXTE_LIBRE.includes(champ)));
+}
+
+/** Effacer : retirer toute trace. Anonymiser : garder les niveaux sans rien qui identifie l'élève. */
+export type Traitement = "effacer" | "anonymiser";
+
+export interface ChoixConservation {
+  /** Promotions échues à traiter. */
+  promotions: readonly string[];
+  /** Élèves à garder tels quels, par exemple un redoublant. */
+  gardes: readonly string[];
+  /** Traiter aussi les résultats restés sans élève. */
+  orphelins: boolean;
+  traitement: Traitement;
+}
+
+export interface BilanConservation {
+  /** Élèves traités, ceux des promotions et les identifiants orphelins confondus. */
   eleves: number;
 }
 
+
 /**
- * Efface les données d'élèves des promotions choisies et, si demandé, les
- * résultats orphelins. Les promotions restent, vides ; les évaluations restent,
- * sans résultats d'élèves. Partout ailleurs, rien ne change.
+ * Efface ou anonymise les données d'élèves des promotions choisies, sauf les
+ * élèves gardés, et si demandé les résultats orphelins.
+ *
+ * - Effacer : l'élève quitte la promotion, ses résultats quittent les évaluations.
+ * - Anonymiser : l'élève devient « Élève anonyme <n> » ; ses niveaux et ses
+ *   dates restent, utiles aux bilans ; ses observations et son appréciation,
+ *   textes libres qui peuvent l'identifier, sont retirées.
+ *
+ * Dans les deux cas, les listes saisies à la main restées écrites dans les
+ * évaluations rattachées sont vidées, et les évaluations elles-mêmes gardées.
  */
-export function purgerDonneesEleves(
-  entrees: Entrees,
-  promotionIds: readonly string[],
-  avecOrphelins: boolean,
-): { entrees: Entrees; bilan: BilanPurge } {
+export function traiterDonneesEchues(entrees: Entrees, choix: ChoixConservation): { entrees: Entrees; bilan: BilanConservation } {
+  const gardes = new Set(choix.gardes);
   const choisies = lireListe(entrees[CLE_PROMOTIONS])
     .filter(estObjet)
-    .filter((promotion) => typeof promotion.id === "string" && promotionIds.includes(promotion.id));
-  const identifiants = [...new Set([...choisies.flatMap(identifiantsEleves), ...(avecOrphelins ? identifiantsOrphelins(entrees) : [])])];
+    .filter((promotion) => typeof promotion.id === "string" && choix.promotions.includes(promotion.id));
+  const desPromotions = choisies.flatMap(identifiantsEleves).filter((id) => !gardes.has(id));
+  const orphelins = choix.orphelins ? identifiantsOrphelins(entrees).filter((id) => !gardes.has(id)) : [];
+  const traites = new Set([...desPromotions, ...orphelins]);
+  if (traites.size === 0 && choisies.length === 0) {
+    return { entrees, bilan: { eleves: 0 } };
+  }
   let resultat: Entrees = entrees;
-  if (identifiants.length > 0) {
-    resultat = effacerEleve(resultat, { cle: "", nom: "", identifiants, promotions: [] }, { parNom: false }).entrees;
-  }
-  if (choisies.length > 0) {
-    const nettoyees: Record<string, string> = viderListesSaisies(resultat, choisies);
-    const instantane = analyserJson(resultat[CLE_INSTANTANE_EXEMPLE]);
-    if (estObjet(instantane)) {
-      const textes = (valeur: unknown): Entrees =>
-        estObjet(valeur)
-          ? Object.fromEntries(Object.entries(valeur).filter((paire): paire is [string, string] => typeof paire[1] === "string"))
-          : {};
-      nettoyees[CLE_INSTANTANE_EXEMPLE] = JSON.stringify({
-        avant: viderListesSaisies(textes(instantane.avant), choisies),
-        apres: viderListesSaisies(textes(instantane.apres), choisies),
-      });
+  if (choix.traitement === "effacer") {
+    if (traites.size > 0) {
+      resultat = effacerEleve(resultat, { cle: "", nom: "", identifiants: [...traites], promotions: [] }, { parNom: false }).entrees;
     }
-    resultat = nettoyees;
+    resultat = transformer(resultat, (promotion) => promotion, (evaluation) => sansListeSaisie(evaluation, choisies));
+  } else {
+    const idsChoisies = new Set(choisies.map((promotion) => promotion.id));
+    resultat = transformer(
+      resultat,
+      (promotion) => {
+        if (!idsChoisies.has(promotion.id)) {
+          return promotion;
+        }
+        // La numérotation reprend après les élèves déjà anonymisés, pour ne pas créer de doublon.
+        let rang = Math.max(
+          0,
+          ...elevesDe(promotion)
+            .filter((eleve) => estAnonyme(eleve.nom))
+            .map((eleve) => Number(eleve.nom.slice(NOM_ANONYME.length + 1)) || 0),
+        );
+        const liste = (Array.isArray(promotion.liste) ? promotion.liste : []).map((eleve): unknown => {
+          if (!estObjet(eleve) || typeof eleve.id !== "string" || !traites.has(eleve.id) || estAnonyme(texte(eleve.nom))) {
+            return eleve;
+          }
+          rang += 1;
+          return { ...eleve, nom: `${NOM_ANONYME} ${String(rang)}` };
+        });
+        const noms = liste.filter(estObjet).map((eleve) => texte(eleve.nom));
+        return { ...promotion, liste, eleves: noms.join("\n") };
+      },
+      (evaluation) => {
+        const copie = sansListeSaisie(evaluation, choisies);
+        if (!estObjet(copie.res)) {
+          return copie;
+        }
+        const resultats = Object.fromEntries(
+          Object.entries(copie.res).map(([id, valeur]) => [id, traites.has(id) ? sansTexteLibre(valeur) : valeur]),
+        );
+        return { ...copie, res: resultats };
+      },
+    );
   }
-  return { entrees: resultat, bilan: { eleves: identifiants.length } };
+  return { entrees: resultat, bilan: { eleves: traites.size } };
 }
