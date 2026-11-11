@@ -101,18 +101,13 @@ Sous Linux, seule l'AppImage se met à jour d'elle-même.
 
 Le dossier `site/` contient le site public de DNMAX (<https://dnmax.fr>) : une page unique, sans étape de construction, et les référentiels proposés au téléchargement (`site/referentiels/`). Il est hébergé chez OVH ; `site/.htaccess` règle le serveur (HTTPS, téléchargement des référentiels).
 
-L'atelier « Site » (`.github/workflows/site.yml`) l'envoie sur l'hébergement à chaque fusion dans `main` qui touche `site/`, ou à la demande. Une seule fois, renseigner dans les réglages du dépôt (Settings → Secrets and variables → Actions) :
+Le site se publie **à la main**, par FTP, après chaque fusion qui touche `site/` :
 
-| Nom | Type | Valeur |
-| --- | --- | --- |
-| `OVH_SITE_SERVEUR` | variable | serveur FTP de l'hébergement (espace client OVH, onglet FTP-SSH) |
-| `OVH_SITE_PROTOCOLE` | variable | `sftp` si l'offre le propose, sinon `ftps` ; jamais de FTP en clair |
-| `OVH_SITE_DOSSIER` | variable | dossier racine du site, `www` par défaut |
-| `OVH_SITE_UTILISATEUR` | secret | identifiant FTP |
-| `OVH_SITE_MOT_DE_PASSE` | secret | son mot de passe |
-| `OVH_SITE_CLE_HOTE` | secret | en SFTP : la ligne `known_hosts` du serveur, obtenue par `ssh-keyscan -t ed25519 <serveur>` puis comparée à l'empreinte affichée par OVH |
-
-L'atelier supprime sur le serveur les fichiers absents du dépôt : le dossier distant doit être réservé au site.
+1. Dans l'espace client OVH, onglet « FTP-SSH » de l'hébergement : relever le serveur FTP et l'identifiant (le mot de passe se change au même endroit).
+2. Dans un client FTP (FileZilla, par exemple), choisir **« Connexion FTP explicite sur TLS »** : jamais de FTP en clair, qui ferait circuler le mot de passe lisiblement.
+3. Copier le **contenu** du dossier `site/` dans le dossier `www` du serveur, en remplaçant les fichiers existants, **y compris `.htaccess`** (fichier caché : afficher les fichiers cachés si besoin). `_headers` ne sert qu'à Cloudflare et peut être ignoré.
+4. Supprimer côté serveur un fichier retiré du dépôt, s'il y en a un.
+5. Vérifier <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
 
 Le formulaire « Idées et bugs » de la page ouvre un ticket prérempli sur GitHub.
 

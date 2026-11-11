@@ -4,7 +4,7 @@
 
 ### Modifié
 
-- Site : hébergé chez OVH à l'adresse dnmax.fr, publié par un atelier d'envoi automatique.
+- Site : hébergé chez OVH à l'adresse dnmax.fr.
 
 ### Ajouté
 
