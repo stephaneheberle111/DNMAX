@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.1.0 — 2026-11-11
+
 ### Ajouté
 
 - Squelette de l'application de bureau (Tauri 2, TypeScript, Vite) : fenêtre qui affiche le nom et la version.
