@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 import type { Entrees } from "./domaine/magasin-memoire";
@@ -213,4 +214,14 @@ export async function chercherMiseAJour(): Promise<MiseAJour | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Ouvre une adresse du projet dans le navigateur de l'enseignant.
+ * Seules les adresses autorisées par l'enveloppe (voir `src/configuration.ts`) sont acceptées.
+ *
+ * @throws si l'adresse n'est pas autorisée ou si aucun navigateur ne peut être ouvert.
+ */
+export async function ouvrirDansNavigateur(adresse: string): Promise<void> {
+  await openUrl(adresse);
 }

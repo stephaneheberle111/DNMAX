@@ -81,6 +81,12 @@ export function retirerHorsContenu(valeur: unknown): unknown {
   return valeur;
 }
 
+/** Indique si un référentiel ne contient encore aucune compétence. */
+export function estReferentielVide(contenuLisible: unknown): boolean {
+  const competences: unknown = estObjet(contenuLisible) ? contenuLisible.competences : null;
+  return !Array.isArray(competences) || competences.length === 0;
+}
+
 /** Empreinte du contenu lisible d'un référentiel. */
 export async function calculerEmpreinteReferentiel(contenuLisible: unknown): Promise<string> {
   return calculerEmpreinte(retirerHorsContenu(contenuLisible));

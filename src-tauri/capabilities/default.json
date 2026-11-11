@@ -10,6 +10,20 @@
     "core:event:allow-unlisten",
     "core:window:allow-destroy",
     "updater:default",
-    "process:allow-restart"
+    "process:allow-restart",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://dnmax.pages.dev/*"
+        },
+        {
+          "url": "https://github.com/stephaneheberle111/DNMAX"
+        },
+        {
+          "url": "https://github.com/stephaneheberle111/DNMAX/*"
+        }
+      ]
+    }
   ]
 }
