@@ -141,6 +141,7 @@ flowchart LR
 | Une commande Rust reçoit du JSON alors que l'interface a envoyé des octets | Sous Linux, Tauri transmet un envoi binaire comme une liste JSON de nombres : accepter les deux formes (voir `extraire_octets`). |
 | Deux référentiels différents ont la même empreinte | Le référentiel enregistré ne contient que des identifiants ; les libellés sont dans un dictionnaire à part. Empreinter le contenu lisible fourni par `projeterReferentiel`, jamais la structure enregistrée. |
 | Sur une installation neuve, l'échange ne trouve aucun diplôme | L'interface historique n'enregistrait `dnmade.data` qu'à la première modification ; `persistData()` est appelé en fin de script pour l'inscrire dès le chargement. |
+| En intégration continue, l'étape des bibliothèques système reste bloquée jusqu'au délai du job | Le miroir de paquets par défaut des machines GitHub ne répond pas. Les ateliers passent par `outils/installer-bibliotheques-linux.sh`, qui utilise le miroir officiel d'Ubuntu avec des délais courts. |
 | Les tests du chiffrement sont lents | Leur passer `DERIVATION_DE_TEST` (coût minimal), jamais `PARAMETRES_PAR_DEFAUT`. |
 | Changer `document.title` ne change pas le titre de la fenêtre | Le fixer côté Rust avec `set_title`. |
 | `npm run lint` signale une erreur de type sur `import.meta.dirname` | `@types/node` doit être installé et listé dans `types` de `tsconfig.json`. |
