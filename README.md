@@ -88,7 +88,7 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 
 ### À chaque version
 
-1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
+1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), dater la section du `CHANGELOG.md`, et mettre à jour la version proposée par défaut dans le formulaire « Idées et bugs » de `site/index.html`. Fusionner.
 2. Sur GitHub, onglet Actions → atelier « Publication » → « Run workflow » sur la branche `main`.
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
 4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés proposeront la mise à jour à leur prochain lancement.
@@ -96,6 +96,22 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 Pousser soi-même une étiquette `v1.2.3` déclenche le même atelier.
 
 Sous Linux, seule l'AppImage se met à jour d'elle-même.
+
+## Site web
+
+Le dossier `site/` contient le site public de DNMAX (<https://dnmax.pages.dev>) : une page unique, sans étape de construction, et les référentiels proposés au téléchargement (`site/referentiels/`).
+
+Pour que Cloudflare Pages le publie à chaque fusion dans `main`, relier le projet Pages au dépôt avec ces réglages :
+
+| Réglage | Valeur |
+| --- | --- |
+| Branche de production | `main` |
+| Commande de construction | *(aucune)* |
+| Dossier de sortie | `site` |
+
+Le formulaire « Idées et bugs » de la page ouvre un ticket prérempli sur GitHub.
+
+Les boutons de téléchargement pointent sur des fichiers à nom fixe de la dernière version publiée (`DNMAX-windows.exe`, `DNMAX-macos.dmg`, `DNMAX-linux.AppImage`, `DNMAX-linux.deb`), que l'atelier « Publication » joint à chaque version.
 
 ## Organisation du code
 
@@ -112,6 +128,8 @@ flowchart LR
 - `src/domaine/` : ce qui calcule. Aucune dépendance au navigateur ni à Tauri, donc testable directement.
 - `src/enveloppe.ts` : ce qui parle à l'extérieur.
 - `src/ecran-coffre.ts` : l'écran de mot de passe.
+- `src/ecran-compte.ts` : « Mon compte » (nom, mot de passe, à propos). `src/ecran-exemple.ts` : le retrait de l'exemple.
+- `src/ecran-accueil.ts` : l'encart des premiers pas sur une installation vide. `src/configuration.ts` : les adresses publiques du projet.
 - `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ».
 - `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans.
 - `src-tauri/` : la fenêtre de bureau et ses droits (`capabilities/`). Dans `src-tauri/src/` : `coffre.rs` chiffre (sans toucher au disque), `depot.rs` range les fichiers (sans connaître le chiffrement), `export.rs` écrit les exports, `lib.rs` relie le tout aux commandes appelées par l'interface.
@@ -123,6 +141,7 @@ flowchart LR
 | Une commande Rust reçoit du JSON alors que l'interface a envoyé des octets | Sous Linux, Tauri transmet un envoi binaire comme une liste JSON de nombres : accepter les deux formes (voir `extraire_octets`). |
 | Deux référentiels différents ont la même empreinte | Le référentiel enregistré ne contient que des identifiants ; les libellés sont dans un dictionnaire à part. Empreinter le contenu lisible fourni par `projeterReferentiel`, jamais la structure enregistrée. |
 | Sur une installation neuve, l'échange ne trouve aucun diplôme | L'interface historique n'enregistrait `dnmade.data` qu'à la première modification ; `persistData()` est appelé en fin de script pour l'inscrire dès le chargement. |
+| En intégration continue, l'étape des bibliothèques système reste bloquée jusqu'au délai du job | Le miroir de paquets par défaut des machines GitHub ne répond pas. Les ateliers passent par `outils/installer-bibliotheques-linux.sh`, qui sonde plusieurs miroirs et retient le premier qui répond. |
 | Les tests du chiffrement sont lents | Leur passer `DERIVATION_DE_TEST` (coût minimal), jamais `PARAMETRES_PAR_DEFAUT`. |
 | Changer `document.title` ne change pas le titre de la fenêtre | Le fixer côté Rust avec `set_title`. |
 | `npm run lint` signale une erreur de type sur `import.meta.dirname` | `@types/node` doit être installé et listé dans `types` de `tsconfig.json`. |

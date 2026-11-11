@@ -278,6 +278,44 @@ impl CoffreOuvert {
     }
 }
 
+/// Remplace le mot de passe d'un coffre, que l'enseignant connaît encore.
+///
+/// Le contenu n'est pas rechiffré sous une autre clé : seule la clé de données
+/// est enfermée sous le nouveau mot de passe. Le code de secours reste valable.
+/// Rend le coffre ouvert et le fichier à écrire.
+///
+/// # Errors
+///
+/// `AccesRefuse` si l'ancien mot de passe est incorrect, `MotDePasseTropCourt`
+/// si le nouveau est trop court, `FichierIllisible` ou `VersionInconnue` si le
+/// fichier n'est pas exploitable.
+pub fn changer_mot_de_passe(
+    fichier: &[u8],
+    ancien_mot_de_passe: &str,
+    nouveau_mot_de_passe: &str,
+    alea: &mut (impl RngCore + CryptoRng),
+) -> Result<(CoffreOuvert, Vec<u8>), ErreurCoffre> {
+    verifier_mot_de_passe(nouveau_mot_de_passe)?;
+    let (ancien, entrees) = ouvrir(fichier, ancien_mot_de_passe)?;
+    let acces = Acces {
+        mot_de_passe: sceller_cle(
+            &ancien.cle_donnees,
+            nouveau_mot_de_passe.as_bytes(),
+            USAGE_MOT_DE_PASSE,
+            ancien.derivation,
+            alea,
+        )?,
+        secours: ancien.acces.secours.clone(),
+    };
+    let coffre = CoffreOuvert {
+        cle_donnees: ancien.cle_donnees,
+        derivation: ancien.derivation,
+        acces,
+    };
+    let octets = coffre.sceller(&entrees, alea)?;
+    Ok((coffre, octets))
+}
+
 /// Vérifie qu'un fichier a bien la forme d'un coffre que cette version sait
 /// ouvrir, sans le déchiffrer (aucun mot de passe n'est nécessaire).
 ///
@@ -843,6 +881,62 @@ mod tests {
             verifier_forme(br#"{"format":"dnmax-coffre","version":9}"#),
             Err(ErreurCoffre::VersionInconnue(9))
         );
+    }
+
+    #[test]
+    fn le_nouveau_mot_de_passe_remplace_l_ancien_sans_toucher_au_contenu() {
+        let (fichier, _) = coffre_scelle();
+        let (_, change) =
+            changer_mot_de_passe(&fichier, MOT_DE_PASSE, "nouveau-mot-de-passe", &mut alea())
+                .expect("changement");
+        let (_, entrees) = ouvrir(&change, "nouveau-mot-de-passe").expect("ouverture");
+        assert_eq!(entrees, entrees_exemple());
+        assert_eq!(
+            ouvrir(&change, MOT_DE_PASSE).err(),
+            Some(ErreurCoffre::AccesRefuse)
+        );
+    }
+
+    #[test]
+    fn le_code_de_secours_survit_au_changement_de_mot_de_passe() {
+        let (fichier, code) = coffre_scelle();
+        let (_, change) =
+            changer_mot_de_passe(&fichier, MOT_DE_PASSE, "nouveau-mot-de-passe", &mut alea())
+                .expect("changement");
+        assert!(ouvrir_par_secours(&change, &code, "troisième-mot-de-passe", &mut alea()).is_ok());
+    }
+
+    #[test]
+    fn le_changement_exige_l_ancien_mot_de_passe() {
+        let (fichier, _) = coffre_scelle();
+        assert_eq!(
+            changer_mot_de_passe(
+                &fichier,
+                "mauvais-ancien",
+                "nouveau-mot-de-passe",
+                &mut alea()
+            )
+            .err(),
+            Some(ErreurCoffre::AccesRefuse)
+        );
+    }
+
+    #[test]
+    fn le_changement_refuse_un_nouveau_mot_de_passe_trop_court() {
+        let (fichier, _) = coffre_scelle();
+        assert_eq!(
+            changer_mot_de_passe(&fichier, MOT_DE_PASSE, "court", &mut alea()).err(),
+            Some(ErreurCoffre::MotDePasseTropCourt)
+        );
+    }
+
+    #[test]
+    fn le_coffre_rendu_apres_changement_relit_le_nouveau_fichier() {
+        let (fichier, _) = coffre_scelle();
+        let (coffre, change) =
+            changer_mot_de_passe(&fichier, MOT_DE_PASSE, "nouveau-mot-de-passe", &mut alea())
+                .expect("changement");
+        assert_eq!(coffre.relire(&change), Ok(entrees_exemple()));
     }
 
     #[test]

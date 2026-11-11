@@ -6,6 +6,7 @@ import {
   calculerEmpreinteReferentiel,
   comparerBase,
   decrireBase,
+  estReferentielVide,
   normaliserNom,
   retirerHorsContenu,
 } from "./referentiel";
@@ -25,6 +26,18 @@ describe("retirerHorsContenu", () => {
   it("laisse intactes les valeurs simples", () => {
     expect(retirerHorsContenu("texte")).toBe("texte");
     expect(retirerHorsContenu(null)).toBeNull();
+  });
+});
+
+describe("estReferentielVide", () => {
+  it("est vrai sans compétence, ou pour un contenu absent", () => {
+    expect(estReferentielVide({ competences: [], ues: [{ nom: "UE" }] })).toBe(true);
+    expect(estReferentielVide({})).toBe(true);
+    expect(estReferentielVide(null)).toBe(true);
+  });
+
+  it("est faux dès qu'une compétence existe", () => {
+    expect(estReferentielVide({ competences: [{ code: "C1.1" }] })).toBe(false);
   });
 });
 

@@ -2,6 +2,26 @@
 
 ## Non publié
 
+## 0.1.1 — 2026-11-11
+
+### Ajouté
+
+- Site : les boutons de téléchargement livrent directement l'installeur du système choisi.
+- À l'export, le dossier Documents est proposé par défaut, et l'application propose ensuite d'ouvrir le document enregistré.
+- « Mon compte » : changer son mot de passe, corriger son nom, voir la version et la licence, proposer une idée ou signaler un bug.
+- « Retirer l'exemple » : enlève les évaluations et promotions d'exemple sans toucher à ce que l'enseignant a créé.
+- Sur une installation vide, un encart guide vers le téléchargement puis la réception d'un référentiel.
+- Un référentiel reçu crée son diplôme quand il n'existe pas encore sur le poste.
+- Site web du projet versionné dans `site/`, avec le référentiel DN MADE mention Objet en téléchargement.
+
+### Corrigé
+
+- Intégration continue : l'installation des bibliothèques système ne dépend plus d'un miroir de paquets défaillant.
+
+### Modifié
+
+- L'application est livrée vide : plus de référentiel ni de brouillon d'évaluation préinstallés. Les installations existantes gardent leurs données.
+
 ## 0.1.0 — 2026-11-11
 
 ### Ajouté

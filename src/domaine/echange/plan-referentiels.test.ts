@@ -64,9 +64,9 @@ describe("calculerPlanReferentiels", () => {
     expect(plan).toMatchObject([{ action: "aucune", differences: null, diplomeId: "" }]);
   });
 
-  it("déclare impossible l'ajout quand le diplôme n'existe pas ici", () => {
+  it("propose de créer le diplôme quand il n'existe pas ici", () => {
     const plan = calculerPlanReferentiels(paquetAvec([referentielRecu({ mention: "Graphisme" })]), CATALOGUE);
-    expect(plan).toMatchObject([{ action: "impossible", diplomeId: "" }]);
+    expect(plan).toMatchObject([{ action: "creer-diplome", diplomeId: "", differences: null }]);
   });
 
   it("rend un plan vide pour un fichier sans référentiel", () => {
@@ -92,12 +92,20 @@ describe("appliquerReferentiels", () => {
     expect(apres[CLE_DONNEES]).toContain('"date":"2026-03-09"');
   });
 
-  it("ne change rien quand la ligne n'est pas choisie, déjà présente ou impossible", () => {
+  it("ne change rien quand la ligne n'est pas choisie ou déjà présente", () => {
     const entrees = entreesLocales();
-    const paquet = paquetAvec([referentielRecu({ empreinte: EMPREINTE_VERSION }), referentielRecu({ mention: "Graphisme" }), referentielRecu()]);
+    const paquet = paquetAvec([referentielRecu({ empreinte: EMPREINTE_VERSION }), referentielRecu()]);
     const plan = calculerPlanReferentiels(paquet, CATALOGUE);
-    const choix = new Set([plan[0]?.identifiant ?? "", plan[1]?.identifiant ?? ""]);
-    expect(appliquerReferentiels(entrees, plan, choix, contexte()).entrees).toBe(entrees);
+    expect(appliquerReferentiels(entrees, plan, new Set([plan[0]?.identifiant ?? ""]), contexte()).entrees).toBe(entrees);
+  });
+
+  it("crée, à côté des diplômes existants, le diplôme d'un référentiel inconnu ici", () => {
+    const plan = calculerPlanReferentiels(paquetAvec([referentielRecu({ mention: "Graphisme" })]), CATALOGUE);
+    const { entrees: apres } = appliquerReferentiels(entreesLocales(), plan, new Set([plan[0]?.identifiant ?? ""]), contexte());
+    const donnees = JSON.parse(apres[CLE_DONNEES] ?? "{}") as { diplomes: { id: string; mention: string }[]; valide: Record<string, string> };
+    expect(donnees.diplomes.map((diplome) => diplome.mention)).toEqual(["Objet", "Graphisme"]);
+    expect(donnees.valide[donnees.diplomes[1]?.id ?? ""]).toBe("version-1");
+    expect(donnees.valide.d0).toBe("v1");
   });
 
   it("n'ajoute qu'une fois un référentiel présent deux fois dans le fichier", () => {
