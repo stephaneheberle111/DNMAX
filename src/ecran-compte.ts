@@ -4,7 +4,7 @@ import { ADRESSE_CODE_SOURCE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./c
 import { LONGUEUR_MAXIMALE_NOM } from "./domaine/identite";
 import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
 import { messagePourErreur } from "./ecran-coffre";
-import { ouvrirDroitsEleves } from "./ecran-droits-eleves";
+import { ouvrirConservation, ouvrirDroitsEleves } from "./ecran-droits-eleves";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { changerMotDePasse, lireVersion, ouvrirDansNavigateur } from "./enveloppe";
 
@@ -148,6 +148,9 @@ function creerRubriqueEleves(acces: AccesDonnees): HTMLElement {
     creer("p", "", "Exporter tout ce qui concerne un élève, ou l'effacer de DNMAX, à sa demande ou à celle de sa famille."),
     creerBouton("Données d'un élève…", "btn", () => {
       ouvrirDroitsEleves(acces);
+    }),
+    creerBouton("Données anciennes…", "btn", () => {
+      ouvrirConservation(acces);
     }),
   );
   return rubrique;
