@@ -182,7 +182,7 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Signature** : chaque mise à jour est signée avec une clé privée que seul l'auteur détient (secret du dépôt) ; l'application embarque la clé publique et refuse toute mise à jour dont la signature ne correspond pas. Cette signature est indépendante des certificats Windows et Apple (décision 1) : elle protège le canal de mise à jour, pas la première installation.
 
-**Publication en deux temps** : le bouton « Run workflow » de l'atelier « Publication » (ou la poussée d'une étiquette `v1.2.3`) construit et signe les installeurs puis crée un *brouillon* de version. Les postes ne voient la mise à jour qu'une fois ce brouillon publié à la main. L'auteur garde ainsi le dernier mot, et peut essayer les installeurs avant de les diffuser.
+**Publication en deux temps** : le bouton « Run workflow » de l'atelier « Publication » construit et signe les installeurs puis crée un *brouillon* de version. Les postes ne voient la mise à jour qu'une fois ce brouillon publié à la main. L'auteur garde ainsi le dernier mot, et peut essayer les installeurs avant de les diffuser.
 
 **Garde-fous de l'atelier** : il refuse de construire si l'étiquette ne correspond pas aux versions déclarées, si la clé publique est vide ou si la clé privée manque, et il refuse de publier un manifeste si le fichier ou la signature d'une plateforme manque.
 
