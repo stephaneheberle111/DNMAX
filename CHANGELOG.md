@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Site : hébergé chez OVH à l'adresse dnmax.fr, publié par un atelier d'envoi automatique.
+
 ### Ajouté
 
 - Site : la page Télécharger renvoie aussi vers toutes les versions publiées sur GitHub.

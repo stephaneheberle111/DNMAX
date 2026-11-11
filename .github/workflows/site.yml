@@ -1,0 +1,79 @@
+name: Site
+
+# Publie le dossier site/ sur l'hébergement OVH de dnmax.fr à chaque fusion
+# dans main qui le modifie, ou à la demande (bouton « Run workflow »).
+#
+# Les fichiers distants absents du dépôt sont supprimés : le dossier distant
+# doit être réservé au site.
+#
+# Réglages (Settings → Secrets and variables → Actions) :
+#   secret   OVH_SITE_UTILISATEUR     identifiant FTP/SFTP de l'hébergement
+#   secret   OVH_SITE_MOT_DE_PASSE    son mot de passe
+#   secret   OVH_SITE_CLE_HOTE        en SFTP seulement : la ligne known_hosts du serveur
+#                                     (ssh-keyscan -t ed25519 <serveur>, vérifiée à la main)
+#   variable OVH_SITE_SERVEUR         serveur, par exemple ftp.cluster0xx.hosting.ovh.net
+#   variable OVH_SITE_PROTOCOLE       « sftp » ou « ftps » (FTP chiffré) ; le FTP en clair est refusé
+#   variable OVH_SITE_DOSSIER         dossier distant du site, « www » par défaut
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/site.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    name: Envoi chez OVH
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Les réglages sont renseignés
+        env:
+          SERVEUR: ${{ vars.OVH_SITE_SERVEUR }}
+          PROTOCOLE: ${{ vars.OVH_SITE_PROTOCOLE }}
+          UTILISATEUR: ${{ secrets.OVH_SITE_UTILISATEUR }}
+          MOT_DE_PASSE: ${{ secrets.OVH_SITE_MOT_DE_PASSE }}
+          CLE_HOTE: ${{ secrets.OVH_SITE_CLE_HOTE }}
+        run: |
+          # On ne regarde que la présence des secrets, jamais leur contenu.
+          manque=0
+          for nom in SERVEUR UTILISATEUR MOT_DE_PASSE; do
+            if [ -z "${!nom}" ]; then echo "::error::Réglage manquant : $nom (voir l'en-tête de ce fichier)."; manque=1; fi
+          done
+          case "$PROTOCOLE" in
+            sftp) if [ -z "$CLE_HOTE" ]; then echo "::error::En SFTP, la clé du serveur (OVH_SITE_CLE_HOTE) est requise."; manque=1; fi ;;
+            ftps) ;;
+            *) echo "::error::OVH_SITE_PROTOCOLE doit valoir « sftp » ou « ftps », pas « $PROTOCOLE »."; manque=1 ;;
+          esac
+          exit "$manque"
+      - name: Outil d'envoi
+        run: outils/installer-bibliotheques-linux.sh lftp
+      - name: Envoi du site
+        env:
+          SERVEUR: ${{ vars.OVH_SITE_SERVEUR }}
+          PROTOCOLE: ${{ vars.OVH_SITE_PROTOCOLE }}
+          DOSSIER: ${{ vars.OVH_SITE_DOSSIER || 'www' }}
+          UTILISATEUR: ${{ secrets.OVH_SITE_UTILISATEUR }}
+          LFTP_PASSWORD: ${{ secrets.OVH_SITE_MOT_DE_PASSE }}
+          CLE_HOTE: ${{ secrets.OVH_SITE_CLE_HOTE }}
+        run: |
+          if [ "$PROTOCOLE" = "sftp" ]; then
+            # La clé du serveur est vérifiée : jamais d'acceptation aveugle.
+            mkdir -p ~/.ssh && chmod 700 ~/.ssh
+            printf '%s\n' "$CLE_HOTE" > ~/.ssh/known_hosts
+          fi
+          # Le mot de passe passe par LFTP_PASSWORD (--env-password), pas par la ligne de commande.
+          lftp -c "
+            set net:max-retries 3; set net:timeout 30;
+            set sftp:auto-confirm no;
+            set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate true;
+            open --env-password -u \"$UTILISATEUR\" \"$PROTOCOLE://$SERVEUR\";
+            mirror --reverse --delete --verbose --exclude-glob _headers site/ \"$DOSSIER\"
+          "
