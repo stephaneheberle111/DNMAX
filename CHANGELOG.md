@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- « Mon compte » > « Données d'un élève » : exporter tout ce qui concerne un élève, ou l'effacer partout (promotions, évaluations, brouillon), à sa demande ou à celle de sa famille.
+
 ## 0.1.1 — 2026-11-11
 
 ### Ajouté
