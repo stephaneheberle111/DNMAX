@@ -10,9 +10,17 @@ import {
   lireEvaluations,
   lirePromotions,
   type Evaluation,
+  type ObjetJson,
 } from "./modele";
 import { extraireModele } from "./modele-evaluation";
-import { decrireBase, type BaseReferentiel, type ReferentielLocal } from "./referentiel";
+import {
+  decrireBase,
+  retirerHorsContenu,
+  trouverReferentielDeReference,
+  type BaseReferentiel,
+  type ReferentielLocal,
+} from "./referentiel";
+import { lireListes, preparerEnvoi, type ReferentielEchange } from "./referentiel-echange";
 import { CLE_DATES_MODIFICATION, lireDatesModification } from "./suivi-modifications";
 import { nettoyerNom } from "../identite";
 import type { Entrees } from "../magasin-memoire";
@@ -40,6 +48,7 @@ export interface Paquet {
   /** Nom de l'enseignant qui a créé le fichier, ou texte vide s'il est inconnu. */
   expediteur: string;
   evaluations: EvaluationEchangee[];
+  referentiels: ReferentielEchange[];
 }
 
 export type ErreurPaquet = "illisible" | "format-inconnu" | "version-trop-recente";
@@ -57,6 +66,7 @@ export function construirePaquet(
   maintenant: Date,
   expediteur: string,
   catalogue: readonly ReferentielLocal[],
+  diplomesChoisis: ReadonlySet<string> = new Set(),
 ): Paquet {
   const promotions = lirePromotions(entrees[CLE_PROMOTIONS]);
   const donnees = lireDonneesEtablissement(entrees[CLE_DONNEES]);
@@ -72,7 +82,62 @@ export function construirePaquet(
       });
     }
   }
-  return { format: FORMAT, version: VERSION_COURANTE, creeLe: maintenant.toISOString(), expediteur, evaluations };
+  return {
+    format: FORMAT,
+    version: VERSION_COURANTE,
+    creeLe: maintenant.toISOString(),
+    expediteur,
+    evaluations,
+    referentiels: extraireReferentiels(entrees, catalogue, diplomesChoisis),
+  };
+}
+
+/**
+ * Prépare l'envoi du référentiel de référence de chaque diplôme choisi
+ * (version en vigueur, sinon référentiel de travail). Un diplôme dont le
+ * référentiel est introuvable ou inutilisable est laissé de côté.
+ */
+function extraireReferentiels(
+  entrees: Entrees,
+  catalogue: readonly ReferentielLocal[],
+  diplomesChoisis: ReadonlySet<string>,
+): ReferentielEchange[] {
+  const donnees = analyserJson(entrees[CLE_DONNEES]);
+  if (!estObjet(donnees)) {
+    return [];
+  }
+  const referentiels: ReferentielEchange[] = [];
+  for (const diplomeId of diplomesChoisis) {
+    const local = trouverReferentielDeReference(catalogue, diplomeId);
+    if (local === null) {
+      continue;
+    }
+    const versions: unknown = estObjet(donnees.versions) ? donnees.versions[diplomeId] : null;
+    const version = (Array.isArray(versions) ? versions : []).find(
+      (candidate: unknown): candidate is ObjetJson => estObjet(candidate) && candidate.id === local.versionId,
+    );
+    const structure: unknown =
+      local.versionId === "" ? (estObjet(donnees.refs) ? donnees.refs[diplomeId] : null) : version?.snap;
+    const base = { diplome: local.diplome, mention: local.mention, empreinte: local.empreinte, dateVersion: local.dateVersion };
+    const envoi = preparerEnvoi(base, structure, donnees.dico, local.contenu);
+    if (envoi !== null) {
+      referentiels.push(envoi);
+    }
+  }
+  return referentiels;
+}
+
+function lireReferentiel(valeur: unknown): ReferentielEchange | null {
+  const base = lireBase(valeur);
+  if (base === null || !estObjet(valeur)) {
+    return null;
+  }
+  const structure = lireListes(valeur.structure);
+  const dictionnaire = lireListes(valeur.dictionnaire);
+  if (structure === null || dictionnaire === null) {
+    return null;
+  }
+  return { ...base, structure, dictionnaire, contenuLisible: retirerHorsContenu(valeur.contenuLisible) };
 }
 
 function lireBase(valeur: unknown): BaseReferentiel | null {
@@ -111,12 +176,12 @@ export function lirePaquet(texte: string): Paquet | ErreurPaquet {
   if (valeur.version > VERSION_COURANTE) {
     return "version-trop-recente";
   }
-  if (!Array.isArray(valeur.evaluations)) {
+  if (!Array.isArray(valeur.evaluations) && !Array.isArray(valeur.referentiels)) {
     return "illisible";
   }
   const evaluations: EvaluationEchangee[] = [];
   const identifiantsVus = new Set<string>();
-  for (const element of valeur.evaluations) {
+  for (const element of Array.isArray(valeur.evaluations) ? (valeur.evaluations as unknown[]) : []) {
     if (!estObjet(element) || !estEvaluation(element.modele) || identifiantsVus.has(element.modele.id)) {
       continue;
     }
@@ -134,5 +199,8 @@ export function lirePaquet(texte: string): Paquet | ErreurPaquet {
     creeLe: typeof valeur.creeLe === "string" ? valeur.creeLe : "",
     expediteur: typeof valeur.expediteur === "string" ? nettoyerNom(valeur.expediteur) : "",
     evaluations,
+    referentiels: (Array.isArray(valeur.referentiels) ? valeur.referentiels : [])
+      .map(lireReferentiel)
+      .filter((referentiel) => referentiel !== null),
   };
 }

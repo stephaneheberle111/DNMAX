@@ -132,3 +132,15 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 **Limite assumée** : le nom est déclaratif. Rien n'empêche de saisir le nom d'un autre, ni de retoucher un fichier d'échange : c'est une information entre personnes de confiance, pas une preuve. Une signature vérifiable demanderait d'échanger des clés entre enseignants.
 
 **Reste à faire** : changer son nom depuis l'application.
+
+## 12. Un référentiel reçu devient une nouvelle version, jamais activée d'office
+
+**Retenu** : à l'envoi, l'enseignant peut cocher le référentiel d'un ou plusieurs diplômes (la version en vigueur, sinon le référentiel de travail). À la réception, le plan indique pour chacun s'il est identique à un référentiel d'ici, et sinon ce qui le distingue du référentiel de référence local : compétences, EC, UE et blocs en plus, en moins ou modifiés, désignés par leur code ou leur nom. S'il est accepté, il est ajouté à la liste des versions du diplôme, avec une note « Reçu de … le … ».
+
+**Rien n'est activé** : ni le référentiel de travail, ni la version en vigueur, ni les promotions ne changent. L'enseignant applique lui-même la version reçue depuis Référentiel → Constituer → Validation. Un import ne peut donc pas modifier en silence le référentiel sur lequel des évaluations sont en cours.
+
+**Le dictionnaire de libellés est partagé entre tous les diplômes** : un libellé reçu est réutilisé s'il existe déjà à l'identique, ajouté sinon, et rangé sous un nouvel identifiant si le sien est déjà pris par un libellé différent. Un libellé local n'est jamais modifié. Conséquence visible : après réception d'un référentiel qui reformule une compétence, le dictionnaire (Référentiel → Définir) contient les deux formulations.
+
+**Évaluations du même fichier** : une évaluation construite sur le référentiel reçu est rattachée à la version créée.
+
+**Limite** : un référentiel dont le diplôme ou la mention n'existe pas chez le destinataire n'est pas importable ; il faut d'abord créer ce diplôme dans « Mon établissement ».

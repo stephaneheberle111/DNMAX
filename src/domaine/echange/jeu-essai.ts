@@ -17,7 +17,16 @@ export const DONNEES = {
 
 /** Référentiels du poste : la version validée v1 et le référentiel de travail, de contenus différents. */
 export const CATALOGUE: ReferentielLocal[] = [
-  { diplomeId: "d0", diplome: "DN MADE", mention: "Objet", versionId: "", dateVersion: "", empreinte: EMPREINTE_TRAVAIL },
+  {
+    diplomeId: "d0",
+    diplome: "DN MADE",
+    mention: "Objet",
+    versionId: "",
+    dateVersion: "",
+    empreinte: EMPREINTE_TRAVAIL,
+    enVigueur: false,
+    contenu: { competences: [{ code: "C1.2", libelle: "Concevoir" }] },
+  },
   {
     diplomeId: "d0",
     diplome: "DN MADE",
@@ -25,6 +34,8 @@ export const CATALOGUE: ReferentielLocal[] = [
     versionId: "v1",
     dateVersion: "2025-09-01",
     empreinte: EMPREINTE_VERSION,
+    enVigueur: true,
+    contenu: { competences: [{ code: "C1.1", libelle: "Analyser" }] },
   },
 ];
 
