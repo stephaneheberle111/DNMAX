@@ -246,3 +246,13 @@ export async function lireVersion(): Promise<string> {
     return "";
   }
 }
+
+/**
+ * Ouvre le dernier document exporté avec le logiciel par défaut du système
+ * (traitement de texte, tableur…).
+ *
+ * @throws si aucun document n'a été exporté ou si le système ne sait pas l'ouvrir.
+ */
+export async function ouvrirDernierExport(): Promise<void> {
+  await invoke("ouvrir_dernier_export");
+}

@@ -67,6 +67,8 @@ L'icône est un simple pavé « DN » généré depuis `src-tauri/icone-source.s
 
 L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom proposé et des octets, l'enveloppe nettoie le nom, ouvre « Enregistrer sous » et écrit là où l'enseignant l'a décidé. Aucun droit d'accès général aux fichiers n'est accordé à la page.
 
+La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en indique un. Après l'enregistrement, l'application propose d'ouvrir le document avec le logiciel par défaut du système : l'enveloppe retient pour cela l'emplacement du dernier export, que la page ne connaît jamais — elle ne peut donc faire ouvrir que ce que l'enseignant vient d'enregistrer lui-même.
+
 ## 8. Les données sont chiffrées par un mot de passe
 
 **Retenu** : tout ce que l'enseignant saisit est enregistré dans un seul fichier chiffré, `coffre.dnmax`, déverrouillé par un mot de passe demandé à chaque ouverture. Un code de secours, affiché une seule fois à la création, permet de choisir un nouveau mot de passe en cas d'oubli.

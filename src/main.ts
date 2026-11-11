@@ -22,6 +22,7 @@ import { installerCompte } from "./ecran-compte";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
+import { proposerOuvertureExport } from "./ecran-export";
 import { proposerMiseAJour } from "./ecran-mise-a-jour";
 import {
   attendreAvantFermeture,
@@ -150,7 +151,7 @@ async function demarrer(): Promise<void> {
   }
   const { magasin, acces } = await creerMagasinProtege();
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
-  await chargerInterfaceHistorique(magasin);
+  await chargerInterfaceHistorique(magasin, proposerOuvertureExport);
   installerEchange(acces);
   proposerMiseAJour(() => acces.enregistrerMaintenant());
   suivreExemple(acces);
