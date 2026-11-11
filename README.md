@@ -4,7 +4,7 @@ DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs �
 
 C'est une application de bureau autonome pour Windows, Linux et macOS : pas de serveur central, pas de compte, les données restent sur l'ordinateur de l'enseignant.
 
-> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs élèves. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Manque encore la mise à jour automatique.
+> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs élèves. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. La mise à jour automatique est en place mais demande une clé de signature (voir « Publier une version »).
 
 ## Où sont les données
 
@@ -71,6 +71,39 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 - **macOS** : au premier lancement refusé, ouvrir Réglages Système → Confidentialité et sécurité, puis « Ouvrir quand même ».
 - **Linux** : installer le `.deb`, ou rendre le fichier `.AppImage` exécutable et le lancer.
 
+## Publier une version
+
+### Une seule fois : la clé de signature des mises à jour
+
+1. Sur votre ordinateur, dans le dépôt :
+
+   ```bash
+   npx tauri signer generate -w ~/.tauri/dnmax.key
+   ```
+
+   La commande demande un mot de passe et crée deux fichiers : `dnmax.key` (clé privée, **à ne jamais copier dans le dépôt ni dans une conversation**) et `dnmax.key.pub` (clé publique).
+2. Sur GitHub, dans Settings → Secrets and variables → Actions, créer deux secrets : `TAURI_SIGNING_PRIVATE_KEY` (contenu de `dnmax.key`) et `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (le mot de passe).
+3. Copier le contenu de `dnmax.key.pub` dans `plugins.updater.pubkey` de `src-tauri/tauri.conf.json`, par une branche comme tout changement.
+4. Conserver `dnmax.key` et son mot de passe en lieu sûr : sans eux, plus aucune mise à jour ne sera acceptée par les postes déjà installés.
+
+### À chaque version
+
+1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
+2. Poser l'étiquette sur `main` et la pousser :
+
+   ```bash
+   git tag v0.2.0
+   ```
+
+   ```bash
+   git push origin v0.2.0
+   ```
+
+3. L'atelier « Publication » construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
+4. Publier le brouillon : les postes déjà installés proposeront la mise à jour à leur prochain lancement.
+
+Sous Linux, seule l'AppImage se met à jour d'elle-même.
+
 ## Organisation du code
 
 ```mermaid
@@ -86,6 +119,7 @@ flowchart LR
 - `src/domaine/` : ce qui calcule. Aucune dépendance au navigateur ni à Tauri, donc testable directement.
 - `src/enveloppe.ts` : ce qui parle à l'extérieur.
 - `src/ecran-coffre.ts` : l'écran de mot de passe.
+- `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ».
 - `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans.
 - `src-tauri/` : la fenêtre de bureau et ses droits (`capabilities/`). Dans `src-tauri/src/` : `coffre.rs` chiffre (sans toucher au disque), `depot.rs` range les fichiers (sans connaître le chiffrement), `export.rs` écrit les exports, `lib.rs` relie le tout aux commandes appelées par l'interface.
 
