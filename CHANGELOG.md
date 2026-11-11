@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- Site : page « Confidentialité et mentions légales », reliée depuis le pied de page.
+
 ## 0.1.1 — 2026-11-11
 
 ### Ajouté
