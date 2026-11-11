@@ -51,7 +51,12 @@ export interface AccesDonnees {
   dresserCatalogue(entrees: Entrees): Promise<ReferentielLocal[]>;
   /** Écrit sur le disque, sans attendre, les modifications encore en attente. */
   enregistrerMaintenant(): Promise<void>;
-  /** Enregistre les nouvelles entrées puis recharge l'interface pour qu'elle les affiche. */
+  /** Écrit une entrée, enregistrée comme toute autre modification. */
+  ecrireEntree(cle: string, valeur: string): void;
+  /**
+   * Remplace toutes les entrées par celles fournies (une clé absente est supprimée),
+   * les enregistre, puis recharge l'interface pour qu'elle les affiche.
+   */
   remplacerEntrees(entrees: Entrees): Promise<void>;
 }
 
@@ -80,7 +85,7 @@ const MESSAGES_REFERENTIEL: Record<ComparaisonBase["etat"], { texte: string; ale
 };
 
 /** Crée un élément ; le texte passe par `textContent`, jamais interprété comme du HTML. */
-function creer<Balise extends keyof HTMLElementTagNameMap>(
+export function creer<Balise extends keyof HTMLElementTagNameMap>(
   balise: Balise,
   classe = "",
   texte = "",
@@ -91,7 +96,7 @@ function creer<Balise extends keyof HTMLElementTagNameMap>(
   return element;
 }
 
-function creerBouton(texte: string, classe: string, action: () => void): HTMLButtonElement {
+export function creerBouton(texte: string, classe: string, action: () => void): HTMLButtonElement {
   const bouton = creer("button", classe, texte);
   bouton.type = "button";
   bouton.addEventListener("click", action);
@@ -121,7 +126,7 @@ function lireTexte(valeur: unknown): string {
 }
 
 /** Ouvre une boîte de dialogue vide et rend de quoi la remplir et la fermer. */
-function ouvrirBoite(titre: string): { boite: HTMLElement; fermer: () => void } {
+export function ouvrirBoite(titre: string): { boite: HTMLElement; fermer: () => void } {
   const fond = creer("div", "echange-fond");
   const boite = creer("div", "echange-boite");
   boite.setAttribute("role", "dialog");

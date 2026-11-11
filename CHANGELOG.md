@@ -4,6 +4,7 @@
 
 ### Ajouté
 
+- « Retirer l'exemple » : enlève les évaluations et promotions d'exemple sans toucher à ce que l'enseignant a créé.
 - Sur une installation vide, un encart guide vers le téléchargement puis la réception d'un référentiel.
 - Un référentiel reçu crée son diplôme quand il n'existe pas encore sur le poste.
 - Site web du projet versionné dans `site/`, avec le référentiel DN MADE mention Objet en téléchargement.
