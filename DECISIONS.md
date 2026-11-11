@@ -224,3 +224,13 @@ Le nom se corrige dans « Mon compte » (décision 18).
 - **À propos** : version, licence, et trois liens ouverts dans le navigateur (idées et bugs, site, code source).
 
 **Canal de retours** : la page « Idées et bugs » du site, qui ouvre un ticket prérempli sur GitHub. Un enseignant sans compte GitHub ne peut donc pas déposer lui-même un retour par ce canal.
+
+## 19. Durée de conservation des données d'élèves
+
+**Retenu** : les données d'élèves d'une promotion sont gardées **1 an** après sa sortie (le 1er juillet suivant la fin de son diplôme, dont la durée est lue dans les données de l'établissement, 3 ans à défaut). Au-delà, DNMAX le signale au lancement et propose, dans « Mon compte » > « Données anciennes », d'effacer ces données : liste de la promotion, résultats et listes saisies à la main des évaluations rattachées. Les évaluations elles-mêmes sont gardées : une grille ou des consignes ne sont pas des données personnelles. La même boîte efface les résultats restés sans élève après le retrait d'un élève ou d'une promotion.
+
+**Pourquoi** : le RGPD impose une durée de conservation limitée et proportionnée. Un an après la sortie couvre les demandes d'attestation et les recours de fin de cursus. La durée est un réglage (`ANNEES_CONSERVATION_ELEVES` dans `src/configuration.ts`), à ajuster avec l'établissement et son délégué à la protection des données.
+
+**Jamais d'effacement automatique** : l'enseignant peut avoir à remettre un relevé avant l'effacement. DNMAX propose ; l'enseignant décide.
+
+**Limites** : les sauvegardes automatiques du coffre gardent une trace jusqu'à leur remplacement (dix jours d'utilisation) ; un nom cité dans un texte libre n'est pas recherché.

@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import "./ecran-droits-eleves.css";
+import { ANNEES_CONSERVATION_ELEVES } from "./configuration";
+import { identifiantsOrphelins, promotionsEchues, purgerDonneesEleves } from "./domaine/conservation";
 import { effacerEleve, extraireEleve, listerEleves, type BilanEffacement, type EleveRepere } from "./domaine/droits-eleve";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
@@ -122,4 +125,119 @@ export function ouvrirDroitsEleves(acces: AccesDonnees): void {
     creer("p", "", "Pour corriger le nom d'un élève, utilisez l'écran Promotions : la correction s'applique à toutes ses évaluations."),
     actions,
   );
+}
+
+function ecrireJour(jourIso: string): string {
+  const [annee, mois, jour] = jourIso.split("-");
+  return `${jour ?? ""}/${mois ?? ""}/${annee ?? ""}`;
+}
+
+/**
+ * Ouvre la boîte « Données anciennes » : effacer les données d'élèves des
+ * promotions sorties depuis plus longtemps que la durée de conservation, et les
+ * résultats restés sans élève. Rien n'est effacé sans confirmation.
+ */
+export function ouvrirConservation(acces: AccesDonnees): void {
+  const entrees = acces.lireEntrees();
+  const echues = promotionsEchues(entrees, aujourdHui(), ANNEES_CONSERVATION_ELEVES);
+  const orphelins = identifiantsOrphelins(entrees);
+  const { boite, fermer } = ouvrirBoite("Données anciennes");
+  boite.append(
+    creer(
+      "p",
+      "",
+      `Les données d'élèves sont gardées ${String(ANNEES_CONSERVATION_ELEVES)} an(s) après la sortie de leur promotion, puis effacées. Les évaluations elles-mêmes (grilles, consignes) sont conservées, sans résultats d'élèves.`,
+    ),
+  );
+  const actions = creer("div", "echange-actions");
+  if (echues.length === 0 && orphelins.length === 0) {
+    boite.append(creer("p", "", "Aucune donnée d'élève n'a dépassé sa durée de conservation."));
+    actions.append(creerBouton("Fermer", "btn ghost", fermer));
+    boite.append(actions);
+    return;
+  }
+  const cases: { id: string; caseACocher: HTMLInputElement }[] = [];
+  for (const promotion of echues) {
+    const ligne = creer("label", "conservation-ligne");
+    const caseACocher = creer("input");
+    caseACocher.type = "checkbox";
+    caseACocher.checked = true;
+    ligne.append(
+      caseACocher,
+      ` ${promotion.nom} : ${String(promotion.eleves)} élève(s), sortie le ${ecrireJour(promotion.sortie)}, à effacer depuis le ${ecrireJour(promotion.echeance)}`,
+    );
+    cases.push({ id: promotion.id, caseACocher });
+    boite.append(ligne);
+  }
+  const caseOrphelins = creer("input");
+  if (orphelins.length > 0) {
+    const ligne = creer("label", "conservation-ligne");
+    caseOrphelins.type = "checkbox";
+    caseOrphelins.checked = true;
+    ligne.append(
+      caseOrphelins,
+      ` Résultats de ${String(orphelins.length)} élève(s) retiré(s) de toute promotion, restés dans des évaluations`,
+    );
+    boite.append(ligne);
+  }
+  const erreur = creer("p", "echange-erreur");
+  erreur.hidden = true;
+  const effacer = creerBouton("Effacer définitivement", "btn primary", () => {
+    const choisies = cases.filter((element) => element.caseACocher.checked).map((element) => element.id);
+    const avecOrphelins = orphelins.length > 0 && caseOrphelins.checked;
+    if (choisies.length === 0 && !avecOrphelins) {
+      erreur.textContent = "Cochez au moins une ligne.";
+      erreur.hidden = false;
+      return;
+    }
+    effacer.disabled = true;
+    const purge = purgerDonneesEleves(acces.lireEntrees(), choisies, avecOrphelins);
+    // Les données sont réécrites puis l'interface est rechargée.
+    acces.remplacerEntrees(purge.entrees).catch((erreurPurge: unknown) => {
+      erreur.textContent = messagePourErreur(erreurPurge);
+      erreur.hidden = false;
+      effacer.disabled = false;
+    });
+  });
+  boite.append(
+    creer(
+      "p",
+      "",
+      "Cet effacement est définitif. Pensez à exporter auparavant ce que vous devez remettre (relevés, attestations). Les sauvegardes automatiques en gardent une trace jusqu'à leur remplacement.",
+    ),
+    erreur,
+  );
+  actions.append(creerBouton("Plus tard", "btn ghost", fermer), effacer);
+  boite.append(actions);
+}
+
+/**
+ * Au lancement, signale discrètement des données d'élèves échues. Ne fait
+ * rien d'autre : l'effacement reste une décision de l'enseignant.
+ */
+export function rappelerConservation(acces: AccesDonnees): void {
+  const echues = promotionsEchues(acces.lireEntrees(), aujourdHui(), ANNEES_CONSERVATION_ELEVES);
+  if (echues.length === 0) {
+    return;
+  }
+  const annonce = creer("div", "annonce-conservation");
+  annonce.setAttribute("role", "status");
+  const voir = creerBouton("Voir", "btn primary", () => {
+    annonce.remove();
+    ouvrirConservation(acces);
+  });
+  const plusTard = creerBouton("Plus tard", "btn ghost", () => {
+    annonce.remove();
+  });
+  const boutons = creer("div", "annonce-actions");
+  boutons.append(plusTard, voir);
+  annonce.append(
+    creer(
+      "p",
+      "",
+      `${String(echues.length)} promotion(s) sont sorties depuis plus de ${String(ANNEES_CONSERVATION_ELEVES)} an(s) : leurs données d'élèves peuvent être effacées.`,
+    ),
+    boutons,
+  );
+  document.body.append(annonce);
 }

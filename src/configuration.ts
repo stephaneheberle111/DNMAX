@@ -16,3 +16,10 @@ export const REFERENTIEL_PROPOSE = {
 } as const;
 
 export const LICENCE = "AGPL-3.0-or-later";
+
+/**
+ * Années pendant lesquelles les données d'élèves d'une promotion sont gardées
+ * après sa sortie (fin de l'année scolaire où s'achève son diplôme). Au-delà,
+ * DNMAX propose de les effacer. Voir DECISIONS.md, « Durée de conservation ».
+ */
+export const ANNEES_CONSERVATION_ELEVES = 1;

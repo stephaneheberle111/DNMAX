@@ -5,6 +5,7 @@
 ### Ajouté
 
 - « Mon compte » > « Données d'un élève » : exporter tout ce qui concerne un élève, ou l'effacer partout (promotions, évaluations, brouillon), à sa demande ou à celle de sa famille.
+- Durée de conservation : un an après la sortie d'une promotion, DNMAX propose d'effacer ses données d'élèves (« Mon compte » > « Données anciennes »), ainsi que les résultats restés sans élève.
 
 ## 0.1.1 — 2026-11-11
 
