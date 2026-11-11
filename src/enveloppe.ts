@@ -133,3 +133,27 @@ export async function ouvrirFichierEchange(): Promise<string | null> {
   }
   return texte;
 }
+
+/**
+ * Chiffre le texte d'un fichier d'échange sous `motDePasse` et le fait
+ * enregistrer par la boîte de dialogue du système.
+ *
+ * @returns `true` si le fichier a été écrit, `false` si l'enseignant a annulé.
+ * @throws ErreurCoffre si le mot de passe est trop court ou l'écriture impossible.
+ */
+export async function enregistrerFichierProtege(nomPropose: string, texte: string, motDePasse: string): Promise<boolean> {
+  return (await appelerCoffre("enregistrer_fichier_protege", { nomPropose, texte, motDePasse })) === true;
+}
+
+/**
+ * Déchiffre le texte d'un fichier d'échange protégé.
+ *
+ * @throws ErreurCoffre « acces-refuse » si le mot de passe n'est pas le bon.
+ */
+export async function dechiffrerFichierEchange(fichier: string, motDePasse: string): Promise<string> {
+  const texte = await appelerCoffre("dechiffrer_fichier_echange", { fichier, motDePasse });
+  if (typeof texte !== "string") {
+    throw new ErreurCoffre("interne");
+  }
+  return texte;
+}

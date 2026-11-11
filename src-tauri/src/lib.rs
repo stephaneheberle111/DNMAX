@@ -263,6 +263,50 @@ fn ouvrir_fichier_echange(application: AppHandle) -> Result<Option<String>, Erre
     }
 }
 
+/// Chiffre le texte d'un fichier d'échange sous le mot de passe convenu entre les
+/// deux enseignants, puis le fait enregistrer là où l'expéditeur le décide.
+///
+/// Rend `true` si le fichier a été écrit, `false` si l'enseignant a annulé.
+#[tauri::command(async)]
+fn enregistrer_fichier_protege(
+    application: AppHandle,
+    nom_propose: String,
+    texte: String,
+    mot_de_passe: String,
+) -> Result<bool, ErreurCommande> {
+    let chiffre = coffre::proteger_texte(
+        &texte,
+        &mot_de_passe,
+        coffre::PARAMETRES_PAR_DEFAUT,
+        &mut OsRng,
+    )?;
+    let choix = application
+        .dialog()
+        .file()
+        .set_file_name(export::nettoyer_nom_fichier(&nom_propose))
+        .blocking_save_file();
+    let Some(emplacement) = choix else {
+        return Ok(false);
+    };
+    let chemin = emplacement
+        .into_path()
+        .map_err(|_| ErreurCommande::DisqueInaccessible)?;
+    export::ecrire_export(&chemin, &chiffre)?;
+    Ok(true)
+}
+
+/// Déchiffre le texte d'un fichier d'échange protégé, déjà lu par l'interface.
+#[tauri::command(async)]
+fn dechiffrer_fichier_echange(
+    fichier: String,
+    mot_de_passe: String,
+) -> Result<String, ErreurCommande> {
+    Ok(coffre::lire_texte_protege(
+        fichier.as_bytes(),
+        &mot_de_passe,
+    )?)
+}
+
 /// Rend les octets transmis par l'interface.
 ///
 /// Selon le système, Tauri livre un même envoi binaire soit tel quel, soit
@@ -318,7 +362,9 @@ pub fn lancer() {
             ouvrir_coffre_par_secours,
             lire_coffre,
             enregistrer_coffre,
-            ouvrir_fichier_echange
+            ouvrir_fichier_echange,
+            enregistrer_fichier_protege,
+            dechiffrer_fichier_echange
         ])
         .setup(|application| {
             // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.
