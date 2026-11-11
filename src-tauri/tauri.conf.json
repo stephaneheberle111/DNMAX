@@ -48,7 +48,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDIwQjUwODAyMjg0NzJBOEQKUldTTktrY29BZ2kxSUdJbEtoUCtOK2tWcFpWbm5HSWp5V1RnWnJKU1p6V1k4em1BZDNFNHBJd3QK",
       "endpoints": [
         "https://github.com/stephaneheberle111/DNMAX/releases/latest/download/latest.json"
       ]

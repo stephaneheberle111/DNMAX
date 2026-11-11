@@ -4,7 +4,7 @@ DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs �
 
 C'est une application de bureau autonome pour Windows, Linux et macOS : pas de serveur central, pas de compte, les données restent sur l'ordinateur de l'enseignant.
 
-> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs élèves. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. La mise à jour automatique est en place mais demande une clé de signature (voir « Publier une version »).
+> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs élèves. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Les mises à jour leur sont proposées au lancement (voir « Publier une version »).
 
 ## Où sont les données
 
