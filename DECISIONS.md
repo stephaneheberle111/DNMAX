@@ -171,3 +171,20 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 **Pourquoi seulement sur une installation vide** : installer un coffre par-dessus des données existantes les détruirait en bloc. Un coffre déjà présent n'est donc jamais remplacé. Pour réunir deux jeux de données, on passe par l'échange, qui montre ce qui change ligne par ligne.
 
 **Conséquence** : il n'y a pas de synchronisation entre deux ordinateurs utilisés en parallèle ; le transfert est un déménagement.
+
+## 15. Mises à jour proposées, jamais imposées, et publiées à la main
+
+**Retenu** : au lancement, une fois les données ouvertes, l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
+
+**Seul appel réseau de l'application.** Aucune donnée de l'enseignant n'est transmise. Sans connexion, ou si la vérification échoue, l'application ne dit rien et fonctionne normalement.
+
+**Signature** : chaque mise à jour est signée avec une clé privée que seul l'auteur détient (secret du dépôt) ; l'application embarque la clé publique et refuse toute mise à jour dont la signature ne correspond pas. Cette signature est indépendante des certificats Windows et Apple (décision 1) : elle protège le canal de mise à jour, pas la première installation.
+
+**Publication en deux temps** : pousser une étiquette `v1.2.3` construit et signe les installeurs puis crée un *brouillon* de version. Les postes ne voient la mise à jour qu'une fois ce brouillon publié à la main. L'auteur garde ainsi le dernier mot, et peut essayer les installeurs avant de les diffuser.
+
+**Garde-fous de l'atelier** : il refuse de construire si l'étiquette ne correspond pas aux versions déclarées, si la clé publique est vide ou si la clé privée manque, et il refuse de publier un manifeste si le fichier ou la signature d'une plateforme manque.
+
+**Limites** :
+
+- sous Linux, seule l'AppImage se met à jour d'elle-même ; un paquet `.deb` se remplace à la main ;
+- la perte de la clé privée empêcherait de publier des mises à jour acceptées par les postes déjà installés : il faudrait leur faire réinstaller l'application.

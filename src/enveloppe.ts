@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { relaunch } from "@tauri-apps/plugin-process";
+import { check } from "@tauri-apps/plugin-updater";
 import type { Entrees } from "./domaine/magasin-memoire";
 import { estJeuEntrees } from "./domaine/saisie-coffre";
 
@@ -175,4 +177,40 @@ export async function exporterCoffre(): Promise<boolean> {
  */
 export async function installerCoffre(): Promise<boolean> {
   return (await appelerCoffre("installer_coffre")) === true;
+}
+
+/** Une version plus récente de l'application, prête à être installée. */
+export interface MiseAJour {
+  version: string;
+  /** Notes de version rédigées par l'auteur ; texte vide s'il n'y en a pas. */
+  notes: string;
+  /** Télécharge la mise à jour, vérifie sa signature, l'installe puis relance l'application. */
+  installer(): Promise<void>;
+}
+
+/**
+ * Cherche une version plus récente auprès du dépôt de l'application.
+ * C'est le seul appel réseau de DNMAX ; aucune donnée de l'enseignant n'est transmise.
+ *
+ * @returns `null` s'il n'y en a pas, ou si la vérification est impossible
+ *   (pas de connexion, publication en cours…) : l'application doit rester
+ *   pleinement utilisable hors ligne.
+ */
+export async function chercherMiseAJour(): Promise<MiseAJour | null> {
+  try {
+    const disponible = await check();
+    if (disponible === null) {
+      return null;
+    }
+    return {
+      version: disponible.version,
+      notes: disponible.body ?? "",
+      installer: async () => {
+        await disponible.downloadAndInstall();
+        await relaunch();
+      },
+    };
+  } catch {
+    return null;
+  }
 }

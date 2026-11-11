@@ -1,0 +1,39 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.annonce-mise-a-jour {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 70;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+}
+
+.annonce-mise-a-jour b {
+  font-family: var(--fd);
+  font-size: 14.5px;
+}
+
+.annonce-mise-a-jour p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.annonce-mise-a-jour .annonce-erreur {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.annonce-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
