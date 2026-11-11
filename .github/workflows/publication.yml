@@ -169,6 +169,15 @@ jobs:
           find publication -mindepth 2 -type f -exec mv -t publication {} +
           find publication -mindepth 1 -type d -empty -delete
           node outils/ecrire-manifeste.ts publication "$VERSION" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${ETIQUETTE}"
+      - name: Copies à nom fixe pour les liens de téléchargement du site
+        # Le site pointe sur « releases/latest/download/<nom> » : il lui faut des noms
+        # qui ne changent pas d'une version à l'autre. Fait après le manifeste, qui
+        # doit continuer à désigner les fichiers signés sous leur nom d'origine.
+        run: |
+          cp publication/*-setup.exe publication/DNMAX-windows.exe
+          cp publication/*.dmg publication/DNMAX-macos.dmg
+          cp publication/*.AppImage publication/DNMAX-linux.AppImage
+          cp publication/*.deb publication/DNMAX-linux.deb
       - name: Brouillon de version sur GitHub
         env:
           GH_TOKEN: ${{ github.token }}
