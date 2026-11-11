@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- Site : la page Télécharger propose le référentiel DN MADE mention Objet et explique comment l'importer.
+
 ### Modifié
 
 - Site : hébergé chez OVH à l'adresse dnmax.fr.
