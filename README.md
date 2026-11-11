@@ -97,6 +97,20 @@ Pousser soi-même une étiquette `v1.2.3` déclenche le même atelier.
 
 Sous Linux, seule l'AppImage se met à jour d'elle-même.
 
+## Site web
+
+Le dossier `site/` contient le site public de DNMAX (<https://dnmax.pages.dev>) : une page unique, sans étape de construction, et les référentiels proposés au téléchargement (`site/referentiels/`).
+
+Pour que Cloudflare Pages le publie à chaque fusion dans `main`, relier le projet Pages au dépôt avec ces réglages :
+
+| Réglage | Valeur |
+| --- | --- |
+| Branche de production | `main` |
+| Commande de construction | *(aucune)* |
+| Dossier de sortie | `site` |
+
+Le formulaire « Idées et bugs » de la page ouvre un ticket prérempli sur GitHub.
+
 ## Organisation du code
 
 ```mermaid
