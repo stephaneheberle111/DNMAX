@@ -32,7 +32,7 @@ function referentielRecu(surcharge: Partial<ReferentielEchange> = {}): Referenti
 }
 
 function paquetAvec(referentiels: ReferentielEchange[], evaluations: Paquet["evaluations"] = []): Paquet {
-  return { format: "dnmax-echange", version: 1, creeLe: "", expediteur: "Noé Baptiste", evaluations, referentiels };
+  return { format: "dnmax-echange", version: 1, creeLe: "", expediteur: "Noé Baptiste", evaluations, referentiels, promotions: [] };
 }
 
 function contexte(): ContexteImport {
@@ -110,7 +110,7 @@ describe("appliquerReferentiels", () => {
 describe("rattacherAuxVersionsCreees", () => {
   it("rattache à la version créée une évaluation construite sur le référentiel reçu", () => {
     const base = { diplome: "DN MADE", mention: "Objet", empreinte: EMPREINTE_RECUE, dateVersion: "2026-02-01" };
-    const paquet = paquetAvec([referentielRecu()], [{ modele: creerEvaluation(), modifieLe: "", modifiePar: "", base }]);
+    const paquet = paquetAvec([referentielRecu()], [{ modele: creerEvaluation(), modifieLe: "", modifiePar: "", base, donneesEleves: null }]);
     const entrees = entreesLocales();
     const planReferentiels = calculerPlanReferentiels(paquet, CATALOGUE);
     const planEvaluations = calculerPlan(entrees, paquet, CATALOGUE);
@@ -128,7 +128,7 @@ describe("rattacherAuxVersionsCreees", () => {
   });
 
   it("laisse intacte une évaluation construite sur un autre référentiel", () => {
-    const paquet = paquetAvec([], [{ modele: creerEvaluation(), modifieLe: "", modifiePar: "", base: null }]);
+    const paquet = paquetAvec([], [{ modele: creerEvaluation(), modifieLe: "", modifiePar: "", base: null, donneesEleves: null }]);
     const plan = calculerPlan(entreesLocales(), paquet, CATALOGUE);
     expect(rattacherAuxVersionsCreees(plan, new Map([["autre", "v9"]]))).toEqual(plan);
   });

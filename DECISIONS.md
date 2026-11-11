@@ -144,3 +144,22 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 **Évaluations du même fichier** : une évaluation construite sur le référentiel reçu est rattachée à la version créée.
 
 **Limite** : un référentiel dont le diplôme ou la mention n'existe pas chez le destinataire n'est pas importable ; il faut d'abord créer ce diplôme dans « Mon établissement ».
+
+## 13. Les élèves et leurs résultats ne voyagent que dans un fichier chiffré
+
+**Retenu** : à l'envoi, une option « Inclure les élèves et leurs résultats » ajoute au fichier les données d'élèves des évaluations choisies et leurs promotions. Le fichier est alors chiffré sous un mot de passe choisi pour l'occasion (même chiffrement que le coffre), à communiquer au destinataire par un autre canal. À la réception, le mot de passe est demandé avant toute lecture.
+
+**Garde-fou** : un fichier en clair ne peut pas faire entrer de données d'élèves, même s'il en contient : elles ne sont lues que si le fichier vient d'être déchiffré.
+
+**Rapprochement** : les identifiants de promotions et d'élèves sont propres à chaque poste. Une promotion reçue est retrouvée par son identifiant, sinon par son nom au sein du même diplôme, sinon créée. Un élève est retrouvé par son identifiant, sinon par son nom (casse, accents et espaces ignorés), sinon ajouté à la promotion. Deux enseignants qui ont saisi la même classe chacun de leur côté se retrouvent donc. Aucun élève d'ici n'est retiré ni renommé.
+
+**Fusion des résultats, élève par élève** : un élève sans résultat ici reçoit ceux du fichier ; des résultats identiques ne changent rien ; des résultats différents sont signalés et **ceux d'ici sont gardés**, sauf si l'enseignant coche leur remplacement pour cette évaluation. Les élèves d'ici absents du fichier ne sont jamais touchés. Le plan annonce ces trois nombres avant validation.
+
+**Limites** :
+
+- deux élèves homonymes d'une même promotion seraient confondus ;
+- l'état des restitutions n'est repris que si aucun identifiant d'élève n'a dû être changé ;
+- si le diplôme de la promotion n'existe pas chez le destinataire, les résultats ne sont pas importables ;
+- la fusion se décide par évaluation, pas élève par élève.
+
+**Adaptation de l'interface historique** : ses données d'établissement n'étaient enregistrées qu'à leur première modification ; elles le sont maintenant dès le chargement (`persistData()` en fin de script), sans quoi une installation neuve ne connaissait pas son propre diplôme lors d'un import.
