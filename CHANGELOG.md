@@ -2,6 +2,14 @@
 
 ## Non publié
 
+### Ajouté
+
+- Site : la page Télécharger renvoie aussi vers toutes les versions publiées sur GitHub.
+
+### Modifié
+
+- Site : plus de numéro de version écrit en dur, qui restait en retard d'une version ; la page Télécharger renvoie au journal des modifications.
+
 ### Corrigé
 
 - L'annonce de mise à jour affiche en entier le lien vers le journal des modifications.
