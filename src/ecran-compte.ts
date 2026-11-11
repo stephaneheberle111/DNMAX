@@ -4,6 +4,7 @@ import { ADRESSE_CODE_SOURCE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./c
 import { LONGUEUR_MAXIMALE_NOM } from "./domaine/identite";
 import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
 import { messagePourErreur } from "./ecran-coffre";
+import { ouvrirDroitsEleves } from "./ecran-droits-eleves";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { changerMotDePasse, lireVersion, ouvrirDansNavigateur } from "./enveloppe";
 
@@ -140,10 +141,22 @@ function creerRubriqueAPropos(): HTMLElement {
   return rubrique;
 }
 
+function creerRubriqueEleves(acces: AccesDonnees): HTMLElement {
+  const rubrique = creer("section", "compte-rubrique");
+  rubrique.append(
+    creer("h3", "", "Données des élèves"),
+    creer("p", "", "Exporter tout ce qui concerne un élève, ou l'effacer de DNMAX, à sa demande ou à celle de sa famille."),
+    creerBouton("Données d'un élève…", "btn", () => {
+      ouvrirDroitsEleves(acces);
+    }),
+  );
+  return rubrique;
+}
+
 function montrerCompte(acces: AccesDonnees): void {
   const { boite, fermer } = ouvrirBoite("Mon compte");
   const contenu = creer("div", "compte-contenu");
-  contenu.append(creerRubriqueNom(acces), creerRubriqueMotDePasse(acces), creerRubriqueAPropos());
+  contenu.append(creerRubriqueNom(acces), creerRubriqueMotDePasse(acces), creerRubriqueEleves(acces), creerRubriqueAPropos());
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(contenu, actions);
