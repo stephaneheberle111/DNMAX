@@ -5,9 +5,12 @@ import {
   EXTENSION_FICHIER,
   construirePaquet,
   lirePaquet,
+  estFichierProtege,
   type ErreurPaquet,
   type Paquet,
 } from "./domaine/echange/paquet";
+import { appliquerResultats, calculerPlanResultats, type LigneResultats } from "./domaine/echange/plan-resultats";
+import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
 import { appliquerPlan, calculerPlan, type Action, type LignePlan } from "./domaine/echange/plan";
 import {
   appliquerReferentiels,
@@ -31,7 +34,12 @@ import {
 import type { Identite } from "./domaine/identite";
 import type { Entrees } from "./domaine/magasin-memoire";
 import { messagePourErreur } from "./ecran-coffre";
-import { enregistrerFichier, ouvrirFichierEchange } from "./enveloppe";
+import {
+  dechiffrerFichierEchange,
+  enregistrerFichier,
+  enregistrerFichierProtege,
+  ouvrirFichierEchange,
+} from "./enveloppe";
 
 /** Ce dont l'écran d'échange a besoin de l'application. */
 export interface AccesDonnees {
@@ -175,7 +183,7 @@ function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonl
     creer(
       "p",
       "",
-      `Cochez ce que vous envoyez. Le fichier sera signé de votre nom (${acces.identite.nom}) et ne contient ni noms d'élèves, ni résultats, ni votre suivi. ` +
+      `Cochez ce que vous envoyez. Le fichier sera signé de votre nom (${acces.identite.nom}) et ne contient ni noms d'élèves, ni résultats, ni votre suivi, sauf si vous cochez l'option en bas de cette fenêtre. ` +
         "Chaque évaluation emporte l'empreinte de son référentiel, que vous envoyiez le référentiel ou non.",
     ),
   );
@@ -188,8 +196,22 @@ function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonl
   erreur.hidden = true;
   const boutonCreer = creerBouton("", "btn primary", () => {
     boutonCreer.disabled = true;
-    Promise.resolve(construirePaquet(entrees, choisies, new Date(), acces.identite.nom, catalogue, diplomesChoisis))
-      .then((paquet) => enregistrerFichier(`evaluations${EXTENSION_FICHIER}`, new TextEncoder().encode(JSON.stringify(paquet))))
+    const avecEleves = caseEleves.checked;
+    if (avecEleves && verifierNouveauMotDePasse(motDePasse.value, confirmation.value) !== null) {
+      erreur.textContent = `Choisissez un mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères et saisissez-le deux fois à l'identique.`;
+      erreur.hidden = false;
+      boutonCreer.disabled = false;
+      return;
+    }
+    erreur.hidden = true;
+    const texte = JSON.stringify(
+      construirePaquet(entrees, choisies, new Date(), acces.identite.nom, catalogue, diplomesChoisis, avecEleves),
+    );
+    const nom = `evaluations${EXTENSION_FICHIER}`;
+    const enregistrement = avecEleves
+      ? enregistrerFichierProtege(nom, texte, motDePasse.value)
+      : enregistrerFichier(nom, new TextEncoder().encode(texte));
+    enregistrement
       .then((fichierEcrit) => {
         if (fichierEcrit) {
           fermer();
@@ -202,6 +224,32 @@ function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonl
       .finally(() => {
         actualiser();
       });
+  });
+
+  const caseEleves = creer("input");
+  caseEleves.type = "checkbox";
+  const motDePasse = creer("input");
+  motDePasse.type = "password";
+  motDePasse.placeholder = "Mot de passe du fichier";
+  motDePasse.autocomplete = "new-password";
+  const confirmation = creer("input");
+  confirmation.type = "password";
+  confirmation.placeholder = "Mot de passe, une seconde fois";
+  confirmation.autocomplete = "new-password";
+  const optionEleves = creer("label", "echange-option");
+  optionEleves.append(
+    caseEleves,
+    creer(
+      "span",
+      "",
+      "Inclure les élèves et leurs résultats. Le fichier est alors chiffré : communiquez son mot de passe par un autre moyen que le fichier.",
+    ),
+  );
+  const zoneMotDePasse = creer("div", "echange-outils");
+  zoneMotDePasse.hidden = true;
+  zoneMotDePasse.append(motDePasse, confirmation);
+  caseEleves.addEventListener("change", () => {
+    zoneMotDePasse.hidden = !caseEleves.checked;
   });
 
   for (const diplome of diplomes) {
@@ -293,7 +341,7 @@ function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonl
   );
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Annuler", "btn ghost", fermer), boutonCreer);
-  boite.append(outils, liste, erreur, actions);
+  boite.append(outils, liste, optionEleves, zoneMotDePasse, erreur, actions);
   actualiser();
 }
 
@@ -301,7 +349,80 @@ function compterParAction(plan: readonly LignePlan[], action: Action): number {
   return plan.filter((ligne) => ligne.action === action).length;
 }
 
-function creerLignePlan(ligne: LignePlan, choisies: Set<string>, actualiser: () => void): HTMLElement {
+/** Choix de l'enseignant sur les résultats d'élèves du fichier. */
+interface ChoixResultats {
+  lignes: ReadonlyMap<string, LigneResultats>;
+  /** Évaluations dont les résultats du fichier sont acceptés. */
+  acceptes: Set<string>;
+  /** Évaluations dont les résultats différents du fichier remplacent ceux d'ici. */
+  aRemplacer: Set<string>;
+}
+
+function creerCase(texte: string, cochee: boolean, surChangement: (cochee: boolean) => void): HTMLElement {
+  const option = creer("label", "echange-option");
+  const case_ = creer("input");
+  case_.type = "checkbox";
+  case_.checked = cochee;
+  case_.addEventListener("change", () => {
+    surChangement(case_.checked);
+  });
+  option.append(case_, creer("span", "", texte));
+  return option;
+}
+
+/** Ajoute à une ligne d'évaluation ce qui concerne les résultats de ses élèves. */
+function ajouterResultats(texte: HTMLElement, resultats: LigneResultats, choix: ChoixResultats, actualiser: () => void): void {
+  if (!resultats.possible) {
+    texte.append(
+      creer(
+        "div",
+        "echange-detail alerte",
+        "Résultats d'élèves non importables : la promotion concernée relève d'un diplôme absent de votre établissement.",
+      ),
+    );
+    return;
+  }
+  const { nouveaux, differents, identiques } = resultats.bilan;
+  const complements = [
+    resultats.promotionCreee ? "la promotion sera créée" : "",
+    !resultats.promotionCreee && resultats.elevesAjoutes > 0
+      ? `${String(resultats.elevesAjoutes)} élève(s) ajouté(s) à votre promotion`
+      : "",
+  ].filter((complement) => complement !== "");
+  const bilan = `${String(nouveaux)} élève(s) sans résultat chez vous, ${String(differents)} aux résultats différents des vôtres, ${String(identiques)} identiques`;
+  texte.append(
+    creerCase(
+      `Recevoir les résultats des élèves : ${bilan}${complements.length > 0 ? ` · ${complements.join(" · ")}` : ""}.`,
+      choix.acceptes.has(resultats.identifiant),
+      (cochee) => {
+        if (cochee) {
+          choix.acceptes.add(resultats.identifiant);
+        } else {
+          choix.acceptes.delete(resultats.identifiant);
+        }
+        actualiser();
+      },
+    ),
+  );
+  if (differents > 0) {
+    texte.append(
+      creerCase("Remplacer mes résultats différents par ceux du fichier (sinon les miens sont gardés).", false, (cochee) => {
+        if (cochee) {
+          choix.aRemplacer.add(resultats.identifiant);
+        } else {
+          choix.aRemplacer.delete(resultats.identifiant);
+        }
+      }),
+    );
+  }
+}
+
+function creerLignePlan(
+  ligne: LignePlan,
+  choisies: Set<string>,
+  choixResultats: ChoixResultats,
+  actualiser: () => void,
+): HTMLElement {
   const element = creer("label", ligne.action === "aucune" ? "echange-ligne inactive" : "echange-ligne");
   const case_ = creer("input");
   case_.type = "checkbox";
@@ -338,6 +459,10 @@ function creerLignePlan(ligne: LignePlan, choisies: Set<string>, actualiser: () 
   if (ligne.action !== "aucune") {
     const referentiel = MESSAGES_REFERENTIEL[ligne.referentiel.etat];
     texte.append(creer("div", referentiel.alerte ? "echange-detail alerte" : "echange-detail", referentiel.texte));
+  }
+  const resultats = choixResultats.lignes.get(ligne.identifiant);
+  if (resultats !== undefined) {
+    ajouterResultats(texte, resultats, choixResultats, actualiser);
   }
   element.append(case_, texte);
   return element;
@@ -437,6 +562,7 @@ function montrerPlan(
   paquet: Paquet,
   plan: readonly LignePlan[],
   planReferentiels: readonly LigneReferentiel[],
+  catalogue: readonly ReferentielLocal[],
 ): void {
   const { boite, fermer } = ouvrirBoite("Ce que ce fichier changerait");
   if (plan.length === 0 && planReferentiels.length === 0) {
@@ -448,6 +574,17 @@ function montrerPlan(
   const referentielsChoisis = new Set(
     planReferentiels.filter((ligne) => ligne.action === "ajouter").map((ligne) => ligne.identifiant),
   );
+  const lignesResultats = calculerPlanResultats(entrees, paquet, catalogue);
+  const choixResultats: ChoixResultats = {
+    lignes: lignesResultats,
+    // Par défaut : accepter ce qui complète sans rien écraser.
+    acceptes: new Set(
+      [...lignesResultats.values()]
+        .filter((ligne) => ligne.possible && ligne.bilan.nouveaux > 0)
+        .map((ligne) => ligne.identifiant),
+    ),
+    aRemplacer: new Set(),
+  };
   const expediteur = paquet.expediteur === "" ? "un enseignant non identifié" : paquet.expediteur;
   boite.append(creer("p", "", `Fichier créé par ${expediteur} le ${ecrireDate(paquet.creeLe)}.`));
   boite.append(
@@ -470,14 +607,22 @@ function montrerPlan(
       genererIdentifiant: (partie) => `${partie.charAt(0)}${crypto.randomUUID().slice(0, LONGUEUR_IDENTIFIANT_GENERE)}`,
     });
     const aAppliquer = appliquerPlan(avecReferentiels, rattacherAuxVersionsCreees(plan, versionsCreees), choisies, maintenant);
-    acces.remplacerEntrees(aAppliquer).catch((erreurApplication: unknown) => {
+    const avecResultats = appliquerResultats(
+      aAppliquer,
+      paquet,
+      catalogue,
+      choixResultats.acceptes,
+      choixResultats.aRemplacer,
+      () => `s${crypto.randomUUID().slice(0, LONGUEUR_IDENTIFIANT_GENERE)}`,
+    );
+    acces.remplacerEntrees(avecResultats).catch((erreurApplication: unknown) => {
       erreur.textContent = messagePourErreur(erreurApplication);
       erreur.hidden = false;
       boutonAppliquer.disabled = false;
     });
   });
   const actualiser = (): void => {
-    const nombre = choisies.size + referentielsChoisis.size;
+    const nombre = choisies.size + referentielsChoisis.size + choixResultats.acceptes.size;
     boutonAppliquer.textContent = `Appliquer (${String(nombre)})`;
     boutonAppliquer.disabled = nombre === 0;
   };
@@ -488,7 +633,7 @@ function montrerPlan(
   // Ce qui demande une décision d'abord : nouvelles, puis modifiées, puis identiques.
   const ordre: Record<Action, number> = { creer: 0, modifier: 1, aucune: 2 };
   for (const ligne of [...plan].sort((a, b) => ordre[a.action] - ordre[b.action])) {
-    liste.append(creerLignePlan(ligne, choisies, actualiser));
+    liste.append(creerLignePlan(ligne, choisies, choixResultats, actualiser));
   }
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Annuler", "btn ghost", fermer), boutonAppliquer);
@@ -496,19 +641,83 @@ function montrerPlan(
   actualiser();
 }
 
+/**
+ * Demande le mot de passe d'un fichier protégé et rend son contenu déchiffré.
+ * La boîte reste ouverte tant que le mot de passe est refusé.
+ *
+ * @returns `null` si l'enseignant renonce.
+ */
+function demanderMotDePasseFichier(fichier: string): Promise<string | null> {
+  return new Promise((resoudre) => {
+    const { boite, fermer } = ouvrirBoite("Fichier protégé");
+    boite.append(
+      creer(
+        "p",
+        "",
+        "Ce fichier contient des élèves et leurs résultats. Saisissez le mot de passe que son expéditeur vous a communiqué.",
+      ),
+    );
+    const formulaire = creer("form", "echange-outils");
+    const motDePasse = creer("input");
+    motDePasse.type = "password";
+    motDePasse.placeholder = "Mot de passe du fichier";
+    motDePasse.required = true;
+    const erreur = creer("p", "echange-erreur");
+    erreur.hidden = true;
+    const ouvrir = creer("button", "btn primary", "Ouvrir");
+    ouvrir.type = "submit";
+    formulaire.append(motDePasse, ouvrir);
+    formulaire.addEventListener("submit", (evenement) => {
+      evenement.preventDefault();
+      ouvrir.disabled = true;
+      dechiffrerFichierEchange(fichier, motDePasse.value)
+        .then((clair) => {
+          fermer();
+          resoudre(clair);
+        })
+        .catch((erreurOuverture: unknown) => {
+          erreur.textContent = messagePourErreur(erreurOuverture);
+          erreur.hidden = false;
+          ouvrir.disabled = false;
+        });
+    });
+    const actions = creer("div", "echange-actions");
+    actions.append(
+      creerBouton("Renoncer", "btn ghost", () => {
+        fermer();
+        resoudre(null);
+      }),
+    );
+    boite.append(formulaire, erreur, actions);
+    motDePasse.focus();
+  });
+}
+
 async function lancerImport(acces: AccesDonnees): Promise<void> {
   const texte = await ouvrirFichierEchange();
   if (texte === null) {
     return;
   }
-  const paquet = lirePaquet(texte);
+  const protege = estFichierProtege(texte);
+  const clair = protege ? await demanderMotDePasseFichier(texte) : texte;
+  if (clair === null) {
+    return;
+  }
+  const paquet = lirePaquet(clair, protege);
   if (typeof paquet === "string") {
     afficherMessage("Recevoir", MESSAGES_PAQUET[paquet]);
     return;
   }
   const entrees = acces.lireEntrees();
   const catalogue = await acces.dresserCatalogue(entrees);
-  montrerPlan(acces, entrees, paquet, calculerPlan(entrees, paquet, catalogue), calculerPlanReferentiels(paquet, catalogue));
+  montrerPlan(
+    acces,
+    entrees,
+    paquet,
+    calculerPlan(entrees, paquet, catalogue),
+    calculerPlanReferentiels(paquet, catalogue),
+    catalogue,
+  );
 }
 
 function montrerChoix(acces: AccesDonnees): void {

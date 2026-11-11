@@ -160,6 +160,28 @@
   color: var(--signal);
 }
 
+.echange-option {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 4px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.echange-option input {
+  margin-top: 2px;
+  accent-color: var(--accent);
+}
+
+.echange-outils input[type="password"] {
+  flex: 1 1 200px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-2);
+}
+
 .echange-actions {
   display: flex;
   justify-content: flex-end;
