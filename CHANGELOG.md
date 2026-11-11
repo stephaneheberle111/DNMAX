@@ -6,6 +6,21 @@
 
 - Site : les polices sont servies par le site lui-même ; une visite ne transmet plus l'adresse IP du visiteur à Google.
 
+## 0.1.2 — 2026-11-11
+
+### Ajouté
+
+- Site : la page Télécharger renvoie aussi vers toutes les versions publiées sur GitHub.
+
+### Modifié
+
+- Site : plus de numéro de version écrit en dur, qui restait en retard d'une version ; la page Télécharger renvoie au journal des modifications.
+
+### Corrigé
+
+- L'annonce de mise à jour affiche en entier le lien vers le journal des modifications.
+- « Mon compte » : le contour bleu du champ sélectionné n'est plus rogné sur les côtés.
+
 ## 0.1.1 — 2026-11-11
 
 ### Ajouté

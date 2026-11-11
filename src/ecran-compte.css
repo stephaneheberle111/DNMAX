@@ -5,6 +5,10 @@
   flex-direction: column;
   gap: 16px;
   overflow: auto;
+  /* La zone défile, donc rogne ce qui dépasse : le contour de focus des champs
+     (2 px, décalé de 2 px) doit tenir dans ce retrait, compensé par la marge. */
+  padding: 4px;
+  margin: -4px;
 }
 
 .compte-rubrique {
