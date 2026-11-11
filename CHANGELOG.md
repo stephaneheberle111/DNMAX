@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Mises à jour : DNMAX ne se connecte plus à Internet au lancement ; la recherche se fait à la demande, depuis « Mon compte ».
+
 ## 0.1.1 — 2026-11-11
 
 ### Ajouté

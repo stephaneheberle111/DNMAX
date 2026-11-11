@@ -23,7 +23,6 @@ import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } fro
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
 import { proposerOuvertureExport } from "./ecran-export";
-import { proposerMiseAJour } from "./ecran-mise-a-jour";
 import {
   attendreAvantFermeture,
   enregistrerCoffre,
@@ -153,7 +152,6 @@ async function demarrer(): Promise<void> {
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
   await chargerInterfaceHistorique(magasin, proposerOuvertureExport);
   installerEchange(acces);
-  proposerMiseAJour(() => acces.enregistrerMaintenant());
   suivreExemple(acces);
   installerCompte(acces);
   await proposerPremiersPas(acces);
