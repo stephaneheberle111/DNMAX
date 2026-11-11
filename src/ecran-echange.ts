@@ -788,9 +788,7 @@ function montrerChoix(acces: AccesDonnees): void {
   );
   const recevoir = creerBouton("", "", () => {
     fermer();
-    lancerImport(acces).catch((erreur: unknown) => {
-      afficherMessage("Recevoir", messagePourErreur(erreur));
-    });
+    ouvrirReception(acces);
   });
   recevoir.append(
     creer("b", "", "Recevoir"),
@@ -808,6 +806,13 @@ function montrerChoix(acces: AccesDonnees): void {
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(choix, actions);
+}
+
+/** Ouvre le sélecteur de fichier puis le plan de réception ; toute erreur est affichée à l'enseignant. */
+export function ouvrirReception(acces: AccesDonnees): void {
+  lancerImport(acces).catch((erreur: unknown) => {
+    afficherMessage("Recevoir", messagePourErreur(erreur));
+  });
 }
 
 /** Rend visible le bouton « Échanger… » de l'en-tête et le branche. */

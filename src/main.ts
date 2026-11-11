@@ -17,6 +17,7 @@ import {
   mettreAJourDates,
 } from "./domaine/echange/suivi-modifications";
 import { CLE_IDENTITE, lireIdentite } from "./domaine/identite";
+import { proposerPremiersPas } from "./ecran-accueil";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { proposerMiseAJour } from "./ecran-mise-a-jour";
@@ -131,6 +132,7 @@ async function demarrer(): Promise<void> {
   await chargerInterfaceHistorique(magasin);
   installerEchange(acces);
   proposerMiseAJour(() => acces.enregistrerMaintenant());
+  await proposerPremiersPas(acces);
 }
 
 function afficherEchecDemarrage(erreur: unknown): void {

@@ -4,8 +4,13 @@
 
 ### Ajouté
 
+- Sur une installation vide, un encart guide vers le téléchargement puis la réception d'un référentiel.
 - Un référentiel reçu crée son diplôme quand il n'existe pas encore sur le poste.
 - Site web du projet versionné dans `site/`, avec le référentiel DN MADE mention Objet en téléchargement.
+
+### Modifié
+
+- L'application est livrée vide : plus de référentiel ni de brouillon d'évaluation préinstallés. Les installations existantes gardent leurs données.
 
 ## 0.1.0 — 2026-11-11
 

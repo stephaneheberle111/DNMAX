@@ -188,3 +188,17 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 
 - sous Linux, seule l'AppImage se met à jour d'elle-même ; un paquet `.deb` se remplace à la main ;
 - la perte de la clé privée empêcherait de publier des mises à jour acceptées par les postes déjà installés : il faudrait leur faire réinstaller l'application.
+
+## 16. L'application est livrée vide
+
+**Retenu** : une installation neuve ne contient ni référentiel, ni diplôme renseigné, ni évaluation d'exemple, ni brouillon prérempli. Seule subsiste la liste générique des types de livrables, modifiable dans « Mon établissement ».
+
+**Pourquoi** : le référentiel d'un diplôme n'est pas une donnée de l'application ; il évolue, diffère d'une mention à l'autre, et ne concerne pas tous les enseignants. Le livrer d'office l'aurait figé dans chaque version.
+
+**Comment obtenir un référentiel** : sur une installation vide, un encart propose de télécharger celui du DN MADE mention Objet (fichier `site/referentiels/dn-made-objet.dnmax`, ouvert dans le navigateur) puis de le recevoir par le circuit habituel de l'échange, qui crée le diplôme (décision 12). On peut aussi recevoir celui d'un autre enseignant ou le construire dans l'onglet Référentiel.
+
+**L'application n'ouvre aucune connexion pour cela** : elle demande au système d'ouvrir l'adresse dans le navigateur. Seules les adresses du site et du dépôt du projet sont autorisées (`src-tauri/capabilities/default.json`, `src/configuration.ts`).
+
+**Exemple** : « charge un exemple » reste disponible pour découvrir l'application ; faute de référentiel, il installe celui du DN MADE mention Objet, toujours présent dans le code à cette seule fin.
+
+**Adaptations de l'interface historique** : référentiel de départ vide (`REF_VIDE`), brouillon de départ vide, et installation du référentiel d'origine par `loadDemo` quand il n'y en a aucun.

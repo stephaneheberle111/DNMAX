@@ -126,6 +126,7 @@ flowchart LR
 - `src/domaine/` : ce qui calcule. Aucune dépendance au navigateur ni à Tauri, donc testable directement.
 - `src/enveloppe.ts` : ce qui parle à l'extérieur.
 - `src/ecran-coffre.ts` : l'écran de mot de passe.
+- `src/ecran-accueil.ts` : l'encart des premiers pas sur une installation vide. `src/configuration.ts` : les adresses publiques du projet.
 - `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ».
 - `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans.
 - `src-tauri/` : la fenêtre de bureau et ses droits (`capabilities/`). Dans `src-tauri/src/` : `coffre.rs` chiffre (sans toucher au disque), `depot.rs` range les fichiers (sans connaître le chiffrement), `export.rs` écrit les exports, `lib.rs` relie le tout aux commandes appelées par l'interface.

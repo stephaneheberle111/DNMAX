@@ -3642,7 +3642,10 @@ function projectRef(d){
       return {code:c.code,libelle:c.libelle,bloc:c.bloc,ecs};
     })};
 }
-let DATA = LS.get("dnmade.data",null) || buildData(LS.get("dnmade.ref",null)||REF_DEFAULT, LS.get("dnmade.supports",null)||SUPPORTS_DEF);
+/* Une installation neuve démarre sans référentiel : l'enseignant en reçoit un ou construit le sien.
+   Le référentiel d'origine (REF_DEFAULT) ne sert plus qu'à l'exemple, qui l'installe à la demande. */
+const REF_VIDE = {meta:{diplome:"",niveaux:[],blocTint:"#D1F1DA"},blocs:[],ues:[],familles:[],competences:[]};
+let DATA = LS.get("dnmade.data",null) || buildData(LS.get("dnmade.ref",null)||REF_VIDE, LS.get("dnmade.supports",null)||SUPPORTS_DEF);
 DATA = migrateData(DATA);
 let REF = projectRef(DATA);
 try{STOCKAGE.removeItem("dnmade.hist")}catch(e){}
@@ -3663,7 +3666,11 @@ function savePrefs(){LS.set("dnmade.prefs",PREFS)}
 let promos = LS.get("dnmade.promos",[]);
 
 let delArm = null;
-let F = LS.get("dnmade.draft",null) || demo();
+/* brouillon de départ : une évaluation vide (vierge() ne peut pas servir ici, elle lit F) */
+let F = LS.get("dnmade.draft",null) || {id:uid(),promoId:"",titre:"",livrables:[],semestre:"S1",classe:"",
+  date:new Date().toISOString().slice(0,10),prof:"",ues:[],ecCodes:[],compCode:"",consignes:"",
+  ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),opts:{crit:true,obs:true,coef:false},
+  eleves:"",items:[],res:{}};
 if(F.preset && !PRESETS[F.preset]){F.preset=DEF_PRESET_GET();F.niveaux=PRESETS[DEF_PRESET_GET()].niveaux.slice()}
 if(F.promoId===undefined)F.promoId="";
 ["compCode"].forEach(k=>{if(F[k]===undefined)F[k]=""});
@@ -7058,6 +7065,10 @@ function demoMass(){
   return {fiches:out,nPr,nEl,nM:dips.length};
 }
 function loadDemo(){
+  // sans référentiel, l'exemple apporte le sien : celui du DN MADE mention Objet
+  if(!refOf(DATA,DATA.activeDiplome).competences.length){
+    DATA=migrateData(buildData(REF_DEFAULT,SUPPORTS_DEF));REF=projectRef(DATA);persistData();
+  }
   [["S. Hébérlé","Atelier de création"],["M. Lenoir","Technologies et matériaux"],["A. Benali","Humanités"]]
     .forEach(([nom,discipline])=>{if(!DATA.enseignants.some(t=>t.nom===nom))DATA.enseignants.push({id:uid(),nom,discipline})});
   persistData();
