@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Site : hébergé chez OVH à l'adresse dnmax.fr.
+
 ### Sécurité
 
 - Site : les polices sont servies par le site lui-même ; une visite ne transmet plus l'adresse IP du visiteur à Google.
