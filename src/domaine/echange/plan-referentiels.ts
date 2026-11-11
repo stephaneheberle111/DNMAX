@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { Entrees } from "../magasin-memoire";
-import { CLE_DONNEES, analyserJson } from "./modele";
+import { lirePromotionsBrutes } from "./donnees-eleves";
+import { CLE_DONNEES, CLE_PROMOTIONS, analyserJson, estObjet } from "./modele";
 import type { Paquet } from "./paquet";
 import type { LignePlan } from "./plan";
 import {
@@ -12,14 +13,19 @@ import {
 } from "./referentiel";
 import {
   comparerContenus,
+  creerDiplome,
   integrerVersion,
+  trouverDiplomeVierge,
   type Differences,
   type Partie,
   type ReferentielEchange,
 } from "./referentiel-echange";
 
-/** `ajouter` : nouvelle version proposée · `aucune` : déjà présent · `impossible` : diplôme absent d'ici. */
-export type ActionReferentiel = "ajouter" | "aucune" | "impossible";
+/**
+ * `ajouter` : nouvelle version proposée pour un diplôme d'ici · `aucune` : déjà présent ·
+ * `creer-diplome` : le diplôme n'existe pas ici, il serait créé avec ce référentiel.
+ */
+export type ActionReferentiel = "ajouter" | "aucune" | "creer-diplome";
 
 /** Ce que l'import ferait d'un référentiel du fichier. */
 export interface LigneReferentiel {
@@ -29,7 +35,7 @@ export interface LigneReferentiel {
   mention: string;
   dateVersion: string;
   action: ActionReferentiel;
-  /** Diplôme local qui recevrait la version ; texte vide si l'action est impossible. */
+  /** Diplôme local qui recevrait la version ; texte vide s'il n'y en a pas. */
   diplomeId: string;
   /** Écarts avec le référentiel de référence d'ici (action « ajouter » seulement). */
   differences: Differences | null;
@@ -51,7 +57,7 @@ export function calculerPlanReferentiels(paquet: Paquet, catalogue: readonly Ref
         normaliserNom(local.mention) === normaliserNom(recu.mention),
     );
     const action: ActionReferentiel =
-      comparaison.etat === "identique" ? "aucune" : diplomeLocal === undefined ? "impossible" : "ajouter";
+      comparaison.etat === "identique" ? "aucune" : diplomeLocal === undefined ? "creer-diplome" : "ajouter";
     const reference = diplomeLocal === undefined ? null : trouverReferentielDeReference(catalogue, diplomeLocal.diplomeId);
     return {
       identifiant: cleDeBase(recu),
@@ -66,17 +72,27 @@ export function calculerPlanReferentiels(paquet: Paquet, catalogue: readonly Ref
   });
 }
 
+function diplomesDesPromotions(entrees: Entrees): Set<string> {
+  return new Set(
+    lirePromotionsBrutes(entrees[CLE_PROMOTIONS])
+      .filter(estObjet)
+      .map((promotion) => promotion.diplomeId)
+      .filter((diplomeId) => typeof diplomeId === "string"),
+  );
+}
+
 /** Ce qu'il faut connaître du moment de l'import pour créer les versions. */
 export interface ContexteImport {
   /** Date du jour (AAAA-MM-JJ), retenue pour une version reçue sans date. */
   dateDuJour: string;
   /** Note inscrite sur chaque version créée, pour dire d'où elle vient. */
   note: string;
-  genererIdentifiant: (partie: Partie | "version") => string;
+  genererIdentifiant: (partie: Partie | "version" | "diplome") => string;
 }
 
 /**
- * Ajoute les référentiels choisis comme nouvelles versions non activées.
+ * Ajoute les référentiels choisis : comme nouvelles versions non activées
+ * pour les diplômes d'ici, ou en créant leur diplôme quand il n'existe pas.
  *
  * Rend les entrées à enregistrer et, pour chaque référentiel ajouté,
  * l'identifiant de la version créée (par clé de base), afin d'y rattacher
@@ -91,7 +107,7 @@ export function appliquerReferentiels(
   let donnees = analyserJson(entrees[CLE_DONNEES]);
   const versionsCreees = new Map<string, string>();
   for (const ligne of lignes) {
-    if (ligne.action !== "ajouter" || !identifiantsChoisis.has(ligne.identifiant) || versionsCreees.has(ligne.identifiant)) {
+    if (ligne.action === "aucune" || !identifiantsChoisis.has(ligne.identifiant) || versionsCreees.has(ligne.identifiant)) {
       continue;
     }
     const version = {
@@ -99,7 +115,16 @@ export function appliquerReferentiels(
       date: ligne.dateVersion || contexte.dateDuJour,
       note: contexte.note,
     };
-    const apres = integrerVersion(donnees, ligne.diplomeId, ligne.recu, version, contexte.genererIdentifiant);
+    const apres =
+      ligne.action === "ajouter"
+        ? integrerVersion(donnees, ligne.diplomeId, ligne.recu, version, contexte.genererIdentifiant)
+        : creerDiplome(
+            donnees,
+            ligne.recu,
+            version,
+            trouverDiplomeVierge(donnees, diplomesDesPromotions(entrees)),
+            contexte.genererIdentifiant,
+          );
     if (apres !== null) {
       donnees = apres;
       versionsCreees.set(ligne.identifiant, version.id);

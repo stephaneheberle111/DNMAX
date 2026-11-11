@@ -143,7 +143,7 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 
 **Évaluations du même fichier** : une évaluation construite sur le référentiel reçu est rattachée à la version créée.
 
-**Limite** : un référentiel dont le diplôme ou la mention n'existe pas chez le destinataire n'est pas importable ; il faut d'abord créer ce diplôme dans « Mon établissement ».
+**Diplôme absent chez le destinataire** : le référentiel reçu crée alors ce diplôme, dont il devient le référentiel de travail et la version en vigueur — il n'y a rien d'existant à protéger, et le diplôme doit être utilisable tout de suite. Sur une installation neuve, le diplôme vide créé d'office est renseigné plutôt que doublé.
 
 ## 13. Les élèves et leurs résultats ne voyagent que dans un fichier chiffré
 

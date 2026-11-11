@@ -4,6 +4,7 @@
 
 ### Ajouté
 
+- Un référentiel reçu crée son diplôme quand il n'existe pas encore sur le poste.
 - Site web du projet versionné dans `site/`, avec le référentiel DN MADE mention Objet en téléchargement.
 
 ## 0.1.0 — 2026-11-11
