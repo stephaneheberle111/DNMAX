@@ -2,6 +2,11 @@
 
 ## Non publié
 
+### Corrigé
+
+- L'annonce de mise à jour affiche en entier le lien vers le journal des modifications.
+- « Mon compte » : le contour bleu du champ sélectionné n'est plus rogné sur les côtés.
+
 ## 0.1.1 — 2026-11-11
 
 ### Ajouté
