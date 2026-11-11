@@ -19,6 +19,7 @@ import {
 import { CLE_IDENTITE, lireIdentite } from "./domaine/identite";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
+import { proposerMiseAJour } from "./ecran-mise-a-jour";
 import {
   attendreAvantFermeture,
   enregistrerCoffre,
@@ -129,6 +130,7 @@ async function demarrer(): Promise<void> {
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
   await chargerInterfaceHistorique(magasin);
   installerEchange(acces);
+  proposerMiseAJour(() => acces.enregistrerMaintenant());
 }
 
 function afficherEchecDemarrage(erreur: unknown): void {

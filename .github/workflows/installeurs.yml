@@ -3,13 +3,12 @@ name: Installeurs
 # Produit les installeurs des trois systèmes, sans les publier : ils sont
 # joints à l'exécution, à télécharger depuis l'onglet « Actions ».
 # - à la demande (bouton « Run workflow ») ;
-# - pour chaque étiquette de version ;
 # - pour toute branche « essai-installeurs/… », afin d'essayer un changement
 #   sur un vrai poste avant de le fusionner.
+# Les versions destinées aux enseignants passent par l'atelier « Publication ».
 on:
   workflow_dispatch:
   push:
-    tags: ["v*"]
     branches: ["essai-installeurs/**"]
 
 permissions:
