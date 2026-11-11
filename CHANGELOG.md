@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- Site web du projet versionné dans `site/`, avec le référentiel DN MADE mention Objet en téléchargement.
+
 ## 0.1.0 — 2026-11-11
 
 ### Ajouté
