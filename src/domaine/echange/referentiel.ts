@@ -23,6 +23,26 @@ export interface ReferentielLocal extends BaseReferentiel {
   diplomeId: string;
   /** Identifiant de la version, ou texte vide pour le référentiel de travail. */
   versionId: string;
+  /** Vrai pour la version en vigueur du diplôme. */
+  enVigueur: boolean;
+  /** Contenu lisible du référentiel, pour montrer ce qui le distingue d'un autre. */
+  contenu: unknown;
+}
+
+/**
+ * Le référentiel qui fait foi pour un diplôme : sa version en vigueur, sinon
+ * son référentiel de travail. C'est lui qu'on envoie et auquel on compare.
+ */
+export function trouverReferentielDeReference(
+  catalogue: readonly ReferentielLocal[],
+  diplomeId: string,
+): ReferentielLocal | null {
+  const duDiplome = catalogue.filter((referentiel) => referentiel.diplomeId === diplomeId);
+  return (
+    duDiplome.find((referentiel) => referentiel.enVigueur) ??
+    duDiplome.find((referentiel) => referentiel.versionId === "") ??
+    null
+  );
 }
 
 /**
