@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.1.2 — 2026-11-11
+
 ### Ajouté
 
 - Site : la page Télécharger renvoie aussi vers toutes les versions publiées sur GitHub.
