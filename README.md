@@ -4,7 +4,7 @@ DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs �
 
 C'est une application de bureau autonome pour Windows, Linux et macOS : pas de serveur central, pas de compte, les données restent sur l'ordinateur de l'enseignant.
 
-> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations (sans élèves) et des référentiels. Manquent encore l'échange des résultats d'élèves, le transfert vers un autre ordinateur et la mise à jour automatique.
+> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs élèves. Manquent encore le transfert vers un autre ordinateur et la mise à jour automatique.
 
 ## Où sont les données
 
@@ -95,6 +95,7 @@ flowchart LR
 | --- | --- |
 | Une commande Rust reçoit du JSON alors que l'interface a envoyé des octets | Sous Linux, Tauri transmet un envoi binaire comme une liste JSON de nombres : accepter les deux formes (voir `extraire_octets`). |
 | Deux référentiels différents ont la même empreinte | Le référentiel enregistré ne contient que des identifiants ; les libellés sont dans un dictionnaire à part. Empreinter le contenu lisible fourni par `projeterReferentiel`, jamais la structure enregistrée. |
+| Sur une installation neuve, l'échange ne trouve aucun diplôme | L'interface historique n'enregistrait `dnmade.data` qu'à la première modification ; `persistData()` est appelé en fin de script pour l'inscrire dès le chargement. |
 | Les tests du chiffrement sont lents | Leur passer `DERIVATION_DE_TEST` (coût minimal), jamais `PARAMETRES_PAR_DEFAUT`. |
 | Changer `document.title` ne change pas le titre de la fenêtre | Le fixer côté Rust avec `set_title`. |
 | `npm run lint` signale une erreur de type sur `import.meta.dirname` | `@types/node` doit être installé et listé dans `types` de `tsconfig.json`. |

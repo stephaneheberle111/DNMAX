@@ -9,9 +9,19 @@ import {
   lireDonneesEtablissement,
   lireEvaluations,
   lirePromotions,
+  trouverPromotion,
   type Evaluation,
   type ObjetJson,
 } from "./modele";
+import {
+  decrirePromotion,
+  extraireDonneesEleves,
+  lireDonneesEleves,
+  lirePromotionEchangee,
+  lirePromotionsBrutes,
+  type DonneesEleves,
+  type PromotionEchangee,
+} from "./donnees-eleves";
 import { extraireModele } from "./modele-evaluation";
 import {
   decrireBase,
@@ -28,6 +38,9 @@ import type { Entrees } from "../magasin-memoire";
 const FORMAT = "dnmax-echange";
 const VERSION_COURANTE = 1;
 
+/** Format des fichiers chiffrés par l'enveloppe (voir `coffre.rs`). */
+const FORMAT_COFFRE = "dnmax-coffre";
+
 /** Extension des fichiers d'échange. */
 export const EXTENSION_FICHIER = ".dnmax";
 
@@ -39,6 +52,8 @@ export interface EvaluationEchangee {
   /** Nom de l'enseignant qui a fait cette modification, ou texte vide s'il est inconnu. */
   modifiePar: string;
   base: BaseReferentiel | null;
+  /** Élèves et résultats ; `null` dans un fichier non protégé, qui n'en transporte jamais. */
+  donneesEleves: DonneesEleves | null;
 }
 
 export interface Paquet {
@@ -49,6 +64,17 @@ export interface Paquet {
   expediteur: string;
   evaluations: EvaluationEchangee[];
   referentiels: ReferentielEchange[];
+  /** Promotions des évaluations envoyées avec leurs élèves ; vide dans un fichier non protégé. */
+  promotions: PromotionEchangee[];
+}
+
+/**
+ * Indique si un texte est un fichier d'échange protégé par mot de passe, à
+ * déchiffrer avant lecture. Un fichier protégé a le format d'un coffre.
+ */
+export function estFichierProtege(texte: string): boolean {
+  const valeur = analyserJson(texte);
+  return estObjet(valeur) && valeur.format === FORMAT_COFFRE;
 }
 
 export type ErreurPaquet = "illisible" | "format-inconnu" | "version-trop-recente";
@@ -67,14 +93,31 @@ export function construirePaquet(
   expediteur: string,
   catalogue: readonly ReferentielLocal[],
   diplomesChoisis: ReadonlySet<string> = new Set(),
+  avecEleves = false,
 ): Paquet {
   const promotions = lirePromotions(entrees[CLE_PROMOTIONS]);
   const donnees = lireDonneesEtablissement(entrees[CLE_DONNEES]);
   const dates = lireDatesModification(entrees[CLE_DATES_MODIFICATION]);
+  const promotionsBrutes = lirePromotionsBrutes(entrees[CLE_PROMOTIONS]);
+  const promotionsEnvoyees = new Map<string, PromotionEchangee>();
   const evaluations: EvaluationEchangee[] = [];
   for (const evaluation of lireEvaluations(entrees[CLE_EVALUATIONS])) {
     if (identifiantsChoisis.has(evaluation.id)) {
+      const promotion = avecEleves ? trouverPromotion(evaluation, promotions) : null;
+      const diplome = donnees.diplomes.find((candidat) => candidat.id === promotion?.diplomeId);
+      const decrite =
+        promotion === null || diplome === undefined
+          ? null
+          : decrirePromotion(
+              promotionsBrutes.find((brute) => estObjet(brute) && brute.id === promotion.id),
+              diplome.nom,
+              diplome.mention,
+            );
+      if (decrite !== null) {
+        promotionsEnvoyees.set(decrite.id, decrite);
+      }
       evaluations.push({
+        donneesEleves: avecEleves ? extraireDonneesEleves(evaluation, decrite?.id ?? "") : null,
         modele: extraireModele(evaluation),
         modifieLe: dates[evaluation.id]?.le ?? "",
         modifiePar: dates[evaluation.id]?.par ?? "",
@@ -89,6 +132,7 @@ export function construirePaquet(
     expediteur,
     evaluations,
     referentiels: extraireReferentiels(entrees, catalogue, diplomesChoisis),
+    promotions: [...promotionsEnvoyees.values()],
   };
 }
 
@@ -164,8 +208,12 @@ function lireBase(valeur: unknown): BaseReferentiel | null {
  * Le fichier vient de l'extérieur : sa forme est vérifiée, et tout modèle
  * reçu repasse par `extraireModele` pour qu'un fichier trafiqué ne puisse pas
  * injecter des résultats d'élèves ni des identifiants locaux.
+ *
+ * @param protege vrai si le texte vient d'un fichier protégé par mot de passe ;
+ *   les données d'élèves ne sont lues que dans ce cas, pour qu'un fichier en
+ *   clair ne puisse jamais en faire entrer.
  */
-export function lirePaquet(texte: string): Paquet | ErreurPaquet {
+export function lirePaquet(texte: string, protege = false): Paquet | ErreurPaquet {
   const valeur = analyserJson(texte);
   if (!estObjet(valeur)) {
     return "illisible";
@@ -191,6 +239,7 @@ export function lirePaquet(texte: string): Paquet | ErreurPaquet {
       modifieLe: typeof element.modifieLe === "string" ? element.modifieLe : "",
       modifiePar: typeof element.modifiePar === "string" ? nettoyerNom(element.modifiePar) : "",
       base: lireBase(element.base),
+      donneesEleves: protege ? lireDonneesEleves(element.donneesEleves) : null,
     });
   }
   return {
@@ -202,5 +251,8 @@ export function lirePaquet(texte: string): Paquet | ErreurPaquet {
     referentiels: (Array.isArray(valeur.referentiels) ? valeur.referentiels : [])
       .map(lireReferentiel)
       .filter((referentiel) => referentiel !== null),
+    promotions: (protege && Array.isArray(valeur.promotions) ? valeur.promotions : [])
+      .map(lirePromotionEchangee)
+      .filter((promotion) => promotion !== null),
   };
 }

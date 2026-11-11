@@ -278,6 +278,42 @@ impl CoffreOuvert {
     }
 }
 
+/// Clé sous laquelle un texte protégé est rangé dans son coffre.
+const CLE_TEXTE_PROTEGE: &str = "contenu";
+
+/// Chiffre un texte sous un mot de passe, pour un fichier à transmettre.
+///
+/// Le résultat a le format d'un coffre : il s'ouvre avec [`lire_texte_protege`].
+/// Le code de secours du coffre n'est pas rendu : pour un fichier transmis,
+/// seul le mot de passe convenu entre les deux enseignants doit l'ouvrir.
+///
+/// # Errors
+///
+/// `MotDePasseTropCourt` si le mot de passe est trop court.
+pub fn proteger_texte(
+    texte: &str,
+    mot_de_passe: &str,
+    derivation: ParametresDerivation,
+    alea: &mut (impl RngCore + CryptoRng),
+) -> Result<Vec<u8>, ErreurCoffre> {
+    let (coffre, _code_secours) = creer(mot_de_passe, derivation, alea)?;
+    let entrees = Entrees::from([(CLE_TEXTE_PROTEGE.to_owned(), texte.to_owned())]);
+    coffre.sceller(&entrees, alea)
+}
+
+/// Déchiffre un texte produit par [`proteger_texte`].
+///
+/// # Errors
+///
+/// `AccesRefuse` si le mot de passe est incorrect, `FichierIllisible` ou
+/// `VersionInconnue` si le fichier n'est pas exploitable.
+pub fn lire_texte_protege(fichier: &[u8], mot_de_passe: &str) -> Result<String, ErreurCoffre> {
+    let (_coffre, mut entrees) = ouvrir(fichier, mot_de_passe)?;
+    entrees
+        .remove(CLE_TEXTE_PROTEGE)
+        .ok_or(ErreurCoffre::FichierIllisible)
+}
+
 fn verifier_mot_de_passe(mot_de_passe: &str) -> Result<(), ErreurCoffre> {
     if mot_de_passe.chars().count() < LONGUEUR_MINIMALE_MOT_DE_PASSE {
         return Err(ErreurCoffre::MotDePasseTropCourt);
@@ -712,6 +748,70 @@ mod tests {
         assert_eq!(
             ouvrir(&trafique, MOT_DE_PASSE).err(),
             Some(ErreurCoffre::FichierIllisible)
+        );
+    }
+
+    #[test]
+    fn un_texte_protege_se_relit_avec_son_mot_de_passe() {
+        let fichier = proteger_texte(
+            "résultats de l'élève fictif",
+            MOT_DE_PASSE,
+            DERIVATION_DE_TEST,
+            &mut alea(),
+        )
+        .expect("protection");
+        assert_eq!(
+            lire_texte_protege(&fichier, MOT_DE_PASSE),
+            Ok("résultats de l'élève fictif".to_owned())
+        );
+    }
+
+    #[test]
+    fn un_texte_protege_n_apparait_pas_en_clair() {
+        let fichier = proteger_texte(
+            "élève fictif",
+            MOT_DE_PASSE,
+            DERIVATION_DE_TEST,
+            &mut alea(),
+        )
+        .expect("protection");
+        assert!(!String::from_utf8_lossy(&fichier).contains("fictif"));
+    }
+
+    #[test]
+    fn un_texte_protege_refuse_un_mauvais_mot_de_passe() {
+        let fichier = proteger_texte("texte", MOT_DE_PASSE, DERIVATION_DE_TEST, &mut alea())
+            .expect("protection");
+        assert_eq!(
+            lire_texte_protege(&fichier, "autre-mot-de-passe"),
+            Err(ErreurCoffre::AccesRefuse)
+        );
+    }
+
+    #[test]
+    fn proteger_refuse_un_mot_de_passe_trop_court() {
+        assert_eq!(
+            proteger_texte("texte", "court", DERIVATION_DE_TEST, &mut alea()).err(),
+            Some(ErreurCoffre::MotDePasseTropCourt)
+        );
+    }
+
+    #[test]
+    fn un_coffre_ordinaire_n_est_pas_un_texte_protege() {
+        let (fichier, _) = coffre_scelle();
+        assert_eq!(
+            lire_texte_protege(&fichier, MOT_DE_PASSE),
+            Err(ErreurCoffre::FichierIllisible)
+        );
+    }
+
+    #[test]
+    fn accepte_un_texte_protege_vide() {
+        let fichier =
+            proteger_texte("", MOT_DE_PASSE, DERIVATION_DE_TEST, &mut alea()).expect("protection");
+        assert_eq!(
+            lire_texte_protege(&fichier, MOT_DE_PASSE),
+            Ok(String::new())
         );
     }
 

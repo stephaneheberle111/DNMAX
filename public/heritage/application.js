@@ -7841,3 +7841,8 @@ window.dnmaxPont.projeterReferentiel=(diplomeId,versionId)=>{
   const v=versionsOf(diplomeId).find(x=>x.id===versionId);
   return projectSnap(DATA,diplomeId,JSON.parse(JSON.stringify(v?v.snap:refOf(DATA,diplomeId))));
 };
+
+/* Pont vers l'application : les données de l'établissement (diplômes, dictionnaire, référentiels) ne sont
+   enregistrées qu'à leur première modification. L'échange entre enseignants les lit dans le stockage :
+   on les y inscrit dès le chargement, pour qu'une installation neuve connaisse aussi son diplôme par défaut. */
+persistData();
