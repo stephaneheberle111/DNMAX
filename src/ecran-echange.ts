@@ -45,7 +45,9 @@ import {
 /** Ce dont l'écran d'échange a besoin de l'application. */
 export interface AccesDonnees {
   /** L'enseignant qui utilise l'application : son nom signe les fichiers qu'il envoie. */
-  identite: Identite;
+  readonly identite: Identite;
+  /** Change le nom de l'enseignant ; rend `false` si le nom proposé est vide. */
+  renommer(nom: string): boolean;
   lireEntrees(): Entrees;
   /** Référentiels présents sur ce poste, avec leur empreinte. */
   dresserCatalogue(entrees: Entrees): Promise<ReferentielLocal[]>;

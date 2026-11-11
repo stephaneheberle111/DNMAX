@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { getVersion } from "@tauri-apps/api/app";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -224,4 +225,24 @@ export async function chercherMiseAJour(): Promise<MiseAJour | null> {
  */
 export async function ouvrirDansNavigateur(adresse: string): Promise<void> {
   await openUrl(adresse);
+}
+
+/**
+ * Remplace le mot de passe des données, après vérification de l'ancien.
+ * Le code de secours reste valable.
+ *
+ * @throws ErreurCoffre « acces-refuse » si l'ancien mot de passe est incorrect,
+ *   « mot-de-passe-trop-court » si le nouveau ne convient pas.
+ */
+export async function changerMotDePasse(ancienMotDePasse: string, nouveauMotDePasse: string): Promise<void> {
+  await appelerCoffre("changer_mot_de_passe", { ancienMotDePasse, nouveauMotDePasse });
+}
+
+/** Lit la version de l'application ; texte vide si elle ne peut pas être lue. */
+export async function lireVersion(): Promise<string> {
+  try {
+    return await getVersion();
+  } catch {
+    return "";
+  }
 }

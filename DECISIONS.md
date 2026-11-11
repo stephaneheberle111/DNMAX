@@ -92,7 +92,7 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 
 **Conséquence assumée** : mot de passe **et** code de secours perdus, les données sont irrécupérables, y compris par l'auteur de l'application.
 
-**Reste à faire** : changer de mot de passe sans passer par le code de secours, restaurer une sauvegarde depuis l'application, verrouiller sans quitter.
+**Reste à faire** : restaurer une sauvegarde depuis l'application, verrouiller sans quitter. (Le changement de mot de passe est décrit dans la décision 18.)
 
 ## 9. Installeurs construits par l'intégration continue, sans certificat
 
@@ -131,7 +131,7 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 
 **Limite assumée** : le nom est déclaratif. Rien n'empêche de saisir le nom d'un autre, ni de retoucher un fichier d'échange : c'est une information entre personnes de confiance, pas une preuve. Une signature vérifiable demanderait d'échanger des clés entre enseignants.
 
-**Reste à faire** : changer son nom depuis l'application.
+Le nom se corrige dans « Mon compte » (décision 18).
 
 ## 12. Un référentiel reçu devient une nouvelle version, jamais activée d'office
 
@@ -212,3 +212,13 @@ L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom pro
 **Pourquoi pas un simple retour à l'état d'avant** : il effacerait aussi ce que l'enseignant a saisi après avoir chargé l'exemple.
 
 **Limite** : l'exemple chargé avant cette version n'a pas d'état « avant » enregistré et ne peut pas être retiré par ce bouton.
+
+## 18. « Mon compte » : nom, mot de passe, à propos et retours
+
+**Retenu** : un bouton « Mon compte… » ouvre trois rubriques.
+
+- **Nom** : l'enseignant peut le corriger ; son identifiant d'installation ne change pas, et les modifications déjà signées gardent l'ancien nom.
+- **Mot de passe** : il se change en fournissant l'ancien. Seule la clé de données est ré-enfermée sous le nouveau mot de passe ; le contenu n'est pas rechiffré et le code de secours reste valable. Les sauvegardes antérieures s'ouvrent toujours avec le mot de passe en vigueur le jour où elles ont été faites.
+- **À propos** : version, licence, et trois liens ouverts dans le navigateur (idées et bugs, site, code source).
+
+**Canal de retours** : la page « Idées et bugs » du site, qui ouvre un ticket prérempli sur GitHub. Un enseignant sans compte GitHub ne peut donc pas déposer lui-même un retour par ce canal.
