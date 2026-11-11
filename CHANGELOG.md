@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Corrigé
+
+- Site : sur téléphone, le menu de l'en-tête passe à la ligne et le titre « Documentation » s'adapte à la largeur ; la page ne défile plus horizontalement.
+
 ## 0.1.1 — 2026-11-11
 
 ### Ajouté

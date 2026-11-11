@@ -64,7 +64,8 @@ nav.main a[aria-current="page"]{color:var(--ink);background:var(--sunk)}
 nav.main a.cta{background:var(--accent);color:var(--accent-ink)}
 @media (max-width:720px){
   header.top .wrap{height:auto;flex-wrap:wrap;padding-top:10px;padding-bottom:6px;gap:6px}
-  nav.main{margin-left:0;width:100%}
+  /* Passage à la ligne plutôt que défilement : tous les liens restent visibles sans geste caché. */
+  nav.main{margin-left:0;width:100%;flex-wrap:wrap;overflow-x:visible}
   nav.main a{padding:6px 10px;font-size:15px}
 }
 .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:9px;font:600 16px/1.2 var(--body);text-decoration:none;border:2px solid var(--accent);cursor:pointer;background:transparent;color:var(--accent)}
@@ -295,6 +296,8 @@ svg.dim .dot.off{opacity:.1}
 /* ---------- Pages intérieures ---------- */
 .page{padding:64px 0 96px;min-height:calc(100vh - 64px)}
 .page h1{font:800 clamp(38px,5vw,60px)/1.04 var(--display);letter-spacing:-.025em;margin:0 0 14px}
+/* Un titre d'un seul mot (« Documentation ») ne peut pas passer à la ligne : la taille suit la largeur sur téléphone. */
+@media (max-width:520px){.page h1{font-size:clamp(22px,6.8vw,38px)}}
 .page .intro{color:var(--ink-2);font-size:19px;max-width:40em;margin:0 0 44px}
 
 .systemes{display:grid;gap:12px}
