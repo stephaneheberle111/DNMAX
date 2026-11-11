@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.1.1 — 2026-11-11
+
 ### Ajouté
 
 - « Mon compte » : changer son mot de passe, corriger son nom, voir la version et la licence, proposer une idée ou signaler un bug.
