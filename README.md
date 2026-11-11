@@ -89,18 +89,11 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 ### À chaque version
 
 1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
-2. Poser l'étiquette sur `main` et la pousser :
+2. Sur GitHub, onglet Actions → atelier « Publication » → « Run workflow » sur la branche `main`.
+3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
+4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés proposeront la mise à jour à leur prochain lancement.
 
-   ```bash
-   git tag v0.2.0
-   ```
-
-   ```bash
-   git push origin v0.2.0
-   ```
-
-3. L'atelier « Publication » construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
-4. Publier le brouillon : les postes déjà installés proposeront la mise à jour à leur prochain lancement.
+Pousser soi-même une étiquette `v1.2.3` déclenche le même atelier.
 
 Sous Linux, seule l'AppImage se met à jour d'elle-même.
 

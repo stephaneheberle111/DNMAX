@@ -1,16 +1,21 @@
 name: Publication
 
-# Prépare une version pour les enseignants quand une étiquette « v1.2.3 » est poussée :
-# construit les installeurs des trois systèmes, les signe pour la mise à jour
-# automatique, puis crée un BROUILLON de version sur GitHub.
+# Prépare une version pour les enseignants : construit les installeurs des trois
+# systèmes, les signe pour la mise à jour automatique, puis crée un BROUILLON
+# de version sur GitHub. La version est celle déclarée dans package.json.
+#
+# Déclenchement : bouton « Run workflow » sur la branche main, ou poussée d'une
+# étiquette « v1.2.3 ».
 #
 # Rien n'est diffusé tant que le brouillon n'est pas publié à la main : c'est
-# la publication qui déclenche la proposition de mise à jour sur les postes.
+# la publication qui crée l'étiquette (si elle n'existe pas) et déclenche la
+# proposition de mise à jour sur les postes.
 #
 # Secrets requis (Settings → Secrets and variables → Actions) :
 #   TAURI_SIGNING_PRIVATE_KEY           clé privée de signature des mises à jour
 #   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  son mot de passe
 on:
+  workflow_dispatch:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
 
@@ -28,21 +33,41 @@ jobs:
     timeout-minutes: 5
     outputs:
       version: ${{ steps.version.outputs.version }}
+      etiquette: ${{ steps.version.outputs.etiquette }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: L'étiquette correspond aux versions déclarées
+      - name: Les versions déclarées concordent
         id: version
         env:
-          ETIQUETTE: ${{ github.ref_name }}
+          TYPE_REFERENCE: ${{ github.ref_type }}
+          REFERENCE: ${{ github.ref_name }}
         run: |
-          version="${ETIQUETTE#v}"
-          version_interface="$(jq -r .version package.json)"
+          version="$(jq -r .version package.json)"
           version_enveloppe="$(grep -m1 '^version = ' src-tauri/Cargo.toml | cut -d'"' -f2)"
-          if [ "$version" != "$version_interface" ] || [ "$version" != "$version_enveloppe" ]; then
-            echo "::error::Étiquette $ETIQUETTE, mais package.json annonce $version_interface et Cargo.toml $version_enveloppe."
+          if [ "$version" != "$version_enveloppe" ]; then
+            echo "::error::package.json annonce $version et Cargo.toml $version_enveloppe."
+            exit 1
+          fi
+          if [ "$TYPE_REFERENCE" = "tag" ] && [ "$REFERENCE" != "v$version" ]; then
+            echo "::error::Étiquette $REFERENCE, mais la version déclarée est $version."
+            exit 1
+          fi
+          if [ "$TYPE_REFERENCE" = "branch" ] && [ "$REFERENCE" != "main" ]; then
+            echo "::error::Une version se publie depuis main, pas depuis $REFERENCE."
             exit 1
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "etiquette=v$version" >> "$GITHUB_OUTPUT"
+      - name: Cette version n'a pas déjà été publiée
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ETIQUETTE: ${{ steps.version.outputs.etiquette }}
+        run: |
+          # Un brouillon resté en attente peut être refait ; une version publiée ne se remplace pas.
+          if [ "$(gh release view "$ETIQUETTE" --json isDraft --jq .isDraft 2>/dev/null)" = "false" ]; then
+            echo "::error::La version $ETIQUETTE est déjà publiée. Montez le numéro de version avant de publier."
+            exit 1
+          fi
       - name: La clé publique de mise à jour est renseignée
         run: |
           if [ -z "$(jq -r .plugins.updater.pubkey src-tauri/tauri.conf.json)" ]; then
@@ -137,8 +162,8 @@ jobs:
       - name: Manifeste de mise à jour
         env:
           VERSION: ${{ needs.verifier.outputs.version }}
-          ETIQUETTE: ${{ github.ref_name }}
-          NOTES_VERSION: "Voir le journal des modifications : https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md"
+          ETIQUETTE: ${{ needs.verifier.outputs.etiquette }}
+          NOTES_VERSION: "Voir le journal des modifications : https://github.com/${{ github.repository }}/blob/${{ needs.verifier.outputs.etiquette }}/CHANGELOG.md"
         run: |
           # Les fichiers peuvent arriver rangés par sous-dossier : on les met à plat.
           find publication -mindepth 2 -type f -exec mv -t publication {} +
@@ -147,10 +172,13 @@ jobs:
       - name: Brouillon de version sur GitHub
         env:
           GH_TOKEN: ${{ github.token }}
-          ETIQUETTE: ${{ github.ref_name }}
+          ETIQUETTE: ${{ needs.verifier.outputs.etiquette }}
           VERSION: ${{ needs.verifier.outputs.version }}
         run: |
+          # Un brouillon précédent de la même version est remplacé.
+          gh release delete "$ETIQUETTE" --yes 2>/dev/null || true
           gh release create "$ETIQUETTE" publication/* \
             --draft \
+            --target "$GITHUB_SHA" \
             --title "DNMAX $VERSION" \
             --notes "Voir le journal des modifications : https://github.com/${GITHUB_REPOSITORY}/blob/${ETIQUETTE}/CHANGELOG.md"
