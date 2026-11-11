@@ -6,6 +6,7 @@
 
 ### Ajouté
 
+- Site : les boutons de téléchargement livrent directement l'installeur du système choisi.
 - À l'export, le dossier Documents est proposé par défaut, et l'application propose ensuite d'ouvrir le document enregistré.
 - « Mon compte » : changer son mot de passe, corriger son nom, voir la version et la licence, proposer une idée ou signaler un bug.
 - « Retirer l'exemple » : enlève les évaluations et promotions d'exemple sans toucher à ce que l'enseignant a créé.

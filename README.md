@@ -111,6 +111,8 @@ Pour que Cloudflare Pages le publie à chaque fusion dans `main`, relier le proj
 
 Le formulaire « Idées et bugs » de la page ouvre un ticket prérempli sur GitHub.
 
+Les boutons de téléchargement pointent sur des fichiers à nom fixe de la dernière version publiée (`DNMAX-windows.exe`, `DNMAX-macos.dmg`, `DNMAX-linux.AppImage`, `DNMAX-linux.deb`), que l'atelier « Publication » joint à chaque version.
+
 ## Organisation du code
 
 ```mermaid
