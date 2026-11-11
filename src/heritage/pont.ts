@@ -40,15 +40,16 @@ class ErreurEnregistrement extends Error {
   }
 }
 
-async function enregistrerPourInterfaceHistorique(demande: {
-  filename: string;
-  data: ContenuFichier;
-}): Promise<void> {
+async function enregistrerPourInterfaceHistorique(
+  demande: { filename: string; data: ContenuFichier },
+  surExport: (nomFichier: string) => void,
+): Promise<void> {
   const octets = await convertirEnOctets(demande.data);
   const fichierEcrit = await enregistrerFichier(demande.filename, octets);
   if (!fichierEcrit) {
     throw new ErreurEnregistrement("declined", "enregistrement annulé");
   }
+  surExport(demande.filename);
 }
 
 /**
@@ -56,13 +57,18 @@ async function enregistrerPourInterfaceHistorique(demande: {
  *
  * Le script lit le stockage dès son chargement : le magasin doit donc déjà
  * contenir les données de l'enseignant quand cette fonction est appelée.
+ *
+ * @param surExport appelée après chaque document enregistré, avec le nom proposé pour ce document
  */
-export async function chargerInterfaceHistorique(magasin: MagasinMemoire): Promise<void> {
+export async function chargerInterfaceHistorique(
+  magasin: MagasinMemoire,
+  surExport: (nomFichier: string) => void = () => undefined,
+): Promise<void> {
   window.XLSX = XLSX;
   window.JSZip = JSZip;
   window.dnmaxPont = {
     stockage: magasin,
-    telechargements: { save: enregistrerPourInterfaceHistorique },
+    telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport) },
   };
   await new Promise<void>((resoudre, rejeter) => {
     const script = document.createElement("script");

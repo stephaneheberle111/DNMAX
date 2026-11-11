@@ -6,6 +6,7 @@
 
 ### Ajouté
 
+- À l'export, le dossier Documents est proposé par défaut, et l'application propose ensuite d'ouvrir le document enregistré.
 - « Mon compte » : changer son mot de passe, corriger son nom, voir la version et la licence, proposer une idée ou signaler un bug.
 - « Retirer l'exemple » : enlève les évaluations et promotions d'exemple sans toucher à ce que l'enseignant a créé.
 - Sur une installation vide, un encart guide vers le téléchargement puis la réception d'un référentiel.
