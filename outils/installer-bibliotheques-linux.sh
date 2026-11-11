@@ -4,24 +4,53 @@
 # Installe, sur une machine d'intégration continue Ubuntu, les bibliothèques
 # système dont Tauri a besoin pour compiler.
 #
-# Les machines de GitHub pointent par défaut sur un miroir de paquets
-# (azure.archive.ubuntu.com) qui a déjà cessé de répondre pendant des heures :
+# Les machines de GitHub pointent sur un miroir de paquets qui a déjà cessé de
+# répondre pendant des heures, en même temps que le miroir officiel d'Ubuntu :
 # chaque paquet attendait alors vingt secondes et le job dépassait son délai.
-# On passe donc par le miroir officiel d'Ubuntu, avec des délais courts et
-# quelques nouvelles tentatives, pour échouer vite plutôt que rester bloqué.
+# On sonde donc plusieurs miroirs et on retient le premier qui répond. Changer
+# de miroir ne réduit pas la sécurité : apt vérifie la signature des paquets,
+# quel que soit le serveur qui les livre.
 set -euo pipefail
 
 MIROIR_PAR_DEFAUT="http://azure.archive.ubuntu.com/ubuntu"
-MIROIR_OFFICIEL="http://archive.ubuntu.com/ubuntu"
-OPTIONS_APT=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
+MIROIRS_CANDIDATS=(
+  "$MIROIR_PAR_DEFAUT"
+  "http://archive.ubuntu.com/ubuntu"
+  "http://mirrors.edge.kernel.org/ubuntu"
+  "http://ftp.halifax.rwth-aachen.de/ubuntu"
+  "http://mirror.math.princeton.edu/pub/ubuntu"
+)
+DELAI_SONDE_SECONDES=8
+OPTIONS_APT=(-o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
 
-# L'adresse du miroir peut figurer dans les sources elles-mêmes ou dans une liste de
-# miroirs à part (/etc/apt/apt-mirrors.txt sur les machines GitHub) : on la remplace
-# partout où elle se trouve sous /etc/apt.
-while IFS= read -r fichier; do
-  sudo sed -i "s|${MIROIR_PAR_DEFAUT}|${MIROIR_OFFICIEL}|g" "$fichier"
-  echo "Miroir remplacé dans ${fichier}"
-done < <(sudo grep -rl "${MIROIR_PAR_DEFAUT}" /etc/apt 2>/dev/null || true)
+version_ubuntu="$(. /etc/os-release && echo "$VERSION_CODENAME")"
+
+miroir_retenu=""
+for miroir in "${MIROIRS_CANDIDATS[@]}"; do
+  if curl --fail --silent --show-error --max-time "$DELAI_SONDE_SECONDES" --output /dev/null \
+    "${miroir}/dists/${version_ubuntu}/InRelease"; then
+    miroir_retenu="$miroir"
+    break
+  fi
+  echo "Miroir injoignable : ${miroir}"
+done
+if [ -z "$miroir_retenu" ]; then
+  echo "::error::Aucun miroir de paquets Ubuntu ne répond. Relancer plus tard."
+  exit 1
+fi
+echo "Miroir retenu : ${miroir_retenu}"
+
+if [ "$miroir_retenu" != "$MIROIR_PAR_DEFAUT" ]; then
+  # L'adresse par défaut peut figurer dans les sources ou dans une liste de miroirs à
+  # part (/etc/apt/apt-mirrors.txt sur les machines GitHub) : on la remplace partout.
+  while IFS= read -r fichier; do
+    sudo sed -i "s|${MIROIR_PAR_DEFAUT}|${miroir_retenu}|g" "$fichier"
+  done < <(sudo grep -rl "${MIROIR_PAR_DEFAUT}" /etc/apt 2>/dev/null || true)
+  # Sans cela, apt irait encore chercher les correctifs de sécurité sur les serveurs en panne.
+  while IFS= read -r fichier; do
+    sudo sed -i -E "s#https?://(security|archive)\\.ubuntu\\.com/ubuntu#${miroir_retenu}#g" "$fichier"
+  done < <(sudo grep -rlE "(security|archive)\\.ubuntu\\.com/ubuntu" /etc/apt 2>/dev/null || true)
+fi
 
 sudo apt-get "${OPTIONS_APT[@]}" update
 sudo apt-get "${OPTIONS_APT[@]}" install -y --no-install-recommends \
