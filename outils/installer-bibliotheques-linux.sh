@@ -15,11 +15,13 @@ MIROIR_PAR_DEFAUT="http://azure.archive.ubuntu.com/ubuntu"
 MIROIR_OFFICIEL="http://archive.ubuntu.com/ubuntu"
 OPTIONS_APT=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
 
-for fichier in /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
-  if [ -f "$fichier" ]; then
-    sudo sed -i "s|${MIROIR_PAR_DEFAUT}|${MIROIR_OFFICIEL}|g" "$fichier"
-  fi
-done
+# L'adresse du miroir peut figurer dans les sources elles-mêmes ou dans une liste de
+# miroirs à part (/etc/apt/apt-mirrors.txt sur les machines GitHub) : on la remplace
+# partout où elle se trouve sous /etc/apt.
+while IFS= read -r fichier; do
+  sudo sed -i "s|${MIROIR_PAR_DEFAUT}|${MIROIR_OFFICIEL}|g" "$fichier"
+  echo "Miroir remplacé dans ${fichier}"
+done < <(sudo grep -rl "${MIROIR_PAR_DEFAUT}" /etc/apt 2>/dev/null || true)
 
 sudo apt-get "${OPTIONS_APT[@]}" update
 sudo apt-get "${OPTIONS_APT[@]}" install -y --no-install-recommends \
