@@ -312,6 +312,9 @@ svg.dim .dot.off{opacity:.1}
 .sys p{margin:0;color:var(--ink-2);font-size:15px}
 .sys .fmt{font-family:var(--mono);font-size:13px;color:var(--ink)}
 @media (max-width:760px){.sys{grid-template-columns:1fr;gap:10px}}
+.sources{margin-top:16px;color:var(--ink-2);font-size:15px}
+.sources h3{margin:0 0 4px;font-size:17px;color:var(--ink)}
+.sources p{margin:0}
 .note{margin-top:28px;padding:20px 24px;border-left:4px solid var(--signal);background:var(--sunk);border-radius:0 10px 10px 0}
 .note h3{margin:0 0 8px;font-size:17px}
 .note ul{margin:0;padding-left:20px}
@@ -431,7 +434,7 @@ footer a{color:var(--ink-2)}
           <a class="btn primary" href="#telecharger">Télécharger DNMAX</a>
           <button class="btn" type="button" id="vers-visite">Parcourir l’application</button>
         </div>
-        <p class="meta">Version 0.1.0 · Windows, macOS et Linux · Logiciel libre</p>
+        <p class="meta">Windows, macOS et Linux · Logiciel libre</p>
       </div>
     </div>
     <button class="defiler" type="button" id="defiler" aria-label="Commencer la visite">Faites défiler
@@ -665,7 +668,7 @@ footer a{color:var(--ink-2)}
   <section class="page">
     <div class="wrap">
       <h1>Télécharger DNMAX</h1>
-      <p class="intro">Version 0.1.0, publiée le 11 novembre 2026. Choisissez l’installeur de votre système&nbsp;; les fichiers sont hébergés sur GitHub.</p>
+      <p class="intro">Dernière version publiée, avec ses nouveautés dans le <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/CHANGELOG.md">journal des modifications</a>. Choisissez l’installeur de votre système&nbsp;; les fichiers sont hébergés sur GitHub.</p>
       <div class="systemes" id="systemes">
         <div class="sys" data-os="win">
           <div><h3>Windows</h3></div>
@@ -682,6 +685,10 @@ footer a{color:var(--ink-2)}
           <div><p>L’AppImage se met à jour d’elle-même&nbsp;; le paquet .deb s’installe comme les autres.</p><p class="fmt">.AppImage, ou <a href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.deb">paquet .deb</a></p></div>
           <a class="btn primary" href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.AppImage">Télécharger pour Linux</a>
         </div>
+      </div>
+      <div class="sources">
+        <h3>Toutes les sources de téléchargement</h3>
+        <p>Versions précédentes et ensemble des fichiers de chaque version&nbsp;: <a href="https://github.com/stephaneheberle111/DNMAX/releases">page des versions sur GitHub</a>.</p>
       </div>
       <div class="note">
         <h3>Votre système affiche un avertissement au premier lancement&nbsp;?</h3>
@@ -879,7 +886,7 @@ npm run dev</code></pre>
             </div>
             <div class="champ">
               <label for="f-version">Version de DNMAX</label>
-              <input type="text" id="f-version" value="0.1.1" maxlength="20">
+              <input type="text" id="f-version" maxlength="20" placeholder="Affichée dans Mon compte">
             </div>
           </div>
           <div class="champ">
