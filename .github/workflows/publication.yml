@@ -4,20 +4,18 @@ name: Publication
 # systèmes, les signe pour la mise à jour automatique, puis crée un BROUILLON
 # de version sur GitHub. La version est celle déclarée dans package.json.
 #
-# Déclenchement : bouton « Run workflow » sur la branche main, ou poussée d'une
-# étiquette « v1.2.3 ».
+# Déclenchement : bouton « Run workflow » sur la branche main, et rien d'autre.
+# La poussée d'une étiquette ne le déclenche pas : c'est la publication du
+# brouillon qui pose l'étiquette, et l'atelier se relancerait alors pour rien.
 #
 # Rien n'est diffusé tant que le brouillon n'est pas publié à la main : c'est
-# la publication qui crée l'étiquette (si elle n'existe pas) et déclenche la
-# proposition de mise à jour sur les postes.
+# la publication qui déclenche la proposition de mise à jour sur les postes.
 #
 # Secrets requis (Settings → Secrets and variables → Actions) :
 #   TAURI_SIGNING_PRIVATE_KEY           clé privée de signature des mises à jour
 #   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  son mot de passe
 on:
   workflow_dispatch:
-  push:
-    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
 
 permissions:
   contents: read
@@ -48,11 +46,7 @@ jobs:
             echo "::error::package.json annonce $version et Cargo.toml $version_enveloppe."
             exit 1
           fi
-          if [ "$TYPE_REFERENCE" = "tag" ] && [ "$REFERENCE" != "v$version" ]; then
-            echo "::error::Étiquette $REFERENCE, mais la version déclarée est $version."
-            exit 1
-          fi
-          if [ "$TYPE_REFERENCE" = "branch" ] && [ "$REFERENCE" != "main" ]; then
+          if [ "$TYPE_REFERENCE" != "branch" ] || [ "$REFERENCE" != "main" ]; then
             echo "::error::Une version se publie depuis main, pas depuis $REFERENCE."
             exit 1
           fi
