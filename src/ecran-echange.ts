@@ -474,7 +474,7 @@ function creerLignePlan(
 const LIBELLES_ACTION_REFERENTIEL: Record<ActionReferentiel, string> = {
   ajouter: "Nouvelle version",
   aucune: "Identique",
-  impossible: "Diplôme absent",
+  "creer-diplome": "Nouveau diplôme",
 };
 
 const LIBELLES_PARTIES: Record<keyof Differences, string> = {
@@ -510,11 +510,11 @@ function decrireDifferences(differences: Differences): string[] {
 }
 
 function creerLigneReferentiel(ligne: LigneReferentiel, choisis: Set<string>, actualiser: () => void): HTMLElement {
-  const element = creer("label", ligne.action === "ajouter" ? "echange-ligne" : "echange-ligne inactive");
+  const element = creer("label", ligne.action === "aucune" ? "echange-ligne inactive" : "echange-ligne");
   const case_ = creer("input");
   case_.type = "checkbox";
-  case_.checked = ligne.action === "ajouter";
-  case_.disabled = ligne.action !== "ajouter";
+  case_.checked = ligne.action !== "aucune";
+  case_.disabled = ligne.action === "aucune";
   case_.addEventListener("change", () => {
     if (case_.checked) {
       choisis.add(ligne.identifiant);
@@ -526,7 +526,7 @@ function creerLigneReferentiel(ligne: LigneReferentiel, choisis: Set<string>, ac
   const texte = creer("div");
   const titre = creer("div", "echange-titre");
   titre.append(
-    creer("span", `echange-pastille ${ligne.action === "ajouter" ? "creer" : ""}`, LIBELLES_ACTION_REFERENTIEL[ligne.action]),
+    creer("span", `echange-pastille ${ligne.action === "aucune" ? "" : "creer"}`, LIBELLES_ACTION_REFERENTIEL[ligne.action]),
     creer("span", "", `Référentiel ${ligne.diplome} — ${ligne.mention}`),
   );
   texte.append(titre);
@@ -550,9 +550,13 @@ function creerLigneReferentiel(ligne: LigneReferentiel, choisis: Set<string>, ac
       ),
     );
   }
-  if (ligne.action === "impossible") {
+  if (ligne.action === "creer-diplome") {
     texte.append(
-      creer("div", "echange-detail alerte", "Créez d'abord ce diplôme et cette mention dans « Mon établissement » pour le recevoir."),
+      creer(
+        "div",
+        "echange-detail",
+        "Ce diplôme n'existe pas encore chez vous : il sera créé avec ce référentiel, prêt à l'emploi.",
+      ),
     );
   }
   element.append(case_, texte);
@@ -575,7 +579,7 @@ function montrerPlan(
   }
   const choisies = new Set(plan.filter((ligne) => ligne.proposee).map((ligne) => ligne.identifiant));
   const referentielsChoisis = new Set(
-    planReferentiels.filter((ligne) => ligne.action === "ajouter").map((ligne) => ligne.identifiant),
+    planReferentiels.filter((ligne) => ligne.action !== "aucune").map((ligne) => ligne.identifiant),
   );
   const lignesResultats = calculerPlanResultats(entrees, paquet, catalogue);
   const choixResultats: ChoixResultats = {
