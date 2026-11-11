@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- Export : un document qui contient des noms ou des résultats d'élèves rappelle, une fois enregistré, qu'il n'est pas protégé par mot de passe.
+
 ## 0.1.1 — 2026-11-11
 
 ### Ajouté
