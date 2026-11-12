@@ -10,11 +10,6 @@ export const ADRESSE_RETOURS = "https://dnmax.fr/#idees";
 export const ADRESSE_CODE_SOURCE = "https://github.com/stephaneheberle111/DNMAX";
 export const ADRESSE_CONFIDENTIALITE = "https://dnmax.fr/#confidentialite";
 
-/** Référentiels proposés aux installations neuves, à télécharger puis à recevoir par « Échanger… ». */
-export const REFERENTIELS_PROPOSES = [
-  { nom: "DN MADE mention Objet", mention: "Objet", adresse: "https://dnmax.fr/referentiels/dn-made-objet.dnmax" },
-  { nom: "DN MADE mention Espace", mention: "Espace", adresse: "https://dnmax.fr/referentiels/dn-made-espace.dnmax" },
-] as const;
 
 export const LICENCE = "AGPL-3.0-or-later";
 
