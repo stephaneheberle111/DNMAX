@@ -6,11 +6,15 @@
 
 - Site : page « Confidentialité et mentions légales » (éditeur bénévole), reliée depuis le pied de page.
 - Site : la page Télécharger propose le référentiel DN MADE mention Objet et explique comment l'importer.
+- Export : un document qui contient des noms ou des résultats d'élèves rappelle, une fois enregistré, qu'il n'est pas protégé par mot de passe.
+- « Mon compte » > « Données d'un élève » : exporter tout ce qui concerne un élève, ou l'effacer partout (promotions, évaluations, brouillon), à sa demande ou à celle de sa famille.
+- Durée de conservation : un an après la sortie d'une promotion, DNMAX le rappelle et propose d'anonymiser ou d'effacer ses données d'élèves (« Mon compte » > « Données anciennes »), en gardant les redoublants ; les résultats restés sans élève sont traités de même.
 
 ### Modifié
 
 - Site : hébergé chez OVH à l'adresse dnmax.fr.
 - Mises à jour : DNMAX ne se connecte plus à Internet au lancement ; la recherche se fait à la demande, depuis « Mon compte ».
+- Application : les liens vers le site (documentation, idées et bugs, référentiel proposé) mènent à dnmax.fr.
 
 ### Sécurité
 
