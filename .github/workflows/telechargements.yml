@@ -48,9 +48,16 @@ jobs:
         run: |
           mkdir -p telechargements
           # Sans étiquette, gh prend la dernière version publiée (jamais un brouillon).
+          absents=""
           for fichier in $FICHIERS; do
-            gh release download --repo "$GITHUB_REPOSITORY" --pattern "$fichier" --dir telechargements
+            # Une version peut paraître sans les Mac (voir « Complément macOS ») : l'installeur
+            # absent est signalé, et celui déjà en ligne est gardé jusqu'au complément.
+            if ! gh release download --repo "$GITHUB_REPOSITORY" --pattern "$fichier" --dir telechargements; then
+              echo "::warning::$fichier absent de la dernière version : l'installeur en ligne est gardé."
+              absents="$absents $fichier"
+            fi
           done
+          echo "ABSENTS=$absents" >> "$GITHUB_ENV"
           ls -l telechargements
           # L'hébergement gratuit est limité à 100 Mo : on refuse d'y dépasser 60 Mo d'installeurs.
           total=$(du -sm telechargements | cut -f1)
@@ -67,16 +74,20 @@ jobs:
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$CLE_HOTE" > ~/.ssh/known_hosts
+          # Les installeurs absents de la version sont exclus de la suppression.
+          exclusions=""
+          for fichier in $ABSENTS; do exclusions="$exclusions --exclude-glob $fichier"; done
           lftp -c "
             set net:max-retries 3; set net:timeout 30;
             set sftp:auto-confirm no;
             open --env-password -u \"$UTILISATEUR\" \"sftp://$SERVEUR\";
             mkdir -p \"$DOSSIER/telechargements\";
-            mirror --reverse --delete --verbose telechargements/ \"$DOSSIER/telechargements\"
+            mirror --reverse --delete --verbose $exclusions telechargements/ \"$DOSSIER/telechargements\"
           "
       - name: Les installeurs répondent
         run: |
           for fichier in $FICHIERS; do
+            case " $ABSENTS " in *" $fichier "*) echo "$fichier : absent de la version, non vérifié"; continue ;; esac
             code="$(curl -sS -r 0-1023 -o /dev/null -w '%{http_code}' --max-time 30 "https://dnmax.fr/telechargements/$fichier")"
             echo "$fichier : $code"
             [ "$code" = "206" ] || [ "$code" = "200" ]
