@@ -18,6 +18,8 @@ const MARGE = 8;
 const INTERVALLE_SUIVI = 400;
 /** Durée pendant laquelle la réussite d'une étape est saluée avant de passer à la suivante. */
 const DUREE_SALUT = 1100;
+/** Durée du glissement de la zone éclairée d'une étape à la suivante, en millisecondes. */
+const DUREE_GLISSEMENT = 750;
 /** Au-delà de cette part de l'écran, la zone éclairée est trop grande pour y accoler la bulle. */
 const PART_ECRAN_MAX = 0.55;
 
@@ -40,6 +42,42 @@ let suivi: number | null = null;
 let cadre: number | null = null;
 let cibleSuivie: Element | null = null;
 let cibleCourante: Element | null = null;
+/** Zone éclairée telle qu'affichée, qui glisse vers la zone visée à chaque changement d'étape. */
+let zoneAffichee: DOMRect | null = null;
+let glissement: { depart: DOMRect; debut: number } | null = null;
+
+function centreEcran(): DOMRect {
+  return new DOMRect(window.innerWidth / 2, window.innerHeight / 2, 0, 0);
+}
+
+/** Accélère puis ralentit : le mouvement se lit d'un bout à l'autre. */
+function adoucir(progression: number): number {
+  return progression < 0.5 ? 4 * progression ** 3 : 1 - (-2 * progression + 2) ** 3 / 2;
+}
+
+function interpoler(depart: DOMRect, arrivee: DOMRect, part: number): DOMRect {
+  const entre = (a: number, b: number): number => a + (b - a) * part;
+  return new DOMRect(
+    entre(depart.x, arrivee.x),
+    entre(depart.y, arrivee.y),
+    entre(depart.width, arrivee.width),
+    entre(depart.height, arrivee.height),
+  );
+}
+
+/** Rend la zone à afficher à cet instant, et dit si elle est encore en mouvement. */
+function avancerGlissement(visee: DOMRect, maintenant: number): { zone: DOMRect; enMouvement: boolean } {
+  if (glissement === null) {
+    return { zone: visee, enMouvement: false };
+  }
+  const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const progression = reduit ? 1 : Math.min(1, (maintenant - glissement.debut) / DUREE_GLISSEMENT);
+  if (progression >= 1) {
+    glissement = null;
+    return { zone: visee, enMouvement: false };
+  }
+  return { zone: interpoler(glissement.depart, visee, adoucir(progression)), enMouvement: true };
+}
 let ecouteClic: ((evenement: Event) => void) | null = null;
 
 const elements = {
@@ -133,6 +171,8 @@ function demonter(): void {
     element?.remove();
   }
   elements.voiles = [];
+  zoneAffichee = null;
+  glissement = null;
   elements.anneau = null;
   elements.curseur = null;
   elements.bulle = null;
@@ -192,6 +232,7 @@ function aller(index: number): void {
     return;
   }
   visite.index = suivant;
+  glissement = { depart: zoneAffichee ?? centreEcran(), debut: performance.now() };
   visite.dejaFait = etape.objectif?.(etat) ?? false;
   visite.salut = null;
   detacherClic();
@@ -498,7 +539,11 @@ function redessiner(): void {
   const boiteOuverte = document.querySelector(SELECTEUR_BOITES);
   const cibleDansBoite = cible !== null && boiteOuverte !== null && boiteOuverte.contains(cible);
   const brut = cible?.getBoundingClientRect() ?? null;
-  const trou = brut === null ? null : new DOMRect(brut.left - MARGE, brut.top - MARGE, brut.width + MARGE * 2, brut.height + MARGE * 2);
+  const visee = brut === null ? null : new DOMRect(brut.left - MARGE, brut.top - MARGE, brut.width + MARGE * 2, brut.height + MARGE * 2);
+  // La zone glisse depuis sa place précédente ; sans cible, elle se resserre au centre de l'écran.
+  const { zone, enMouvement } = avancerGlissement(visee ?? centreEcran(), performance.now());
+  zoneAffichee = zone;
+  const trou = visee === null && !enMouvement ? null : zone;
   // Une boîte de l'application grise déjà l'écran : le voile s'efface, et la bulle
   // se range dans un coin sauf si la zone à éclairer est dans la boîte.
   const masquer = boiteOuverte !== null && !cibleDansBoite;
@@ -506,6 +551,7 @@ function redessiner(): void {
   const anneau = elements.anneau;
   const avecAnneau = trou !== null && !masquer;
   anneau.hidden = !avecAnneau;
+  anneau.classList.toggle("parcours-anneau-glisse", enMouvement);
   if (avecAnneau) {
     Object.assign(anneau.style, {
       left: `${String(trou.left)}px`,
@@ -516,9 +562,11 @@ function redessiner(): void {
     anneau.dataset.geste = etape.geste ?? "regarder";
     anneau.classList.toggle("parcours-anneau-reussi", visite.salut !== null || visite.dejaFait);
   }
-  const tropGrande = trou !== null && (trou.width * trou.height) / (window.innerWidth * window.innerHeight) > PART_ECRAN_MAX;
-  placerBulle(avecAnneau ? trou : null, masquer || tropGrande);
-  placerCurseur(avecAnneau ? trou : null, etape);
+  const tropGrande = visee !== null && (visee.width * visee.height) / (window.innerWidth * window.innerHeight) > PART_ECRAN_MAX;
+  const zoneBulle = visee === null || masquer ? null : zone;
+  placerBulle(zoneBulle, masquer || tropGrande);
+  // Le curseur attend que la zone soit arrivée pour montrer le geste.
+  placerCurseur(enMouvement || masquer ? null : visee, etape);
   if (etape.avanceAuClic === true && cible !== cibleSuivie) {
     detacherClic();
     if (cible !== null) {
