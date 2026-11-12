@@ -91,7 +91,7 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
 2. Sur GitHub, onglet Actions → atelier « Publication » → « Run workflow » sur la branche `main`.
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
-4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés proposeront la mise à jour à leur prochain lancement.
+4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés la trouveront en cliquant « Rechercher une mise à jour » dans « Mon compte ».
 
 Si la construction macOS est annulée faute de machine disponible chez GitHub, relancer les jobs en échec depuis la page de l'exécution (« Re-run failed jobs »).
 
