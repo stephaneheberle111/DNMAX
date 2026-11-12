@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Échange en direct (bêta) : il fonctionne désormais uniquement entre deux ordinateurs du même réseau (même wifi ou même réseau local), sans contacter aucun serveur ; les serveurs publics de découverte d'adresse (STUN) sont abandonnés, car ils ne permettaient pas la connexion en pratique. En cas d'échec, le message rappelle de vérifier le réseau, signale les réseaux d'établissement qui isolent les postes et renvoie à l'échange par fichier. La marque « Bêta » est plus lisible, en thème clair comme sombre. Documentation et page Confidentialité du site mises à jour.
+
 ## 0.4.1 — 2026-11-12
 
 ### Ajouté

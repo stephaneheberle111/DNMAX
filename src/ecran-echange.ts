@@ -43,7 +43,7 @@ import {
   protegerTexteEchange,
 } from "./enveloppe";
 import { echangeDirectDisponible } from "./canal-direct";
-import { montrerChoixDirect, montrerEnvoiDirect } from "./ecran-echange-direct";
+import { creerMarqueBeta, montrerChoixDirect, montrerEnvoiDirect } from "./ecran-echange-direct";
 
 /** Ce dont l'écran d'échange a besoin de l'application. */
 export interface AccesDonnees {
@@ -878,7 +878,7 @@ function montrerChoix(acces: AccesDonnees): void {
     montrerChoixDirect(acces);
   });
   const titreDirect = creer("b", "");
-  titreDirect.append("Échange en direct (bêta) ", creer("span", "echange-beta", "BÊTA"));
+  titreDirect.append("Échange en direct ", creerMarqueBeta());
   const disponible = echangeDirectDisponible();
   direct.disabled = !disponible;
   direct.append(
@@ -887,8 +887,8 @@ function montrerChoix(acces: AccesDonnees): void {
       "span",
       "",
       disponible
-        ? "D'ordinateur à ordinateur, sans fichier : rien ne passe par un serveur. Des serveurs publics français " +
-            "servent seulement à vous trouver. Peut échouer selon les réseaux ; l'échange par fichier reste disponible."
+        ? "D'ordinateur à ordinateur, sans fichier ni serveur, entre deux ordinateurs du même réseau (même wifi). " +
+            "Si la connexion échoue, l'échange par fichier reste disponible."
         : "Indisponible sur cet ordinateur : son afficheur web ne permet pas les connexions directes. Utilisez l'échange par fichier.",
     ),
   );
