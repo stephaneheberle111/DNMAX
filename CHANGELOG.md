@@ -4,6 +4,7 @@
 
 ### Ajouté
 
+- Site : page « Confidentialité et mentions légales », reliée depuis le pied de page.
 - Site : la page Télécharger propose le référentiel DN MADE mention Objet et explique comment l'importer.
 
 ### Modifié
