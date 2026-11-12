@@ -7,6 +7,7 @@ import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./dom
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { changerMotDePasse, lireVersion, ouvrirDansNavigateur } from "./enveloppe";
+import { lancerParcours } from "./ecran-parcours";
 
 const IDENTIFIANT_BOUTON = "bouton-compte";
 
@@ -159,10 +160,34 @@ function creerRubriqueAPropos(): HTMLElement {
   return rubrique;
 }
 
+function creerRubriqueVisites(fermer: () => void): HTMLElement {
+  const rubrique = creer("section", "compte-rubrique");
+  const liens = creer("div", "compte-liens");
+  const visites = [
+    ["prise-en-main", "Prise en main"],
+    ["eleves", "Module Élèves"],
+    ["niveaux", "Module Niveaux DN MADE"],
+  ] as const;
+  for (const [identifiant, libelle] of visites) {
+    liens.append(
+      creerBouton(libelle, "btn ghost", () => {
+        fermer();
+        lancerParcours(identifiant);
+      }),
+    );
+  }
+  rubrique.append(
+    creer("h3", "", "Visites guidées"),
+    creer("p", "", "Relancez une visite pas à pas : elle éclaire là où cliquer et repère ce que vous avez déjà fait."),
+    liens,
+  );
+  return rubrique;
+}
+
 function montrerCompte(acces: AccesDonnees): void {
   const { boite, fermer } = ouvrirBoite("Mon compte");
   const contenu = creer("div", "compte-contenu");
-  contenu.append(creerRubriqueNom(acces), creerRubriqueMotDePasse(acces), creerRubriqueAPropos());
+  contenu.append(creerRubriqueNom(acces), creerRubriqueVisites(fermer), creerRubriqueMotDePasse(acces), creerRubriqueAPropos());
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(contenu, actions);
