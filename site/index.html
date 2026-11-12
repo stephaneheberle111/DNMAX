@@ -381,6 +381,8 @@ textarea{min-height:110px;resize:vertical}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-pied{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:6px}
 .form-pied a{font-size:15px}
+.form-pied a.btn{font-size:16px}
+.aide-envoi{margin:12px 0 0;font-size:14px;color:var(--ink-2)}
 .etat{margin-top:14px;font-size:14px;color:var(--ink-2);min-height:1.4em}
 .etat.ok{color:var(--ok)}
 .etat.err{color:var(--bug)}
@@ -925,8 +927,10 @@ npm run dev</code></pre>
         </div>
         <div class="form-pied">
           <button class="btn primary" type="submit" id="envoyer">Envoyer</button>
+          <a class="btn" href="mailto:contact@dnmax.fr" id="vers-courriel">Envoyer par e-mail</a>
           <a href="#" id="vers-github" target="_blank" rel="noopener">Ouvrir plutôt un ticket GitHub</a>
         </div>
+        <p class="aide-envoi">Sur GitHub, le ticket est <strong>public</strong>. Par e-mail, le message part de votre messagerie vers contact@dnmax.fr et seul l’éditeur le lit. Dans les deux cas, n’écrivez jamais le nom d’un élève.</p>
         <p class="etat" id="etat" role="status" aria-live="polite"></p>
       </form>
 
@@ -969,7 +973,7 @@ npm run dev</code></pre>
         <li><strong>Aucun cookie, aucune mesure d’audience, aucun compte.</strong> Le site ne dépose rien sur votre appareil et ne fait appel à aucun service tiers pour s’afficher&nbsp;: polices et images sont servies par le site lui-même.</li>
         <li><strong>Journaux techniques de l’hébergeur.</strong> Comme tout hébergeur, OVH enregistre pour chaque visite l’adresse IP, la date et la page demandée, pour faire fonctionner et protéger le site. L’éditeur ne les consulte que pour diagnostiquer un problème. Ces données restent en France.</li>
         <li><strong>Téléchargements.</strong> Les boutons «&nbsp;Télécharger DNMAX&nbsp;» mènent à GitHub, qui reçoit alors votre adresse IP, comme pour toute page web. GitHub, société américaine, adhère au cadre de protection des données UE–États-Unis (Data Privacy Framework). Le référentiel, lui, est servi par le site.</li>
-        <li><strong>Idées et bugs.</strong> Le formulaire ouvre un ticket prérempli sur GitHub, sous votre compte GitHub et <strong>publiquement</strong>. N’y écrivez jamais le nom d’un élève et ne joignez aucune capture d’écran montrant des données d’élèves.</li>
+        <li><strong>Idées et bugs.</strong> Le formulaire ouvre soit un ticket prérempli sur GitHub, sous votre compte GitHub et <strong>publiquement</strong>, soit un message prérempli dans votre messagerie, adressé à <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a> et lu par le seul éditeur. N’y écrivez jamais le nom d’un élève et ne joignez aucune capture d’écran montrant des données d’élèves.</li>
       </ul>
 
       <h2>L’application DNMAX</h2>
@@ -1260,7 +1264,43 @@ npm run dev</code></pre>
     if (bug) corps += "\n\n**Système :** "+f("f-sys").value+"\n**Version :** "+f("f-version").value.trim()+"\n\n**Pour reproduire :**\n"+f("f-etapes").value.trim();
     return REPO+"/issues/new?title="+encodeURIComponent(titre)+"&body="+encodeURIComponent(corps);
   }
-  function majLienGithub(){ f("vers-github").href = lienGithub(); }
+  /* Les messageries tronquent ou refusent les liens mailto trop longs : on reste sous cette taille. */
+  const LONGUEUR_MAX_MAILTO = 1800;
+  const ADRESSE_CONTACT = "contact@dnmax.fr";
+  // Les retours à la ligne d'un mailto s'écrivent %0D%0A (RFC 6068).
+  const encoderCourriel = t => encodeURIComponent(t.replace(/\r?\n/g,"\r\n"));
+  function lienCourriel(){
+    const bug = typeChoisi()==="bug";
+    const sujet = "DNMAX — " + (bug?"Bug : ":"Idée : ") + f("f-titre").value.trim();
+    let corps = "Type : "+(bug?"bug":"idée")+"\n\n"+f("f-texte").value.trim();
+    if (bug) corps += "\n\nSystème : "+f("f-sys").value+"\nVersion : "+f("f-version").value.trim()+"\n\nPour reproduire :\n"+f("f-etapes").value.trim();
+    const debut = "mailto:"+ADRESSE_CONTACT+"?subject="+encoderCourriel(sujet)+"&body=";
+    const lien = texte => debut+encoderCourriel(texte);
+    if (lien(corps).length <= LONGUEUR_MAX_MAILTO) return lien(corps);
+    // Coupe par caractères entiers (jamais au milieu d'un emoji) et garde la plus longue partie qui tient.
+    const caracteres = Array.from(corps);
+    let bas = 0, haut = caracteres.length;
+    while (bas < haut){
+      const milieu = Math.ceil((bas+haut)/2);
+      if (lien(caracteres.slice(0,milieu).join("").trimEnd()+"…").length <= LONGUEUR_MAX_MAILTO) bas = milieu; else haut = milieu-1;
+    }
+    return lien(caracteres.slice(0,bas).join("").trimEnd()+"…");
+  }
+  function majLienGithub(){ f("vers-github").href = lienGithub(); f("vers-courriel").href = lienCourriel(); }
+  f("vers-courriel").addEventListener("click",e=>{
+    if (!f("f-titre").value.trim()){ e.preventDefault(); message("Écrivez au moins une phrase dans le premier champ.","err"); f("f-titre").focus(); return; }
+    majLienGithub();
+    message("Votre messagerie s’ouvre avec le message prérempli. Vérifiez-le, puis envoyez-le.","ok");
+  });
+
+  /* Préremplissage depuis l'application : ?version=X.Y.Z&systeme=… (valeurs filtrées). */
+  (function(){
+    const parametres = new URLSearchParams(location.search);
+    const version = parametres.get("version");
+    if (version && /^\d+\.\d+\.\d+$/.test(version)) f("f-version").value = version;
+    const systeme = parametres.get("systeme");
+    if (systeme && ["Windows","macOS","Linux"].includes(systeme)) f("f-sys").value = systeme;
+  })();
   form.addEventListener("change",e=>{ if(e.target.name==="type") majType(); majLienGithub(); });
   form.addEventListener("input",majLienGithub);
   majType();
@@ -1372,8 +1412,8 @@ npm run dev</code></pre>
     const p1=document.createElement("p"); p1.style.margin="0 0 10px";
     p1.textContent="Les idées et les bugs signalés sont suivis publiquement sur GitHub.";
     const p2=document.createElement("p"); p2.style.margin="0";
-    p2.append("Le bouton Envoyer ouvre un ticket prérempli sur ");
-    const a=document.createElement("a"); a.href=REPO+"/issues"; a.target="_blank"; a.rel="noopener"; a.textContent="GitHub"; p2.append(a,".");
+    p2.append("« Envoyer sur GitHub » ouvre un ticket prérempli et public sur ");
+    const a=document.createElement("a"); a.href=REPO+"/issues"; a.target="_blank"; a.rel="noopener"; a.textContent="GitHub"; p2.append(a,". « Envoyer par e-mail » prépare un message à contact@dnmax.fr, que seul l’éditeur lit. N’y écrivez jamais le nom d’un élève.");
     v.append(p1,p2); liste.appendChild(v);
     f("envoyer").textContent="Envoyer sur GitHub";
     f("vers-github").hidden=true;
