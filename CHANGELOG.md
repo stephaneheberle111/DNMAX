@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Identité de l'enseignant (premier lancement, « Mon compte ») : prénom et nom se saisissent dans deux champs ; une identité déjà enregistrée est séparée d'elle-même (premier mot pour le prénom), à corriger au besoin.
+
 ### Corrigé
 
 - L'annonce d'une mise à jour trouvée depuis « Mon compte » s'affiche par-dessus la boîte, au lieu d'apparaître derrière.
