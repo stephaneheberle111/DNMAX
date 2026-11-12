@@ -5,6 +5,7 @@
 ### Ajouté
 
 - Documentation du site : « RGPD : fiche pour l'établissement » (description du traitement pour le chef d'établissement et le délégué à la protection des données) et « RGPD : information des élèves » (modèle de note à adapter), imprimables.
+- Référentiel DN MADE mention Espace (tableau des compétences 2023), téléchargeable sur dnmax.fr comme celui de la mention Objet ; l'encart des installations vides propose les deux.
 
 ## 0.4.1 — 2026-11-12
 
