@@ -27,10 +27,13 @@ export const LICENCE = "AGPL-3.0-or-later";
  * Voir DECISIONS.md, « Échange en direct ».
  */
 export const SERVEURS_STUN: readonly string[] = [
-  // AETA, France.
+  // Trois exploitants français, pour qu'un serveur indisponible ne bloque pas l'échange.
+  // AETA Audio Systems, fabricant de codecs audio.
   "stun:stun.aeta.com:3478",
-  // 86dd.eu, Allemagne ; exploitant non vérifié publiquement à ce jour.
-  "stun:stun.86dd.eu:3478",
+  // Belledonne Communications (Grenoble), éditeur de Linphone ; STUN seul, sans relais.
+  "stun:stun.linphone.org:3478",
+  // ippi, opérateur de téléphonie sur Internet.
+  "stun:stun.ippi.fr:3478",
 ];
 
 /** Délais de l'échange en direct, en millisecondes. */
