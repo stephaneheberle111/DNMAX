@@ -35,6 +35,12 @@ export interface Diplome {
 export interface VersionReferentiel {
   id: string;
   date: string;
+  /**
+   * Date à laquelle l'enseignant de ce poste a attesté avoir vérifié cette
+   * version et en assumer le contenu ; texte vide s'il ne l'a pas fait
+   * (version reçue, livrée avec l'application, ou validée avant l'attestation).
+   */
+  attestation: string;
 }
 
 export interface DonneesEtablissement {
@@ -74,17 +80,22 @@ export function lireEvaluations(texte: string | null | undefined): Evaluation[] 
   return Array.isArray(valeur) ? valeur.filter(estEvaluation) : [];
 }
 
+/** Lit une promotion telle que l'interface historique la tient ; les champs absents valent texte vide. */
+export function lirePromotion(promotion: ObjetJson): Promotion {
+  return {
+    id: lireTexte(promotion.id),
+    nom: lireTexte(promotion.nom),
+    diplomeId: lireTexte(promotion.diplomeId),
+    versionId: lireTexte(promotion.refV),
+  };
+}
+
 export function lirePromotions(texte: string | null | undefined): Promotion[] {
   const valeur = analyserJson(texte);
   if (!Array.isArray(valeur)) {
     return [];
   }
-  return valeur.filter(estObjet).map((promotion) => ({
-    id: lireTexte(promotion.id),
-    nom: lireTexte(promotion.nom),
-    diplomeId: lireTexte(promotion.diplomeId),
-    versionId: lireTexte(promotion.refV),
-  }));
+  return valeur.filter(estObjet).map(lirePromotion);
 }
 
 function lireTable(valeur: unknown): [string, unknown][] {
@@ -92,7 +103,11 @@ function lireTable(valeur: unknown): [string, unknown][] {
 }
 
 export function lireDonneesEtablissement(texte: string | null | undefined): DonneesEtablissement {
-  const racine = analyserJson(texte);
+  return lireDonneesEtablissementDe(analyserJson(texte));
+}
+
+/** Comme `lireDonneesEtablissement`, à partir de données déjà analysées (celles que tient l'interface historique). */
+export function lireDonneesEtablissementDe(racine: unknown): DonneesEtablissement {
   const donnees = estObjet(racine) ? racine : {};
   const diplomes = (Array.isArray(donnees.diplomes) ? donnees.diplomes : []).filter(estObjet).map((diplome) => ({
     id: lireTexte(diplome.id),
@@ -105,6 +120,7 @@ export function lireDonneesEtablissement(texte: string | null | undefined): Donn
       (Array.isArray(liste) ? liste : []).filter(estObjet).map((version) => ({
         id: lireTexte(version.id),
         date: lireTexte(version.date),
+        attestation: lireTexte(version.attestation),
       })),
     ]),
   );
