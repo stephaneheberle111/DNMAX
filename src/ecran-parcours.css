@@ -1,0 +1,593 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Visite guidée : voile grisé percé sur la zone utile, anneau, curseur animé et bulle d'instructions.
+   Sous les boîtes de l'application (z-index 70 à 75) pour ne jamais les bloquer ; seule la bulle passe au-dessus. */
+
+.parcours-voile {
+  position: fixed;
+  z-index: 65;
+  background: rgba(10, 14, 22, 0.58);
+  backdrop-filter: grayscale(0.6);
+}
+
+.parcours-anneau {
+  position: fixed;
+  z-index: 66;
+  pointer-events: none;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 0 rgba(47, 91, 211, 0.55);
+  animation: parcours-pulsation 1.8s ease-out infinite;
+}
+
+/* Zone à remplir : bordure en pointillés qui défile, pour inviter à la saisie plutôt qu'au clic. */
+/* Bord en dégradé qui tourne lentement autour de la zone. */
+@property --parcours-tour {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.parcours-anneau::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  padding: 3px;
+  border-radius: 12px;
+  background: conic-gradient(from var(--parcours-tour), #2f5bd3, #79a9d3, #f0bb39, #e260a4, #2f5bd3);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: parcours-rotation 3s linear infinite;
+}
+
+@keyframes parcours-rotation {
+  to {
+    --parcours-tour: 360deg;
+  }
+}
+
+.parcours-anneau-reussi {
+  border-color: #2e9b5d !important;
+  animation: parcours-pulsation-reussie 0.9s ease-out;
+}
+
+.parcours-anneau-reussi::before {
+  background: #2e9b5d;
+}
+
+@keyframes parcours-pulsation-reussie {
+  0% {
+    box-shadow: 0 0 0 0 rgba(46, 155, 93, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 22px rgba(46, 155, 93, 0);
+  }
+}
+
+.parcours-anneau[data-geste="remplir"]::before,
+.parcours-anneau[data-geste="regarder"]::before {
+  display: none;
+}
+
+.parcours-anneau[data-geste="remplir"] {
+  border-color: var(--accent, #2f5bd3);
+  border-style: dashed;
+  animation:
+    parcours-pulsation 2.4s ease-out infinite,
+    parcours-respiration 2.4s ease-in-out infinite;
+}
+
+.parcours-anneau[data-geste="regarder"] {
+  border-color: #f0a830;
+  animation: parcours-pulsation-douce 2.4s ease-out infinite;
+}
+
+@keyframes parcours-pulsation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 91, 211, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(47, 91, 211, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(47, 91, 211, 0);
+  }
+}
+
+@keyframes parcours-pulsation-douce {
+  0% {
+    box-shadow: 0 0 0 0 rgba(240, 168, 48, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(240, 168, 48, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(240, 168, 48, 0);
+  }
+}
+
+@keyframes parcours-respiration {
+  50% {
+    border-color: #f0a830;
+  }
+}
+
+/* Curseur : part de la bulle, glisse jusqu'à la zone, puis « clique » (onde) ou « écrit » (trait). */
+.parcours-curseur {
+  position: fixed;
+  z-index: 67;
+  width: 30px;
+  height: 30px;
+  margin: -3px 0 0 -5px;
+  pointer-events: none;
+  animation: parcours-trajet 2.6s cubic-bezier(0.55, 0.05, 0.3, 1) infinite;
+}
+
+.parcours-curseur::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: no-repeat center / contain
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 2l15 11.5-6.6 1.1 3.8 6.9-3 1.6-3.8-7L4 20z' fill='%23111' stroke='%23fff' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+}
+
+.parcours-curseur::after {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: -10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--accent, #2f5bd3);
+  opacity: 0;
+  animation: parcours-onde 2.6s ease-out infinite;
+}
+
+.parcours-curseur[data-geste="remplir"]::after {
+  left: 18px;
+  top: 2px;
+  width: 0;
+  height: 3px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--accent, #2f5bd3);
+  animation: parcours-ecriture 2.6s ease-out infinite;
+}
+
+.parcours-curseur[data-geste="regarder"] {
+  display: none;
+}
+
+@keyframes parcours-trajet {
+  0% {
+    transform: translate(var(--depart-x, 0), var(--depart-y, 0));
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  55%,
+  80% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes parcours-onde {
+  0%,
+  55% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  60% {
+    opacity: 0.9;
+  }
+  85% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes parcours-ecriture {
+  0%,
+  55% {
+    width: 0;
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  85% {
+    width: 46px;
+    opacity: 1;
+  }
+  100% {
+    width: 46px;
+    opacity: 0;
+  }
+}
+
+.parcours-bulle {
+  position: fixed;
+  z-index: 80;
+  box-sizing: border-box;
+  width: min(380px, calc(100vw - 24px));
+  padding: 14px 16px 12px;
+  border-radius: 14px;
+  background: var(--surface, #fff);
+  color: var(--ink, #14171c);
+  border: 1px solid var(--line, #d8dce3);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+}
+
+.parcours-entree {
+  animation: parcours-apparition 0.45s cubic-bezier(0.2, 1.35, 0.4, 1);
+}
+
+/* Liseré dégradé qui ondule en haut de la bulle. */
+.parcours-bulle::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: -1px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, #2f5bd3, #79a9d3, #91cc78, #f0bb39, #e260a4, #2f5bd3);
+  background-size: 200% 100%;
+  animation: parcours-ondulation 4s linear infinite;
+}
+
+/* Flèche vers la zone éclairée. */
+.parcours-bulle[data-position="dessous"]::before,
+.parcours-bulle[data-position="dessus"]::before {
+  content: "";
+  position: absolute;
+  left: var(--fleche-x, 50%);
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--line, #d8dce3);
+  transform: rotate(45deg);
+}
+
+.parcours-bulle[data-position="dessous"]::before {
+  top: -8px;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.parcours-bulle[data-position="dessus"]::before {
+  bottom: -8px;
+  border-left: 0;
+  border-top: 0;
+}
+
+@keyframes parcours-ondulation {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.parcours-cascade {
+  animation: parcours-cascade 0.4s ease-out both;
+  animation-delay: calc(var(--rang, 0) * 70ms + 80ms);
+}
+
+@keyframes parcours-cascade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Accueil et fin : bulle plus large, bandeau dégradé animé. */
+.parcours-accueil {
+  width: min(460px, calc(100vw - 24px));
+  padding-top: 0;
+  overflow: hidden;
+}
+
+.parcours-accueil::after {
+  display: none;
+}
+
+.parcours-banniere {
+  margin: 0 -16px 14px;
+  padding: 22px 20px 18px;
+  color: #fff;
+  background: linear-gradient(120deg, #1f3f9e, #2f5bd3, #4f8fd8, #2f5bd3);
+  background-size: 300% 300%;
+  animation: parcours-degrade 8s ease-in-out infinite;
+}
+
+.parcours-banniere .parcours-titre {
+  margin: 4px 0 0;
+  font-size: 22px;
+  color: #fff;
+}
+
+.parcours-banniere-marque {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  opacity: 0.8;
+}
+
+@keyframes parcours-degrade {
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Feuille de route des grandes étapes. */
+.parcours-feuille {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.parcours-chapitre {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 11px;
+  color: var(--muted, #687080);
+  animation: parcours-pop 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  animation-delay: calc(var(--rang, 0) * 70ms + 200ms);
+}
+
+/* Trait qui relie les pastilles. */
+.parcours-chapitre + .parcours-chapitre::before {
+  content: "";
+  position: absolute;
+  top: 11px;
+  right: calc(50% + 14px);
+  width: calc(100% - 24px);
+  height: 2px;
+  background: var(--line, #d8dce3);
+}
+
+.parcours-chapitre-fait + .parcours-chapitre::before {
+  background: #2e9b5d;
+}
+
+.parcours-pastille {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--line, #d8dce3);
+  background: var(--surface, #fff);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.parcours-libelle {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.parcours-chapitre-fait .parcours-pastille {
+  border-color: #2e9b5d;
+  background: #2e9b5d;
+  color: #fff;
+}
+
+.parcours-chapitre-actif {
+  color: var(--ink, #14171c);
+  font-weight: 600;
+}
+
+.parcours-chapitre-actif .parcours-pastille {
+  border-color: var(--accent, #2f5bd3);
+  background: var(--accent, #2f5bd3);
+  color: #fff;
+  animation: parcours-pulsation 1.8s ease-out infinite;
+}
+
+@keyframes parcours-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+/* Éclats de réussite. */
+.parcours-eclats {
+  position: fixed;
+  z-index: 85;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.parcours-eclats span {
+  position: absolute;
+  left: -4px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--couleur);
+  opacity: 0;
+  animation: parcours-eclat 1s cubic-bezier(0.15, 0.7, 0.3, 1) forwards;
+  animation-delay: var(--delai, 0ms);
+}
+
+.parcours-eclats span:nth-child(odd) {
+  border-radius: 50%;
+}
+
+@keyframes parcours-eclat {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateX(0) scale(1);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateX(var(--distance)) translateY(14px) scale(0.6) rotate(180deg);
+  }
+}
+
+@keyframes parcours-apparition {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+.parcours-secoue {
+  animation: parcours-secousse 0.4s ease;
+}
+
+@keyframes parcours-secousse {
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.parcours-entete {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted, #687080);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.parcours-progression {
+  height: 4px;
+  margin: 6px 0 10px;
+  border-radius: 2px;
+  background: var(--surface-2, #eef0f4);
+  overflow: hidden;
+}
+
+.parcours-progression span {
+  display: block;
+  height: 100%;
+  background: var(--accent, #2f5bd3);
+  transition: width 0.4s ease;
+}
+
+.parcours-titre {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+
+.parcours-texte {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.parcours-coche {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #2e9b5d;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: 1px;
+  animation: parcours-coche 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+@keyframes parcours-coche {
+  from {
+    transform: scale(0);
+  }
+}
+
+.parcours-reussie {
+  border-color: #2e9b5d;
+}
+
+.parcours-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.parcours-passer {
+  margin-right: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parcours-voile,
+  .parcours-anneau,
+  .parcours-bulle,
+  .parcours-progression span {
+    transition: none;
+  }
+
+  .parcours-anneau,
+  .parcours-anneau::before,
+  .parcours-bulle::after,
+  .parcours-banniere,
+  .parcours-cascade,
+  .parcours-chapitre,
+  .parcours-chapitre-actif .parcours-pastille,
+  .parcours-entree,
+  .parcours-secoue,
+  .parcours-coche,
+  .parcours-curseur::after {
+    animation: none;
+  }
+
+  .parcours-curseur {
+    animation: none;
+    display: none;
+  }
+}
+
+/* Hors accueil et fin, la bulle est étroite : seul le libellé de la grande étape en cours s'affiche, en entier. */
+.parcours-bulle:not(.parcours-accueil) .parcours-chapitre .parcours-libelle {
+  visibility: hidden;
+}
+
+.parcours-bulle:not(.parcours-accueil) .parcours-chapitre-actif .parcours-libelle {
+  visibility: visible;
+  overflow: visible;
+}
+
+/* Pendant le glissement d'une étape à l'autre, la zone brille davantage pour qu'on la suive des yeux. */
+.parcours-anneau-glisse {
+  animation: none;
+  box-shadow:
+    0 0 0 4px rgba(47, 91, 211, 0.35),
+    0 0 28px 6px rgba(121, 169, 211, 0.55);
+}

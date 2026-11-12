@@ -3294,6 +3294,8 @@ const MODULES = {
   dn:{nom:"Niveaux DN MADE",def:false,req:"eleves",
     d:"Attribue à chaque élève le niveau DN MADE atteint sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec un niveau de maîtrise suffisant. Affiché dans « Progression élève », dans les intitulés d'année et dans les exports."}
 };
+/* visite guidée de chaque module (voir src/parcours-etapes.ts) */
+const VISITE_MODULE={eleves:"eleves",dn:"niveaux"};
 /* ces anciens modules font désormais partie de la Base : toujours actifs */
 const BASE_KEYS=["base","ec","consignes","fiches","referentiel"];
 const SUPPORTS_DEF = ["Carnet de projet","Catalogue d'expérimentation","Planches de projet",
@@ -7185,7 +7187,7 @@ function paintSet(){
   host.innerHTML=Object.entries(MODULES).map(([k,v])=>`
     <div class="mod${v.req&&!MOD[v.req]?" modoff":""}"><label class="tg"><input type="checkbox" data-mod="${k}" ${MOD[k]?"checked":""} ${v.locked||(v.req&&!MOD[v.req])?"disabled":""} aria-label="${esc(v.nom)}"><span></span></label>
     <div><b>${esc(v.nom)}</b>${v.req?`<span class="hint" style="margin-left:8px;font-size:11.5px">nécessite le module ${esc(MODULES[v.req].nom)}</span>`:""}<div class="d">${esc(v.d)}</div>
-    ${v.locked?`<div class="off" style="color:var(--accent)">toujours actif</div>`:v.req&&!MOD[v.req]?`<div class="off">activez d'abord le module ${esc(MODULES[v.req].nom)}</div>`:v.def===false?`<div class="off">désactivé par défaut</div>`:""}</div></div>`).join("");
+    ${v.locked?`<div class="off" style="color:var(--accent)">toujours actif</div>`:v.req&&!MOD[v.req]?`<div class="off">activez d'abord le module ${esc(MODULES[v.req].nom)}</div>`:v.def===false?`<div class="off">désactivé par défaut</div>`:""}${VISITE_MODULE[k]?`<button type="button" class="btn ghost modvisite" data-parcours="${VISITE_MODULE[k]}">Visite guidée</button>`:""}</div></div>`).join("");
   host.querySelectorAll("[data-mod]").forEach(cb=>cb.onchange=()=>{
     if((MODULES[cb.dataset.mod]||{}).locked){cb.checked=true;return}
     if(!cb.checked&&Object.entries(MODULES).some(([k,v])=>v.req===cb.dataset.mod&&MOD[k]))
