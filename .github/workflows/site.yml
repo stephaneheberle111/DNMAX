@@ -4,7 +4,8 @@ name: Site
 # fusion dans main qui le modifie, ou à la demande (bouton « Run workflow »).
 #
 # Les fichiers distants absents du dépôt sont supprimés : le dossier distant
-# doit être réservé au site.
+# doit être réservé au site. Seul le dossier telechargements/, tenu par
+# l'atelier « Téléchargements », est laissé tel quel.
 #
 # Réglages (Settings → Secrets and variables → Actions) :
 #   variable OVH_SITE_SERVEUR       serveur SFTP, par exemple ftp.cluster129.hosting.ovh.net
@@ -99,7 +100,7 @@ jobs:
             set net:max-retries 3; set net:timeout 30;
             set sftp:auto-confirm no;
             open --env-password -u \"$UTILISATEUR\" \"sftp://$SERVEUR\";
-            mirror --reverse --delete --verbose site/ \"$DOSSIER\"
+            mirror --reverse --delete --verbose --exclude ^telechargements/ site/ \"$DOSSIER\"
           "
       - name: Le site répond
         run: |

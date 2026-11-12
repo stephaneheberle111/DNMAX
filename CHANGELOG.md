@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- Les installeurs Windows, macOS et Debian/Ubuntu de chaque version publiée sont déposés sur dnmax.fr.
+
 ## 0.3.0 — 2026-11-12
 
 ### Ajouté
