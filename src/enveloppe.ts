@@ -150,6 +150,20 @@ export async function enregistrerFichierProtege(nomPropose: string, texte: strin
 }
 
 /**
+ * Chiffre le texte d'un paquet d'échange sous `motDePasse` et le rend, sans
+ * l'enregistrer : même texte que celui d'un fichier protégé.
+ *
+ * @throws ErreurCoffre « mot-de-passe-trop-court » si le mot de passe ne convient pas.
+ */
+export async function protegerTexteEchange(texte: string, motDePasse: string): Promise<string> {
+  const chiffre = await appelerCoffre("proteger_texte_echange", { texte, motDePasse });
+  if (typeof chiffre !== "string") {
+    throw new ErreurCoffre("interne");
+  }
+  return chiffre;
+}
+
+/**
  * Déchiffre le texte d'un fichier d'échange protégé.
  *
  * @throws ErreurCoffre « acces-refuse » si le mot de passe n'est pas le bon.
