@@ -10,35 +10,12 @@ export const ADRESSE_RETOURS = "https://dnmax.fr/#idees";
 export const ADRESSE_CODE_SOURCE = "https://github.com/stephaneheberle111/DNMAX";
 export const ADRESSE_CONFIDENTIALITE = "https://dnmax.fr/#confidentialite";
 
-/** Référentiels proposés aux installations neuves, à télécharger puis à recevoir par « Échanger… ». */
-export const REFERENTIELS_PROPOSES = [
-  { nom: "DN MADE mention Objet", mention: "Objet", adresse: "https://dnmax.fr/referentiels/dn-made-objet.dnmax" },
-  { nom: "DN MADE mention Espace", mention: "Espace", adresse: "https://dnmax.fr/referentiels/dn-made-espace.dnmax" },
-] as const;
 
 export const LICENCE = "AGPL-3.0-or-later";
 
-/**
- * Échange en direct (bêta) : serveurs STUN publics, contactés seulement quand
- * l'enseignant lance un échange en direct. Ils servent uniquement à découvrir
- * l'adresse publique de chaque poste ; aucune donnée échangée n'y transite.
- * Ne jamais ajouter ici de serveur relais (`turn:`) : les données passeraient
- * par un tiers. Ils sont de toute façon écartés (voir `garderServeursStun`).
- * Voir DECISIONS.md, « Échange en direct ».
- */
-export const SERVEURS_STUN: readonly string[] = [
-  // Trois exploitants français, pour qu'un serveur indisponible ne bloque pas l'échange.
-  // AETA Audio Systems, fabricant de codecs audio.
-  "stun:stun.aeta.com:3478",
-  // Belledonne Communications (Grenoble), éditeur de Linphone ; STUN seul, sans relais.
-  "stun:stun.linphone.org:3478",
-  // ippi, opérateur de téléphonie sur Internet.
-  "stun:stun.ippi.fr:3478",
-];
-
 /** Délais de l'échange en direct, en millisecondes. */
 export const DELAIS_ECHANGE_DIRECT = {
-  /** Recherche des chemins de connexion avant d'écrire un code ; au-delà, le code part avec ceux trouvés. */
+  /** Recherche des adresses locales avant d'écrire un code ; au-delà, le code part avec celles trouvées. */
   rassemblement: 10_000,
   /** Attente de l'autre enseignant : le temps de se transmettre les codes à la main. */
   attenteCorrespondant: 15 * 60_000,
