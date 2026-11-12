@@ -82,6 +82,9 @@ export function listerEleves(entrees: Entrees): EleveRepere[] {
 
 /** Rangs, dans la liste saisie à la main d'une évaluation, des lignes qui portent ce nom. */
 function rangsDuNom(evaluation: ObjetJson, nomNormalise: string): number[] {
+  if (nomNormalise === "") {
+    return [];
+  }
   return lireNoms(evaluation.eleves).flatMap((nom, rang) => (normaliserNom(nom) === nomNormalise ? [rang] : []));
 }
 
@@ -193,7 +196,17 @@ function retirerRangs(evaluation: ObjetJson, rangs: number[]): ObjetJson {
   return copie;
 }
 
-function effacerDansEvaluation(evaluation: ObjetJson, eleve: EleveRepere, bilan: BilanEffacement): ObjetJson {
+/** Façon de retrouver l'élève : par identifiant seulement, ou aussi par son nom dans les listes saisies à la main. */
+export interface OptionsEffacement {
+  parNom: boolean;
+}
+
+function effacerDansEvaluation(
+  evaluation: ObjetJson,
+  eleve: EleveRepere,
+  bilan: BilanEffacement,
+  options: OptionsEffacement,
+): ObjetJson {
   const identifiants = new Set(eleve.identifiants);
   let copie: ObjetJson = { ...evaluation };
   let touchee = false;
@@ -209,7 +222,7 @@ function effacerDansEvaluation(evaluation: ObjetJson, eleve: EleveRepere, bilan:
     delete copie.eleveId;
     touchee = true;
   }
-  const rangs = rangsDuNom(evaluation, normaliserNom(eleve.nom));
+  const rangs = options.parNom ? rangsDuNom(evaluation, normaliserNom(eleve.nom)) : [];
   if (rangs.length > 0) {
     copie = retirerRangs(copie, rangs);
     bilan.listesSaisies += 1;
@@ -221,7 +234,7 @@ function effacerDansEvaluation(evaluation: ObjetJson, eleve: EleveRepere, bilan:
   return copie;
 }
 
-function effacerDansDonnees(entrees: Entrees, eleve: EleveRepere, bilan: BilanEffacement): Entrees {
+function effacerDansDonnees(entrees: Entrees, eleve: EleveRepere, bilan: BilanEffacement, options: OptionsEffacement): Entrees {
   const resultat: Record<string, string> = { ...entrees };
   const identifiants = new Set(eleve.identifiants);
   if (CLE_PROMOTIONS in entrees) {
@@ -241,13 +254,13 @@ function effacerDansDonnees(entrees: Entrees, eleve: EleveRepere, bilan: BilanEf
   }
   if (CLE_EVALUATIONS in entrees) {
     const evaluations = lireListe(entrees[CLE_EVALUATIONS]).map((evaluation): unknown =>
-      estObjet(evaluation) ? effacerDansEvaluation(evaluation, eleve, bilan) : evaluation,
+      estObjet(evaluation) ? effacerDansEvaluation(evaluation, eleve, bilan, options) : evaluation,
     );
     resultat[CLE_EVALUATIONS] = JSON.stringify(evaluations);
   }
   const brouillon = analyserJson(entrees[CLE_BROUILLON]);
   if (estObjet(brouillon)) {
-    resultat[CLE_BROUILLON] = JSON.stringify(effacerDansEvaluation(brouillon, eleve, bilan));
+    resultat[CLE_BROUILLON] = JSON.stringify(effacerDansEvaluation(brouillon, eleve, bilan, options));
   }
   return resultat;
 }
@@ -265,17 +278,24 @@ function lireTextes(valeur: unknown): Entrees {
  * Limites : un nom cité dans un texte libre (appréciation d'un autre élève,
  * titre, consignes) n'est pas recherché ; les sauvegardes automatiques du
  * coffre conservent l'élève jusqu'à leur renouvellement.
+ *
+ * @param options par défaut, l'élève est aussi retrouvé par son nom dans les
+ *   listes saisies à la main ; un effacement en masse s'en tient aux identifiants.
  */
-export function effacerEleve(entrees: Entrees, eleve: EleveRepere): { entrees: Entrees; bilan: BilanEffacement } {
+export function effacerEleve(
+  entrees: Entrees,
+  eleve: EleveRepere,
+  options: OptionsEffacement = { parNom: true },
+): { entrees: Entrees; bilan: BilanEffacement } {
   const bilan: BilanEffacement = { promotions: 0, evaluations: 0, listesSaisies: 0 };
-  const resultat: Record<string, string> = { ...effacerDansDonnees(entrees, eleve, bilan) };
+  const resultat: Record<string, string> = { ...effacerDansDonnees(entrees, eleve, bilan, options) };
   const instantane = analyserJson(entrees[CLE_INSTANTANE_EXEMPLE]);
   if (estObjet(instantane)) {
     // Les copies ne comptent pas dans le bilan : l'enseignant ne les voit pas.
     const ignore: BilanEffacement = { promotions: 0, evaluations: 0, listesSaisies: 0 };
     resultat[CLE_INSTANTANE_EXEMPLE] = JSON.stringify({
-      avant: effacerDansDonnees(lireTextes(instantane.avant), eleve, ignore),
-      apres: effacerDansDonnees(lireTextes(instantane.apres), eleve, ignore),
+      avant: effacerDansDonnees(lireTextes(instantane.avant), eleve, ignore, options),
+      apres: effacerDansDonnees(lireTextes(instantane.apres), eleve, ignore, options),
     });
   }
   return { entrees: resultat, bilan };
