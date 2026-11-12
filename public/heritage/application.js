@@ -3281,7 +3281,7 @@ const PRESETS = {
 /* échelles : actives et par défaut se règlent dans Paramètres ; chaque évaluation garde la sienne */
 const ECH=(()=>{let e=null;try{e=JSON.parse(STOCKAGE.getItem("dnmade.echelles")||"null")}catch(_){}
   e=e||{};if(Array.isArray(e.actifs))e.actifs=e.actifs.filter(k=>k!=="dn");   // les niveaux DN MADE ne sont plus une échelle
-  if(!Array.isArray(e.actifs)||!e.actifs.length)e.actifs=["maitrise","acq"];
+  if(!Array.isArray(e.actifs)||!e.actifs.length)e.actifs=["maitrise"];   // « Degrés d'acquisition » se coche dans Paramètres
   if(!e.def||!e.actifs.includes(e.def))e.def=e.actifs.includes("maitrise")?"maitrise":e.actifs[0];
   if(Array.isArray(e.libre)&&e.libre.length)PRESETS.libre.niveaux=e.libre.slice();return e})();
 function saveEch(){try{STOCKAGE.setItem("dnmade.echelles",JSON.stringify(ECH))}catch(_){}}
