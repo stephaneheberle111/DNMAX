@@ -141,7 +141,24 @@ export function ouvrirBoite(titre: string, surFermeture?: () => void): { boite: 
   boite.setAttribute("role", "dialog");
   boite.setAttribute("aria-modal", "true");
   boite.append(creer("h2", "", titre));
+  // Plusieurs façons de sortir : la croix, un clic sur le fond, la touche Échap, ou le bouton de la boîte.
+  const croix = creerBouton("×", "echange-fermer", () => {
+    fermer();
+  });
+  croix.setAttribute("aria-label", "Fermer");
+  croix.title = "Fermer";
+  boite.append(croix);
   fond.append(boite);
+  // Le clic doit commencer et finir sur le fond : une sélection de texte relâchée hors de la boîte ne la ferme pas.
+  let appuiSurFond = false;
+  fond.addEventListener("mousedown", (evenement) => {
+    appuiSurFond = evenement.target === fond;
+  });
+  fond.addEventListener("click", (evenement) => {
+    if (appuiSurFond && evenement.target === fond) {
+      fermer();
+    }
+  });
   const surTouche = (evenement: KeyboardEvent): void => {
     if (evenement.key === "Escape") {
       fermer();
