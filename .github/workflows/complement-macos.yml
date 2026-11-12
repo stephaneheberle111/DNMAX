@@ -29,6 +29,10 @@ jobs:
     name: Vérifications préalables
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    # GitHub ne montre les brouillons de version qu'avec le droit d'écriture,
+    # même pour les lire : sans lui, un brouillon passe pour inexistant.
+    permissions:
+      contents: write
     outputs:
       commit: ${{ steps.version.outputs.commit }}
       version: ${{ steps.version.outputs.version }}
