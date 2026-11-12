@@ -51,3 +51,9 @@
 .accueil-vide > .btn.ghost {
   align-self: flex-end;
 }
+
+.accueil-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}

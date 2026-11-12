@@ -200,7 +200,7 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Pourquoi** : le référentiel d'un diplôme n'est pas une donnée de l'application ; il évolue, diffère d'une mention à l'autre, et ne concerne pas tous les enseignants. Le livrer d'office l'aurait figé dans chaque version.
 
-**Comment obtenir un référentiel** : sur une installation vide, un encart propose de télécharger celui du DN MADE mention Objet (fichier `site/referentiels/dn-made-objet.dnmax`, ouvert dans le navigateur) puis de le recevoir par le circuit habituel de l'échange, qui crée le diplôme (décision 12). On peut aussi recevoir celui d'un autre enseignant ou le construire dans l'onglet Référentiel.
+**Comment obtenir un référentiel** : sur une installation vide, un encart propose de télécharger celui du DN MADE mention Objet ou mention Espace (fichiers `site/referentiels/dn-made-objet.dnmax` et `dn-made-espace.dnmax`, ouverts dans le navigateur) puis de le recevoir par le circuit habituel de l'échange, qui crée le diplôme (décision 12). On peut aussi recevoir celui d'un autre enseignant ou le construire dans l'onglet Référentiel.
 
 **L'application n'ouvre aucune connexion pour cela** : elle demande au système d'ouvrir l'adresse dans le navigateur. Seules les adresses du site et du dépôt du projet sont autorisées (`src-tauri/capabilities/default.json`, `src/configuration.ts`).
 
