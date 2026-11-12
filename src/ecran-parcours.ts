@@ -10,7 +10,7 @@ import {
   type IdentifiantParcours,
 } from "./domaine/parcours";
 import type { AccesDonnees } from "./ecran-echange";
-import { PARCOURS_DEFINIS, type Etape } from "./parcours-etapes";
+import { chapitreDe, PARCOURS_DEFINIS, type Etape, type Parcours } from "./parcours-etapes";
 
 /** Marge autour de la zone éclairée, en pixels. */
 const MARGE = 8;
@@ -215,6 +215,51 @@ function avancerDepuis(index: number): void {
   }
 }
 
+/** Couleurs des éclats, reprises des familles d'enseignements. */
+const COULEURS_ECLATS = ["#2f5bd3", "#91CC78", "#F0BB39", "#79A9D3", "#E260A4", "#F09569"];
+
+/** Petite gerbe d'éclats colorés en (x, y), pour saluer une étape réussie. */
+function eclater(x: number, y: number, nombre: number): void {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+  const gerbe = creer("div", "parcours-eclats");
+  gerbe.setAttribute("aria-hidden", "true");
+  gerbe.style.left = `${String(Math.round(x))}px`;
+  gerbe.style.top = `${String(Math.round(y))}px`;
+  for (let rang = 0; rang < nombre; rang += 1) {
+    const eclat = creer("span");
+    // Angles réguliers et distances alternées : une gerbe régulière, sans hasard.
+    eclat.style.setProperty("--angle", `${String((360 / nombre) * rang)}deg`);
+    eclat.style.setProperty("--distance", `${String(46 + (rang % 3) * 22)}px`);
+    eclat.style.setProperty("--couleur", COULEURS_ECLATS[rang % COULEURS_ECLATS.length] ?? "#2f5bd3");
+    eclat.style.setProperty("--delai", `${String((rang % 4) * 30)}ms`);
+    gerbe.append(eclat);
+  }
+  document.body.append(gerbe);
+  window.setTimeout(() => {
+    gerbe.remove();
+  }, 1400);
+}
+
+/** Feuille de route des grandes étapes : faites, en cours, à venir. */
+function creerFeuilleDeRoute(parcours: Parcours, index: number, derniere: boolean): HTMLElement | null {
+  if (parcours.chapitres === undefined) {
+    return null;
+  }
+  const courant = derniere ? parcours.chapitres.length : (chapitreDe(parcours.etapes, index) ?? parcours.chapitres.length);
+  const liste = creer("ol", "parcours-feuille");
+  liste.setAttribute("aria-label", "Grandes étapes");
+  parcours.chapitres.forEach((nom, rang) => {
+    const etat = rang < courant ? "fait" : rang === courant && index > 0 ? "actif" : "avenir";
+    const element = creer("li", `parcours-chapitre parcours-chapitre-${etat}`);
+    element.style.setProperty("--rang", String(rang));
+    element.append(creer("span", "parcours-pastille", etat === "fait" ? "✓" : String(rang + 1)), creer("span", "parcours-libelle", nom));
+    liste.append(element);
+  });
+  return liste;
+}
+
 function afficherBulle(): void {
   const bulle = elements.bulle;
   if (visite === null || bulle === null) {
@@ -233,6 +278,10 @@ function afficherBulle(): void {
   bulle.classList.add("parcours-entree");
   bulle.classList.toggle("parcours-reussie", fait);
 
+  const derniere = visite.index === parcours.etapes.length - 1;
+  const accueil = visite.index === 0;
+  bulle.classList.toggle("parcours-accueil", accueil || derniere);
+
   const entete = creer("div", "parcours-entete");
   entete.append(
     creer("span", "parcours-nom", parcours.titre),
@@ -250,9 +299,19 @@ function afficherBulle(): void {
   if (fait) {
     texte.prepend(creer("span", "parcours-coche", "✓"));
   }
-
+  const feuille = creerFeuilleDeRoute(parcours, visite.index, derniere);
+  if (accueil || derniere) {
+    const banniere = creer("div", "parcours-banniere");
+    banniere.append(creer("span", "parcours-banniere-marque", "DNMAX"), titre);
+    bulle.append(banniere);
+  } else {
+    bulle.append(entete, progression, titre);
+  }
+  bulle.append(texte);
+  if (feuille !== null) {
+    bulle.append(feuille);
+  }
   const actions = creer("div", "parcours-actions");
-  const derniere = visite.index === parcours.etapes.length - 1;
   const passer = creer("button", "btn ghost parcours-passer", derniere ? "" : "Passer la visite");
   passer.type = "button";
   passer.hidden = derniere;
@@ -280,7 +339,18 @@ function afficherBulle(): void {
     }
   });
   actions.append(passer, precedente, continuer);
-  bulle.append(entete, progression, titre, texte, actions);
+  bulle.append(actions);
+  // Le contenu apparaît en cascade.
+  [...bulle.children].forEach((enfant, rang) => {
+    if (enfant instanceof HTMLElement) {
+      enfant.classList.add("parcours-cascade");
+      enfant.style.setProperty("--rang", String(rang));
+    }
+  });
+  if (derniere && parcours.chapitres !== undefined) {
+    const centre = bulle.getBoundingClientRect();
+    eclater(centre.left + centre.width / 2, centre.top + 40, 28);
+  }
   if (!(etape.cibles?.length ?? 0)) {
     continuer.focus({ preventScroll: true });
   }
@@ -380,7 +450,12 @@ function placerBulle(trou: DOMRect | null, enCoin: boolean): void {
       bulle.dataset.position = "coin";
     }
   }
-  bulle.style.left = `${String(Math.round(Math.max(marge, gauche)))}px`;
+  const gaucheFinale = Math.round(Math.max(marge, gauche));
+  if (trou !== null) {
+    const pointe = trou.left + trou.width / 2 - gaucheFinale;
+    bulle.style.setProperty("--fleche-x", `${String(Math.round(Math.min(Math.max(24, pointe), dimensions.width - 24)))}px`);
+  }
+  bulle.style.left = `${String(gaucheFinale)}px`;
   bulle.style.top = `${String(Math.round(Math.max(marge, haut)))}px`;
 }
 
@@ -439,6 +514,7 @@ function redessiner(): void {
       height: `${String(trou.height)}px`,
     });
     anneau.dataset.geste = etape.geste ?? "regarder";
+    anneau.classList.toggle("parcours-anneau-reussi", visite.salut !== null || visite.dejaFait);
   }
   const tropGrande = trou !== null && (trou.width * trou.height) / (window.innerWidth * window.innerHeight) > PART_ECRAN_MAX;
   placerBulle(avecAnneau ? trou : null, masquer || tropGrande);
@@ -475,6 +551,10 @@ function suivre(): void {
       avancerDepuis(index);
     }, DUREE_SALUT);
     afficherBulle();
+    const zone = cibleCourante?.getBoundingClientRect() ?? elements.bulle?.getBoundingClientRect();
+    if (zone !== undefined) {
+      eclater(zone.left + zone.width / 2, zone.top + Math.min(zone.height / 2, 60), 16);
+    }
     return;
   }
   if (visite.salut === null && etape.atteinte?.() === true) {

@@ -36,7 +36,24 @@ export interface Etape {
 
 export interface Parcours {
   titre: string;
+  /** Grandes étapes affichées en feuille de route ; une étape dont le titre commence par « n. » appartient à la n-ième. */
+  chapitres?: readonly string[];
   etapes: readonly Etape[];
+}
+
+/**
+ * Grande étape (à partir de 0) à laquelle appartient l'étape `index` : celle de la
+ * première étape numérotée à partir d'elle, pour que les étapes de navigation qui
+ * mènent à une grande étape en fassent déjà partie. `null` après la dernière.
+ */
+export function chapitreDe(etapes: readonly Pick<Etape, "titre">[], index: number): number | null {
+  for (const etape of etapes.slice(Math.max(0, index))) {
+    const numero = /^(\d+)\./.exec(etape.titre);
+    if (numero?.[1] !== undefined) {
+      return Number(numero[1]) - 1;
+    }
+  }
+  return null;
 }
 
 function visible(selecteur: string): boolean {
@@ -97,6 +114,7 @@ const FENETRE_ACTIONS = ['[role="dialog"][aria-modal="true"]', ".xpop:not([hidde
 
 const PRISE_EN_MAIN: Parcours = {
   titre: "Prise en main",
+  chapitres: ["Référentiel", "Promotions", "Collègues", "Répartition", "Évaluation", "Export"],
   etapes: [
     {
       titre: "Bienvenue dans DNMAX",
