@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- « Mes évaluations » : l'en-tête du tableau reste visible sous la barre du haut quand la liste défile.
+
 ### Corrigé
 
 - L'annonce d'une mise à jour trouvée depuis « Mon compte » s'affiche par-dessus la boîte, au lieu d'apparaître derrière.

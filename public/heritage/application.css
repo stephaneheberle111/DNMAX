@@ -800,3 +800,14 @@ html[data-device="phone"] .toast{bottom:calc(76px + env(safe-area-inset-bottom,0
   .radwrap{grid-template-columns:minmax(0,1fr) 320px}
   svg.radial{max-width:min(1120px,calc(100vh - 110px))}
 }
+
+/* ---------- En-tête du tableau « Mes évaluations » toujours visible ----------
+   Le tableau défile avec la page : son en-tête reste collé sous la barre du haut.
+   La zone .tw est un conteneur de défilement horizontal, qui empêcherait l'en-tête
+   de se coller à la fenêtre : on le lui retire quand l'écran est assez large pour
+   que le tableau tienne. La hauteur de la barre (--hauteur-barre) est mesurée par
+   src/ecran-entetes.ts, 60px à défaut. */
+@media (min-width:900px){
+  #savedList.tw{overflow:visible}
+  table.slist thead th{position:sticky;top:var(--hauteur-barre,60px);z-index:3;background:var(--surface-2);box-shadow:inset 0 -1px 0 var(--line)}
+}
