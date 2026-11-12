@@ -8,7 +8,7 @@ import {
   type ParametresDirect,
   type Progression,
 } from "./canal-direct";
-import { DELAIS_ECHANGE_DIRECT, SERVEURS_STUN, TAILLE_MAXIMALE_ECHANGE_DIRECT } from "./configuration";
+import { DELAIS_ECHANGE_DIRECT, TAILLE_MAXIMALE_ECHANGE_DIRECT } from "./configuration";
 import type { ErreurCode } from "./domaine/echange/code-direct";
 import { messagePourErreur } from "./ecran-coffre";
 import {
@@ -29,7 +29,6 @@ import {
  */
 
 const PARAMETRES: ParametresDirect = {
-  serveursStun: SERVEURS_STUN,
   delais: DELAIS_ECHANGE_DIRECT,
   tailleMaximale: TAILLE_MAXIMALE_ECHANGE_DIRECT,
 };
@@ -50,7 +49,9 @@ const MESSAGES_DIRECT: Record<Exclude<CodeErreurDirect, "code-invalide">, string
   "autre-seance": "Ce code de réponse correspond à une autre invitation. Demandez la réponse à l'invitation affichée ici.",
   "delai-depasse": "Votre collègue ne s'est pas manifesté à temps. Recommencez l'échange quand vous êtes prêts tous les deux.",
   "connexion-impossible":
-    "La connexion directe entre vos deux ordinateurs n'a pas pu s'établir, souvent à cause d'un pare-feu ou d'un réseau d'établissement. " +
+    "Vos deux ordinateurs n'ont pas réussi à se connecter. Vérifiez qu'ils sont bien sur le même réseau " +
+    "(même wifi ou même réseau local) : l'échange en direct ne fonctionne pas d'un réseau à un autre. " +
+    "Certains réseaux d'établissement isolent les postes les uns des autres ; l'échange en direct y est alors impossible. " +
     "Rien n'est passé par un intermédiaire.",
   "transfert-interrompu": "La connexion s'est interrompue pendant le transfert. Rien n'a été modifié chez le destinataire.",
   "contenu-refuse": "Le contenu reçu n'est pas complet ou n'a pas la forme attendue : il a été refusé, rien n'a été modifié.",
@@ -118,15 +119,22 @@ function decrireProgression(verbe: string, progression: Progression): string {
   return `${verbe} : ${String(pourcentage)} %`;
 }
 
+/** Marque « Bêta » accolée au nom de l'échange en direct. */
+export function creerMarqueBeta(): HTMLElement {
+  const marque = creer("span", "echange-beta", "Bêta");
+  marque.title = "Fonction en cours d'essai";
+  return marque;
+}
+
 /** Texte d'introduction commun aux deux sens. */
 function presenter(boite: HTMLElement): void {
   boite.append(
     creer(
       "p",
       "",
-      "En direct d'ordinateur à ordinateur : rien ne passe par un serveur. Des serveurs publics français " +
-        "servent seulement à ce que vos deux ordinateurs se trouvent ; ils voient vos adresses Internet, jamais le contenu. " +
-        "Selon les réseaux (pare-feu d'établissement notamment), la connexion peut échouer : l'échange par fichier reste disponible.",
+      "En direct d'ordinateur à ordinateur, sans aucun serveur. Les deux ordinateurs doivent être sur le même réseau " +
+        "(même wifi ou même réseau local). Certains réseaux d'établissement isolent les postes : la connexion échoue alors, " +
+        "et l'échange par fichier reste disponible.",
     ),
   );
 }
@@ -311,7 +319,7 @@ export function montrerReceptionDirecte(traiterTexte: (texte: string) => Promise
 export function montrerChoixDirect(acces: AccesDonnees): void {
   const { boite, fermer } = ouvrirBoite("Échange en direct");
   const titre = boite.querySelector("h2");
-  titre?.append(" ", creer("span", "echange-beta", "BÊTA"));
+  titre?.append(" ", creerMarqueBeta());
   presenter(boite);
   const disponible = echangeDirectDisponible();
   if (!disponible) {

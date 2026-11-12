@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { decoderCode, encoderCode, garderServeursStun, sommeControle, type ContenuCode } from "./code-direct";
+import { decoderCode, encoderCode, sommeControle, type ContenuCode } from "./code-direct";
 
 /** Description de session factice, de la forme d'une vraie (aucune adresse réelle). */
 const DESCRIPTION = [
@@ -110,21 +110,3 @@ describe("somme de contrôle", () => {
   });
 });
 
-describe("serveurs de connexion", () => {
-  it("garde les serveurs STUN", () => {
-    expect(garderServeursStun(["stun:stun.exemple.fr:3478", "stun:stun.exemple.fr"])).toEqual([
-      "stun:stun.exemple.fr:3478",
-      "stun:stun.exemple.fr",
-    ]);
-  });
-
-  it("écarte tout serveur relais, par lequel les données transiteraient", () => {
-    expect(garderServeursStun(["turn:relais.exemple.fr:3478", "turns:relais.exemple.fr:5349", "stun:a.fr"])).toEqual([
-      "stun:a.fr",
-    ]);
-  });
-
-  it("écarte une adresse qui embarque des paramètres ou des identifiants", () => {
-    expect(garderServeursStun(["stun:a.fr?transport=tcp", "stun:moi@a.fr", ""])).toEqual([]);
-  });
-});

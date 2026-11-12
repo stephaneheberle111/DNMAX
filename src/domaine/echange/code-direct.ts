@@ -180,13 +180,3 @@ export function decoderCode(texte: string, roleAttendu: RoleCode): ContenuCode |
   }
   return contenu.role === roleAttendu ? contenu : "mauvais-role";
 }
-
-/**
- * Garde, parmi les adresses de serveurs de connexion, celles qui ne servent
- * qu'à découvrir l'adresse publique (`stun:`). Un serveur relais (`turn:`,
- * `turns:`), par lequel les données transiteraient, est toujours écarté :
- * l'échange en direct ne passe jamais par un tiers.
- */
-export function garderServeursStun(adresses: readonly string[]): string[] {
-  return adresses.filter((adresse) => /^stun:[A-Za-z0-9.-]+(:\d{1,5})?$/.test(adresse));
-}
