@@ -3705,19 +3705,31 @@ function migF(f){if(!Array.isArray(f.ues))f.ues=f.ue?[f.ue]:[];delete f.ue;
   f.classe=f.classes.join(", ");
   if(!f.res||typeof f.res!=="object")f.res={};
   return f}
+/* Prénom et nom se saisissent à part (prenom, nomFam) ; « nom » reste le nom affiché
+   « Prénom Nom », utilisé partout ailleurs (listes, exports, échanges, rapprochements). */
+function separerPrenomNom(s){
+  const t=String(s||"").trim();
+  const tab=t.indexOf("\t");   // deux colonnes collées depuis un tableur : prénom, puis nom
+  if(tab>=0)return {prenom:t.slice(0,tab).replace(/\s+/g," ").trim(),nomFam:t.slice(tab+1).replace(/\s+/g," ").trim()};
+  const u=t.replace(/\s+/g," ");const k=u.indexOf(" ");   // sinon : premier mot = prénom
+  return k<0?{prenom:"",nomFam:u}:{prenom:u.slice(0,k),nomFam:u.slice(k+1)}}
+function composerNom(prenom,nomFam){return [prenom,nomFam].map(x=>String(x||"").replace(/\s+/g," ").trim()).filter(Boolean).join(" ")}
+function nouvellePersonne(id,ligne){const p=separerPrenomNom(ligne);return {id,prenom:p.prenom,nomFam:p.nomFam,nom:composerNom(p.prenom,p.nomFam)}}
+function completerPersonne(e){
+  if(typeof e.prenom!=="string"||typeof e.nomFam!=="string"){const p=separerPrenomNom(e.nom);e.prenom=p.prenom;e.nomFam=p.nomFam}
+  return e}
+function lignesNoms(txt){return String(txt||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean)}
 function syncListe(pr,txt){
-  const noms=String(txt==null?pr.eleves:txt).split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const lignes=txt==null?(pr.liste||[]).map(e=>e.nom):lignesNoms(txt);
   const old=(pr.liste||[]).slice();
-  pr.liste=noms.map(nom=>{const i=old.findIndex(e=>e.nom===nom);
-    return i>=0?old.splice(i,1)[0]:{id:newId("s"),nom}});
-  pr.eleves=noms.join("\n");
+  pr.liste=lignes.map(l=>{const nom=composerNom(...Object.values(separerPrenomNom(l)));const i=old.findIndex(e=>e.nom===nom);
+    return i>=0?completerPersonne(old.splice(i,1)[0]):nouvellePersonne(newId("s"),l)});
+  pr.eleves=pr.liste.map(e=>e.nom).join("\n");
   return pr;
 }
 function migPromo(pr){
-  if(!Array.isArray(pr.liste)){
-    pr.liste=String(pr.eleves||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean)
-      .map(nom=>({id:newId("s"),nom}));
-  }
+  if(!Array.isArray(pr.liste))pr.liste=lignesNoms(pr.eleves).map(l=>nouvellePersonne(newId("s"),l));
+  pr.liste.forEach(completerPersonne);
   pr.eleves=pr.liste.map(e=>e.nom).join("\n");
   return pr;
 }
@@ -6213,13 +6225,14 @@ function paintPromosOrg(host){
       ${MOD.eleves?`<button class="btn ghost" data-po="${pr.id}" aria-expanded="${open}">${n} élève${n>1?"s":""} ${open?"▴":"▾"}</button>`:""}
       ${delBtn("pr"+pr.id,"Supprimer")}</div>`;
     if(open){
-      const scss="grid-template-columns:minmax(0,1fr) 300px 92px";
+      const scss="grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px 92px";
       h+=`<div class="pdet">
         ${(pr.liste||[]).map(e=>`<div class="ed" style="${scss}">
-          <input type="text" value="${esc(e.nom)}" data-sn="${pr.id}|${e.id}" aria-label="Prénom et nom de l'élève">
+          <input type="text" value="${esc(completerPersonne(e).prenom)}" data-sp="${pr.id}|${e.id}" placeholder="Prénom" aria-label="Prénom de l'élève">
+          <input type="text" value="${esc(e.nomFam)}" data-sn="${pr.id}|${e.id}" placeholder="Nom" aria-label="Nom de l'élève">
           <select data-sm="${pr.id}|${e.id}" aria-label="Promotion de l'élève" title="Changer de promotion, ou de mention">${moveOpts(pr.id)}</select>
           ${delBtn("st"+pr.id+"|"+e.id,"Retirer")}</div>`).join("")||`<div class="empty">Aucun élève dans cette promotion.</div>`}
-        <div class="padd"><textarea data-sa="${pr.id}" rows="2" placeholder="Ajouter des élèves — un par ligne, prénom puis nom"></textarea>
+        <div class="padd"><textarea data-sa="${pr.id}" rows="2" placeholder="Ajouter des élèves — un par ligne : prénom puis nom, ou deux colonnes Prénom / Nom collées d'un tableur"></textarea>
           <button class="btn ghost" data-sab="${pr.id}">Ajouter</button></div>
       </div>`;
     }
@@ -6240,15 +6253,17 @@ function paintPromosOrg(host){
   host.querySelectorAll("[data-py]").forEach(i=>i.onchange=()=>{const pr=P(i.dataset.py),v=parseInt(i.value,10);
     if(!v)return;rename(pr,()=>pr.debut=v);save2();paintOrg()});
   host.querySelectorAll("[data-po]").forEach(b=>b.onclick=()=>{ui.org.promo=ui.org.promo===b.dataset.po?"":b.dataset.po;paintOrg()});
-  host.querySelectorAll("[data-sn]").forEach(i=>i.oninput=()=>{const [pid,eid]=i.dataset.sn.split("|"),pr=P(pid);
-    const e=pr.liste.find(x=>x.id===eid);if(e){e.nom=i.value;migPromo(pr);save2()}});
+  host.querySelectorAll("[data-sp],[data-sn]").forEach(i=>i.oninput=()=>{const [pid,eid]=(i.dataset.sp||i.dataset.sn).split("|"),pr=P(pid);
+    const e=pr.liste.find(x=>x.id===eid);if(!e)return;completerPersonne(e);
+    if(i.dataset.sp!==undefined)e.prenom=i.value;else e.nomFam=i.value;
+    e.nom=composerNom(e.prenom,e.nomFam);migPromo(pr);save2()});
   host.querySelectorAll("[data-sm]").forEach(sel=>sel.onchange=()=>{const [pid,eid]=sel.dataset.sm.split("|"),from=P(pid),to=P(sel.value);
     if(!to||to===from)return;const k=from.liste.findIndex(x=>x.id===eid);if(k<0)return;
     const e=from.liste.splice(k,1)[0];to.liste.push(e);migPromo(from);migPromo(to);save2();paintOrg();
     toast(e.nom+" → "+(to.nom||"promotion")+(to.diplomeId!==from.diplomeId?" ("+dipLabel(D.diplomes.find(d=>d.id===to.diplomeId)||{})+")":""))});
   host.querySelectorAll("[data-sab]").forEach(b=>b.onclick=()=>{const pr=P(b.dataset.sab), ta=host.querySelector(`[data-sa="${b.dataset.sab}"]`);
-    const noms=String(ta.value||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!noms.length)return;
-    noms.forEach(nom=>pr.liste.push({id:newId("s"),nom}));migPromo(pr);save2();paintOrg()});
+    const lignes=lignesNoms(ta.value);if(!lignes.length)return;
+    lignes.forEach(l=>pr.liste.push(nouvellePersonne(newId("s"),l)));migPromo(pr);save2();paintOrg()});
   host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
     const id=b.dataset.eddel;
     if(id.startsWith("pr")){const pid=id.slice(2);promos=promos.filter(x=>x.id!==pid);if(F.promoId===pid){F.promoId="";save()}}
@@ -6850,19 +6865,24 @@ function paintEditor(pane,host){
     }
   }
   if(pane==="enseignants"){
-    const css="grid-template-columns:60px minmax(0,1fr) 92px";
+    const css="grid-template-columns:60px minmax(0,1fr) minmax(0,1fr) 92px";
+    D.enseignants.forEach(completerPersonne);
     host.innerHTML=edPanel("Enseignants",D.enseignants.length,
       `<button class="btn ghost" id="edAdd">+ Ajouter</button>`,
-      {css,cells:["C'est moi","Prénom et nom",""]},
+      {css,cells:["C'est moi","Prénom","Nom",""]},
       D.enseignants.map((t,i)=>`<div class="ed" style="${css}">
         <input type="radio" name="moi" data-moi="${esc(t.id)}" ${D.moi===t.id?"checked":""} aria-label="C'est moi : ${esc(t.nom)}" style="justify-self:center;width:18px;height:18px">
-        <input type="text" value="${esc(t.nom)}" data-tn="${i}" placeholder="Camille Martin" aria-label="Prénom et nom">
+        <input type="text" value="${esc(t.prenom)}" data-tp="${i}" placeholder="Camille" aria-label="Prénom">
+        <input type="text" value="${esc(t.nomFam)}" data-tn="${i}" placeholder="Martin" aria-label="Nom">
         ${delBtn("ens"+i,"Supprimer")}</div>`).join(""),
       "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur de DNMAX : sa répartition de service cadre la page Progression, et il est coché d'office dans une nouvelle évaluation.");
     host.querySelectorAll("[data-moi]").forEach(r=>r.onchange=()=>{D.moi=r.dataset.moi;persistData();toast("Répartition de service de "+((D.enseignants.find(t=>t.id===D.moi)||{}).nom||"")+" prise en compte.")});
-    host.querySelector("#edAdd").onclick=()=>{D.enseignants.push({id:"t"+Date.now().toString(36),nom:"",discipline:""});saveData();
-      const l=host.querySelectorAll("[data-tn]");if(l.length)l[l.length-1].focus()};
-    host.querySelectorAll("[data-tn]").forEach(inp=>inp.oninput=()=>{D.enseignants[+inp.dataset.tn].nom=inp.value;saveData(false)});
+    host.querySelector("#edAdd").onclick=()=>{D.enseignants.push({id:"t"+Date.now().toString(36),nom:"",prenom:"",nomFam:"",discipline:""});saveData();
+      const l=host.querySelectorAll("[data-tp]");if(l.length)l[l.length-1].focus()};
+    host.querySelectorAll("[data-tp],[data-tn]").forEach(inp=>inp.oninput=()=>{
+      const t=D.enseignants[+(inp.dataset.tp??inp.dataset.tn)];
+      if(inp.dataset.tp!==undefined)t.prenom=inp.value;else t.nomFam=inp.value;
+      t.nom=composerNom(t.prenom,t.nomFam);saveData(false)});
     host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
       D.enseignants.splice(+b.dataset.eddel.slice(3),1);saveData()}));
     return;
@@ -6991,7 +7011,7 @@ function demoMass(){
     if(!dp){dp=addMention(base.id,base.nom);dp.mention=m;dp.code=code;dp.duree=+base.duree||3}dips.push([dp,th])});
   saveData(false);
   const PROFS=["Sophie Hébert","Marc Lenoir","Amina Benali","Claire Nguyen","Julien Marchetti","Lucie Okafor"];
-  PROFS.forEach(nom=>{if(!D.enseignants.some(t=>t.nom===nom))D.enseignants.push({id:uid(),nom})});
+  PROFS.forEach(nom=>{if(!D.enseignants.some(t=>t.nom===nom))D.enseignants.push(nouvellePersonne(uid(),nom))});
   if(!D.moi)D.moi=(D.enseignants.find(t=>t.nom===PROFS[0])||{}).id;
   const LIV=livrNames().length?livrNames():["Carnet de projet","Planches de projet","Oral de présentation de projet"];
   const TYPES=[["Rendu de projet","Carnet de projet"],["Workshop","Planches de projet"],["Fiche de lecture","Fiche de lecture"],
@@ -7070,7 +7090,7 @@ function loadDemo(){
     DATA=migrateData(buildData(REF_DEFAULT,SUPPORTS_DEF));REF=projectRef(DATA);persistData();
   }
   [["Sophie Hébert","Atelier de création"],["Marc Lenoir","Technologies et matériaux"],["Amina Benali","Humanités"]]
-    .forEach(([nom,discipline])=>{if(!DATA.enseignants.some(t=>t.nom===nom))DATA.enseignants.push({id:uid(),nom,discipline})});
+    .forEach(([nom,discipline])=>{if(!DATA.enseignants.some(t=>t.nom===nom))DATA.enseignants.push({...nouvellePersonne(uid(),nom),discipline})});
   persistData();
   const AS0=asStart(anneeScolaire(new Date()));
   const promo=(an,noms)=>{
