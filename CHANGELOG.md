@@ -10,6 +10,7 @@
 ### Modifié
 
 - Site : hébergé chez OVH à l'adresse dnmax.fr.
+- Application : les liens vers le site (documentation, idées et bugs, référentiel proposé) mènent à dnmax.fr.
 
 ### Sécurité
 

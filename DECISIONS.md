@@ -234,3 +234,5 @@ Le nom se corrige dans « Mon compte » (décision 18).
 **Contreparties** : pas de déploiement automatique comme chez Cloudflare. L'offre gratuite n'a qu'un accès FTP ; le site change rarement, un envoi à la main suffit et évite de confier ce mot de passe aux ateliers GitHub ; les réglages du serveur passent par `site/.htaccess` (Apache) au lieu de `site/_headers`, gardé tant que l'ancienne adresse sert de transition.
 
 **Non retenu** : les pages GitHub, qui auraient gardé un hébergeur américain.
+
+**Transition** : l'application ouvre dnmax.fr à partir de la version 0.2.0. Les postes plus anciens ouvrent encore dnmax.pages.dev : l'ancien site Cloudflare reste en ligne jusqu'à ce que ces postes soient à jour, puis est supprimé.
