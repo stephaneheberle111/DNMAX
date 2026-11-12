@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.3.0 — 2026-11-12
+
 ### Ajouté
 
 - Site : publication automatique chez OVH par SFTP à chaque fusion qui touche le site.
