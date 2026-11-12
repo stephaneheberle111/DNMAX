@@ -17,6 +17,7 @@
 - Application : sur les grands écrans, la zone de travail s'élargit par paliers (jusqu'à 1 600 px, puis 1 920 px au-delà de 2 200 px de fenêtre) et le texte grossit légèrement (15 px puis 16 px) ; rien ne change sous 1 400 px.
 - Sur une installation neuve, seule l'échelle « Niveaux de maîtrise » est active ; « Degrés d'acquisition » se coche dans Paramètres.
 - Noms des enseignants et des élèves : les champs demandent le prénom puis le nom ; l'exemple et le site suivent ce format.
+- Site, page Confidentialité : les données d'élèves ne concernent que le module Élèves, et l'hébergeur n'héberge que le site, ni l'application ni les données.
 
 ### Corrigé
 
