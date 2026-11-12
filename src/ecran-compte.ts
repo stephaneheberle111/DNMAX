@@ -36,23 +36,27 @@ function creerMessage(): { zone: HTMLElement; dire: (texte: string, erreur: bool
 
 function creerRubriqueNom(acces: AccesDonnees): HTMLElement {
   const rubrique = creer("section", "compte-rubrique");
-  const { ligne, champ } = creerChamp("text", "Votre prénom et votre nom, tels que les autres enseignants les lisent", "name");
-  champ.value = acces.identite.nom;
-  champ.maxLength = LONGUEUR_MAXIMALE_NOM;
+  const prenom = creerChamp("text", "Votre prénom", "given-name");
+  const nom = creerChamp("text", "Votre nom", "family-name");
+  prenom.champ.value = acces.identite.prenom;
+  nom.champ.value = acces.identite.nomFamille;
+  prenom.champ.maxLength = LONGUEUR_MAXIMALE_NOM;
+  nom.champ.maxLength = LONGUEUR_MAXIMALE_NOM;
   const { zone, dire } = creerMessage();
   const formulaire = creer("form", "compte-formulaire");
   formulaire.addEventListener("submit", (evenement) => {
     evenement.preventDefault();
-    if (acces.renommer(champ.value)) {
-      champ.value = acces.identite.nom;
-      dire("Nom enregistré. Il accompagnera vos prochaines modifications et vos prochains envois.", false);
+    if (acces.renommer(prenom.champ.value, nom.champ.value)) {
+      prenom.champ.value = acces.identite.prenom;
+      nom.champ.value = acces.identite.nomFamille;
+      dire(`Enregistré : ${acces.identite.nom}. Ce nom accompagnera vos prochaines modifications et vos prochains envois.`, false);
     } else {
-      dire("Indiquez un nom.", true);
+      dire("Indiquez votre prénom et votre nom.", true);
     }
   });
   const enregistrer = creer("button", "btn", "Enregistrer le nom");
   enregistrer.type = "submit";
-  formulaire.append(ligne, enregistrer);
+  formulaire.append(prenom.ligne, nom.ligne, enregistrer);
   rubrique.append(creer("h3", "", "Votre nom"), formulaire, zone);
   return rubrique;
 }
