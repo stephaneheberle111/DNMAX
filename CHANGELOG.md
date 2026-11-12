@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- Documentation du site : « RGPD : fiche pour l'établissement » (description du traitement pour le chef d'établissement et le délégué à la protection des données) et « RGPD : information des élèves » (modèle de note à adapter), imprimables.
+
 ## 0.4.1 — 2026-11-12
 
 ### Ajouté
