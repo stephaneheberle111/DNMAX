@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.4.0 — 2026-11-12
+
 ### Ajouté
 
 - Les installeurs Windows, macOS et Debian/Ubuntu de chaque version publiée sont déposés sur dnmax.fr, et les boutons du site les y prennent ; l'AppImage reste sur GitHub. Page Confidentialité mise à jour en conséquence.
@@ -15,7 +17,7 @@
 
 ### Corrigé
 
-- L'annonce d'une mise à jour trouvée depuis « Mon compte » s'affiche par-dessus la boîte, au lieu d'apparaître derrière.
+- L'annonce d'une mise à jour trouvée s'affiche au premier plan, au lieu d'apparaître derrière une boîte ouverte.
 
 ## 0.3.0 — 2026-11-12
 
