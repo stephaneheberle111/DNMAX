@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- Site : publication automatique chez OVH par SFTP à chaque fusion qui touche le site.
+
 ### Corrigé
 
 - Site : sur téléphone, le menu ne sort plus de l'écran et aucune page ne s'élargit au-delà de l'écran.
