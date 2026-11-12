@@ -901,10 +901,13 @@ footer a{color:var(--ink-2)}
 </tbody></table></div>
 <h4>Revenir à une sauvegarde</h4>
 <ol>
-<li>Quittez DNMAX.</li>
-<li>Dans <code>sauvegardes/</code>, copiez le fichier du jour voulu à la place de <code>coffre.dnmax</code>.</li>
-<li>Relancez DNMAX avec le mot de passe qui était en vigueur ce jour-là.</li>
+<li>Ouvrez <strong>Paramètres</strong>, panneau <strong>Sauvegardes</strong>&nbsp;: les sauvegardes y sont listées par date, de la plus récente à la plus ancienne.</li>
+<li>Cliquez sur <strong>Restaurer…</strong> en face du jour voulu, lisez la confirmation, puis validez.</li>
+<li>DNMAX se recharge et demande le mot de passe qui était en vigueur à la date de la sauvegarde (celui d’aujourd’hui si vous ne l’avez pas changé depuis). Le code de secours fonctionne aussi.</li>
 </ol>
+<p>Avant de remplacer vos données, DNMAX met l’état actuel de côté&nbsp;: il apparaît dans la même liste («&nbsp;État mis de côté avant la restauration…&nbsp;») et se restaure de la même façon si vous changez d’avis. Ces copies ne prennent la place d’aucune sauvegarde quotidienne&nbsp;; elles disparaissent quand la sauvegarde quotidienne de leur jour sort des dix gardées.</p>
+<h4>En dernier recours, à la main</h4>
+<p>Si DNMAX ne s’ouvre plus du tout&nbsp;: quittez DNMAX, copiez dans <code>sauvegardes/</code> le fichier du jour voulu (<code>coffre-AAAA-MM-JJ.dnmax</code>) à la place de <code>coffre.dnmax</code>, puis relancez DNMAX avec le mot de passe qui était en vigueur ce jour-là. Gardez de côté une copie de l’ancien <code>coffre.dnmax</code> avant de l’écraser.</p>
 <div class="alerte"><p>Les sauvegardes sont chiffrées comme le coffre&nbsp;: elles ne vous seront d’aucune aide sans votre mot de passe ou votre code de secours.</p></div>
 </div>
 
