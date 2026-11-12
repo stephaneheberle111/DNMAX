@@ -10,9 +10,14 @@
 
 ### Modifié
 
+- Le nom donné au premier lancement suffit à vous déclarer : vous figurez d'office parmi les enseignants de « Mon établissement », marqué « C'est moi » (un collègue déjà déclaré sous le même prénom et le même nom est retenu, sans doublon ; un « C'est moi » déjà coché est respecté). Changer votre nom dans « Mon compte » met cette ligne à jour. « Charger un exemple » garde vos enseignants et votre choix « C'est moi ». La visite guidée en tient compte : l'étape « Déclarer vos collègues » attend un collègue ajouté.
 - Les référentiels DN MADE Objet et Espace sont livrés avec l'application : un clic dans l'encart de départ ouvre « Ce que ce fichier changerait », sans téléchargement.
 - Visite guidée : un seul bleu, avec un éclat qui tourne autour de la zone comme le faisceau d'un phare ; la bulle apparaît directement à sa place une fois la zone arrivée ; « Suivant » mène au bon écran ; après la validation d'un import, la visite reprend où elle en était au lieu de recommencer.
 - Échange en direct (bêta) : il fonctionne désormais uniquement entre deux ordinateurs du même réseau (même wifi ou même réseau local), sans contacter aucun serveur ; les serveurs publics de découverte d'adresse (STUN) sont abandonnés, car ils ne permettaient pas la connexion en pratique. En cas d'échec, le message rappelle de vérifier le réseau, signale les réseaux d'établissement qui isolent les postes et renvoie à l'échange par fichier. La marque « Bêta » est plus lisible, en thème clair comme sombre. Documentation et page Confidentialité du site mises à jour.
+
+### Corrigé
+
+- Une installation neuve n'affiche plus de diplôme « Diplôme » (code « DI ») : « Diplômes et mentions » indique qu'il n'y en a aucun et renvoie à l'encart de départ ou à « + Nouveau diplôme », qui ne crée plus un second diplôme à côté. Au démarrage, ce diplôme vide resté à côté d'un vrai diplôme est retiré, s'il n'a ni référentiel, ni version, ni promotion.
 
 ## 0.4.1 — 2026-11-12
 
