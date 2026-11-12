@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Corrigé
+
+- Site : sur téléphone, le menu ne sort plus de l'écran et aucune page ne s'élargit au-delà de l'écran.
+
 ## 0.2.0 — 2026-11-12
 
 ### Ajouté
