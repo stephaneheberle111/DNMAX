@@ -3,7 +3,7 @@
 .annonce-mise-a-jour {
   position: fixed;
   right: 16px;
-  bottom: 16px;
+  bottom: calc(16px + var(--hauteur-pied, 0px));
   /* Au-dessus des boîtes (75) : la recherche se lance depuis « Mon compte », qui reste ouvert. */
   z-index: 80;
   max-width: 380px;

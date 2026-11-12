@@ -19,6 +19,7 @@ import {
 import { CLE_IDENTITE, creerIdentite, lireIdentite } from "./domaine/identite";
 import { proposerPremiersPas } from "./ecran-accueil";
 import { installerCompte } from "./ecran-compte";
+import { suivreHauteurBarre } from "./ecran-entetes";
 import { installerPiedDePage } from "./ecran-pied";
 import { installerDonneesEleves, rappelerConservation } from "./ecran-droits-eleves";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
@@ -101,8 +102,8 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
     get identite() {
       return identite;
     },
-    renommer: (nom) => {
-      const renommee = creerIdentite(nom, identite.id);
+    renommer: (prenom, nomFamille) => {
+      const renommee = creerIdentite(prenom, nomFamille, identite.id);
       if (renommee === null) {
         return false;
       }
@@ -142,6 +143,7 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
 }
 
 async function demarrer(): Promise<void> {
+  suivreHauteurBarre();
   // Hors de l'enveloppe (page ouverte dans un navigateur pendant le développement),
   // il n'y a ni coffre ni boîtes de dialogue du système : les données ne vivent
   // que le temps de la session et l'échange n'est pas proposé.
@@ -158,7 +160,7 @@ async function demarrer(): Promise<void> {
   installerDonneesEleves(acces);
   rappelerConservation(acces);
   installerCompte(acces);
-  installerPiedDePage();
+  installerPiedDePage(acces);
   await proposerPremiersPas(acces);
 }
 
