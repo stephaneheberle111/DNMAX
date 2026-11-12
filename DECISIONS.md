@@ -237,6 +237,8 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Non retenu** : les pages GitHub, qui auraient gardé un hébergeur américain.
 
+**Installeurs** : les installeurs Windows, macOS et `.deb` de la dernière version publiée sont aussi servis par le site (`telechargements/`, environ 20 Mo), pour que leur téléchargement ne transmette pas l'adresse IP des visiteurs à GitHub. L'AppImage (environ 80 Mo) dépasserait l'espace de l'offre gratuite (100 Mo) : elle reste sur GitHub, comme les fichiers de mise à jour et le code source.
+
 **Transition** : l'application ouvre dnmax.fr à partir de la version 0.2.0 ; l'ancienne adresse du site est fermée.
 
 ## 20. Durée de conservation des données d'élèves
