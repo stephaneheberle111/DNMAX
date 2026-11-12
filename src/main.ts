@@ -26,6 +26,7 @@ import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } fro
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
 import { proposerOuvertureExport } from "./ecran-export";
+import { installerSauvegardes } from "./ecran-sauvegardes";
 import {
   attendreAvantFermeture,
   enregistrerCoffre,
@@ -158,6 +159,7 @@ async function demarrer(): Promise<void> {
   installerEchange(acces);
   suivreExemple(acces);
   installerDonneesEleves(acces);
+  installerSauvegardes(acces);
   rappelerConservation(acces);
   installerCompte(acces);
   installerPiedDePage(acces);

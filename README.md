@@ -16,7 +16,7 @@ Tout est enregistré dans un fichier chiffré, `coffre.dnmax`, protégé par le 
 | macOS | `~/Library/Application Support/fr.dnmax.app/` |
 | Linux | `~/.local/share/fr.dnmax.app/` |
 
-Pour revenir à une sauvegarde : quitter l'application, puis copier le fichier voulu de `sauvegardes/` à la place de `coffre.dnmax`. Le mot de passe reste celui en vigueur le jour de la sauvegarde.
+Pour revenir à une sauvegarde : Paramètres > Sauvegardes > « Restaurer… ». L'état actuel est d'abord mis de côté (`sauvegardes/avant-restauration-…dnmax`, restaurable de la même façon), puis l'application se recharge et demande le mot de passe en vigueur le jour de la sauvegarde. En dernier recours, si l'application ne s'ouvre plus : la quitter, puis copier le fichier voulu de `sauvegardes/` à la place de `coffre.dnmax`.
 
 Les documents exportés (Word, Excel, OpenDocument) ne sont **pas** chiffrés. Le détail de la protection et de ses limites est dans [`DECISIONS.md`](DECISIONS.md), décision 8.
 

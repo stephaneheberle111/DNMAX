@@ -4,6 +4,7 @@
 
 ### Ajouté
 
+- Paramètres > Sauvegardes : liste des sauvegardes quotidiennes et restauration de l'une d'elles. L'état actuel est d'abord mis de côté (restaurable lui aussi), puis l'application se recharge et demande le mot de passe en vigueur à la date de la sauvegarde. La documentation du site décrit la marche à suivre et garde la méthode manuelle en dernier recours.
 - Documentation du site : « RGPD : fiche pour l'établissement » (description du traitement pour le chef d'établissement et le délégué à la protection des données) et « RGPD : information des élèves » (modèle de note à adapter), imprimables.
 - Référentiel DN MADE mention Espace (tableau des compétences 2023), téléchargeable sur dnmax.fr comme celui de la mention Objet ; l'encart des installations vides propose les deux.
 
