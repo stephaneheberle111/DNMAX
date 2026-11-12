@@ -229,8 +229,10 @@ const GABARIT_IDENTITE = `
   <h1>Qui êtes-vous ?</h1>
   <p>Votre prénom et votre nom accompagnent ce que vous modifiez et signent les fichiers que vous envoyez à d'autres enseignants :
      chacun voit ainsi qui a écrit quoi.</p>
-  <label>Votre prénom et votre nom, tels que les autres enseignants les liront
-    <input type="text" name="nom" autocomplete="name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>
+  <label>Votre prénom
+    <input type="text" name="prenom" autocomplete="given-name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>
+  <label>Votre nom
+    <input type="text" name="nom" autocomplete="family-name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>
   <p class="coffre-erreur" role="alert" hidden></p>
   <div class="coffre-actions"><span></span><button type="submit" class="btn primary">Continuer</button></div>`;
 
@@ -248,9 +250,9 @@ export function demanderIdentite(genererIdentifiant: () => string): Promise<Iden
     const formulaire = afficherFormulaire(ecran, GABARIT_IDENTITE);
     formulaire.addEventListener("submit", (evenement) => {
       evenement.preventDefault();
-      const identite = creerIdentite(lireChamp(formulaire, "nom"), genererIdentifiant());
+      const identite = creerIdentite(lireChamp(formulaire, "prenom"), lireChamp(formulaire, "nom"), genererIdentifiant());
       if (identite === null) {
-        afficherErreur(formulaire, "Indiquez votre nom pour continuer.");
+        afficherErreur(formulaire, "Indiquez votre prénom et votre nom pour continuer.");
         return;
       }
       ecran.remove();
