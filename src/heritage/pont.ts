@@ -3,6 +3,7 @@ import JSZip from "jszip";
 import * as XLSX from "xlsx";
 import { convertirEnOctets, type ContenuFichier } from "../domaine/contenu-fichier";
 import { estCadreVierge, nettoyerDiplomesVierges } from "../domaine/diplome-vierge";
+import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { CLE_IDENTITE, lireIdentite } from "../domaine/identite";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
 import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
@@ -22,6 +23,9 @@ interface DemandeEnregistrement {
 /** Appelée après chaque document enregistré. */
 export type SurExport = (nomFichier: string, contientEleves: boolean) => void;
 
+/** Règle appliquée aux enseignants : rend les données à enregistrer, ou `null` s'il n'y a rien à changer. */
+export type RegleEnseignants = (donnees: EnseignantsEtMoi) => EnseignantsEtMoi | null;
+
 /** Ce que l'interface historique attend de l'application, sous `window.dnmaxPont`. */
 interface Pont {
   /**
@@ -30,6 +34,12 @@ interface Pont {
    * pour le référentiel de travail. Rend `null` si le diplôme est inconnu.
    */
   projeterReferentiel?: (diplomeId: string, versionId: string) => unknown;
+  /**
+   * Posée par l'interface historique à son chargement : applique une règle aux
+   * enseignants de l'établissement qu'elle tient en mémoire, puis les enregistre
+   * si la règle rend autre chose que `null`.
+   */
+  ajusterEnseignants?: (regle: RegleEnseignants) => void;
   /**
    * Appelée quand l'enseignant coche le module Élèves : avertissement RGPD et
    * documents à remettre. Rend `true` s'il confirme l'activation.
@@ -115,4 +125,13 @@ export async function chargerInterfaceHistorique(
     });
     document.body.append(script);
   });
+}
+
+/**
+ * Fait appliquer une règle aux enseignants par l'interface historique, qui
+ * tient ses données en mémoire : les modifier dans le magasin serait écrasé à
+ * son prochain enregistrement. Sans interface chargée, ne fait rien.
+ */
+export function ajusterEnseignants(regle: RegleEnseignants): void {
+  window.dnmaxPont?.ajusterEnseignants?.(regle);
 }

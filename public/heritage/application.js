@@ -7125,7 +7125,9 @@ function demoMass(){
 function loadDemo(){
   // sans référentiel, l'exemple apporte le sien : celui du DN MADE mention Objet
   if(!refOf(DATA,DATA.activeDiplome).competences.length){
-    DATA=migrateData(buildData(REF_DEFAULT,SUPPORTS_DEF));REF=projectRef(DATA);persistData();
+    // les enseignants déjà déclarés (dont « moi ») ne dépendent pas du référentiel : on les garde
+    const ens=DATA.enseignants,moi=DATA.moi;
+    DATA=migrateData(buildData(REF_DEFAULT,SUPPORTS_DEF));DATA.enseignants=ens;if(moi)DATA.moi=moi;REF=projectRef(DATA);persistData();
   }
   [["Sophie Hébert","Atelier de création"],["Marc Lenoir","Technologies et matériaux"],["Amina Benali","Humanités"]]
     .forEach(([nom,discipline])=>{if(!DATA.enseignants.some(t=>t.nom===nom))DATA.enseignants.push({...nouvellePersonne(uid(),nom),discipline})});
@@ -7896,6 +7898,15 @@ window.dnmaxPont.projeterReferentiel=(diplomeId,versionId)=>{
   if(!DATA.diplomes.some(d=>d.id===diplomeId))return null;
   const v=versionsOf(diplomeId).find(x=>x.id===versionId);
   return projectSnap(DATA,diplomeId,JSON.parse(JSON.stringify(v?v.snap:refOf(DATA,diplomeId))));
+};
+
+/* Pont vers l'application : elle fait appliquer ses règles aux enseignants (déclarer l'enseignant de
+   l'installation, reporter son changement de nom). La règle reçoit les données et rend les nouvelles, ou null. */
+window.dnmaxPont.ajusterEnseignants=regle=>{
+  const r=regle({enseignants:DATA.enseignants.slice(),moi:DATA.moi});
+  if(!r||!Array.isArray(r.enseignants))return;
+  DATA.enseignants=r.enseignants.slice();DATA.moi=typeof r.moi==="string"?r.moi:DATA.moi;persistData();
+  if(ui.tab==="org")paintOrg();
 };
 
 /* Pont vers l'application : les données de l'établissement (diplômes, dictionnaire, référentiels) ne sont
