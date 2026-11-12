@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Corrigé
+
+- L'annonce d'une mise à jour trouvée depuis « Mon compte » s'affiche par-dessus la boîte, au lieu d'apparaître derrière.
+
 ### Ajouté
 
 - Les installeurs Windows, macOS et Debian/Ubuntu de chaque version publiée sont déposés sur dnmax.fr.
