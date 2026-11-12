@@ -101,13 +101,21 @@ Sous Linux, seule l'AppImage se met à jour d'elle-même.
 
 Le dossier `site/` contient le site public de DNMAX (<https://dnmax.fr>) : une page unique, sans étape de construction, et les référentiels proposés au téléchargement (`site/referentiels/`). Il est hébergé chez OVH ; `site/.htaccess` règle le serveur (HTTPS, téléchargement des référentiels).
 
-Le site se publie **à la main**, par FTP, après chaque fusion qui touche `site/` :
+L'atelier « Site » (`.github/workflows/site.yml`) envoie `site/` par **SFTP** à chaque fusion dans `main` qui touche `site/`, ou à la demande (onglet Actions → « Site » → « Run workflow »). Les fichiers distants absents du dépôt sont supprimés : le dossier `www` doit être réservé au site.
 
-1. Dans l'espace client OVH, onglet « FTP-SSH » de l'hébergement : relever le serveur FTP et l'identifiant (le mot de passe se change au même endroit).
-2. Dans un client FTP (FileZilla, par exemple), choisir **« Connexion FTP explicite sur TLS »** : jamais de FTP en clair, qui ferait circuler le mot de passe lisiblement.
-3. Copier le **contenu** du dossier `site/` dans le dossier `www` du serveur, en remplaçant les fichiers existants, **y compris `.htaccess`** (fichier caché : afficher les fichiers cachés si besoin). `_headers` ne sert qu'à Cloudflare et peut être ignoré.
-4. Supprimer côté serveur un fichier retiré du dépôt, s'il y en a un.
-5. Vérifier <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
+Mise en place, une seule fois (Settings → Secrets and variables → Actions) :
+
+| Nom | Type | Valeur |
+| --- | --- | --- |
+| `OVH_SITE_SERVEUR` | variable | serveur FTP et SFTP de l'hébergement (espace client OVH, onglet FTP-SSH) |
+| `OVH_SITE_DOSSIER` | variable | facultative, `www` par défaut |
+| `OVH_SITE_UTILISATEUR` | secret | identifiant FTP |
+| `OVH_SITE_MOT_DE_PASSE` | secret | son mot de passe |
+| `OVH_SITE_CLE_HOTE` | secret | clé publique du serveur, pour vérifier qu'on parle bien à OVH |
+
+Pour obtenir la clé du serveur : renseigner d'abord `OVH_SITE_SERVEUR`, lancer l'atelier « Site » avec l'action **afficher-cle-serveur**, puis copier la ligne affichée dans le résumé de l'exécution dans le secret `OVH_SITE_CLE_HOTE`. La lecture se fait depuis les machines de GitHub, ce qui fonctionne même si le port 22 est fermé sur le réseau de l'enseignant.
+
+**À la main, en secours** : client FTP (FileZilla, par exemple) en **« Connexion FTP explicite sur TLS »**, jamais en FTP clair ; copier le contenu de `site/`, y compris le fichier caché `.htaccess`, dans `www`. Vérifier ensuite <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
 
 Le formulaire « Idées et bugs » de la page ouvre un ticket prérempli sur GitHub.
 
