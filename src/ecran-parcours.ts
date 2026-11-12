@@ -2,6 +2,8 @@
 import "./ecran-parcours.css";
 import {
   CLE_PARCOURS,
+  CLE_REPRISE,
+  lireReprise,
   doitLancerAuDemarrage,
   estIdentifiantParcours,
   lireAvancement,
@@ -45,6 +47,8 @@ let cibleCourante: Element | null = null;
 /** Zone éclairée telle qu'affichée, qui glisse vers la zone visée à chaque changement d'étape. */
 let zoneAffichee: DOMRect | null = null;
 let glissement: { depart: DOMRect; debut: number } | null = null;
+/** La bulle n'apparaît qu'une fois la zone arrivée, directement à sa place. */
+let bulleRevelee = false;
 
 function centreEcran(): DOMRect {
   return new DOMRect(window.innerWidth / 2, window.innerHeight / 2, 0, 0);
@@ -203,12 +207,34 @@ function detacherClic(): void {
   ecouteClic = null;
 }
 
+/** Note l'étape en cours pour la session : un rechargement de la page (après un import) reprend ici. */
+function noterReprise(): void {
+  try {
+    if (visite === null) {
+      window.sessionStorage.removeItem(CLE_REPRISE);
+    } else {
+      window.sessionStorage.setItem(CLE_REPRISE, JSON.stringify({ identifiant: visite.identifiant, index: visite.index }));
+    }
+  } catch {
+    // Sans stockage de session, la visite repartira simplement du début après un rechargement.
+  }
+}
+
+function lireRepriseSession(): ReturnType<typeof lireReprise> {
+  try {
+    return lireReprise(window.sessionStorage.getItem(CLE_REPRISE));
+  } catch {
+    return null;
+  }
+}
+
 /** Ferme la visite ; elle est notée comme vue, qu'elle soit terminée ou passée. */
 export function terminer(): void {
   if (visite !== null) {
     noterVu(visite.identifiant);
   }
   visite = null;
+  noterReprise();
   demonter();
 }
 
@@ -232,7 +258,9 @@ function aller(index: number): void {
     return;
   }
   visite.index = suivant;
+  noterReprise();
   glissement = { depart: zoneAffichee ?? centreEcran(), debut: performance.now() };
+  bulleRevelee = false;
   visite.dejaFait = etape.objectif?.(etat) ?? false;
   visite.salut = null;
   detacherClic();
@@ -256,8 +284,8 @@ function avancerDepuis(index: number): void {
   }
 }
 
-/** Couleurs des éclats, reprises des familles d'enseignements. */
-const COULEURS_ECLATS = ["#2f5bd3", "#91CC78", "#F0BB39", "#79A9D3", "#E260A4", "#F09569"];
+/** Couleurs des éclats : les bleus de l'application. */
+const COULEURS_ECLATS = ["#2f5bd3", "#4f7fe0", "#8fb4ee", "#1f3f9e", "#c9dbff"];
 
 /** Petite gerbe d'éclats colorés en (x, y), pour saluer une étape réussie. */
 function eclater(x: number, y: number, nombre: number): void {
@@ -363,18 +391,13 @@ function afficherBulle(): void {
   precedente.addEventListener("click", () => {
     reculer();
   });
-  const continuer = creer(
-    "button",
-    "btn primary",
-    derniere ? "Terminer" : etape.avanceAuClic === true && !fait ? "Passer l'étape" : "Suivant",
-  );
+  const continuer = creer("button", "btn primary", derniere ? "Terminer" : "Suivant");
   continuer.type = "button";
-  if (etape.avanceAuClic === true && !fait) {
-    continuer.className = "btn ghost";
-  }
   continuer.addEventListener("click", () => {
     if (derniere) {
       terminer();
+    } else if (etape.avanceAuClic === true && !fait) {
+      cliquerPourLEnseignant(etape);
     } else {
       suivante();
     }
@@ -395,6 +418,26 @@ function afficherBulle(): void {
   if (!(etape.cibles?.length ?? 0)) {
     continuer.focus({ preventScroll: true });
   }
+}
+
+/**
+ * « Suivant » sur une étape qui attend un clic : la visite fait le clic elle-même,
+ * pour mener au bon écran ; l'écoute du clic fait ensuite avancer la visite.
+ */
+function cliquerPourLEnseignant(etape: Etape): void {
+  const cible = trouverCible(etape);
+  const visee = etape.pointe === undefined ? null : (cible?.querySelector<HTMLElement>(etape.pointe) ?? null);
+  const aCliquer = visee ?? (cible instanceof HTMLElement ? cible : null);
+  if (aCliquer === null) {
+    suivante();
+    return;
+  }
+  // L'écoute posée sur la zone n'entend pas un clic fait sur un élément intérieur : on avance nous-mêmes.
+  const index = visite?.index ?? -1;
+  aCliquer.click();
+  window.setTimeout(() => {
+    avancerDepuis(index);
+  }, 150);
 }
 
 /** Recule à l'étape précédente qui ne serait pas aussitôt sautée. */
@@ -454,6 +497,49 @@ function placerVoiles(trou: DOMRect | null, masques: boolean): void {
 }
 
 /** Place la bulle à côté de la zone éclairée, sinon dans un coin, sinon au centre. */
+/**
+ * Zone à éclairer dans une boîte de l'application : la bulle se pose à côté de la
+ * boîte (à droite, sinon à gauche) pour ne pas en cacher le contenu ; sans place, dans un coin.
+ */
+function placerBulleACoteDe(boite: Element, visee: DOMRect): void {
+  const bulle = elements.bulle;
+  if (bulle === null) {
+    return;
+  }
+  const cadreBoite = boite.getBoundingClientRect();
+  const dimensions = bulle.getBoundingClientRect();
+  const marge = 16;
+  const haut = Math.min(
+    Math.max(marge, visee.top + visee.height / 2 - dimensions.height / 2),
+    window.innerHeight - dimensions.height - marge,
+  );
+  let gauche: number | null = null;
+  if (cadreBoite.right + marge + dimensions.width <= window.innerWidth - marge) {
+    gauche = cadreBoite.right + marge;
+    bulle.dataset.position = "droite";
+  } else if (cadreBoite.left - marge - dimensions.width >= marge) {
+    gauche = cadreBoite.left - marge - dimensions.width;
+    bulle.dataset.position = "gauche";
+  }
+  let hautFinal = haut;
+  if (gauche === null) {
+    // Pas de place sur les côtés : sous la boîte, sinon au-dessus, sinon dans un coin.
+    gauche = Math.min(Math.max(marge, visee.left + visee.width / 2 - dimensions.width / 2), window.innerWidth - dimensions.width - marge);
+    if (cadreBoite.bottom + marge + dimensions.height <= window.innerHeight - marge) {
+      hautFinal = cadreBoite.bottom + marge;
+      bulle.dataset.position = "sous-boite";
+    } else if (cadreBoite.top - marge - dimensions.height >= marge) {
+      hautFinal = cadreBoite.top - marge - dimensions.height;
+      bulle.dataset.position = "sur-boite";
+    } else {
+      placerBulle(null, true);
+      return;
+    }
+  }
+  bulle.style.left = `${String(Math.round(gauche))}px`;
+  bulle.style.top = `${String(Math.round(hautFinal))}px`;
+}
+
 function placerBulle(trou: DOMRect | null, enCoin: boolean): void {
   const bulle = elements.bulle;
   if (bulle === null) {
@@ -552,6 +638,8 @@ function redessiner(): void {
   const avecAnneau = trou !== null && !masquer;
   anneau.hidden = !avecAnneau;
   anneau.classList.toggle("parcours-anneau-glisse", enMouvement);
+  // Dans une boîte de l'application, l'anneau passe au-dessus d'elle pour rester visible.
+  anneau.classList.toggle("parcours-anneau-dessus", cibleDansBoite);
   if (avecAnneau) {
     Object.assign(anneau.style, {
       left: `${String(trou.left)}px`,
@@ -563,8 +651,27 @@ function redessiner(): void {
     anneau.classList.toggle("parcours-anneau-reussi", visite.salut !== null || visite.dejaFait);
   }
   const tropGrande = visee !== null && (visee.width * visee.height) / (window.innerWidth * window.innerHeight) > PART_ECRAN_MAX;
-  const zoneBulle = visee === null || masquer ? null : zone;
-  placerBulle(zoneBulle, masquer || tropGrande);
+  // La bulle ne voyage pas avec la zone : elle reste cachée pendant le trajet,
+  // puis apparaît directement à sa place, près de la zone arrivée.
+  const bulle = elements.bulle;
+  if (bulle !== null) {
+    bulle.classList.toggle("parcours-en-attente", enMouvement);
+    // Près d'une boîte, la bulle se fait plus courte (sans feuille de route) pour trouver sa place.
+    bulle.classList.toggle("parcours-compacte", cibleDansBoite);
+    if (!enMouvement) {
+      if (cibleDansBoite && visee !== null) {
+        placerBulleACoteDe(boiteOuverte.querySelector(".echange-boite") ?? boiteOuverte, visee);
+      } else {
+        placerBulle(visee === null || masquer ? null : visee, masquer || tropGrande);
+      }
+      if (!bulleRevelee) {
+        bulleRevelee = true;
+        bulle.classList.remove("parcours-entree");
+        void bulle.getBoundingClientRect();
+        bulle.classList.add("parcours-entree");
+      }
+    }
+  }
   // Le curseur attend que la zone soit arrivée pour montrer le geste.
   placerCurseur(enMouvement || masquer ? null : visee, etape);
   if (etape.avanceAuClic === true && cible !== cibleSuivie) {
@@ -611,14 +718,14 @@ function suivre(): void {
 }
 
 /** Lance une visite depuis son début (ou la relance si elle est en cours). */
-export function lancerParcours(identifiant: IdentifiantParcours): void {
+export function lancerParcours(identifiant: IdentifiantParcours, depart = 0): void {
   if (acces === null) {
     return;
   }
   demonter();
-  visite = { identifiant, index: 0, dejaFait: false, salut: null };
+  visite = { identifiant, index: depart, dejaFait: false, salut: null };
   construire();
-  aller(0);
+  aller(depart);
   suivi = window.setInterval(suivre, INTERVALLE_SUIVI);
   cadre = window.requestAnimationFrame(redessiner);
 }
@@ -637,7 +744,11 @@ export function installerParcours(accesDonnees: Acces): void {
       lancerParcours(identifiant);
     }
   });
-  if (doitLancerAuDemarrage(accesDonnees.lireEntrees())) {
+  // Après un rechargement (import validé pendant la visite), la visite reprend où elle en était.
+  const reprise = lireRepriseSession();
+  if (reprise !== null) {
+    lancerParcours(reprise.identifiant, reprise.index);
+  } else if (doitLancerAuDemarrage(accesDonnees.lireEntrees())) {
     lancerParcours("prise-en-main");
   }
 }
