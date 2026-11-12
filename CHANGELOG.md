@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Site, page Confidentialité : les données d'élèves ne concernent que le module Élèves, et l'hébergeur n'héberge que le site, ni l'application ni les données.
+
 ## 0.2.0 — 2026-11-12
 
 ### Ajouté
