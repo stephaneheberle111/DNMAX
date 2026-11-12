@@ -19,6 +19,7 @@ import {
 import { CLE_IDENTITE, creerIdentite, lireIdentite } from "./domaine/identite";
 import { proposerPremiersPas } from "./ecran-accueil";
 import { installerCompte } from "./ecran-compte";
+import { rappelerConservation } from "./ecran-droits-eleves";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
@@ -153,6 +154,7 @@ async function demarrer(): Promise<void> {
   await chargerInterfaceHistorique(magasin, proposerOuvertureExport);
   installerEchange(acces);
   suivreExemple(acces);
+  rappelerConservation(acces);
   installerCompte(acces);
   await proposerPremiersPas(acces);
 }
