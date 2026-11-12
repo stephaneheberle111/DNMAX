@@ -6,6 +6,7 @@
 
 - Les référentiels DN MADE Objet et Espace sont livrés avec l'application : un clic dans l'encart de départ ouvre « Ce que ce fichier changerait », sans téléchargement.
 - Visite guidée : un seul bleu, avec un éclat qui tourne autour de la zone comme le faisceau d'un phare ; la bulle apparaît directement à sa place une fois la zone arrivée ; « Suivant » mène au bon écran ; après la validation d'un import, la visite reprend où elle en était au lieu de recommencer.
+- Échange en direct (bêta) : il fonctionne désormais uniquement entre deux ordinateurs du même réseau (même wifi ou même réseau local), sans contacter aucun serveur ; les serveurs publics de découverte d'adresse (STUN) sont abandonnés, car ils ne permettaient pas la connexion en pratique. En cas d'échec, le message rappelle de vérifier le réseau, signale les réseaux d'établissement qui isolent les postes et renvoie à l'échange par fichier. La marque « Bêta » est plus lisible, en thème clair comme sombre. Documentation et page Confidentialité du site mises à jour.
 
 ## 0.4.1 — 2026-11-12
 

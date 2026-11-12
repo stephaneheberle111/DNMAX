@@ -179,7 +179,7 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Retenu** : quand l'enseignant clique « Rechercher une mise à jour » dans le pied de page, l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
 
-**Appel réseau à la demande seulement.** Avec l'échange en direct (décision 21), c'est le seul moment où l'application se connecte à Internet. Jusqu'à la version 0.1.1, la vérification avait lieu à chaque lancement ; elle transmettait à GitHub l'adresse IP du poste à chaque ouverture, sans que l'enseignant l'ait demandé. Elle n'a plus lieu que sur sa demande, ce qui rend l'application silencieuse sur le réseau par défaut (RGPD : minimisation). Aucune donnée de l'enseignant n'est transmise. Si la vérification échoue, l'application le dit et propose de réessayer.
+**Appel réseau à la demande seulement.** C'est le seul moment où l'application se connecte à Internet ; l'échange en direct (décision 21) reste sur le réseau local. Jusqu'à la version 0.1.1, la vérification avait lieu à chaque lancement ; elle transmettait à GitHub l'adresse IP du poste à chaque ouverture, sans que l'enseignant l'ait demandé. Elle n'a plus lieu que sur sa demande, ce qui rend l'application silencieuse sur le réseau par défaut (RGPD : minimisation). Aucune donnée de l'enseignant n'est transmise. Si la vérification échoue, l'application le dit et propose de réessayer.
 
 **Contrepartie** : un enseignant qui ne vérifie jamais reste sur sa version ; le site et la documentation l'invitent à le faire de temps en temps.
 
@@ -261,15 +261,17 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 **Limites** : les sauvegardes automatiques du coffre gardent une trace jusqu'à leur remplacement (dix jours d'utilisation) ; un nom cité dans un texte libre d'un autre élève, un titre ou des consignes n'est pas recherché ; un redoublant est repéré par son nom, donc un homonyme peut être pris pour un redoublant (il est alors gardé, ce qui est sans risque).
 
-## 21. Échange en direct (bêta) : pair à pair, STUN sans relais, codes copiés à la main
+## 21. Échange en direct (bêta) : pair à pair sur le réseau local, sans aucun serveur, codes copiés à la main
 
-**Retenu** : « Échanger… → Échange en direct (bêta) » envoie le même contenu qu'un fichier d'échange, mais d'ordinateur à ordinateur, par un canal de données WebRTC (`RTCDataChannel`) de la vue web du système. Aucune dépendance n'est ajoutée.
+**Retenu** : « Échanger… → Échange en direct (bêta) » envoie le même contenu qu'un fichier d'échange, mais d'ordinateur à ordinateur, par un canal de données WebRTC (`RTCDataChannel`) de la vue web du système, **entre deux ordinateurs du même réseau** (même wifi ou même réseau local). Aucune dépendance n'est ajoutée.
 
 **Parcours** : l'expéditeur choisit le contenu comme pour un fichier ; DNMAX affiche un code d'invitation, que l'expéditeur transmet par le moyen de son choix (messagerie, copier-coller) ; le destinataire le colle et obtient un code de réponse, qu'il renvoie ; l'expéditeur le colle, la connexion s'établit et le contenu part. Le destinataire voit alors le plan d'import habituel : le texte reçu suit exactement le circuit d'un fichier (`ouvrirTexteRecu` dans `src/ecran-echange.ts`), mot de passe compris s'il contient des élèves.
 
 **Pourquoi pair à pair** : DNMAX n'a pas de serveur central et n'en veut pas (décision 1). Le contenu ne transite par aucun tiers, même chiffré.
 
-**Pourquoi des serveurs STUN, et seulement eux** : pour que deux ordinateurs derrière des box ou des réseaux différents se trouvent, chacun doit connaître son adresse publique ; un serveur STUN la lui renvoie, rien de plus. Trois serveurs publics et gratuits, tous exploités par des acteurs français, sont déclarés dans `src/configuration.ts` : `stun.aeta.com` (AETA Audio Systems), `stun.linphone.org` (Belledonne Communications, éditeur de Linphone) et `stun.ippi.fr` (ippi). Plusieurs, pour qu'un serveur indisponible ne bloque pas l'échange. **Aucun serveur TURN** (relais) : un relais ferait passer les données par un tiers, ce que l'auteur exclut. `garderServeursStun` écarte d'ailleurs toute adresse `turn:` ou `turns:` qui serait ajoutée par erreur.
+**Pourquoi aucun serveur, et donc le même réseau** : la connexion est ouverte avec `iceServers: []` (`configurationConnexion` dans `src/canal-direct.ts`) ; seuls les candidats locaux (adresses de l'ordinateur sur son réseau) sont rassemblés, et l'application ne contacte personne. **Aucun serveur TURN** (relais) : un relais ferait passer les données par un tiers, ce que l'auteur exclut.
+
+**Révision : serveurs STUN abandonnés** (version suivant la 0.4.1). La première version interrogeait trois serveurs STUN publics exploités en France (`stun.aeta.com`, `stun.linphone.org`, `stun.ippi.fr`), pour que deux ordinateurs de réseaux différents découvrent leur adresse publique et se joignent. En pratique, ces serveurs ne permettaient pas la connexion ; de plus, même joignables, ils n'auraient pas suffi derrière la plupart des box et réseaux d'établissement (NAT symétrique, pare-feu) sans relais, que l'auteur exclut. Les garder revenait à contacter des tiers, à leur révéler l'adresse IP publique des postes et à retarder chaque code jusqu'à 10 secondes, pour un gain nul. L'échange en direct est donc limité au réseau local, ce que l'interface dit avant l'échange et en cas d'échec ; entre deux réseaux, l'échange par fichier reste la voie prévue.
 
 **Pourquoi une signalisation à la main** : une connexion WebRTC a besoin d'échanger une offre et une réponse (description de session et candidats de connexion). Sans serveur de signalisation, ce sont les enseignants qui les transportent. Les candidats sont rassemblés avant d'écrire le code (10 secondes au plus), pour n'avoir qu'un aller-retour. Le code (`src/domaine/echange/code-direct.ts`) porte un préfixe et une version (`DNMAX-DIRECT:1:`), un JSON compact en base64url et une somme CRC-32 qui repère un code tronqué ou mal recopié ; espaces, retours à la ligne et guillemets ajoutés par une messagerie sont ignorés. Un identifiant de séance relie la réponse à son invitation.
 
@@ -277,16 +279,16 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 **Délais** (`DELAIS_ECHANGE_DIRECT`) : 15 minutes pour que l'autre enseignant se manifeste, 30 secondes pour établir la connexion une fois les deux codes collés, 60 secondes de silence au plus pendant un transfert. « Annuler » ferme la connexion à tout moment.
 
-**CSP** : inchangée. Les connexions WebRTC (STUN, ICE, canal de données) ne relèvent pas de `connect-src` ; vérifié dans Chromium avec la CSP de l'enveloppe, sans aucune violation.
+**CSP** : inchangée. Les connexions WebRTC (ICE, canal de données) ne relèvent pas de `connect-src` ; vérifié dans Chromium avec la CSP de l'enveloppe, sans aucune violation. Aucune capacité de l'enveloppe ne citait de serveur STUN.
 
 **Limites** :
 
-- la connexion directe échoue derrière certains pare-feu (réseaux d'établissement, NAT symétrique) : l'échange échoue alors avec un message qui propose l'échange par fichier ; c'est le prix de l'absence de relais ;
-- les serveurs STUN voient l'adresse IP publique de chaque poste et l'heure de la demande, jamais le contenu ; les codes eux-mêmes contiennent ces adresses (et, sur un même réseau local, des noms d'hôte `.local` aléatoires) : ils ne sont à transmettre qu'au collègue concerné ;
-- la localisation des serveurs de `stun.ippi.fr` n'est pas confirmée publiquement, et la joignabilité des trois serveurs n'a pas été vérifiée depuis l'environnement de développement ;
-- si les serveurs STUN sont injoignables, chaque code met 10 secondes à apparaître et seul un échange sur le même réseau local reste possible ;
+- l'échange en direct ne fonctionne pas d'un réseau à un autre (établissement et domicile, par exemple) : l'échange par fichier s'impose alors ;
+- certains réseaux d'établissement isolent les postes les uns des autres (isolation des clients wifi, réseaux séparés) ; la connexion y échoue avec un message qui le signale et propose l'échange par fichier ;
+- les vues web récentes masquent l'adresse locale derrière un nom d'hôte `.local` aléatoire, résolu par multidiffusion (mDNS) ; un réseau qui bloque la multidiffusion peut donc empêcher la connexion même entre deux postes voisins ;
+- les codes contiennent ces noms ou adresses locales : ils ne sont à transmettre qu'au collègue concerné ;
 - la vue web de Linux (WebKitGTK) peut ne pas fournir WebRTC : le choix apparaît alors désactivé, avec l'explication ;
-- testé seulement dans Chromium, deux pages d'un même navigateur ; pas encore sur WebView2 (Windows), WKWebView (macOS), WebKitGTK ni entre deux réseaux réels : d'où la mention « bêta ».
+- testé seulement dans Chromium, deux pages d'un même navigateur ; pas encore sur WebView2 (Windows), WKWebView (macOS), WebKitGTK ni entre deux ordinateurs réels d'un même réseau : d'où la mention « bêta ».
 
 ## 22. Restaurer une sauvegarde depuis l'application
 
