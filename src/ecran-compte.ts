@@ -38,7 +38,7 @@ function creerMessage(): { zone: HTMLElement; dire: (texte: string, erreur: bool
 
 function creerRubriqueNom(acces: AccesDonnees): HTMLElement {
   const rubrique = creer("section", "compte-rubrique");
-  const { ligne, champ } = creerChamp("text", "Votre nom, tel que les autres enseignants le lisent", "name");
+  const { ligne, champ } = creerChamp("text", "Votre prénom et votre nom, tels que les autres enseignants les lisent", "name");
   champ.value = acces.identite.nom;
   champ.maxLength = LONGUEUR_MAXIMALE_NOM;
   const { zone, dire } = creerMessage();

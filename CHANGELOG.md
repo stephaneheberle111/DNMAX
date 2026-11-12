@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Noms des enseignants et des élèves : les champs demandent le prénom puis le nom ; l'exemple et le site suivent ce format.
+
 ## 0.2.0 — 2026-11-12
 
 ### Ajouté
