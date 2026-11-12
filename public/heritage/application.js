@@ -7702,7 +7702,7 @@ async function exportFiche(i,kind,mode){
     F=migF(structuredClone(f));EXPORT_VIDE=!rest;vueMention(mentionDeFiche(F));REF=computeREF();
     const nom=fname(kind,rest?"restitutions":""), data = kind==="docx" ? await buildDocx() : kind==="odt" ? await buildOdt() : buildXlsx(kind);
     F=keep;EXPORT_VIDE=false;vueMention(vue);REF=computeREF();
-    await offer(nom,data);
+    await offer(nom,data,rest);
   }catch(e){F=keep;EXPORT_VIDE=false;vueMention(vue);REF=computeREF();toast(({docx:"Word",odt:"OpenDocument texte",ods:"OpenDocument tableur"}[kind]||"Excel")+" : "+(e&&e.message||e))}
 }
 /* élèves pas encore entièrement évalués (non rendu et dispensé comptent comme terminés) */
@@ -7730,9 +7730,9 @@ function exportItems(i){
   return MOD.eleves?`<span class="xh">L'évaluation · grille vierge</span>${fm("eval")}<span class="xsep"></span><span class="xh">Les restitutions · résultats par élève</span>${fm("rest")}`
     :`<span class="xh">Grille à remplir à la main</span>${fm("eval")}`;
 }
-async function offer(filename,data){
+async function offer(filename,data,eleves=false){
   if(!dl){toast("Téléchargement indisponible ici.");return}
-  try{ await dl.save({filename,data}); toast("Fichier enregistré : "+filename); }
+  try{ await dl.save({filename,data,eleves}); toast("Fichier enregistré : "+filename); }
   catch(e){
     const c=e&&e.code;
     if(c==="declined")return;
@@ -7836,7 +7836,7 @@ bind("bSave3","click",()=>{
   const maj=saveFiche();toast(maj?"Évaluation mise à jour.":"Évaluation enregistrée dans « Mes évaluations ».")}));
 bind("bSave4","click",()=>{const maj=saveFiche();toast(maj?"Évaluation et résultats mis à jour.":"Évaluation enregistrée.")});
 document.querySelectorAll("#eMode [data-emode]").forEach(b=>b.onclick=()=>{ui.emode=b.dataset.emode;paintEleves()});
-bind("bExpJson","click",()=>offer("fiches-dnmade.json",JSON.stringify({ref:REF.meta,fiches},null,1)));
+bind("bExpJson","click",()=>offer("fiches-dnmade.json",JSON.stringify({ref:REF.meta,fiches},null,1),true));
 bind("r-search","input",e=>{ui.ref.q=e.target.value;paintRef()});
 bind("r-group","change",e=>{ui.ref.group=e.target.value;paintRef()});
 bind("r-annee","change",e=>{ui.ref.annee=e.target.value;paintRef()});

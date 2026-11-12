@@ -4,7 +4,34 @@
 
 ### Ajouté
 
+- Site : page « Confidentialité et mentions légales », reliée depuis le pied de page.
+- Site : la page Télécharger propose le référentiel DN MADE mention Objet et explique comment l'importer.
+- Export : un document qui contient des noms ou des résultats d'élèves rappelle, une fois enregistré, qu'il n'est pas protégé par mot de passe.
 - « Mon compte » > « Données d'un élève » : exporter tout ce qui concerne un élève, ou l'effacer partout (promotions, évaluations, brouillon), à sa demande ou à celle de sa famille.
+
+### Modifié
+
+- Site : hébergé chez OVH à l'adresse dnmax.fr.
+- Mises à jour : DNMAX ne se connecte plus à Internet au lancement ; la recherche se fait à la demande, depuis « Mon compte ».
+
+### Sécurité
+
+- Site : les polices sont servies par le site lui-même ; une visite ne transmet plus l'adresse IP du visiteur à Google.
+
+## 0.1.2 — 2026-11-11
+
+### Ajouté
+
+- Site : la page Télécharger renvoie aussi vers toutes les versions publiées sur GitHub.
+
+### Modifié
+
+- Site : plus de numéro de version écrit en dur, qui restait en retard d'une version ; la page Télécharger renvoie au journal des modifications.
+
+### Corrigé
+
+- L'annonce de mise à jour affiche en entier le lien vers le journal des modifications.
+- « Mon compte » : le contour bleu du champ sélectionné n'est plus rogné sur les côtés.
 
 ## 0.1.1 — 2026-11-11
 
