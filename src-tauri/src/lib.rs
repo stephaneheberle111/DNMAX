@@ -125,6 +125,7 @@ enum ErreurCommande {
     CoffreVerrouille,
     DisqueInaccessible,
     FichierTropVolumineux,
+    SauvegardeInconnue,
     Interne,
 }
 
@@ -300,6 +301,58 @@ fn enregistrer_coffre(
     let session = session.verrou();
     let coffre = session.as_ref().ok_or(ErreurCommande::CoffreVerrouille)?;
     depot::ecrire(&dossier, &coffre.sceller(&entrees, &mut OsRng)?)?;
+    Ok(())
+}
+
+/// Liste les sauvegardes du coffre, de la plus récente à la plus ancienne.
+#[tauri::command(async)]
+fn lister_sauvegardes(
+    application: AppHandle,
+    session: State<'_, Session>,
+) -> Result<Vec<depot::SauvegardeDisponible>, ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    if session.verrou().is_none() {
+        return Err(ErreurCommande::CoffreVerrouille);
+    }
+    depot::lister_sauvegardes(&dossier).map_err(|_| ErreurCommande::DisqueInaccessible)
+}
+
+/// Traduit l'échec de lecture d'une sauvegarde : un nom absent de la liste est
+/// distingué d'un disque en panne.
+fn erreur_lecture_sauvegarde(erreur: &std::io::Error) -> ErreurCommande {
+    if erreur.kind() == std::io::ErrorKind::NotFound {
+        ErreurCommande::SauvegardeInconnue
+    } else {
+        ErreurCommande::DisqueInaccessible
+    }
+}
+
+/// Remplace le coffre par la sauvegarde nommée `nom`, après avoir mis le
+/// coffre actuel de côté dans `sauvegardes/`.
+///
+/// `nom` doit être l'un des noms rendus par `lister_sauvegardes` : il n'est
+/// jamais traité comme un chemin. La session est ensuite verrouillée : la
+/// sauvegarde s'ouvre avec le mot de passe en vigueur le jour où elle a été
+/// faite, que l'interface doit redemander. Cela empêche aussi un enregistrement
+/// encore en attente dans la page d'écraser le coffre restauré.
+#[tauri::command(async)]
+fn restaurer_sauvegarde(
+    application: AppHandle,
+    session: State<'_, Session>,
+    nom: String,
+) -> Result<(), ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let mut session = session.verrou();
+    if session.is_none() {
+        return Err(ErreurCommande::CoffreVerrouille);
+    }
+    let octets = depot::lire_sauvegarde(&dossier, &nom)
+        .map_err(|erreur| erreur_lecture_sauvegarde(&erreur))?;
+    // Une sauvegarde endommagée ne doit pas remplacer un coffre sain.
+    coffre::verifier_forme(&octets)?;
+    depot::restaurer(&dossier, &octets, OffsetDateTime::now_utc())
+        .map_err(|_| ErreurCommande::DisqueInaccessible)?;
+    *session = None;
     Ok(())
 }
 
@@ -513,7 +566,9 @@ pub fn lancer() {
             dechiffrer_fichier_echange,
             exporter_coffre,
             installer_coffre,
-            changer_mot_de_passe
+            changer_mot_de_passe,
+            lister_sauvegardes,
+            restaurer_sauvegarde
         ])
         .setup(|application| {
             // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.
@@ -529,8 +584,35 @@ pub fn lancer() {
 
 #[cfg(test)]
 mod tests {
-    use super::{decoder_pourcents, extraire_octets};
+    use super::{decoder_pourcents, erreur_lecture_sauvegarde, extraire_octets, ErreurCommande};
+    use std::io;
     use tauri::ipc::InvokeBody;
+
+    #[test]
+    fn une_sauvegarde_absente_de_la_liste_est_inconnue() {
+        let erreur = io::Error::new(io::ErrorKind::NotFound, "sauvegarde inconnue");
+        assert_eq!(
+            erreur_lecture_sauvegarde(&erreur),
+            ErreurCommande::SauvegardeInconnue
+        );
+    }
+
+    #[test]
+    fn une_sauvegarde_illisible_signale_le_disque() {
+        let erreur = io::Error::new(io::ErrorKind::PermissionDenied, "refusé");
+        assert_eq!(
+            erreur_lecture_sauvegarde(&erreur),
+            ErreurCommande::DisqueInaccessible
+        );
+    }
+
+    #[test]
+    fn le_code_d_une_sauvegarde_inconnue_est_stable() {
+        assert_eq!(
+            serde_json::to_value(ErreurCommande::SauvegardeInconnue).expect("sérialisation"),
+            serde_json::json!("sauvegarde-inconnue")
+        );
+    }
 
     #[test]
     fn accepte_des_octets_bruts() {
