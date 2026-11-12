@@ -123,18 +123,20 @@ const PRISE_EN_MAIN: Parcours = {
         "Vous pouvez passer cette visite à tout moment et la relancer depuis « Mon compte ».",
     },
     {
-      titre: "1. Télécharger le référentiel",
-      texte: "Téléchargez le référentiel de votre mention, Objet ou Espace. Votre navigateur enregistre le fichier, puis revenez ici.",
+      titre: "1. Choisir le référentiel",
+      texte:
+        "Cliquez sur votre mention, Objet ou Espace : le référentiel est livré avec DNMAX, rien à télécharger. Vous verrez ce qu'il contient avant de l'installer.",
       cibles: [".accueil-vide li:first-child", "#bouton-echange"],
+      pointe: ".btn",
       geste: "cliquer",
       groupeFait: (avancement) => avancement.referentiel,
+      avanceAuClic: true,
     },
     {
-      titre: "1. Installer le référentiel",
-      texte:
-        "Cliquez « Recevoir le fichier… » (ou « Échanger… » puis « Recevoir ») et choisissez le fichier téléchargé. DNMAX vous montre ce qu'il contient : acceptez pour l'installer.",
+      titre: "1. Valider l'installation",
+      texte: "DNMAX montre ce que le référentiel ajouterait. Validez : l'application se recharge et la visite reprend à l'étape suivante.",
       texteFait: "Votre référentiel est installé. Vous le retrouvez dans l'onglet « Référentiel ».",
-      cibles: [".accueil-vide li:nth-child(2) button", "#bouton-echange", "#t-ref"],
+      cibles: [".echange-boite .echange-actions .btn.primary", ".accueil-vide li:first-child", "#t-ref"],
       geste: "cliquer",
       objectif: (avancement) => avancement.referentiel,
     },

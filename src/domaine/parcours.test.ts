@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { CLE_PARCOURS, doitLancerAuDemarrage, estIdentifiantParcours, lireAvancement, lireParcoursVus, noterParcoursVu } from "./parcours";
+import {
+  CLE_PARCOURS,
+  doitLancerAuDemarrage,
+  estIdentifiantParcours,
+  lireAvancement,
+  lireParcoursVus,
+  lireReprise,
+  noterParcoursVu,
+} from "./parcours";
 
 const DONNEES_COMPLETES = {
   "dnmade.data": JSON.stringify({
@@ -83,5 +91,22 @@ describe("visites vues", () => {
     expect(estIdentifiantParcours("niveaux")).toBe(true);
     expect(estIdentifiantParcours("autre")).toBe(false);
     expect(estIdentifiantParcours(undefined)).toBe(false);
+  });
+});
+
+describe("lireReprise", () => {
+  it("relit l'étape notée", () => {
+    expect(lireReprise(JSON.stringify({ identifiant: "prise-en-main", index: 3 }))).toEqual({ identifiant: "prise-en-main", index: 3 });
+  });
+
+  it("ignore une note absente ou illisible", () => {
+    expect(lireReprise(null)).toBeNull();
+    expect(lireReprise("{")).toBeNull();
+  });
+
+  it("ignore une visite inconnue ou un index invalide", () => {
+    expect(lireReprise(JSON.stringify({ identifiant: "autre", index: 1 }))).toBeNull();
+    expect(lireReprise(JSON.stringify({ identifiant: "eleves", index: -1 }))).toBeNull();
+    expect(lireReprise(JSON.stringify({ identifiant: "eleves", index: 1.5 }))).toBeNull();
   });
 });
