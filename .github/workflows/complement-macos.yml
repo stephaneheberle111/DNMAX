@@ -1,0 +1,137 @@
+name: Complément macOS
+
+# Ajoute les fichiers Mac à une version parue sans eux (atelier « Publication »
+# lancé sans macOS, faute de machine disponible). Construit à partir du code
+# exact de la version, puis :
+#   - dépose l'installeur, le fichier de mise à jour et sa signature dans la version ;
+#   - complète son latest.json avec les Mac, sans toucher aux autres systèmes ;
+#   - redépose les installeurs sur dnmax.fr si la version est déjà publiée.
+# Relançable sans risque : chaque fichier est remplacé à l'identique.
+#
+# Déclenchement : bouton « Run workflow », en indiquant l'étiquette (v0.4.1).
+on:
+  workflow_dispatch:
+    inputs:
+      etiquette:
+        description: "Étiquette de la version à compléter (ex. v0.4.1)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: complement-macos-${{ inputs.etiquette }}
+  cancel-in-progress: false
+
+jobs:
+  verifier:
+    name: Vérifications préalables
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      commit: ${{ steps.version.outputs.commit }}
+      version: ${{ steps.version.outputs.version }}
+      brouillon: ${{ steps.version.outputs.brouillon }}
+    steps:
+      - name: La version existe et attend ses fichiers Mac
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ETIQUETTE: ${{ inputs.etiquette }}
+        run: |
+          if ! [[ "$ETIQUETTE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Étiquette mal formée : « $ETIQUETTE » (attendu : v1.2.3)."; exit 1
+          fi
+          infos="$(gh release view "$ETIQUETTE" --repo "$GITHUB_REPOSITORY" --json targetCommitish,isDraft,assets)" || {
+            echo "::error::Aucune version $ETIQUETTE (ni publiée ni en brouillon)."; exit 1; }
+          if ! jq -e '.assets[] | select(.name == "latest.json")' <<<"$infos" >/dev/null; then
+            echo "::error::La version $ETIQUETTE n'a pas de latest.json à compléter."; exit 1
+          fi
+          commit="$(jq -r .targetCommitish <<<"$infos")"
+          # Une version publiée a son étiquette : on construit le code qu'elle désigne.
+          if git ls-remote --exit-code --tags "https://github.com/${GITHUB_REPOSITORY}" "refs/tags/$ETIQUETTE" >/dev/null; then
+            commit="$ETIQUETTE"
+          fi
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "version=${ETIQUETTE#v}" >> "$GITHUB_OUTPUT"
+          echo "brouillon=$(jq -r .isDraft <<<"$infos")" >> "$GITHUB_OUTPUT"
+
+  construire:
+    name: macOS
+    needs: verifier
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.verifier.outputs.commit }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22.23.4"
+          cache: npm
+      - name: La version du code est celle de l'étiquette
+        env:
+          VERSION: ${{ needs.verifier.outputs.version }}
+        run: |
+          [ "$(jq -r .version package.json)" = "$VERSION" ] || { echo "::error::Le code construit n'est pas en version $VERSION."; exit 1; }
+      - name: Cibles Rust pour les deux familles de Mac
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+        working-directory: src-tauri
+      - run: npm ci
+      - name: Construction et signature
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npx tauri build --target universal-apple-darwin --config src-tauri/tauri.publication.conf.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: complement-macOS
+          path: |
+            src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz
+            src-tauri/target/universal-apple-darwin/release/bundle/macos/*.app.tar.gz.sig
+          if-no-files-found: error
+          retention-days: 7
+
+  completer:
+    name: Ajout à la version
+    needs: [verifier, construire]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22.23.4"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: complement-macOS
+          path: complement
+      - name: Manifeste complété
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ETIQUETTE: ${{ inputs.etiquette }}
+          VERSION: ${{ needs.verifier.outputs.version }}
+        run: |
+          find complement -mindepth 2 -type f -exec mv -t complement {} +
+          find complement -mindepth 1 -type d -empty -delete
+          mkdir publie
+          gh release download "$ETIQUETTE" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir publie
+          node outils/ecrire-manifeste.ts complement "$VERSION" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${ETIQUETTE}" macos publie/latest.json
+          cp complement/*.dmg complement/DNMAX-macos.dmg
+          ls -l complement
+      - name: Dépôt dans la version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ETIQUETTE: ${{ inputs.etiquette }}
+        run: gh release upload "$ETIQUETTE" complement/* --repo "$GITHUB_REPOSITORY" --clobber
+      - name: Installeurs du site
+        if: ${{ needs.verifier.outputs.brouillon == 'false' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # Une version déjà publiée a ses installeurs sur dnmax.fr : on y ajoute celui des Mac.
+        run: gh workflow run telechargements.yml --repo "$GITHUB_REPOSITORY" --ref main
