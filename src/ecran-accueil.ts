@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-accueil.css";
-import { REFERENTIEL_PROPOSE } from "./configuration";
+import { REFERENTIELS_PROPOSES } from "./configuration";
 import { CLE_EVALUATIONS, lireEvaluations } from "./domaine/echange/modele";
 import { estReferentielVide } from "./domaine/echange/referentiel";
 import { ouvrirReception, type AccesDonnees } from "./ecran-echange";
@@ -15,11 +15,14 @@ function creerBouton(texte: string, classe: string, action: () => void): HTMLBut
   return bouton;
 }
 
-function creerEtape(numero: string, texte: string, bouton: HTMLButtonElement): HTMLElement {
+function creerEtape(numero: string, texte: string, ...boutons: HTMLButtonElement[]): HTMLElement {
   const etape = document.createElement("li");
   const libelle = document.createElement("span");
   libelle.textContent = `${numero}. ${texte}`;
-  etape.append(libelle, bouton);
+  const actions = document.createElement("span");
+  actions.className = "accueil-actions";
+  actions.append(...boutons);
+  etape.append(libelle, actions);
   return etape;
 }
 
@@ -33,7 +36,7 @@ function afficher(acces: AccesDonnees): void {
   const texte = document.createElement("p");
   texte.textContent =
     "DNMAX démarre vide : aucun référentiel ni aucune donnée n'est installé d'office. " +
-    `Vous pouvez recevoir celui du ${REFERENTIEL_PROPOSE.nom}, recevoir celui d'un autre enseignant, ` +
+    "Vous pouvez recevoir celui du DN MADE (mention Objet ou Espace), recevoir celui d'un autre enseignant, " +
     "ou construire le vôtre dans l'onglet Référentiel.";
   const erreur = document.createElement("p");
   erreur.className = "accueil-erreur";
@@ -43,13 +46,15 @@ function afficher(acces: AccesDonnees): void {
   etapes.append(
     creerEtape(
       "1",
-      `Téléchargez le référentiel ${REFERENTIEL_PROPOSE.nom} (votre navigateur l'enregistre).`,
-      creerBouton("Télécharger", "btn", () => {
-        ouvrirDansNavigateur(REFERENTIEL_PROPOSE.adresse).catch(() => {
-          erreur.textContent = `Le navigateur n'a pas pu être ouvert. Adresse du fichier : ${REFERENTIEL_PROPOSE.adresse}`;
-          erreur.hidden = false;
-        });
-      }),
+      "Téléchargez le référentiel de votre mention (votre navigateur l'enregistre).",
+      ...REFERENTIELS_PROPOSES.map((referentiel) =>
+        creerBouton(referentiel.mention, "btn", () => {
+          ouvrirDansNavigateur(referentiel.adresse).catch(() => {
+            erreur.textContent = `Le navigateur n'a pas pu être ouvert. Adresse du fichier : ${referentiel.adresse}`;
+            erreur.hidden = false;
+          });
+        }),
+      ),
     ),
     creerEtape(
       "2",
