@@ -301,6 +301,7 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Recours** : si l'application ne s'ouvre plus, la copie à la main d'un fichier de `sauvegardes/` à la place de `coffre.dnmax` reste décrite dans la documentation.
 
 **Limites** : la relance après restauration et l'ensemble du parcours n'ont été essayés que par les tests de l'enveloppe et dans Chromium avec des réponses simulées, pas encore dans l'application installée sur chacun des trois systèmes.
+
 ## 23. Visite guidée intégrée, guidée par l'état réel des données
 
 **Retenu** : une visite pas à pas dans l'application (`src/ecran-parcours.ts`, étapes dans `src/parcours-etapes.ts`), plutôt qu'une documentation ou une vidéo. L'écran est grisé sauf la zone où agir ; un curseur animé montre le geste attendu. La prise en main se lance à la première ouverture, une seule fois (entrée `dnmax.parcours` du coffre), et se relance depuis « Mon compte » ; les modules Élèves et Niveaux DN MADE ont chacun leur visite, lancée depuis leur carte dans Paramètres.
