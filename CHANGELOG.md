@@ -9,6 +9,8 @@
 ### Modifié
 
 - Site : l'ancienne adresse du site est fermée ; seul dnmax.fr reste en service.
+- Données des élèves : la section passe de « Mon compte » à l'onglet Paramètres, et n'apparaît que si le module Élèves est actif ou si des élèves sont enregistrés.
+- Une promotion peut être anonymisée ou effacée à tout moment, pas seulement après sa durée de conservation (avec une seconde confirmation).
 
 ### Corrigé
 
