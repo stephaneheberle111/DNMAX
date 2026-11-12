@@ -2,7 +2,9 @@
 import JSZip from "jszip";
 import * as XLSX from "xlsx";
 import { convertirEnOctets, type ContenuFichier } from "../domaine/contenu-fichier";
+import { estObjet, lireDonneesEtablissementDe, lirePromotion } from "../domaine/echange/modele";
 import { CLE_IDENTITE, lireIdentite } from "../domaine/identite";
+import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
 import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
 import { enregistrerFichier } from "../enveloppe";
@@ -36,6 +38,15 @@ interface Pont {
    * @param etablissement nom de l'établissement saisi dans « Mon établissement », vide s'il ne l'est pas
    */
   readonly confirmerModuleEleves: (etablissement: unknown) => Promise<boolean>;
+  /**
+   * Règles de validation du référentiel (`src/domaine/validation-referentiel.ts`),
+   * appliquées aux données que tient l'interface historique : `donnees` est
+   * l'objet de `dnmade.data`, `promotion` un élément de `dnmade.promos`.
+   */
+  readonly referentielValide: {
+    promotion(donnees: unknown, promotion: unknown): boolean;
+    diplome(donnees: unknown, diplomeId: unknown): boolean;
+  };
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: DemandeEnregistrement): Promise<void>;
@@ -96,6 +107,13 @@ export async function chargerInterfaceHistorique(
         etablissement: typeof etablissement === "string" ? etablissement : "",
         enseignant: lireIdentite(magasin.getItem(CLE_IDENTITE))?.nom ?? "",
       }),
+    // Données non typées : elles sont relues prudemment, et tout ce qui est illisible vaut « non validé ».
+    referentielValide: {
+      promotion: (donnees, promotion) =>
+        estObjet(promotion) && promotionAReferentielValide(lireDonneesEtablissementDe(donnees), lirePromotion(promotion)),
+      diplome: (donnees, diplomeId) =>
+        typeof diplomeId === "string" && diplomeAReferentielValide(lireDonneesEtablissementDe(donnees), diplomeId),
+    },
   };
   await new Promise<void>((resoudre, rejeter) => {
     const script = document.createElement("script");

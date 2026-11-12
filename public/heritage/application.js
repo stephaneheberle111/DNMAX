@@ -3955,6 +3955,7 @@ function vierge(){
     eleves:"",items:[],res:{}});
 }
 function nouvelleFiche(){
+  if(!peutCreerFiche()){alerteRefNonValide(DATA.activeDiplome,"Impossible de créer une évaluation");return}
   F=vierge();
   {const me=DATA.enseignants.find(t=>t.id===DATA.moi);if(me&&me.nom){F.profs=[me.nom];F.prof=me.nom}}save();ui.tab="new";ui.step=1;ui.sel=[];ui.eleve="";
   paintTabs();paintForm();paintPick();paintLignes();goStep(1);
@@ -4071,8 +4072,10 @@ function paintClasse(){
   host.innerHTML=names.map(x=>{
     const pr=ps.find(p=>p.nom===x), on=F.classes.includes(x), off=!on&&pr&&lockY!=null&&yr(pr)!==lockY;
     return `<button type="button" class="liv" data-classe="${esc(x)}" aria-pressed="${on}" ${off?"disabled":""}
-      title="${esc(x)}${off?" — autre année de formation que la promotion déjà choisie":""}">${esc(promoDisp(x))}${promoDisp(x)===x?tag(x):""}</button>`}).join("")
-    +(live.length?"":`<span class="hint">Aucune promotion en cours en ${esc(AS)} : crée-la dans Mon établissement › Promotions.</span>`);
+      title="${esc(x)}${off?" — autre année de formation que la promotion déjà choisie":""}${pr&&!promoRefValide(pr)?" — référentiel non validé":""}">${esc(promoDisp(x))}${promoDisp(x)===x?tag(x):""}${pr&&!promoRefValide(pr)?`<span class="n">référentiel à valider</span>`:""}</button>`}).join("")
+    +(live.length?"":`<span class="hint">Aucune promotion en cours en ${esc(AS)} : crée-la dans Mon établissement › Promotions.</span>`)
+    +(dipBloquant(F)?`<span class="hint" id="f-refnv" style="color:var(--signal);flex-basis:100%">Le référentiel de cette évaluation n'est pas validé : elle ne pourra pas être enregistrée. <button type="button" class="btn ghost" data-allerval>Valider le référentiel</button></span>`:"");
+  {const b=host.querySelector("[data-allerval]");if(b)b.onclick=()=>allerValidation(dipBloquant(F))}
   host.querySelectorAll("[data-classe]").forEach(b=>b.onclick=()=>toggleClasse(b.dataset.classe));
 }
 function paintProf(){
@@ -5003,6 +5006,7 @@ function paintSaved(){
   const syncF=f=>{if(F&&F.id===f.id){F.suivi=structuredClone(f.suivi);F.restit=structuredClone(f.restit||{});save()}LS.set("dnmade.fiches",fiches)};
   const bindActs=root=>{
     root.querySelectorAll("[data-sai]").forEach(b=>b.onclick=e=>{e.stopPropagation();fermerActions(false);
+      if(refBloque(fiches[+b.dataset.sai],"Impossible de saisir les résultats"))return;
       F=migF(structuredClone(fiches[+b.dataset.sai]));vueMention(mentionDeFiche(F));save();
       ui.tab="new";ui.step=4;ui.eleve="";paintTabs();paintForm();paintPick();paintLignes();goStep(4)});
     root.querySelectorAll("[data-xk]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const i=+b.dataset.xi, f=fiches[i], k=b.dataset.xk;if(!f)return;
@@ -5019,7 +5023,8 @@ function paintSaved(){
         ui.delArm=null;const n=nbIndiv(f);f.res={};if(F&&F.id===f.id){F.res={};save()}toast(n+" évaluation"+(n>1?"s":"")+" individuelle"+(n>1?"s":"")+" supprimée"+(n>1?"s":"")+".")}
       if(F&&F.id===f.id){if(f.annulee)F.annulee=f.annulee;else delete F.annulee}
       syncF(f);paintSaved()});
-    root.querySelectorAll("[data-dup]").forEach(b=>b.onclick=e=>{e.stopPropagation();fermerActions(false);F=migF(structuredClone(fiches[+b.dataset.dup]));vueMention(mentionDeFiche(F));F.id=uid();F.titre+=" (copie)";F.date=new Date().toISOString().slice(0,10);delete F.distribPrev;delete F.renduPrev;if(F.suivi)F.suivi.saisie=F.date;save();ui.tab="new";paintTabs();paintForm();paintPick()});
+    root.querySelectorAll("[data-dup]").forEach(b=>b.onclick=e=>{e.stopPropagation();fermerActions(false);
+      if(refBloque(fiches[+b.dataset.dup],"Impossible de dupliquer cette évaluation"))return;F=migF(structuredClone(fiches[+b.dataset.dup]));vueMention(mentionDeFiche(F));F.id=uid();F.titre+=" (copie)";F.date=new Date().toISOString().slice(0,10);delete F.distribPrev;delete F.renduPrev;if(F.suivi)F.suivi.saisie=F.date;save();ui.tab="new";paintTabs();paintForm();paintPick()});
   };
   const openSt=key=>{const [i,k]=String(key).split(":").map(Number), b=h.querySelector(`[data-sts="${i}:${k}"]`);if(!b)return;
     const pop=h.querySelector(`[data-stp="${i}"]`), f=fiches[i];
@@ -6326,6 +6331,47 @@ function versionsOf(dip){const D=DATA;D.versions=D.versions||{};D.versions[dip]=
 function refJSON(dip){const R=refOf(DATA,dip);return JSON.stringify(KINDS.map(k=>R[k]))}
 function versionActive(dip){const v=versionsOf(dip);return v.find(x=>x.id===((DATA.valide||{})[dip]))||null}
 function refAJour(dip){const v=versionActive(dip);return !!v&&JSON.stringify(KINDS.map(k=>v.snap[k]))===refJSON(dip)}
+/* Validation par l'enseignant, qui est responsable du référentiel sur lequel il évalue : seule une version
+   qu'il a attestée lui-même (v.attestation, date) permet de créer ou d'enregistrer une évaluation et de
+   saisir des résultats. Une version reçue, livrée avec l'application ou validée avant l'attestation n'en a pas.
+   La règle est tenue par l'application (src/domaine/validation-referentiel.ts) et passe par le pont. */
+function dipRefValide(dip){return window.dnmaxPont.referentielValide.diplome(DATA,dip)}
+function promoRefValide(pr){return window.dnmaxPont.referentielValide.promotion(DATA,pr)}
+function promosDeF(f){
+  const l=[promos.find(p=>p.id===f.promoId),...(f.classes||[]).map(n=>promos.find(p=>p.nom===n))].filter(Boolean);
+  return [...new Set(l)];
+}
+/* diplôme dont le référentiel bloque l'évaluation, ou "" si rien ne la bloque ; sans promotion, le diplôme affiché */
+function dipBloquant(f){
+  const l=promosDeF(f);
+  if(!l.length)return dipRefValide(DATA.activeDiplome)?"":DATA.activeDiplome;
+  const pr=l.find(p=>!promoRefValide(p));return pr?(pr.diplomeId||DATA.activeDiplome):"";
+}
+function peutCreerFiche(){return dipRefValide(DATA.activeDiplome)||promos.some(promoRefValide)}
+function allerValidation(dip){
+  if(dip&&dip!==DATA.activeDiplome&&DATA.diplomes.some(d=>d.id===dip))vueMention(dip);
+  ui.tab="ref";ui.ref.pane="constituer";ui.ref.cp="valider";edArm=null;
+  paintTabs();paintRef();window.scrollTo({top:0,behavior:"smooth"});
+}
+/* Explique pourquoi l'action est refusée et mène au volet de validation. */
+function alerteRefNonValide(dip,action){
+  const prev=document.activeElement, el=document.createElement("div");el.className="modal";
+  const dp=DATA.diplomes.find(x=>x.id===dip);
+  el.innerHTML=`<div class="card" role="alertdialog" aria-modal="true" aria-labelledby="rnvT" aria-describedby="rnvD" style="max-width:500px;width:100%">
+    <p id="rnvT"><b>${esc(action)} : le référentiel${dp?" "+esc(dipLabel(dp)):""} n'est pas validé.</b></p>
+    <p id="rnvD">Avant une première évaluation, le référentiel doit être vérifié et validé par l'enseignant, dans Référentiel › Constituer › Validation. C'est vous qui en êtes responsable, pas l'hébergeur ni le développeur de DNMAX.</p>
+    <p class="hint">Les évaluations déjà enregistrées ne sont pas touchées : elles restent consultables et exportables.</p>
+    <div class="row"><button class="btn ghost" data-no>Fermer</button><button class="btn primary" data-yes>Aller à la validation</button></div></div>`;
+  const close=()=>{el.remove();document.removeEventListener("keydown",key);if(prev&&prev.focus&&document.contains(prev))prev.focus()};
+  const key=e=>{if(e.key==="Escape")close()};
+  el.querySelector("[data-no]").onclick=close;
+  el.querySelector("[data-yes]").onclick=()=>{close();allerValidation(dip)};
+  el.onclick=e=>{if(e.target===el)close()};
+  document.addEventListener("keydown",key);document.body.appendChild(el);
+  el.querySelector("[data-yes]").focus();
+}
+/* Vrai, avec le message, si le référentiel de l'évaluation empêche l'action. */
+function refBloque(f,action){const dip=dipBloquant(f);if(!dip)return false;alerteRefNonValide(dip,action);return true}
 /* Versions du référentiel par promotion : une promo utilise la version validée qui lui est appliquée
    (pr.refV) ; sans choix explicite, la version en vigueur de sa mention. Une évaluation enregistrée
    garde la version sur laquelle elle a été faite (f.refV) : appliquer une nouvelle version à une promo
@@ -6348,10 +6394,18 @@ function versionUsage(dip,vid){
   const fs=fiches.filter(f=>f.refV===vid);
   return {ps,fs};
 }
+/* Appelée seulement une fois l'attestation cochée : la version validée la porte. */
 function validerVersion(date,note){
   absorb(DATA);
-  const dip=DATA.activeDiplome, R=refOf(DATA,dip), prevId=(DATA.valide||{})[dip]||"";
-  const v={id:newId("v"),date:date||new Date().toISOString().slice(0,10),note:String(note||"").trim(),
+  const dip=DATA.activeDiplome, R=refOf(DATA,dip), prevId=(DATA.valide||{})[dip]||"", today=new Date().toISOString().slice(0,10);
+  // version en vigueur identique au référentiel, mais jamais attestée (reçue, installée) : on l'atteste
+  // sans en créer une copie, pour que promotions et évaluations qui la suivent n'aient pas à changer de version
+  const va=versionActive(dip);
+  if(va&&!va.attestation&&refAJour(dip)){
+    va.attestation=today;persistData();REF=computeREF();paintRef();
+    toast("Référentiel validé — version du "+frDate(va.date)+", vérifiée par vous.");return;
+  }
+  const v={id:newId("v"),date:date||today,note:String(note||"").trim(),attestation:today,
     snap:JSON.parse(JSON.stringify({ues:R.ues,ecs:R.ecs,blocs:R.blocs,competences:R.competences}))};
   // ce qui suivait l'ancienne version y reste attaché : promos sans choix explicite, évaluations enregistrées
   if(prevId){
@@ -6391,7 +6445,7 @@ function restaurerVersion(id){
   DATA.valide=Object.assign({},DATA.valide||{});DATA.valide[dip]=v.id;
   materialize(DATA);REF=computeREF();persistData();
   paintRef();paintForm();paintPick();paintLignes();
-  toast("Version du "+frDate(v.date)+" rétablie.");
+  toast("Version du "+frDate(v.date)+" rétablie."+(v.attestation?"":" Validez-la avant d'évaluer avec."));
 }
 /* afficher le référentiel de la mention d'une promotion : chaque mention a le sien,
    et une évaluation suit toujours la mention de sa promotion */
@@ -6563,13 +6617,14 @@ function paintConstituer(host){
   const ments=D.diplomes.filter(dp=>norm(dp.nom||"")===norm(curDip.nom||""));
   const vs=versionsOf(D.activeDiplome), va=versionActive(D.activeDiplome), ajour=refAJour(D.activeDiplome);
   const etat=!va?`<span class="vst draft">Jamais validé — brouillon</span>`
+    :!va.attestation?`<span class="vst mod" style="white-space:nowrap">À vérifier et valider</span>`
     :ajour?`<span class="vst ok">À jour · version du ${esc(frDate(va.date))}</span>`
     :`<span class="vst mod">Modifié depuis la version du ${esc(frDate(va.date))}</span>`;
   const plan=D.competences.filter(c=>(c.ecs||[]).some(x=>(x.sems||[]).length)).length;
   const sums={ues:`${D.ues.length} <em>UE retenue${D.ues.length>1?"s":""}</em>`,
     ecs:`${D.ecs.length} <em>EC</em>${D.ecs.filter(e=>!e.ueId).length?` <em>· ${D.ecs.filter(e=>!e.ueId).length} sans UE</em>`:""}`,
     tableau:`${plan} <em>/ ${D.competences.length} compétences planifiées</em>`,
-    valider:!va?`<em>jamais validé</em>`:ajour?`<em>à jour · ${esc(frDate(va.date))}</em>`:`<em>modifié depuis le ${esc(frDate(va.date))}</em>`};
+    valider:!va?`<em>jamais validé</em>`:!va.attestation?`<em>à vérifier et valider</em>`:ajour?`<em>à jour · ${esc(frDate(va.date))}</em>`:`<em>modifié depuis le ${esc(frDate(va.date))}</em>`};
   const steps=`<ol class="steps">${keys.map((x,j)=>`<li><button type="button" data-cp="${x}" ${x===k?'aria-current="true"':""}><span class="hd"><b>${j+1}</b><span class="l">${esc(CON_PANES[x])}</span></span><span class="s">${sums[x]}</span></button></li>`).join("")}</ol>`;
   const nav=`<div style="display:flex;gap:8px;justify-content:space-between;margin:16px 0 4px">
     ${si>0?`<button type="button" class="btn ghost" data-cp="${keys[si-1]}">← ${esc(CON_PANES[keys[si-1]])}</button>`:"<span></span>"}
@@ -6577,8 +6632,12 @@ function paintConstituer(host){
   const valider=`<div class="panel"><div class="pick-head"><h3>Valider le référentiel · ${esc(dipLabel(curDip))}</h3>${etat}</div>
       <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
         <div class="hint">Valider fige l'état du référentiel de cette mention à une date. À la validation, tu choisis les promotions en cours qui passent à cette version ; les autres gardent la leur, et les évaluations déjà enregistrées restent sur le référentiel sur lequel elles ont été faites.</div>
+        <div class="hint">Aucune évaluation ne peut être créée pour une promotion tant que son référentiel n'a pas été vérifié et validé ici. C'est l'enseignant qui est responsable du référentiel, y compris quand il est livré avec DNMAX ou reçu d'un collègue.</div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px"><span><b>${D.ues.length}</b> UE</span><span><b>${D.ecs.length}</b> EC</span><span><b>${D.blocs.length}</b> blocs</span><span><b>${D.competences.length}</b> compétences</span><span><b>${plan}</b> planifiées sur un semestre</span></div>
         ${D.competences.length-plan?`<div class="hint" style="color:var(--signal)">${D.competences.length-plan} compétence${D.competences.length-plan>1?"s ne sont rattachées":" n'est rattachée"} à aucun semestre (étape 3).</div>`:""}
+        <label class="sw" style="align-items:flex-start;font-size:13px"><input type="checkbox" id="cAtteste" aria-describedby="cAttErr">
+          <span>J'ai vérifié ce référentiel et j'en assume le contenu : l'hébergeur et le développeur de DNMAX n'en sont pas responsables.</span></label>
+        <div class="hint" id="cAttErr" role="alert" style="color:var(--signal)"></div>
         <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
           <input type="date" id="cDate" value="${esc(new Date().toISOString().slice(0,10))}" aria-label="Date de la version" style="width:auto">
           <input type="text" id="cNote" placeholder="Note (facultatif)" style="width:auto;flex:1 1 200px" aria-label="Note de version">
@@ -6590,6 +6649,8 @@ function paintConstituer(host){
         <span class="n">${v.snap.ues.length} UE · ${v.snap.ecs.length} EC · ${v.snap.blocs.length} blocs · ${v.snap.competences.length} compétences</span>
         <span class="note">${esc(v.note||"")}</span>
         ${v.id===(va||{}).id?`<span class="vst ok">en vigueur</span>`:""}
+        ${v.attestation?`<span class="hint" style="font-size:11.5px">validée par vous le ${esc(frDate(v.attestation))}</span>`
+          :`<span class="vst draft" style="white-space:nowrap">non validée par vous</span><button class="btn ghost" data-vatt="${esc(v.id)}" title="Cochez d'abord l'attestation ci-dessus">Valider</button>`}
         ${(()=>{const u=versionUsage(D.activeDiplome,v.id);return (u.ps.length||u.fs.length)?`<span class="hint" style="font-size:11.5px;flex-basis:100%">Utilisée par ${u.ps.length?u.ps.map(p=>esc(p.nom||"promo")).join(", "):"aucune promotion"}${u.fs.length?` · ${u.fs.length} évaluation${u.fs.length>1?"s":""}`:""}</span>`:""})()}
         ${(v.id!==(va||{}).id||!ajour)?`<button class="btn ghost" data-vres="${v.id}">Rétablir</button>`:""}
         ${(()=>{const u=versionUsage(D.activeDiplome,v.id);return (u.ps.length||u.fs.length)?"":`<button class="btn ghost ${edArm==="v"+i?"danger":""}" data-eddel="v${i}">${edArm==="v"+i?"Confirmer":"Supprimer"}</button>`})()}
@@ -6608,7 +6669,17 @@ function paintConstituer(host){
   host.querySelector("#cMen").onchange=e=>{D.activeDiplome=e.target.value;ui.ref.filter={kind:"",value:""};saveData()};
   const main=host.querySelector("#cpMain");
   if(k==="valider"){main.innerHTML=valider;
-    main.querySelector("#cValid").onclick=()=>validerVersion(main.querySelector("#cDate").value,main.querySelector("#cNote").value);
+    // sans l'attestation cochée, rien n'est validé
+    const atteste=()=>{const c=main.querySelector("#cAtteste"), err=main.querySelector("#cAttErr");
+      if(c.checked){err.textContent="";c.removeAttribute("aria-invalid");return true}
+      err.textContent="Cochez d'abord la case : vous attestez avoir vérifié ce référentiel et en assumer le contenu.";
+      c.setAttribute("aria-invalid","true");c.focus();return false};
+    main.querySelector("#cAtteste").onchange=e=>{if(e.target.checked)atteste()};
+    main.querySelector("#cValid").onclick=()=>{if(atteste())validerVersion(main.querySelector("#cDate").value,main.querySelector("#cNote").value)};
+    main.querySelectorAll("[data-vatt]").forEach(b=>b.onclick=()=>{if(!atteste())return;
+      const v=versionsOf(D.activeDiplome).find(x=>x.id===b.dataset.vatt);if(!v)return;
+      v.attestation=new Date().toISOString().slice(0,10);persistData();REF=computeREF();paintRef();
+      toast("Version du "+frDate(v.date)+" validée par vous.")});
     main.querySelectorAll("[data-vres]").forEach(b=>b.onclick=()=>restaurerVersion(b.dataset.vres));
     main.querySelectorAll(".vpanel [data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
       const i=+b.dataset.eddel.slice(1), v=versionsOf(D.activeDiplome).splice(i,1)[0];
@@ -7109,11 +7180,25 @@ function demoMass(){
   out.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
   return {fiches:out,nPr,nEl,nM:dips.length};
 }
+function validerExemple(dips){
+  absorb(DATA);
+  const today=new Date().toISOString().slice(0,10);
+  dips.forEach(dip=>{
+    if(dipRefValide(dip))return;
+    const R=refOf(DATA,dip), v={id:newId("v"),date:today,note:"Exemple",attestation:today,
+      snap:JSON.parse(JSON.stringify({ues:R.ues,ecs:R.ecs,blocs:R.blocs,competences:R.competences}))};
+    versionsOf(dip).unshift(v);
+    DATA.valide=Object.assign({},DATA.valide||{});DATA.valide[dip]=v.id;
+  });
+  persistData();REF=computeREF();
+}
 function loadDemo(){
   // sans référentiel, l'exemple apporte le sien : celui du DN MADE mention Objet
-  if(!refOf(DATA,DATA.activeDiplome).competences.length){
+  const refExemple=!refOf(DATA,DATA.activeDiplome).competences.length;
+  if(refExemple){
     DATA=migrateData(buildData(REF_DEFAULT,SUPPORTS_DEF));REF=projectRef(DATA);persistData();
   }
+  const dipsAvant=new Set(refExemple?[]:DATA.diplomes.map(d=>d.id));
   [["Sophie Hébert","Atelier de création"],["Marc Lenoir","Technologies et matériaux"],["Amina Benali","Humanités"]]
     .forEach(([nom,discipline])=>{if(!DATA.enseignants.some(t=>t.nom===nom))DATA.enseignants.push({...nouvellePersonne(uid(),nom),discipline})});
   persistData();
@@ -7134,6 +7219,9 @@ function loadDemo(){
   const f3=cl(demoFiche3(),p2); fillRes(f3,47,8);
   const titres=[f1.titre,f2.titre,f3.titre];
   const MS=demoMass();
+  // Le référentiel que l'exemple installe lui-même est validé pour la démonstration ; celui de l'enseignant
+  // (et les mentions que l'exemple en dérive) reste à valider par lui.
+  if(refExemple)validerExemple(DATA.diplomes.filter(d=>!dipsAvant.has(d.id)).map(d=>d.id));
   fiches=[structuredClone(f1),structuredClone(f3),structuredClone(f2),...MS.fiches,...fiches.filter(x=>!titres.includes(x.titre)&&!x.demo)];
   LS.set("dnmade.fiches",fiches);
   F=migF(f1);save();
@@ -7849,7 +7937,9 @@ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>goStep(b.dataset
 document.querySelectorAll(".steps [data-step]").forEach(b=>b.onclick=()=>goStep(b.dataset.step));
 bind("bLink","click",linkSelection);
 bind("bLinkNone","click",()=>{ui.sel=[];paintLignes()});
+/* Rend null, sans rien enregistrer, si le référentiel de l'évaluation n'est pas validé. */
 function saveFiche(){
+  if(refBloque(F,"Impossible d'enregistrer cette évaluation"))return null;
   suiviOf(F);
   if(!F.refV){const v=versionPourF();if(v)F.refV=v.id;save()}
   const i=fiches.findIndex(f=>f.id===F.id);
@@ -7859,14 +7949,14 @@ function saveFiche(){
   return i>=0;
 }
 bind("bSave3","click",()=>{
-  const maj=saveFiche();
+  const maj=saveFiche();if(maj===null)return;
   if(MOD.fiches){ui.tab="saved";paintTabs();window.scrollTo({top:0,behavior:"smooth"});
     toast((maj?"Évaluation mise à jour":"Évaluation enregistrée")+" — le Word et l'Excel se génèrent d'ici, quand tu veux.")}
   else toast(maj?"Évaluation mise à jour.":"Évaluation enregistrée.");
 });
 ["bSave1","bSave2"].forEach(id=>bind(id,"click",()=>{
-  const maj=saveFiche();toast(maj?"Évaluation mise à jour.":"Évaluation enregistrée dans « Mes évaluations ».")}));
-bind("bSave4","click",()=>{const maj=saveFiche();toast(maj?"Évaluation et résultats mis à jour.":"Évaluation enregistrée.")});
+  const maj=saveFiche();if(maj===null)return;toast(maj?"Évaluation mise à jour.":"Évaluation enregistrée dans « Mes évaluations ».")}));
+bind("bSave4","click",()=>{const maj=saveFiche();if(maj===null)return;toast(maj?"Évaluation et résultats mis à jour.":"Évaluation enregistrée.")});
 document.querySelectorAll("#eMode [data-emode]").forEach(b=>b.onclick=()=>{ui.emode=b.dataset.emode;paintEleves()});
 bind("bExpJson","click",()=>offer("fiches-dnmade.json",JSON.stringify({ref:REF.meta,fiches},null,1),true));
 bind("r-search","input",e=>{ui.ref.q=e.target.value;paintRef()});
