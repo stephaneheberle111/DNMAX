@@ -34,6 +34,7 @@ La consigne est de préférer, à fonction égale, un outil référencé au [SIL
 | Rust | Langage de l'enveloppe | Non vérifié | Imposé par Tauri |
 | ESLint | Linter | Non vérifié | |
 | Vitest | Tests | Non vérifié | Partage la configuration de Vite |
+| WebRTC (`RTCPeerConnection`) | Échange en direct (bêta) | Non vérifié | API de la vue web du système, aucune dépendance ajoutée ; voir décision 21 |
 
 « Non vérifié » : le catalogue n'a pas pu être consulté au moment du choix. À compléter.
 
@@ -178,7 +179,7 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Retenu** : quand l'enseignant clique « Rechercher une mise à jour » dans « Mon compte », l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
 
-**Seul appel réseau de l'application, et seulement à la demande.** Jusqu'à la version 0.1.1, la vérification avait lieu à chaque lancement ; elle transmettait à GitHub l'adresse IP du poste à chaque ouverture, sans que l'enseignant l'ait demandé. Elle n'a plus lieu que sur sa demande, ce qui rend l'application silencieuse sur le réseau par défaut (RGPD : minimisation). Aucune donnée de l'enseignant n'est transmise. Si la vérification échoue, l'application le dit et propose de réessayer.
+**Appel réseau à la demande seulement.** Avec l'échange en direct (décision 21), c'est le seul moment où l'application se connecte à Internet. Jusqu'à la version 0.1.1, la vérification avait lieu à chaque lancement ; elle transmettait à GitHub l'adresse IP du poste à chaque ouverture, sans que l'enseignant l'ait demandé. Elle n'a plus lieu que sur sa demande, ce qui rend l'application silencieuse sur le réseau par défaut (RGPD : minimisation). Aucune donnée de l'enseignant n'est transmise. Si la vérification échoue, l'application le dit et propose de réessayer.
 
 **Contrepartie** : un enseignant qui ne vérifie jamais reste sur sa version ; le site et la documentation l'invitent à le faire de temps en temps.
 
@@ -257,3 +258,30 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Jamais de traitement automatique** : l'enseignant peut avoir à remettre un relevé avant. DNMAX rappelle et propose ; l'enseignant décide.
 
 **Limites** : les sauvegardes automatiques du coffre gardent une trace jusqu'à leur remplacement (dix jours d'utilisation) ; un nom cité dans un texte libre d'un autre élève, un titre ou des consignes n'est pas recherché ; un redoublant est repéré par son nom, donc un homonyme peut être pris pour un redoublant (il est alors gardé, ce qui est sans risque).
+
+## 21. Échange en direct (bêta) : pair à pair, STUN sans relais, codes copiés à la main
+
+**Retenu** : « Échanger… → Échange en direct (bêta) » envoie le même contenu qu'un fichier d'échange, mais d'ordinateur à ordinateur, par un canal de données WebRTC (`RTCDataChannel`) de la vue web du système. Aucune dépendance n'est ajoutée.
+
+**Parcours** : l'expéditeur choisit le contenu comme pour un fichier ; DNMAX affiche un code d'invitation, que l'expéditeur transmet par le moyen de son choix (messagerie, copier-coller) ; le destinataire le colle et obtient un code de réponse, qu'il renvoie ; l'expéditeur le colle, la connexion s'établit et le contenu part. Le destinataire voit alors le plan d'import habituel : le texte reçu suit exactement le circuit d'un fichier (`ouvrirTexteRecu` dans `src/ecran-echange.ts`), mot de passe compris s'il contient des élèves.
+
+**Pourquoi pair à pair** : DNMAX n'a pas de serveur central et n'en veut pas (décision 1). Le contenu ne transite par aucun tiers, même chiffré.
+
+**Pourquoi des serveurs STUN, et seulement eux** : pour que deux ordinateurs derrière des box ou des réseaux différents se trouvent, chacun doit connaître son adresse publique ; un serveur STUN la lui renvoie, rien de plus. Deux serveurs publics sont déclarés dans `src/configuration.ts` : `stun.aeta.com` (AETA, France) et `stun.86dd.eu` (Allemagne). **Aucun serveur TURN** (relais) : un relais ferait passer les données par un tiers, ce que l'auteur exclut. `garderServeursStun` écarte d'ailleurs toute adresse `turn:` ou `turns:` qui serait ajoutée par erreur.
+
+**Pourquoi une signalisation à la main** : une connexion WebRTC a besoin d'échanger une offre et une réponse (description de session et candidats de connexion). Sans serveur de signalisation, ce sont les enseignants qui les transportent. Les candidats sont rassemblés avant d'écrire le code (10 secondes au plus), pour n'avoir qu'un aller-retour. Le code (`src/domaine/echange/code-direct.ts`) porte un préfixe et une version (`DNMAX-DIRECT:1:`), un JSON compact en base64url et une somme CRC-32 qui repère un code tronqué ou mal recopié ; espaces, retours à la ligne et guillemets ajoutés par une messagerie sont ignorés. Un identifiant de séance relie la réponse à son invitation.
+
+**Transfert** : le texte part en morceaux de 2 000 caractères (moins de 16 Kio par message, taille sûre entre navigateurs), précédés d'un en-tête (taille, nombre de morceaux, CRC-32) et suivis d'une fin (`src/domaine/echange/morceaux.ts`). Le destinataire vérifie l'ordre, la taille totale (20 Mo au plus, comme un fichier) et la somme, puis renvoie un accusé de réception ; l'expéditeur n'annonce « Envoyé » qu'après cet accusé. Le canal WebRTC est chiffré (DTLS) de bout en bout ; un contenu avec élèves est en plus chiffré sous un mot de passe, comme le fichier (commande `proteger_texte_echange` de l'enveloppe), à communiquer par un autre moyen que le code.
+
+**Délais** (`DELAIS_ECHANGE_DIRECT`) : 15 minutes pour que l'autre enseignant se manifeste, 30 secondes pour établir la connexion une fois les deux codes collés, 60 secondes de silence au plus pendant un transfert. « Annuler » ferme la connexion à tout moment.
+
+**CSP** : inchangée. Les connexions WebRTC (STUN, ICE, canal de données) ne relèvent pas de `connect-src` ; vérifié dans Chromium avec la CSP de l'enveloppe, sans aucune violation.
+
+**Limites** :
+
+- la connexion directe échoue derrière certains pare-feu (réseaux d'établissement, NAT symétrique) : l'échange échoue alors avec un message qui propose l'échange par fichier ; c'est le prix de l'absence de relais ;
+- les serveurs STUN voient l'adresse IP publique de chaque poste et l'heure de la demande, jamais le contenu ; les codes eux-mêmes contiennent ces adresses (et, sur un même réseau local, des noms d'hôte `.local` aléatoires) : ils ne sont à transmettre qu'au collègue concerné ;
+- l'exploitant de `stun.86dd.eu` n'est pas vérifié publiquement à ce jour ; la joignabilité des deux serveurs n'a pas été vérifiée depuis l'environnement de développement ;
+- si les serveurs STUN sont injoignables, chaque code met 10 secondes à apparaître et seul un échange sur le même réseau local reste possible ;
+- la vue web de Linux (WebKitGTK) peut ne pas fournir WebRTC : le choix apparaît alors désactivé, avec l'explication ;
+- testé seulement dans Chromium, deux pages d'un même navigateur ; pas encore sur WebView2 (Windows), WKWebView (macOS), WebKitGTK ni entre deux réseaux réels : d'où la mention « bêta ».
