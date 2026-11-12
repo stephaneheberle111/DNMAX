@@ -64,7 +64,13 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:29;backgroun
 header.top .wrap{display:flex;align-items:center;gap:24px;height:64px}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font:800 22px/1 var(--display);letter-spacing:-.01em}
 .logo svg{width:26px;height:26px}
-nav.main{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+nav.main{display:flex;gap:4px;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+/* Téléphone : le menu passe sous le logo, et ses liens vont à la ligne plutôt que de sortir de l'écran */
+@media (max-width:640px){
+  header.top .wrap{flex-wrap:wrap;height:auto;row-gap:6px;padding-top:10px;padding-bottom:8px}
+  nav.main{flex:1 1 100%;margin-left:0;flex-wrap:wrap;overflow:visible;row-gap:4px}
+  nav.main a{padding:7px 10px;font-size:15px}
+}
 nav.main a{padding:8px 12px;border-radius:7px;color:var(--ink-2);text-decoration:none;font-weight:500;white-space:nowrap}
 nav.main a:hover{color:var(--ink);background:var(--sunk)}
 nav.main a[aria-current="page"]{color:var(--ink);background:var(--sunk)}
@@ -302,6 +308,8 @@ svg.dim .dot.off{opacity:.1}
 /* ---------- Pages intérieures ---------- */
 .page{padding:64px 0 96px;min-height:calc(100vh - 64px)}
 .page h1{font:800 clamp(38px,5vw,60px)/1.04 var(--display);letter-spacing:-.025em;margin:0 0 14px}
+/* Un titre d'un seul mot (« Documentation ») ne peut pas passer à la ligne : sa taille suit la largeur sur téléphone. */
+@media (max-width:520px){.page h1{font-size:clamp(22px,6.8vw,38px)}}
 .page .intro{color:var(--ink-2);font-size:19px;max-width:40em;margin:0 0 44px}
 
 .systemes{display:grid;gap:12px}
@@ -373,6 +381,8 @@ textarea{min-height:110px;resize:vertical}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-pied{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:6px}
 .form-pied a{font-size:15px}
+.form-pied a.btn{font-size:16px}
+.aide-envoi{margin:12px 0 0;font-size:14px;color:var(--ink-2)}
 .etat{margin-top:14px;font-size:14px;color:var(--ink-2);min-height:1.4em}
 .etat.ok{color:var(--ok)}
 .etat.err{color:var(--bug)}
@@ -522,10 +532,10 @@ footer a{color:var(--ink-2)}
                 <div class="scr" data-scr="saved">
                   <div class="tb a"><h4>Mes évaluations</h4><span class="bt">+ Nouvelle évaluation</span></div>
                   <ul class="evs">
-                    <li class="a" style="--d:120"><div class="t">Évaluation intermédiaire — Mobilier modulaire en frêne</div><div class="s">11 / 14 élèves<div class="barre"><i style="--w:78%"></i></div></div><div class="m">DN MADE 2 Objet · S3 · Degrés d’acquisition · modifiée par S. Hébérlé</div></li>
-                    <li class="a" style="--d:240"><div class="t">Fiche de lecture</div><div class="s">12 / 12 élèves<div class="barre"><i style="--w:100%"></i></div></div><div class="m">DN MADE 1 Objet · S1 · Niveaux de maîtrise · modifiée par A. Benali</div></li>
-                    <li class="a" style="--d:360"><div class="t">Oral de présentation de projet</div><div class="s"><span class="tag-s">Exportée en Word</span></div><div class="m">DN MADE 2 Objet · S3 · Niveaux de maîtrise · modifiée par M. Lenoir</div></li>
-                    <li class="a" style="--d:480"><div class="t">Carnet d’exposition</div><div class="s">6 / 14 élèves<div class="barre"><i style="--w:43%"></i></div></div><div class="m">DN MADE 3 Objet · S5 · Degrés d’acquisition · modifiée par S. Hébérlé</div></li>
+                    <li class="a" style="--d:120"><div class="t">Évaluation intermédiaire — Mobilier modulaire en frêne</div><div class="s">11 / 14 élèves<div class="barre"><i style="--w:78%"></i></div></div><div class="m">DN MADE 2 Objet · S3 · Degrés d’acquisition · modifiée par Sophie Hébert</div></li>
+                    <li class="a" style="--d:240"><div class="t">Fiche de lecture</div><div class="s">12 / 12 élèves<div class="barre"><i style="--w:100%"></i></div></div><div class="m">DN MADE 1 Objet · S1 · Niveaux de maîtrise · modifiée par Amina Benali</div></li>
+                    <li class="a" style="--d:360"><div class="t">Oral de présentation de projet</div><div class="s"><span class="tag-s">Exportée en Word</span></div><div class="m">DN MADE 2 Objet · S3 · Niveaux de maîtrise · modifiée par Marc Lenoir</div></li>
+                    <li class="a" style="--d:480"><div class="t">Carnet d’exposition</div><div class="s">6 / 14 élèves<div class="barre"><i style="--w:43%"></i></div></div><div class="m">DN MADE 3 Objet · S5 · Degrés d’acquisition · modifiée par Sophie Hébert</div></li>
                   </ul>
                 </div>
 
@@ -632,7 +642,7 @@ footer a{color:var(--ink-2)}
                   <div class="voile"></div>
                   <div class="modale">
                     <h4>Importer des évaluations</h4>
-                    <div class="fichier"><span class="ic">.dnmax</span><div><b>evaluations-lenoir.dnmax</b><br><span class="mut">Envoyé par M. Lenoir</span></div></div>
+                    <div class="fichier"><span class="ic">.dnmax</span><div><b>evaluations-lenoir.dnmax</b><br><span class="mut">Envoyé par Marc Lenoir</span></div></div>
                     <div class="ok-ref a" style="--d:700">✓ Construites sur le même référentiel que le vôtre</div>
                     <div class="plan">
                       <div class="a" style="--d:1000"><span>Fiche de lecture — corpus critique</span><span class="st nv">nouvelle</span></div>
@@ -917,8 +927,10 @@ npm run dev</code></pre>
         </div>
         <div class="form-pied">
           <button class="btn primary" type="submit" id="envoyer">Envoyer</button>
+          <a class="btn" href="mailto:contact@dnmax.fr" id="vers-courriel">Envoyer par e-mail</a>
           <a href="#" id="vers-github" target="_blank" rel="noopener">Ouvrir plutôt un ticket GitHub</a>
         </div>
+        <p class="aide-envoi">Sur GitHub, le ticket est <strong>public</strong>. Par e-mail, le message part de votre messagerie vers contact@dnmax.fr et seul l’éditeur le lit. Dans les deux cas, n’écrivez jamais le nom d’un élève.</p>
         <p class="etat" id="etat" role="status" aria-live="polite"></p>
       </form>
 
@@ -961,7 +973,7 @@ npm run dev</code></pre>
         <li><strong>Aucun cookie, aucune mesure d’audience, aucun compte.</strong> Le site ne dépose rien sur votre appareil et ne fait appel à aucun service tiers pour s’afficher&nbsp;: polices et images sont servies par le site lui-même.</li>
         <li><strong>Journaux techniques de l’hébergeur.</strong> Comme tout hébergeur, OVH enregistre pour chaque visite l’adresse IP, la date et la page demandée, pour faire fonctionner et protéger le site. L’éditeur ne les consulte que pour diagnostiquer un problème. Ces données restent en France.</li>
         <li><strong>Téléchargements.</strong> Les boutons «&nbsp;Télécharger DNMAX&nbsp;» mènent à GitHub, qui reçoit alors votre adresse IP, comme pour toute page web. GitHub, société américaine, adhère au cadre de protection des données UE–États-Unis (Data Privacy Framework). Le référentiel, lui, est servi par le site.</li>
-        <li><strong>Idées et bugs.</strong> Le formulaire ouvre un ticket prérempli sur GitHub, sous votre compte GitHub et <strong>publiquement</strong>. N’y écrivez jamais le nom d’un élève et ne joignez aucune capture d’écran montrant des données d’élèves.</li>
+        <li><strong>Idées et bugs.</strong> Le formulaire ouvre soit un ticket prérempli sur GitHub, sous votre compte GitHub et <strong>publiquement</strong>, soit un message prérempli dans votre messagerie, adressé à <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a> et lu par le seul éditeur. N’y écrivez jamais le nom d’un élève et ne joignez aucune capture d’écran montrant des données d’élèves.</li>
       </ul>
 
       <h2>L’application DNMAX</h2>
@@ -1252,7 +1264,43 @@ npm run dev</code></pre>
     if (bug) corps += "\n\n**Système :** "+f("f-sys").value+"\n**Version :** "+f("f-version").value.trim()+"\n\n**Pour reproduire :**\n"+f("f-etapes").value.trim();
     return REPO+"/issues/new?title="+encodeURIComponent(titre)+"&body="+encodeURIComponent(corps);
   }
-  function majLienGithub(){ f("vers-github").href = lienGithub(); }
+  /* Les messageries tronquent ou refusent les liens mailto trop longs : on reste sous cette taille. */
+  const LONGUEUR_MAX_MAILTO = 1800;
+  const ADRESSE_CONTACT = "contact@dnmax.fr";
+  // Les retours à la ligne d'un mailto s'écrivent %0D%0A (RFC 6068).
+  const encoderCourriel = t => encodeURIComponent(t.replace(/\r?\n/g,"\r\n"));
+  function lienCourriel(){
+    const bug = typeChoisi()==="bug";
+    const sujet = "DNMAX — " + (bug?"Bug : ":"Idée : ") + f("f-titre").value.trim();
+    let corps = "Type : "+(bug?"bug":"idée")+"\n\n"+f("f-texte").value.trim();
+    if (bug) corps += "\n\nSystème : "+f("f-sys").value+"\nVersion : "+f("f-version").value.trim()+"\n\nPour reproduire :\n"+f("f-etapes").value.trim();
+    const debut = "mailto:"+ADRESSE_CONTACT+"?subject="+encoderCourriel(sujet)+"&body=";
+    const lien = texte => debut+encoderCourriel(texte);
+    if (lien(corps).length <= LONGUEUR_MAX_MAILTO) return lien(corps);
+    // Coupe par caractères entiers (jamais au milieu d'un emoji) et garde la plus longue partie qui tient.
+    const caracteres = Array.from(corps);
+    let bas = 0, haut = caracteres.length;
+    while (bas < haut){
+      const milieu = Math.ceil((bas+haut)/2);
+      if (lien(caracteres.slice(0,milieu).join("").trimEnd()+"…").length <= LONGUEUR_MAX_MAILTO) bas = milieu; else haut = milieu-1;
+    }
+    return lien(caracteres.slice(0,bas).join("").trimEnd()+"…");
+  }
+  function majLienGithub(){ f("vers-github").href = lienGithub(); f("vers-courriel").href = lienCourriel(); }
+  f("vers-courriel").addEventListener("click",e=>{
+    if (!f("f-titre").value.trim()){ e.preventDefault(); message("Écrivez au moins une phrase dans le premier champ.","err"); f("f-titre").focus(); return; }
+    majLienGithub();
+    message("Votre messagerie s’ouvre avec le message prérempli. Vérifiez-le, puis envoyez-le.","ok");
+  });
+
+  /* Préremplissage depuis l'application : ?version=X.Y.Z&systeme=… (valeurs filtrées). */
+  (function(){
+    const parametres = new URLSearchParams(location.search);
+    const version = parametres.get("version");
+    if (version && /^\d+\.\d+\.\d+$/.test(version)) f("f-version").value = version;
+    const systeme = parametres.get("systeme");
+    if (systeme && ["Windows","macOS","Linux"].includes(systeme)) f("f-sys").value = systeme;
+  })();
   form.addEventListener("change",e=>{ if(e.target.name==="type") majType(); majLienGithub(); });
   form.addEventListener("input",majLienGithub);
   majType();
@@ -1364,8 +1412,8 @@ npm run dev</code></pre>
     const p1=document.createElement("p"); p1.style.margin="0 0 10px";
     p1.textContent="Les idées et les bugs signalés sont suivis publiquement sur GitHub.";
     const p2=document.createElement("p"); p2.style.margin="0";
-    p2.append("Le bouton Envoyer ouvre un ticket prérempli sur ");
-    const a=document.createElement("a"); a.href=REPO+"/issues"; a.target="_blank"; a.rel="noopener"; a.textContent="GitHub"; p2.append(a,".");
+    p2.append("« Envoyer sur GitHub » ouvre un ticket prérempli et public sur ");
+    const a=document.createElement("a"); a.href=REPO+"/issues"; a.target="_blank"; a.rel="noopener"; a.textContent="GitHub"; p2.append(a,". « Envoyer par e-mail » prépare un message à contact@dnmax.fr, que seul l’éditeur lit. N’y écrivez jamais le nom d’un élève.");
     v.append(p1,p2); liste.appendChild(v);
     f("envoyer").textContent="Envoyer sur GitHub";
     f("vers-github").hidden=true;

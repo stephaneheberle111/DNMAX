@@ -3281,7 +3281,7 @@ const PRESETS = {
 /* échelles : actives et par défaut se règlent dans Paramètres ; chaque évaluation garde la sienne */
 const ECH=(()=>{let e=null;try{e=JSON.parse(STOCKAGE.getItem("dnmade.echelles")||"null")}catch(_){}
   e=e||{};if(Array.isArray(e.actifs))e.actifs=e.actifs.filter(k=>k!=="dn");   // les niveaux DN MADE ne sont plus une échelle
-  if(!Array.isArray(e.actifs)||!e.actifs.length)e.actifs=["maitrise","acq"];
+  if(!Array.isArray(e.actifs)||!e.actifs.length)e.actifs=["maitrise"];   // « Degrés d'acquisition » se coche dans Paramètres
   if(!e.def||!e.actifs.includes(e.def))e.def=e.actifs.includes("maitrise")?"maitrise":e.actifs[0];
   if(Array.isArray(e.libre)&&e.libre.length)PRESETS.libre.niveaux=e.libre.slice();return e})();
 function saveEch(){try{STOCKAGE.setItem("dnmade.echelles",JSON.stringify(ECH))}catch(_){}}
@@ -6216,10 +6216,10 @@ function paintPromosOrg(host){
       const scss="grid-template-columns:minmax(0,1fr) 300px 92px";
       h+=`<div class="pdet">
         ${(pr.liste||[]).map(e=>`<div class="ed" style="${scss}">
-          <input type="text" value="${esc(e.nom)}" data-sn="${pr.id}|${e.id}" aria-label="Nom de l'élève">
+          <input type="text" value="${esc(e.nom)}" data-sn="${pr.id}|${e.id}" aria-label="Prénom et nom de l'élève">
           <select data-sm="${pr.id}|${e.id}" aria-label="Promotion de l'élève" title="Changer de promotion, ou de mention">${moveOpts(pr.id)}</select>
           ${delBtn("st"+pr.id+"|"+e.id,"Retirer")}</div>`).join("")||`<div class="empty">Aucun élève dans cette promotion.</div>`}
-        <div class="padd"><textarea data-sa="${pr.id}" rows="2" placeholder="Ajouter des élèves — un nom par ligne"></textarea>
+        <div class="padd"><textarea data-sa="${pr.id}" rows="2" placeholder="Ajouter des élèves — un par ligne, prénom puis nom"></textarea>
           <button class="btn ghost" data-sab="${pr.id}">Ajouter</button></div>
       </div>`;
     }
@@ -6853,10 +6853,10 @@ function paintEditor(pane,host){
     const css="grid-template-columns:60px minmax(0,1fr) 92px";
     host.innerHTML=edPanel("Enseignants",D.enseignants.length,
       `<button class="btn ghost" id="edAdd">+ Ajouter</button>`,
-      {css,cells:["C'est moi","Nom",""]},
+      {css,cells:["C'est moi","Prénom et nom",""]},
       D.enseignants.map((t,i)=>`<div class="ed" style="${css}">
         <input type="radio" name="moi" data-moi="${esc(t.id)}" ${D.moi===t.id?"checked":""} aria-label="C'est moi : ${esc(t.nom)}" style="justify-self:center;width:18px;height:18px">
-        <input type="text" value="${esc(t.nom)}" data-tn="${i}" placeholder="S. Hébérlé" aria-label="Nom">
+        <input type="text" value="${esc(t.nom)}" data-tn="${i}" placeholder="Camille Martin" aria-label="Prénom et nom">
         ${delBtn("ens"+i,"Supprimer")}</div>`).join(""),
       "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur de DNMAX : sa répartition de service cadre la page Progression, et il est coché d'office dans une nouvelle évaluation.");
     host.querySelectorAll("[data-moi]").forEach(r=>r.onchange=()=>{D.moi=r.dataset.moi;persistData();toast("Répartition de service de "+((D.enseignants.find(t=>t.id===D.moi)||{}).nom||"")+" prise en compte.")});
@@ -6933,7 +6933,7 @@ function demoFiche3(){
     mk("C2.2","",[OR]),mk("C11.5","Tenir le calendrier annoncé et rendre les pièces attendues",[PL])].filter(Boolean);
   return {id:uid(),promoId:"",titre:"Soutenance intermédiaire — oral et planches",
     livrables:[OR,PL],semestre:"S4",classe:"DN MADE 2 Objet",
-    date:new Date(Date.now()-86400000*6).toISOString().slice(0,10),prof:"M. Lenoir",
+    date:new Date(Date.now()-86400000*6).toISOString().slice(0,10),prof:"Marc Lenoir",
     ues:["UE ATELIERS DE CREATION"],ecCodes:[],compCode:"",
     consignes:"Oral de cinq minutes devant le groupe, deux planches A2 affichées. Questions du jury pendant cinq minutes.",
     ops:[],preset:"acq",niveaux:PRESETS.acq.niveaux.slice(),
@@ -6953,7 +6953,7 @@ function demoFiche(){
   ["C10.3","C11.2"].forEach(c=>{const i=byCode(c);if(i)i.op=op2.id});
   return {id:uid(),promoId:"",titre:"Évaluation intermédiaire — Mobilier modulaire en frêne",
     livrables:[CP,MQ,PL],semestre:"S3",classe:"DN MADE 2 Objet",
-    date:new Date().toISOString().slice(0,10),prof:"S. Hébérlé",
+    date:new Date().toISOString().slice(0,10),prof:"Sophie Hébert",
     ues:["UE ATELIERS DE CREATION"],ecCodes:["EC 11.1","EC 11.2"],compCode:"C10.6",
     consignes:"Rendu intermédiaire du projet : carnet de projet tenu depuis le lancement, trois maquettes de recherche au 1/5 sur l'assemblage, deux planches A2 présentant le principe retenu. Oral de cinq minutes devant le groupe.",
     ops:[op1,op2],preset:"acq",niveaux:PRESETS.acq.niveaux.slice(),
@@ -6965,7 +6965,7 @@ function demoFiche2(){
   const items=["C4.2","C4.4","C2.1"].map(mk).filter(Boolean);
   return {id:uid(),promoId:"",titre:"Fiche de lecture — Objets du quotidien",
     livrables:["Fiche de lecture"],semestre:"S1",classe:"DN MADE 1 Objet",
-    date:new Date(Date.now()-86400000*21).toISOString().slice(0,10),prof:"S. Hébérlé",
+    date:new Date(Date.now()-86400000*21).toISOString().slice(0,10),prof:"Sophie Hébert",
     ues:["UE HUMANITES et CULTURE"],ecCodes:["EC 1.1"],compCode:"C4.2",
     consignes:"Lecture d'un chapitre au choix dans la bibliographie, restitution en une page : thèse de l'auteur, notions clés, lien avec le projet d'atelier en cours.",
     ops:[],preset:"acq",niveaux:PRESETS.acq.niveaux.slice(),
@@ -6990,7 +6990,7 @@ function demoMass(){
   MENT.forEach(([m,code,th])=>{let dp=D.diplomes.find(d=>d.nom===base.nom&&d.mention===m);
     if(!dp){dp=addMention(base.id,base.nom);dp.mention=m;dp.code=code;dp.duree=+base.duree||3}dips.push([dp,th])});
   saveData(false);
-  const PROFS=["S. Hébérlé","M. Lenoir","A. Benali","C. Nguyen","J. Marchetti","L. Okafor"];
+  const PROFS=["Sophie Hébert","Marc Lenoir","Amina Benali","Claire Nguyen","Julien Marchetti","Lucie Okafor"];
   PROFS.forEach(nom=>{if(!D.enseignants.some(t=>t.nom===nom))D.enseignants.push({id:uid(),nom})});
   if(!D.moi)D.moi=(D.enseignants.find(t=>t.nom===PROFS[0])||{}).id;
   const LIV=livrNames().length?livrNames():["Carnet de projet","Planches de projet","Oral de présentation de projet"];
@@ -7007,7 +7007,7 @@ function demoMass(){
       if(!pr){pr={id:uid(),debut,diplomeId:dp.id,eleves:"",liste:[]};promos.push(pr)}
       migPromoCohorte(pr);nPr++;
       {const mi=dips.findIndex(x=>x[0]===dp);
-        // l'enseignant « moi » (S. Hébérlé) n'intervient qu'en Objet et en Espace
+        // l'enseignant « moi » (Sophie Hébert) n'intervient qu'en Objet et en Espace
         const tids=D.enseignants.filter(t=>PROFS.includes(t.nom)&&(mi<2||t.nom!==PROFS[0])).map(t=>t.id);
         // une répartition par année scolaire vécue par la promotion (historique)
         for(let y=debut;y<=AS0&&y<debut+duree;y++){const as=asOf(y), A=affectOf(pr.id,as);
@@ -7069,7 +7069,7 @@ function loadDemo(){
   if(!refOf(DATA,DATA.activeDiplome).competences.length){
     DATA=migrateData(buildData(REF_DEFAULT,SUPPORTS_DEF));REF=projectRef(DATA);persistData();
   }
-  [["S. Hébérlé","Atelier de création"],["M. Lenoir","Technologies et matériaux"],["A. Benali","Humanités"]]
+  [["Sophie Hébert","Atelier de création"],["Marc Lenoir","Technologies et matériaux"],["Amina Benali","Humanités"]]
     .forEach(([nom,discipline])=>{if(!DATA.enseignants.some(t=>t.nom===nom))DATA.enseignants.push({id:uid(),nom,discipline})});
   persistData();
   const AS0=asStart(anneeScolaire(new Date()));
