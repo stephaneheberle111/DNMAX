@@ -93,7 +93,10 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
 4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés la trouveront en cliquant « Rechercher une mise à jour » en bas de la fenêtre.
 
-Si la construction macOS est annulée faute de machine disponible chez GitHub, relancer les jobs en échec depuis la page de l'exécution (« Re-run failed jobs »).
+Si la construction macOS est annulée faute de machine disponible chez GitHub, relancer les jobs en échec depuis la page de l'exécution (« Re-run failed jobs »). Si les machines macOS manquent durablement :
+
+1. Lancer « Publication » en décochant « avec_macos » : le brouillon ne contient que Windows et Linux, et son `latest.json` ne propose la mise à jour qu'à ces systèmes. Le publier.
+2. Lancer ensuite l'atelier « Complément macOS » avec l'étiquette de la version (`v0.4.1`), autant de fois qu'il le faut. Il construit le code de cette version, ajoute les fichiers Mac à la version, complète `latest.json` et redépose les installeurs sur dnmax.fr. D'ici là, le site garde l'installeur Mac précédent.
 
 Sous Linux, seule l'AppImage se met à jour d'elle-même.
 

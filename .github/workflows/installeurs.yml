@@ -33,7 +33,7 @@ jobs:
             fichiers: |
               src-tauri/target/release/bundle/nsis/*.exe
           - nom: macOS
-            machine: macos-15
+            machine: macos-latest
             # Un seul fichier pour les Mac Intel et Apple Silicon.
             options: "--target universal-apple-darwin"
             fichiers: |
