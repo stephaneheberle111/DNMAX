@@ -236,7 +236,7 @@ describe("traiterDonneesEchues : anonymiser", () => {
 
   it("remplace le nom de l'élève par un nom anonyme, en gardant son identifiant", () => {
     const [ancienne] = lire(anonymiser(), CLE_PROMOTIONS);
-    expect(ancienne?.liste).toEqual([{ id: "sAncien", nom: `${NOM_ANONYME} 1` }]);
+    expect(ancienne?.liste).toEqual([{ id: "sAncien", nom: `${NOM_ANONYME} 1`, prenom: "", nomFam: `${NOM_ANONYME} 1` }]);
     expect(ancienne?.eleves).toBe(`${NOM_ANONYME} 1`);
   });
 
@@ -286,7 +286,7 @@ describe("après un premier traitement", () => {
     const { entrees } = traiterDonneesEchues(deja, { promotions: ["pA"], gardes: [], orphelins: false, traitement: "anonymiser" });
     expect(lire(entrees, CLE_PROMOTIONS)[0]?.liste).toEqual([
       { id: "sX", nom: `${NOM_ANONYME} 4` },
-      { id: "sAncien", nom: `${NOM_ANONYME} 5` },
+      { id: "sAncien", nom: `${NOM_ANONYME} 5`, prenom: "", nomFam: `${NOM_ANONYME} 5` },
     ]);
   });
 });
@@ -316,5 +316,22 @@ describe("etatPromotions", () => {
   it("ne liste pas une promotion sans élève identifiable", () => {
     const vide = { [CLE_PROMOTIONS]: JSON.stringify([{ ...RECENTE, liste: [{ id: "sX", nom: `${NOM_ANONYME} 1` }] }]) };
     expect(etatPromotions(vide, "2026-11-12", 1)).toEqual([]);
+  });
+});
+
+describe("anonymisation des prénoms et noms saisis à part", () => {
+  it("remplace aussi le prénom et le nom de famille", () => {
+    const separes = {
+      ...donnees(),
+      [CLE_PROMOTIONS]: JSON.stringify([
+        { ...ANCIENNE, liste: [{ id: "sAncien", nom: "Ancien Élève", prenom: "Ancien", nomFam: "Élève" }] },
+      ]),
+    };
+    const { entrees } = traiterDonneesEchues(separes, { promotions: ["pA"], gardes: [], orphelins: false, traitement: "anonymiser" });
+    expect(lire(entrees, CLE_PROMOTIONS)[0]?.liste).toEqual([
+      { id: "sAncien", nom: `${NOM_ANONYME} 1`, prenom: "", nomFam: `${NOM_ANONYME} 1` },
+    ]);
+    expect(entrees[CLE_PROMOTIONS]).not.toContain("Ancien Élève");
+    expect(entrees[CLE_PROMOTIONS]).not.toContain('"Ancien"');
   });
 });

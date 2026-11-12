@@ -177,7 +177,7 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 ## 15. Mises à jour proposées, jamais imposées, et publiées à la main
 
-**Retenu** : quand l'enseignant clique « Rechercher une mise à jour » dans « Mon compte », l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
+**Retenu** : quand l'enseignant clique « Rechercher une mise à jour » dans le pied de page, l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
 
 **Appel réseau à la demande seulement.** Avec l'échange en direct (décision 21), c'est le seul moment où l'application se connecte à Internet. Jusqu'à la version 0.1.1, la vérification avait lieu à chaque lancement ; elle transmettait à GitHub l'adresse IP du poste à chaque ouverture, sans que l'enseignant l'ait demandé. Elle n'a plus lieu que sur sa demande, ce qui rend l'application silencieuse sur le réseau par défaut (RGPD : minimisation). Aucune donnée de l'enseignant n'est transmise. Si la vérification échoue, l'application le dit et propose de réessayer.
 
@@ -237,6 +237,8 @@ Le nom se corrige dans « Mon compte » (décision 18).
 **Contreparties** : le mot de passe de l'unique accès FTP/SFTP de l'offre gratuite est confié aux secrets du dépôt GitHub (chiffrés, jamais affichés, utilisés seulement sur `main`) ; s'il fuitait, il se change dans l'espace client OVH. La clé du serveur est vérifiée à chaque envoi. Les réglages du serveur passent par `site/.htaccess` (Apache).
 
 **Non retenu** : les pages GitHub, qui auraient gardé un hébergeur américain.
+
+**Installeurs** : les installeurs Windows, macOS et `.deb` de la dernière version publiée sont aussi servis par le site (`telechargements/`, environ 20 Mo), pour que leur téléchargement ne transmette pas l'adresse IP des visiteurs à GitHub. L'AppImage (environ 80 Mo) dépasserait l'espace de l'offre gratuite (100 Mo) : elle reste sur GitHub, comme les fichiers de mise à jour et le code source.
 
 **Transition** : l'application ouvre dnmax.fr à partir de la version 0.2.0 ; l'ancienne adresse du site est fermée.
 

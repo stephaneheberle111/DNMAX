@@ -15,7 +15,7 @@
 .annonce-conservation {
   position: fixed;
   right: 16px;
-  bottom: 16px;
+  bottom: calc(16px + var(--hauteur-pied, 0px));
   z-index: 70;
   max-width: 380px;
   display: flex;
