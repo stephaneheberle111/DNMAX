@@ -50,7 +50,7 @@ export interface AccesDonnees {
   /** L'enseignant qui utilise l'application : son nom signe les fichiers qu'il envoie. */
   readonly identite: Identite;
   /** Change le nom de l'enseignant ; rend `false` si le nom proposé est vide. */
-  renommer(nom: string): boolean;
+  renommer(prenom: string, nomFamille: string): boolean;
   lireEntrees(): Entrees;
   /** Référentiels présents sur ce poste, avec leur empreinte. */
   dresserCatalogue(entrees: Entrees): Promise<ReferentielLocal[]>;

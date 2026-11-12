@@ -91,7 +91,7 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
 2. Sur GitHub, onglet Actions → atelier « Publication » → « Run workflow » sur la branche `main`.
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
-4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés la trouveront en cliquant « Rechercher une mise à jour » dans « Mon compte ».
+4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés la trouveront en cliquant « Rechercher une mise à jour » en bas de la fenêtre.
 
 Si la construction macOS est annulée faute de machine disponible chez GitHub, relancer les jobs en échec depuis la page de l'exécution (« Re-run failed jobs »).
 
@@ -114,6 +114,8 @@ Mise en place, une seule fois (Settings → Secrets and variables → Actions) :
 | `OVH_SITE_CLE_HOTE` | secret | clé publique du serveur, pour vérifier qu'on parle bien à OVH |
 
 Pour obtenir la clé du serveur : renseigner d'abord `OVH_SITE_SERVEUR`, lancer l'atelier « Site » avec l'action **afficher-cle-serveur**, puis copier la ligne affichée dans le résumé de l'exécution dans le secret `OVH_SITE_CLE_HOTE`. La lecture se fait depuis les machines de GitHub, ce qui fonctionne même si le port 22 est fermé sur le réseau de l'enseignant.
+
+L'atelier « Téléchargements » (`.github/workflows/telechargements.yml`) dépose dans `www/telechargements/`, à chaque publication de version (ou à la demande), les installeurs Windows, macOS et `.deb` de la dernière version publiée ; l'atelier « Site » ne touche pas à ce dossier. L'AppImage et les fichiers de mise à jour restent sur GitHub.
 
 **À la main, en secours** : client FTP (FileZilla, par exemple) en **« Connexion FTP explicite sur TLS »**, jamais en FTP clair ; copier le contenu de `site/`, y compris le fichier caché `.htaccess`, dans `www`. Vérifier ensuite <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
 
