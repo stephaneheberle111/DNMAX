@@ -8,6 +8,17 @@ import { enregistrerFichier } from "../enveloppe";
 /** Adresse du script de l'interface historique, servi depuis `public/`. */
 const ADRESSE_SCRIPT_HISTORIQUE = "/heritage/application.js";
 
+/** Document que l'interface historique demande d'enregistrer. */
+interface DemandeEnregistrement {
+  filename: string;
+  data: ContenuFichier;
+  /** Vrai si le document contient des noms ou des résultats d'élèves. */
+  eleves?: boolean;
+}
+
+/** Appelée après chaque document enregistré. */
+export type SurExport = (nomFichier: string, contientEleves: boolean) => void;
+
 /** Ce que l'interface historique attend de l'application, sous `window.dnmaxPont`. */
 interface Pont {
   /**
@@ -18,7 +29,7 @@ interface Pont {
   projeterReferentiel?: (diplomeId: string, versionId: string) => unknown;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
-    save(demande: { filename: string; data: ContenuFichier }): Promise<void>;
+    save(demande: DemandeEnregistrement): Promise<void>;
   };
 }
 
@@ -41,15 +52,15 @@ class ErreurEnregistrement extends Error {
 }
 
 async function enregistrerPourInterfaceHistorique(
-  demande: { filename: string; data: ContenuFichier },
-  surExport: (nomFichier: string) => void,
+  demande: DemandeEnregistrement,
+  surExport: SurExport,
 ): Promise<void> {
   const octets = await convertirEnOctets(demande.data);
   const fichierEcrit = await enregistrerFichier(demande.filename, octets);
   if (!fichierEcrit) {
     throw new ErreurEnregistrement("declined", "enregistrement annulé");
   }
-  surExport(demande.filename);
+  surExport(demande.filename, demande.eleves === true);
 }
 
 /**
@@ -59,10 +70,11 @@ async function enregistrerPourInterfaceHistorique(
  * contenir les données de l'enseignant quand cette fonction est appelée.
  *
  * @param surExport appelée après chaque document enregistré, avec le nom proposé pour ce document
+ *   et l'indication qu'il contient, ou non, des données d'élèves
  */
 export async function chargerInterfaceHistorique(
   magasin: MagasinMemoire,
-  surExport: (nomFichier: string) => void = () => undefined,
+  surExport: SurExport = () => undefined,
 ): Promise<void> {
   window.XLSX = XLSX;
   window.JSZip = JSZip;

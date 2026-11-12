@@ -19,11 +19,11 @@ import {
 import { CLE_IDENTITE, creerIdentite, lireIdentite } from "./domaine/identite";
 import { proposerPremiersPas } from "./ecran-accueil";
 import { installerCompte } from "./ecran-compte";
+import { rappelerConservation } from "./ecran-droits-eleves";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
 import { proposerOuvertureExport } from "./ecran-export";
-import { proposerMiseAJour } from "./ecran-mise-a-jour";
 import {
   attendreAvantFermeture,
   enregistrerCoffre,
@@ -153,8 +153,8 @@ async function demarrer(): Promise<void> {
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
   await chargerInterfaceHistorique(magasin, proposerOuvertureExport);
   installerEchange(acces);
-  proposerMiseAJour(() => acces.enregistrerMaintenant());
   suivreExemple(acces);
+  rappelerConservation(acces);
   installerCompte(acces);
   await proposerPremiersPas(acces);
 }

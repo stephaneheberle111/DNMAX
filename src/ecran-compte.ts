@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-compte.css";
 import { ADRESSE_CODE_SOURCE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./configuration";
+import { decrireVerification } from "./domaine/annonce-mise-a-jour";
 import { LONGUEUR_MAXIMALE_NOM } from "./domaine/identite";
 import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
 import { messagePourErreur } from "./ecran-coffre";
+import { ouvrirConservation, ouvrirDroitsEleves } from "./ecran-droits-eleves";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
+import { verifierMiseAJour } from "./ecran-mise-a-jour";
 import { changerMotDePasse, lireVersion, ouvrirDansNavigateur } from "./enveloppe";
 
 const IDENTIFIANT_BOUTON = "bouton-compte";
@@ -112,10 +115,38 @@ function creerLien(texte: string, adresse: string, dire: (texte: string, erreur:
   });
 }
 
-function creerRubriqueAPropos(): HTMLElement {
+function creerVerificationMiseAJour(acces: AccesDonnees, versionInstallee: Promise<string>): HTMLElement {
+  const bloc = creer("div", "compte-formulaire");
+  const { zone, dire } = creerMessage();
+  const verifier = creerBouton("Rechercher une mise à jour", "btn", () => {
+    verifier.disabled = true;
+    zone.hidden = true;
+    void Promise.all([verifierMiseAJour(() => acces.enregistrerMaintenant()), versionInstallee]).then(([issue, numero]) => {
+      verifier.disabled = false;
+      if (issue === null) {
+        dire("Une nouvelle version est proposée en bas à droite de la fenêtre.", false);
+      } else {
+        dire(decrireVerification(issue, numero), issue === "impossible");
+      }
+    });
+  });
+  bloc.append(
+    creer(
+      "p",
+      "",
+      "DNMAX ne se connecte à Internet que lorsque vous le demandez ici : il interroge alors le dépôt du projet sur GitHub, sans rien transmettre de vos données.",
+    ),
+    verifier,
+    zone,
+  );
+  return bloc;
+}
+
+function creerRubriqueAPropos(acces: AccesDonnees): HTMLElement {
   const rubrique = creer("section", "compte-rubrique");
   const version = creer("p", "", "DNMAX");
-  void lireVersion().then((numero) => {
+  const versionInstallee = lireVersion();
+  void versionInstallee.then((numero) => {
     version.textContent = numero === "" ? "DNMAX" : `DNMAX, version ${numero}`;
   });
   const { zone, dire } = creerMessage();
@@ -134,8 +165,24 @@ function creerRubriqueAPropos(): HTMLElement {
       `Logiciel libre sous licence ${LICENCE} : vous pouvez l'utiliser, l'étudier, le modifier et le redistribuer aux mêmes conditions. ` +
         "Vos données restent sur cet ordinateur ; ces liens s'ouvrent dans votre navigateur.",
     ),
+    creerVerificationMiseAJour(acces, versionInstallee),
     liens,
     zone,
+  );
+  return rubrique;
+}
+
+function creerRubriqueEleves(acces: AccesDonnees): HTMLElement {
+  const rubrique = creer("section", "compte-rubrique");
+  rubrique.append(
+    creer("h3", "", "Données des élèves"),
+    creer("p", "", "Exporter tout ce qui concerne un élève, ou l'effacer de DNMAX, à sa demande ou à celle de sa famille."),
+    creerBouton("Données d'un élève…", "btn", () => {
+      ouvrirDroitsEleves(acces);
+    }),
+    creerBouton("Données anciennes…", "btn", () => {
+      ouvrirConservation(acces);
+    }),
   );
   return rubrique;
 }
@@ -143,7 +190,7 @@ function creerRubriqueAPropos(): HTMLElement {
 function montrerCompte(acces: AccesDonnees): void {
   const { boite, fermer } = ouvrirBoite("Mon compte");
   const contenu = creer("div", "compte-contenu");
-  contenu.append(creerRubriqueNom(acces), creerRubriqueMotDePasse(acces), creerRubriqueAPropos());
+  contenu.append(creerRubriqueNom(acces), creerRubriqueMotDePasse(acces), creerRubriqueEleves(acces), creerRubriqueAPropos(acces));
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(contenu, actions);
