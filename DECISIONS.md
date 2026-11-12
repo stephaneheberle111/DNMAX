@@ -176,9 +176,11 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 ## 15. Mises à jour proposées, jamais imposées, et publiées à la main
 
-**Retenu** : au lancement, une fois les données ouvertes, l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
+**Retenu** : quand l'enseignant clique « Rechercher une mise à jour » dans « Mon compte », l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
 
-**Seul appel réseau de l'application.** Aucune donnée de l'enseignant n'est transmise. Sans connexion, ou si la vérification échoue, l'application ne dit rien et fonctionne normalement.
+**Seul appel réseau de l'application, et seulement à la demande.** Jusqu'à la version 0.1.1, la vérification avait lieu à chaque lancement ; elle transmettait à GitHub l'adresse IP du poste à chaque ouverture, sans que l'enseignant l'ait demandé. Elle n'a plus lieu que sur sa demande, ce qui rend l'application silencieuse sur le réseau par défaut (RGPD : minimisation). Aucune donnée de l'enseignant n'est transmise. Si la vérification échoue, l'application le dit et propose de réessayer.
+
+**Contrepartie** : un enseignant qui ne vérifie jamais reste sur sa version ; le site et la documentation l'invitent à le faire de temps en temps.
 
 **Signature** : chaque mise à jour est signée avec une clé privée que seul l'auteur détient (secret du dépôt) ; l'application embarque la clé publique et refuse toute mise à jour dont la signature ne correspond pas. Cette signature est indépendante des certificats Windows et Apple (décision 1) : elle protège le canal de mise à jour, pas la première installation.
 
@@ -224,3 +226,13 @@ Le nom se corrige dans « Mon compte » (décision 18).
 - **À propos** : version, licence, et trois liens ouverts dans le navigateur (idées et bugs, site, code source).
 
 **Canal de retours** : la page « Idées et bugs » du site, qui ouvre un ticket prérempli sur GitHub. Un enseignant sans compte GitHub ne peut donc pas déposer lui-même un retour par ce canal.
+
+## 19. Le site est hébergé chez OVH, en France
+
+**Retenu** : le site <https://dnmax.fr> est hébergé sur l'hébergement web gratuit qui accompagne le nom de domaine chez OVH, et publié à la main par FTP chiffré (voir le README).
+
+**Pourquoi** : un hébergeur français, soumis au droit européen, supprime le transfert des adresses IP des visiteurs vers les États-Unis qu'impliquait Cloudflare Pages ; le nom de domaine, l'adresse de contact et le site sont chez le même prestataire. Le site est statique et léger (moins d'un mégaoctet) : l'offre gratuite suffit.
+
+**Contreparties** : pas de déploiement automatique comme chez Cloudflare. L'offre gratuite n'a qu'un accès FTP ; le site change rarement, un envoi à la main suffit et évite de confier ce mot de passe aux ateliers GitHub ; les réglages du serveur passent par `site/.htaccess` (Apache) au lieu de `site/_headers`, gardé tant que l'ancienne adresse sert de transition.
+
+**Non retenu** : les pages GitHub, qui auraient gardé un hébergeur américain.
