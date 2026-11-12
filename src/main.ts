@@ -19,6 +19,7 @@ import {
 import { CLE_IDENTITE, creerIdentite, lireIdentite } from "./domaine/identite";
 import { proposerPremiersPas } from "./ecran-accueil";
 import { installerCompte } from "./ecran-compte";
+import { installerPiedDePage } from "./ecran-pied";
 import { installerDonneesEleves, rappelerConservation } from "./ecran-droits-eleves";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
@@ -157,6 +158,7 @@ async function demarrer(): Promise<void> {
   installerDonneesEleves(acces);
   rappelerConservation(acces);
   installerCompte(acces);
+  installerPiedDePage();
   await proposerPremiersPas(acces);
 }
 
