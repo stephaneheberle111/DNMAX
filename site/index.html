@@ -812,13 +812,15 @@ footer a{color:var(--ink-2)}
 
 <div data-doc="echanger" data-titre="Échanger entre enseignants">
 <h3>Échanger entre enseignants</h3>
-<p>Les échanges passent par des fichiers <code>.dnmax</code> que vous transmettez comme vous voulez&nbsp;: courriel, clé USB, espace partagé.</p>
+<p>Les échanges passent par des fichiers <code>.dnmax</code> que vous transmettez comme vous voulez&nbsp;: courriel, clé USB, espace partagé. En bêta, ils peuvent aussi se faire en direct, sans fichier (voir plus bas).</p>
 <h4>Une évaluation, sans élèves</h4>
 <p>Vous choisissez les évaluations à envoyer. À la réception, un plan marque chacune comme nouvelle, modifiée ou identique, et l’import attend votre validation. DNMAX vérifie aussi que l’évaluation a été construite sur le même référentiel.</p>
 <h4>Une évaluation avec élèves et résultats</h4>
 <p>Le fichier est chiffré par un mot de passe que vous communiquez séparément. À l’import, promotions et élèves sont rapprochés par leur nom, et les résultats sont fusionnés élève par élève, sans écraser ceux déjà saisis par le destinataire. Un fichier non chiffré ne peut jamais faire entrer de données d’élèves.</p>
 <h4>Un référentiel</h4>
 <p>À la réception, les écarts avec votre référentiel s’affichent en détail. Le référentiel reçu est ajouté comme nouvelle version, sans être activé&nbsp;: vous décidez quand l’utiliser.</p>
+<h4>Échange en direct (bêta)</h4>
+<p>Sans fichier, d’ordinateur à ordinateur&nbsp;: «&nbsp;Échanger…&nbsp;» → «&nbsp;Échange en direct&nbsp;». L’expéditeur choisit ce qu’il envoie, comme pour un fichier, et DNMAX affiche un <strong>code d’invitation</strong> qu’il transmet à son collègue (messagerie, copier-coller). Le collègue le colle dans «&nbsp;Recevoir en direct&nbsp;» et renvoie le <strong>code de réponse</strong> affiché. Dès que l’expéditeur l’a collé, le contenu passe directement d’un ordinateur à l’autre, et le destinataire voit le même plan d’import que pour un fichier. Rien ne passe par un serveur&nbsp;: des serveurs publics français servent seulement à ce que les deux ordinateurs se trouvent. Avec des élèves, le contenu est chiffré par un mot de passe à communiquer autrement que par le code. Selon les réseaux (pare-feu d’établissement notamment), la connexion peut échouer&nbsp;: passez alors par un fichier.</p>
 </div>
 
 <div data-doc="exporter" data-titre="Exporter des documents">
@@ -982,8 +984,12 @@ npm run dev</code></pre>
       <p>Un fichier d’échange qui contient des élèves est lui aussi chiffré&nbsp;; transmettez son mot de passe par un autre moyen que le fichier. Les documents exportés (PDF, tableur, traitement de texte) ne sont <strong>pas</strong> chiffrés&nbsp;: rangez-les et partagez-les avec la même prudence qu’un relevé de notes papier.</p>
       <h3>Si vous utilisez le module Élèves</h3>
       <p>Sans le module Élèves, DNMAX ne contient que des grilles d’évaluation et des référentiels&nbsp;: aucune donnée d’élève. Avec ce module, vous y enregistrez des noms et des résultats d’élèves, qui sont des données personnelles. L’évaluation des élèves relève de l’établissement scolaire&nbsp;: c’est lui, représenté par son chef d’établissement, qui en est responsable au sens du RGPD, et l’enseignant utilise DNMAX pour son compte. DNMAX vous aide à respecter les droits des élèves&nbsp;: dans Paramètres, «&nbsp;Données des élèves&nbsp;» permet d’exporter ou d’effacer les données d’un élève, et d’anonymiser ou d’effacer une promotion, ce que DNMAX vous rappelle un an après sa sortie. Pour toute question sur les données d’un élève, l’élève ou sa famille s’adresse à l’établissement et à son délégué à la protection des données.</p>
+      <h3>Connexions à Internet</h3>
+      <p>L’application ne se connecte pas seule à Internet. Deux fonctions seulement s’y connectent, et uniquement quand vous les lancez&nbsp;: la recherche de mise à jour et l’échange en direct.</p>
+      <h3>Échange en direct (bêta)</h3>
+      <p>L’échange en direct transmet le contenu choisi directement de votre ordinateur à celui de votre collègue, chiffré pendant le trajet&nbsp;; il ne passe par aucun serveur, ni de l’éditeur ni d’un tiers. Pour que les deux ordinateurs se trouvent, chacun interroge des serveurs publics dits «&nbsp;STUN&nbsp;», <code>stun.aeta.com</code> (AETA), <code>stun.linphone.org</code> (Belledonne Communications) et <code>stun.ippi.fr</code> (ippi), tous exploités en France&nbsp;: ils voient l’adresse IP publique de l’ordinateur et l’heure de la demande, <strong>rien du contenu échangé</strong>. Les codes que vous vous transmettez contiennent ces adresses&nbsp;: ne les envoyez qu’au collègue concerné.</p>
       <h3>Vérification des mises à jour</h3>
-      <p>L’application ne se connecte pas seule à Internet. Quand vous cliquez «&nbsp;Rechercher une mise à jour&nbsp;» en bas de la fenêtre, elle demande à GitHub si une nouvelle version existe&nbsp;; GitHub reçoit alors l’adresse IP de l’ordinateur et la date de la demande. Aucune donnée saisie dans l’application n’accompagne cette demande. Une mise à jour n’est installée qu’avec votre accord.</p>
+      <p>Quand vous cliquez «&nbsp;Rechercher une mise à jour&nbsp;» en bas de la fenêtre, elle demande à GitHub si une nouvelle version existe&nbsp;; GitHub reçoit alors l’adresse IP de l’ordinateur et la date de la demande. Aucune donnée saisie dans l’application n’accompagne cette demande. Une mise à jour n’est installée qu’avec votre accord.</p>
 
       <h2>Vos droits</h2>
       <p>Pour toute question ou demande sur les données traitées par ce site ou par l’éditeur, écrivez à <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a>. Si la réponse ne vous satisfait pas, vous pouvez saisir la Commission nationale de l’informatique et des libertés&nbsp;: <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">cnil.fr/fr/plaintes</a>.</p>
