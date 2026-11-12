@@ -2,7 +2,9 @@
 import JSZip from "jszip";
 import * as XLSX from "xlsx";
 import { convertirEnOctets, type ContenuFichier } from "../domaine/contenu-fichier";
+import { CLE_IDENTITE, lireIdentite } from "../domaine/identite";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
+import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
 import { enregistrerFichier } from "../enveloppe";
 
 /** Adresse du script de l'interface historique, servi depuis `public/`. */
@@ -27,6 +29,13 @@ interface Pont {
    * pour le référentiel de travail. Rend `null` si le diplôme est inconnu.
    */
   projeterReferentiel?: (diplomeId: string, versionId: string) => unknown;
+  /**
+   * Appelée quand l'enseignant coche le module Élèves : avertissement RGPD et
+   * documents à remettre. Rend `true` s'il confirme l'activation.
+   *
+   * @param etablissement nom de l'établissement saisi dans « Mon établissement », vide s'il ne l'est pas
+   */
+  readonly confirmerModuleEleves: (etablissement: unknown) => Promise<boolean>;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: DemandeEnregistrement): Promise<void>;
@@ -81,6 +90,12 @@ export async function chargerInterfaceHistorique(
   window.dnmaxPont = {
     stockage: magasin,
     telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport) },
+    // L'interface historique n'est pas typée : le nom reçu est vérifié.
+    confirmerModuleEleves: (etablissement) =>
+      confirmerActivationEleves({
+        etablissement: typeof etablissement === "string" ? etablissement : "",
+        enseignant: lireIdentite(magasin.getItem(CLE_IDENTITE))?.nom ?? "",
+      }),
   };
   await new Promise<void>((resoudre, rejeter) => {
     const script = document.createElement("script");

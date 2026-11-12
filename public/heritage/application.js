@@ -7190,12 +7190,21 @@ function paintSet(){
     ${v.locked?`<div class="off" style="color:var(--accent)">toujours actif</div>`:v.req&&!MOD[v.req]?`<div class="off">activez d'abord le module ${esc(MODULES[v.req].nom)}</div>`:v.def===false?`<div class="off">désactivé par défaut</div>`:""}${VISITE_MODULE[k]?`<button type="button" class="btn ghost modvisite" data-parcours="${VISITE_MODULE[k]}">Visite guidée</button>`:""}</div></div>`).join("");
   host.querySelectorAll("[data-mod]").forEach(cb=>cb.onchange=()=>{
     if((MODULES[cb.dataset.mod]||{}).locked){cb.checked=true;return}
-    if(!cb.checked&&Object.entries(MODULES).some(([k,v])=>v.req===cb.dataset.mod&&MOD[k]))
-      toast("Niveaux DN MADE désactivé aussi : il nécessite le module "+MODULES[cb.dataset.mod].nom+".");
-    MOD[cb.dataset.mod]=cb.checked;modDeps();LS.set("dnmade.modules",MOD);
-    paintSet();paintTabs();paintForm();paintPick();paintLignes();paintVocab();if(MOD.referentiel)paintRef();
-    toast(MODULES[cb.dataset.mod].nom+(cb.checked?" : activé":" : désactivé"));
+    // Activer le module Élèves passe par un avertissement RGPD : la case ne reste cochée que si l'enseignant confirme.
+    if(cb.dataset.mod==="eleves"&&cb.checked&&!MOD.eleves){
+      cb.checked=false;
+      window.dnmaxPont.confirmerModuleEleves((DATA.etab||{}).nom||"").then(ok=>{if(ok&&!MOD.eleves){cb.checked=true;appliquerModule(cb)}});
+      return;
+    }
+    appliquerModule(cb);
   });
+}
+function appliquerModule(cb){
+  if(!cb.checked&&Object.entries(MODULES).some(([k,v])=>v.req===cb.dataset.mod&&MOD[k]))
+    toast("Niveaux DN MADE désactivé aussi : il nécessite le module "+MODULES[cb.dataset.mod].nom+".");
+  MOD[cb.dataset.mod]=cb.checked;modDeps();LS.set("dnmade.modules",MOD);
+  paintSet();paintTabs();paintForm();paintPick();paintLignes();paintVocab();if(MOD.referentiel)paintRef();
+  toast(MODULES[cb.dataset.mod].nom+(cb.checked?" : activé":" : désactivé"));
 }
 
 /* ---------- construction de la fiche ---------- */
