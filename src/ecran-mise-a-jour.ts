@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-mise-a-jour.css";
-import { resumerNotes } from "./domaine/annonce-mise-a-jour";
+import { resumerNotes, type IssueSansMiseAJour } from "./domaine/annonce-mise-a-jour";
 import { chercherMiseAJour, type MiseAJour } from "./enveloppe";
 
 function creerBouton(texte: string, classe: string, action: () => void): HTMLButtonElement {
@@ -52,15 +52,18 @@ function annoncer(miseAJour: MiseAJour, avantInstallation: () => Promise<void>):
 }
 
 /**
- * Cherche une mise à jour sans bloquer l'application et, s'il y en a une,
- * la propose : rien n'est installé sans l'accord de l'enseignant.
+ * Cherche une mise à jour, à la demande de l'enseignant, et la propose s'il y
+ * en a une : rien n'est installé sans son accord.
  *
  * @param avantInstallation écrit sur le disque ce qui est encore en attente
+ * @returns `null` si une mise à jour est proposée, sinon l'issue à lui dire
  */
-export function proposerMiseAJour(avantInstallation: () => Promise<void>): void {
-  void chercherMiseAJour().then((miseAJour) => {
-    if (miseAJour !== null) {
-      annoncer(miseAJour, avantInstallation);
-    }
-  });
+export async function verifierMiseAJour(avantInstallation: () => Promise<void>): Promise<IssueSansMiseAJour | null> {
+  const recherche = await chercherMiseAJour();
+  if (recherche.issue !== "disponible") {
+    return recherche.issue;
+  }
+  document.querySelector(".annonce-mise-a-jour")?.remove();
+  annoncer(recherche.miseAJour, avantInstallation);
+  return null;
 }
