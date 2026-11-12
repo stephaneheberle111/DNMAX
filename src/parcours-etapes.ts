@@ -171,6 +171,7 @@ const PRISE_EN_MAIN: Parcours = {
       texte:
         "Donnez un intitulé, cochez la ou les promotions concernées et les livrables attendus. Passez ensuite à l'étape 2, « Compétences ».",
       cibles: ["#step1"],
+      pointe: "#f-titre",
       geste: "remplir",
       atteinte: () => visible("#step2") || visible("#step3"),
       groupeFait: (avancement) => avancement.evaluations > 0,
@@ -206,6 +207,7 @@ const PRISE_EN_MAIN: Parcours = {
       texte:
         "Choisissez Word, Excel ou OpenDocument. Le document reprend les compétences avec leur code, ce que vous attendez et votre nom en en-tête.",
       cibles: FENETRE_ACTIONS,
+      pointe: "[data-xk]",
       geste: "cliquer",
     },
     {
