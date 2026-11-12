@@ -1,6 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { LONGUEUR_MAXIMALE_NOTES, resumerNotes } from "./annonce-mise-a-jour";
+import { LONGUEUR_MAXIMALE_NOTES, decrireVerification, resumerNotes } from "./annonce-mise-a-jour";
+
+describe("decrireVerification", () => {
+  it("dit que DNMAX est à jour, avec sa version", () => {
+    expect(decrireVerification("a-jour", "0.1.2")).toBe("DNMAX est à jour (version 0.1.2).");
+  });
+
+  it("dit que DNMAX est à jour même si sa version est inconnue", () => {
+    expect(decrireVerification("a-jour", "")).toBe("DNMAX est à jour.");
+  });
+
+  it("dit qu'une vérification impossible est à refaire, sans prétendre que tout est à jour", () => {
+    const message = decrireVerification("impossible", "0.1.2");
+    expect(message).toContain("n'a pas abouti");
+    expect(message).not.toContain("à jour");
+  });
+});
 
 describe("resumerNotes", () => {
   it("ramène les notes à une seule ligne", () => {
