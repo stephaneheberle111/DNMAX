@@ -4,9 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DNMAX — évaluations par compétences pour le DN MADE</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="polices/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="polices/syne.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* Polices servies par le site lui-même : aucune requête vers un service tiers. Licence SIL OFL 1.1, voir polices/. */
+@font-face{font-family:"Syne";src:url(polices/syne.woff2) format("woff2");font-weight:400 800;font-style:normal;font-display:swap}
+@font-face{font-family:"Schibsted Grotesk";src:url(polices/schibsted-grotesk.woff2) format("woff2");font-weight:400 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Schibsted Grotesk";src:url(polices/schibsted-grotesk-italique.woff2) format("woff2");font-weight:400 900;font-style:italic;font-display:swap}
+@font-face{font-family:"Bricolage Grotesque";src:url(polices/bricolage-grotesque.woff2) format("woff2");font-weight:200 800;font-style:normal;font-display:swap}
+@font-face{font-family:"Public Sans";src:url(polices/public-sans.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+</style>
 <style>
 :root{
   --paper:#F3F5F9; --surface:#FFFFFF; --sunk:#E8ECF3;
@@ -305,6 +312,14 @@ svg.dim .dot.off{opacity:.1}
 .sys p{margin:0;color:var(--ink-2);font-size:15px}
 .sys .fmt{font-family:var(--mono);font-size:13px;color:var(--ink)}
 @media (max-width:760px){.sys{grid-template-columns:1fr;gap:10px}}
+.referentiel{margin-top:16px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:24px;padding:22px 24px;background:var(--surface);border:1px dashed var(--line);border-radius:12px}
+.referentiel h3{margin:0 0 4px;font-size:17px}
+.referentiel p{margin:0 0 4px;color:var(--ink-2);font-size:15px}
+.referentiel .fmt{font-family:var(--mono);font-size:13px;color:var(--ink)}
+@media (max-width:760px){.referentiel{grid-template-columns:1fr;gap:12px}}
+.sources{margin-top:16px;color:var(--ink-2);font-size:15px}
+.sources h3{margin:0 0 4px;font-size:17px;color:var(--ink)}
+.sources p{margin:0}
 .note{margin-top:28px;padding:20px 24px;border-left:4px solid var(--signal);background:var(--sunk);border-radius:0 10px 10px 0}
 .note h3{margin:0 0 8px;font-size:17px}
 .note ul{margin:0;padding-left:20px}
@@ -384,6 +399,14 @@ textarea{min-height:110px;resize:vertical}
 .vide{padding:28px;border:1px dashed var(--line);border-radius:12px;color:var(--ink-2)}
 .statut-sel{width:auto;padding:3px 8px;font-size:13px}
 
+.legal{max-width:46em}
+.legal h1{font-size:clamp(30px,5vw,60px);hyphens:auto}
+.legal h2{font:700 26px/1.2 var(--display);margin:48px 0 12px}
+.legal h3{font:700 18px/1.3 var(--body);margin:24px 0 6px}
+.legal p,.legal li{color:var(--ink-2)}
+.legal ul{padding-left:22px}
+.legal li{margin:4px 0}
+.legal .maj{font-size:15px;color:var(--ink-2)}
 footer{border-top:1px solid var(--line);padding:40px 0 56px;color:var(--ink-2);font-size:15px}
 footer .wrap{display:flex;flex-wrap:wrap;gap:16px 40px;justify-content:space-between}
 footer a{color:var(--ink-2)}
@@ -424,7 +447,7 @@ footer a{color:var(--ink-2)}
           <a class="btn primary" href="#telecharger">Télécharger DNMAX</a>
           <button class="btn" type="button" id="vers-visite">Parcourir l’application</button>
         </div>
-        <p class="meta">Version 0.1.0 · Windows, macOS et Linux · Logiciel libre</p>
+        <p class="meta">Windows, macOS et Linux · Logiciel libre</p>
       </div>
     </div>
     <button class="defiler" type="button" id="defiler" aria-label="Commencer la visite">Faites défiler
@@ -658,7 +681,7 @@ footer a{color:var(--ink-2)}
   <section class="page">
     <div class="wrap">
       <h1>Télécharger DNMAX</h1>
-      <p class="intro">Version 0.1.0, publiée le 11 novembre 2026. Choisissez l’installeur de votre système&nbsp;; les fichiers sont hébergés sur GitHub.</p>
+      <p class="intro">Dernière version publiée, avec ses nouveautés dans le <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/CHANGELOG.md">journal des modifications</a>. Choisissez l’installeur de votre système&nbsp;; les fichiers sont hébergés sur GitHub.</p>
       <div class="systemes" id="systemes">
         <div class="sys" data-os="win">
           <div><h3>Windows</h3></div>
@@ -675,6 +698,18 @@ footer a{color:var(--ink-2)}
           <div><p>L’AppImage se met à jour d’elle-même&nbsp;; le paquet .deb s’installe comme les autres.</p><p class="fmt">.AppImage, ou <a href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.deb">paquet .deb</a></p></div>
           <a class="btn primary" href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.AppImage">Télécharger pour Linux</a>
         </div>
+      </div>
+      <div class="referentiel">
+        <div>
+          <h3>Référentiel DN MADE mention Objet</h3>
+          <p>DNMAX est livré vide&nbsp;: importez ce référentiel pour commencer. Dans DNMAX, cliquez «&nbsp;Échanger…&nbsp;», puis «&nbsp;Recevoir&nbsp;», et choisissez ce fichier.</p>
+          <p class="fmt">dn-made-objet.dnmax</p>
+        </div>
+        <a class="btn" href="referentiels/dn-made-objet.dnmax" download>Télécharger le référentiel</a>
+      </div>
+      <div class="sources">
+        <h3>Toutes les sources de téléchargement</h3>
+        <p>Versions précédentes et ensemble des fichiers de chaque version&nbsp;: <a href="https://github.com/stephaneheberle111/DNMAX/releases">page des versions sur GitHub</a>.</p>
       </div>
       <div class="note">
         <h3>Votre système affiche un avertissement au premier lancement&nbsp;?</h3>
@@ -872,7 +907,7 @@ npm run dev</code></pre>
             </div>
             <div class="champ">
               <label for="f-version">Version de DNMAX</label>
-              <input type="text" id="f-version" value="0.1.1" maxlength="20">
+              <input type="text" id="f-version" maxlength="20" placeholder="Affichée dans Mon compte">
             </div>
           </div>
           <div class="champ">
@@ -906,10 +941,50 @@ npm run dev</code></pre>
 </div>
 </main>
 
+<!-- ================= CONFIDENTIALITÉ ================= -->
+<div data-vue="confidentialite" hidden>
+  <section class="page">
+    <div class="wrap legal">
+      <h1>Confidentialité et mentions légales</h1>
+      <p class="intro">Ce que deviennent vos données, sur ce site et dans l’application.</p>
+
+      <h2>Mentions légales</h2>
+      <h3>Éditeur</h3>
+      <p>Stéphane Héberlé, à titre personnel. Contact&nbsp;: <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a>.</p>
+      <h3>Hébergement</h3>
+      <p>Le site est hébergé en France par OVH SAS, 2 rue Kellermann, 59100 Roubaix, France, téléphone 1007. Les fichiers d’installation et le code source sont hébergés par GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis.</p>
+      <h3>Licence</h3>
+      <p>DNMAX est un logiciel libre sous licence AGPL-3.0-or-later. Les polices du site sont sous licence SIL Open Font License 1.1.</p>
+
+      <h2>Ce site</h2>
+      <ul>
+        <li><strong>Aucun cookie, aucune mesure d’audience, aucun compte.</strong> Le site ne dépose rien sur votre appareil et ne fait appel à aucun service tiers pour s’afficher&nbsp;: polices et images sont servies par le site lui-même.</li>
+        <li><strong>Journaux techniques de l’hébergeur.</strong> Comme tout hébergeur, OVH enregistre pour chaque visite l’adresse IP, la date et la page demandée, pour faire fonctionner et protéger le site. L’éditeur ne les consulte que pour diagnostiquer un problème. Ces données restent en France.</li>
+        <li><strong>Téléchargements.</strong> Les boutons «&nbsp;Télécharger DNMAX&nbsp;» mènent à GitHub, qui reçoit alors votre adresse IP, comme pour toute page web. GitHub, société américaine, adhère au cadre de protection des données UE–États-Unis (Data Privacy Framework). Le référentiel, lui, est servi par le site.</li>
+        <li><strong>Idées et bugs.</strong> Le formulaire ouvre un ticket prérempli sur GitHub, sous votre compte GitHub et <strong>publiquement</strong>. N’y écrivez jamais le nom d’un élève et ne joignez aucune capture d’écran montrant des données d’élèves.</li>
+      </ul>
+
+      <h2>L’application DNMAX</h2>
+      <h3>Les données que vous saisissez</h3>
+      <p>Évaluations, élèves, résultats et appréciations sont enregistrés <strong>uniquement sur votre ordinateur</strong>, chiffrés et protégés par votre mot de passe. Ils ne sont envoyés à aucun serveur&nbsp;: l’éditeur n’y a jamais accès.</p>
+      <p>Un fichier d’échange qui contient des élèves est lui aussi chiffré&nbsp;; transmettez son mot de passe par un autre moyen que le fichier. Les documents exportés (PDF, tableur, traitement de texte) ne sont <strong>pas</strong> chiffrés&nbsp;: rangez-les et partagez-les avec la même prudence qu’un relevé de notes papier.</p>
+      <h3>Qui est responsable des données des élèves</h3>
+      <p>L’évaluation des élèves relève de l’établissement scolaire. C’est lui, représenté par son chef d’établissement, qui est responsable de ce traitement au sens du RGPD&nbsp;; l’enseignant utilise DNMAX pour son compte. Pour toute question sur les données d’un élève (accès, rectification, effacement), l’élève ou sa famille s’adressent à l’établissement et à son délégué à la protection des données.</p>
+      <h3>Vérification des mises à jour</h3>
+      <p>Au lancement, l’application demande à GitHub si une nouvelle version existe. GitHub reçoit alors l’adresse IP de l’ordinateur et la date de la demande. Aucune donnée saisie dans l’application n’accompagne cette demande. Une mise à jour n’est installée qu’avec votre accord.</p>
+
+      <h2>Vos droits</h2>
+      <p>Pour toute question ou demande sur les données traitées par ce site ou par l’éditeur, écrivez à <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a>. Si la réponse ne vous satisfait pas, vous pouvez saisir la Commission nationale de l’informatique et des libertés&nbsp;: <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">cnil.fr/fr/plaintes</a>.</p>
+
+      <p class="maj">Dernière mise à jour&nbsp;: 12 novembre 2026.</p>
+    </div>
+  </section>
+</div>
+
 <footer>
   <div class="wrap">
     <div>DNMAX, logiciel libre sous licence AGPL-3.0-or-later.</div>
-    <div><a href="https://github.com/stephaneheberle111/DNMAX" target="_blank" rel="noopener">Code source</a> &nbsp; <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Journal des modifications</a></div>
+    <div><a href="https://github.com/stephaneheberle111/DNMAX" target="_blank" rel="noopener">Code source</a> &nbsp; <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Journal des modifications</a> &nbsp; <a href="#confidentialite" data-lien="confidentialite">Confidentialité et mentions légales</a></div>
   </div>
 </footer>
 
@@ -920,8 +995,8 @@ npm run dev</code></pre>
   const REF = {"ues":[{"n":"Humanités et culture","c":"#91CC78"},{"n":"Méthodologies, techniques et langues","c":"#ECA765"},{"n":"Ateliers de création","c":"#79A9D3"},{"n":"Professionnalisation","c":"#D394B5"}],"ecs":[{"n":"Humanités","l":"Humanités","u":0,"c":"#91CC78","y":{"1":"EC 1.1","2":"EC 9.1","3":"EC 17.1"},"k":{"1":["C2.1","C4.3","C4.4","C7.1","C8.1","C8.2"],"2":["C2.1","C4.3","C4.4","C7.1"],"3":["C2.1","C4.1","C4.2","C5.2","C6.1"]}},{"n":"Culture des arts, du design et des techniques","l":"Culture des arts et du design","u":0,"c":"#B8E778","y":{"2":"EC 9.2","3":"EC 17.2","1":"EC 1.2"},"k":{"2":["C2.1","C3.1","C4.1","C4.2","C4.3","C4.4","C6.1","C6.2"],"3":["C2.1","C3.1","C4.1","C4.2","C4.3","C4.4","C6.1","C6.2"],"1":["C3.1","C4.1","C4.2","C4.3"]}},{"n":"Outils d’expression et d’exploration créative","l":"Outils d’expression","u":1,"c":"#E4E432","y":{"1":"EC 2.1","2":"EC 10.1","3":"EC 18.1"},"k":{"1":["C3.2","C4.1","C4.2","C4.4","C9.1","C9.2","C10.3"],"2":["C3.2","C4.1","C4.2","C4.4","C9.1","C9.2","C9.3","C10.3"],"3":["C3.2","C4.1","C4.2","C4.4","C9.1","C9.2","C9.3","C10.3"]}},{"n":"Technologies et matériaux","l":"Technologies et matériaux","u":1,"c":"#D1D174","y":{"1":"EC 2.2","2":"EC 10.2","3":"EC 18.2"},"k":{"1":["C3.1","C4.1","C4.2","C4.3","C10.7"],"2":["C3.1","C4.1","C4.2","C4.3","C6.1","C6.2","C10.4","C10.7","C11.2","C11.5"],"3":["C3.1","C4.1","C4.2","C4.3","C6.1","C6.2","C10.4","C10.7","C11.2","C11.5"]}},{"n":"Outils et langages numériques","l":"Outils numériques","u":1,"c":"#F0BB39","y":{"1":"EC 2.3","2":"EC 10.3","3":"EC 18.3"},"k":{"1":["C1.1","C7.1","C10.6"],"2":["C1.1","C2.1","C7.1","C8.1","C8.2","C8.3","C10.6","C10.7","C11.5"],"3":["C1.1","C3.3"]}},{"n":"Langues vivantes","l":"Langues vivantes","u":1,"c":"#F5AB66","y":{"1":"EC 2.4","2":"EC 10.4","3":"EC 18.4"},"k":{"1":["C2.2","C4.1","C4.2"],"2":["C2.2","C4.4","C10.6"],"3":["C2.2","C4.4","C10.6"]}},{"n":"Contextes économiques et juridiques","l":"Contextes éco. et juridiques","u":1,"c":"#F09569","y":{"1":"EC 2.5","3":"EC 18.5","2":"EC 10.5"},"k":{"1":["C2.1","C4.2","C4.3","C4.4","C5.1","C8.1","C9.3"],"3":["C3.3","C4.1","C5.3","C5.4","C8.1"],"2":["C4.2","C5.1","C5.2","C5.3","C5.4"]}},{"n":"Techniques et savoir-faire","l":"Techniques et savoir-faire","u":2,"c":"#8DABC7","y":{"2":"EC 11.1","1":"EC 3.1","3":"EC 19.1"},"k":{"2":["C1.1","C7.1","C10.3","C10.4","C10.6","C10.7","C11.2"],"1":["C7.1","C10.3","C10.4","C10.6","C10.7","C11.2"],"3":["C7.1","C10.3","C10.4","C10.6","C10.7","C11.2"]}},{"n":"Pratiques et mises en œuvre du projet","l":"Mise en œuvre du projet","u":2,"c":"#79A9D3","y":{"1":"EC 3.2","2":"EC 11.2","3":"EC 19.2"},"k":{"1":["C4.1","C4.2","C4.3","C4.4","C8.1","C8.2","C8.3","C10.2","C10.3","C10.4","C10.5","C10.6","C10.7","C11.1","C11.3","C11.4","C11.5"],"2":["C4.1","C4.2","C4.3","C4.4","C5.1","C5.2","C5.3","C5.4","C6.1","C6.2","C8.1","C8.2","C8.3","C9.1","C9.2","C9.3","C10.1","C10.2","C10.3","C10.4","C10.5","C10.6","C10.7","C11.1","C11.2","C11.3","C11.4","C11.5","C11.6"],"3":["C4.1","C4.2","C4.3","C4.4","C5.1","C5.2","C5.3","C5.4","C6.1","C6.2","C7.1","C8.3","C9.1","C9.2","C9.3","C10.1","C10.2","C10.3","C10.4","C10.5","C10.6","C10.7","C11.5"]}},{"n":"Communication et médiation du projet","l":"Communication du projet","u":2,"c":"#9FDBE8","y":{"1":"EC 3.3","2":"EC 11.3","3":"EC 19.3"},"k":{"1":["C1.1","C2.1","C3.3","C4.4","C7.1","C9.2","C9.3","C10.6"],"2":["C1.1","C2.1","C3.3","C4.4","C6.2","C7.1","C9.1","C9.2","C9.3","C10.6"],"3":["C1.1","C2.1","C3.3","C7.1","C9.1","C9.2","C9.3","C10.6"]}},{"n":"Démarche de recherche en lien avec la pratique de projet","l":"Démarche de recherche","u":2,"c":"#96C8D1","y":{"2":"EC 11.4","3":"EC 19.4"},"k":{"2":["C1.1","C3.1","C3.3","C4.1","C4.2","C4.3","C4.4","C5.3","C5.4","C6.1","C6.2","C8.3","C10.1"],"3":["C1.1","C4.1","C4.2","C4.3","C4.4","C6.1","C6.2","C7.1","C7.2","C8.1","C8.2","C8.3","C10.1","C10.2","C11.6"]}},{"n":"Parcours de professionnalisation et poursuite d’étude","l":"Parcours et poursuite d’études","u":3,"c":"#E260A4","y":{"2":"EC 12","3":"EC 20.1","1":"EC 4"},"k":{"2":["C3.1","C3.3","C5.3","C5.4","C9.1","C9.2"],"3":["C3.3","C5.3","C5.4","C9.1","C9.2"],"1":["C5.3","C5.4","C8.2","C9.3"]}},{"n":"Stage","l":"Stage","u":3,"c":"#D394B5","y":{"2":"NE","3":"EC 20.2"},"k":{"2":["C5.1","C5.2","C5.3","C5.4","C7.1","C8.1","C8.2","C8.3","C9.3"],"3":["C5.1","C5.2","C5.3","C5.4","C7.1","C7.2","C8.1","C8.2","C8.3","C9.3"]}}],"comps":{"C1.1":["Utiliser les outils numériques de référence et les règles de sécurité informatique pour acquérir, traiter, produire et diffuser de l’information ainsi que pour collaborer en interne et en externe.","1"],"C2.1":["Se servir aisément des différents registres d’expression écrite et orale de la langue française.","2"],"C2.2":["Communiquer par oral et par écrit, de façon claire et non ambiguë, dans au moins une langue vivante étrangère.","2"],"C3.1":["Désigner les ressources, mettre en oeuvre les outils et les méthodes de recherche propres au champ professionnel abordé.","3"],"C3.2":["Expérimenter des outils de création et de recherche plastique et conceptuelle permettant de structurer les étapes d’un projet et leurs interactions.","3"],"C3.3":["Caractériser et valoriser son identité, ses compétences et son projet professionnel.","3"],"C4.1":["Identifier, sélectionner et analyser avec esprit critique diverses ressources dans son domaine de spécialité.","4"],"C4.2":["Recueillir des ressources pour documenter un sujet et synthétiser ces données en vue de leur exploitation.","4"],"C4.3":["Analyser et synthétiser des données en vue de leur exploitation.","4"],"C4.4":["Développer une argumentation avec un esprit critique.","4"],"C5.1":["Situer son rôle et sa mission au sein d’une organisation pour s’adapter et prendre des initiatives.","5"],"C5.2":["Respecter les principes d’éthique, de déontologie et de responsabilité environnementale.","5"],"C5.3":["Identifier et situer les champs professionnels potentiellement en relation avec les acquis de la mention ainsi que les parcours possibles pour y accéder.","5"],"C5.4":["Prendre en compte l’environnement économique de l’activité professionnelle et appréhender des démarches entrepreneuriales.","5"],"C6.1":["Identifier les enjeux du domaine et des métiers au regard de l’actualité et des perspectives d’évolution, dans une démarche prospective.","6"],"C6.2":["S’informer des pratiques d’atelier et des productions émergentes associant ou non le numérique et la CFAO.","6"],"C7.1":["Développer ses propres ressources, méthodes et outils de médiation et de communication.","7"],"C7.2":["Veiller à l’adéquation des connaissances et compétences aux évolutions et besoin du métier.","7"],"C8.1":["Entretenir des liens et dialoguer au sein des équipes, avec les partenaires du projet et les experts associés.","8"],"C8.2":["Partager ses connaissances au sein d’une équipe et d’un réseau d’acteurs professionnels pluridisciplinaires.","8"],"C8.3":["Engager sa responsabilité au service du projet en prenant en compte les outils et méthodes de conception, de création et de réalisation.","8"],"C9.1":["Faire état d’une écriture et d’une pratique expérimentale personnelle : des dimensions plastique, sensorielle, graphique, volumique,fonctionnelles technologique, structurelle et signifiante des objets et de leur structuration.","9"],"C9.2":["Formaliser et rendre visible ses expériences pour valoriser son identité personnelle : - dans la conception et le pilotage de projets relatifs à l’objet. - dans la gestion de projet et la réalisation d’objets.","9"],"C9.3":["S’auto évaluer et se remettre en question pour apprendre : - Maîtrise des outils, protocoles et techniques relevant de l’objet. - Développement d’une culture professionnelle de l’objet.","9"],"C10.1":["Définir une approche collaborative avec l’ensemble des acteurs concernés : client, service marketing, recherche et développement, ergonomes, fabricant, technicien, artisans, usager et, selon l’échelle du programme, sémiologue, sociologue, philosophe, historien…","10"],"C10.2":["Proposer des orientations créatives et prospectives relevant du domaine de l’objet.","10"],"C10.3":["Expérimenter les différents champs d’hypothèses en prenant en compte l’aspect formel (plastique, volumique, technologique), l’aspect structurel (organisation, articulation des systèmes), leur sens (dimension sémantique), l’usage, le rapport à l’utilisateur (expérience, ergonomie), les matériaux, les process et le rapport à l’environnement (cycle de vie, écoconception).","10"],"C10.4":["Au regard de la demande initiale cahier des charges, commande, vérifier la faisabilité technique et économique de production du projet relevant de l’objet.","10"],"C10.5":["Veiller au respect des échéances et au contrôle technique et artistique selon les contraintes budgétaires, administratives, techniques, légales.","10"],"C10.6":["Énoncer ses idées d’objets et de services, argumenter ses choix au travers de supports et de média adaptés 2D et/ou 3D et/ou supports vidéos et/ou interactifs.","10"],"C10.7":["Mettre en oeuvre les matériaux, les techniques et les technologies innovantes ou traditionnelles, dans le cadre de la conception et de la réalisation partielle d’un projet et dans l’adaptation des process de fabrication, en prenant en compte le cycle de vie et la durabilité (conception d’objets et de leur environnement: produits, procédés, services ou systèmes).","10"],"C11.1":["Saisir les éléments caractéristiques d’un projet relevant de l’objet au travers de maquettes et d’échantillons en prenant en compte les étapes de fabrication.","11"],"C11.2":["Prototyper ou réaliser tout ou partie du projet en incluant les outils numériques CAO, DAO, PAO.","11"],"C11.3":["Établir des principes d’évolution du projet relevant de l’’objet selon des critères explicités.","11"],"C11.4":["Faire la démonstration que le projet relevant de l’objet est bien en adéquation avec la demande initiale et son économie générale.","11"],"C11.5":["Planifier et gérer les différentes étapes d’un projet jusqu’à son rendu et sa validation en prenant en compte les aspects techniques et réglementaires.","11"],"C11.6":["Favoriser le dialogue au sein des équipes et avec les partenaires du projet et les experts associés: client, service marketing, recherche et développement, ergonomes, fabricant, technicien, artisans, usager et, selon l’échelle du programme, sémiologue, sociologue, philosophe, historien…","11"]},"blocs":{"1":"Utiliser les outils numériques de référence","2":"S’exprimer et communiquer à l’oral, à l’écrit et dans au moins une langue étrangère","3":"Se positionner vis-à-vis d’un champ professionnel","4":"Exploiter des données à des fins d’analyse","5":"Agir en tant que professionnel dans le domaine Objet","6":"Exercer des activités de veille professionnelle en design et métiers d’art","7":"Employer différentes techniques d’information et de communication en design et métiers d’art","8":"Coopérer et travailler en équipe","9":"Elaborer une stratégie personnelle relative aux métiers de design d’objet","10":"Développer et mettre en œuvre des outils de création et de recherche relevant du design d’objet","11":"Concevoir, conduire et superviser une production relevant du design d’objet"}};
 
   /* ---------- Pages ---------- */
-  const VUES = ["accueil","telecharger","documentation","idees"];
-  const TITRES = {accueil:"DNMAX — évaluations par compétences pour le DN MADE",telecharger:"Télécharger DNMAX",documentation:"Documentation de DNMAX",idees:"Idées et bugs — DNMAX"};
+  const VUES = ["accueil","telecharger","documentation","idees","confidentialite"];
+  const TITRES = {accueil:"DNMAX — évaluations par compétences pour le DN MADE",telecharger:"Télécharger DNMAX",documentation:"Documentation de DNMAX",idees:"Idées et bugs — DNMAX",confidentialite:"Confidentialité et mentions légales — DNMAX"};
   function route(){
     const h = location.hash.slice(1);
     const v = VUES.includes(h) ? h : "accueil";
