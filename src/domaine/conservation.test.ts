@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { NOM_ANONYME, identifiantsOrphelins, promotionsEchues, traiterDonneesEchues, type ChoixConservation } from "./conservation";
+import {
+  NOM_ANONYME,
+  etatPromotions,
+  identifiantsOrphelins,
+  promotionsEchues,
+  traiterDonneesEchues,
+  type ChoixConservation,
+} from "./conservation";
 import { CLE_BROUILLON, effacerEleve } from "./droits-eleve";
 import { CLE_DONNEES, CLE_EVALUATIONS, CLE_PROMOTIONS } from "./echange/modele";
 import type { Entrees } from "./magasin-memoire";
@@ -38,14 +45,24 @@ const EVAL_ORPHELINE = { id: "e3", titre: "Orpheline", res: { sParti: { n: { a: 
 
 function donnees(autres: Record<string, string> = {}): Entrees {
   return {
-    [CLE_DONNEES]: JSON.stringify({ diplomes: [{ id: "d3", duree: 3 }, { id: "d1", duree: 1 }] }),
+    [CLE_DONNEES]: JSON.stringify({
+      diplomes: [
+        { id: "d3", duree: 3 },
+        { id: "d1", duree: 1 },
+      ],
+    }),
     [CLE_PROMOTIONS]: JSON.stringify([ANCIENNE, RECENTE, COURTE]),
     [CLE_EVALUATIONS]: JSON.stringify([EVAL_ANCIENNE, EVAL_RECENTE, EVAL_ORPHELINE]),
     ...autres,
   };
 }
 
-function effacer(entrees: Entrees, promotions: string[], orphelins: boolean, gardes: string[] = []): ReturnType<typeof traiterDonneesEchues> {
+function effacer(
+  entrees: Entrees,
+  promotions: string[],
+  orphelins: boolean,
+  gardes: string[] = [],
+): ReturnType<typeof traiterDonneesEchues> {
   return traiterDonneesEchues(entrees, { promotions, gardes, orphelins, traitement: "effacer" });
 }
 
@@ -108,9 +125,9 @@ describe("identifiantsOrphelins", () => {
   });
 
   it("n'en trouve aucun quand tout est rattaché", () => {
-    expect(identifiantsOrphelins({ [CLE_PROMOTIONS]: JSON.stringify([RECENTE]), [CLE_EVALUATIONS]: JSON.stringify([EVAL_RECENTE]) })).toEqual(
-      [],
-    );
+    expect(
+      identifiantsOrphelins({ [CLE_PROMOTIONS]: JSON.stringify([RECENTE]), [CLE_EVALUATIONS]: JSON.stringify([EVAL_RECENTE]) }),
+    ).toEqual([]);
   });
 });
 
@@ -271,5 +288,33 @@ describe("après un premier traitement", () => {
       { id: "sX", nom: `${NOM_ANONYME} 4` },
       { id: "sAncien", nom: `${NOM_ANONYME} 5` },
     ]);
+  });
+});
+
+describe("etatPromotions", () => {
+  it("liste aussi les promotions en cours, pour les traiter à tout moment", () => {
+    const etats = etatPromotions(donnees(), "2026-11-12", 1);
+    expect(etats.map((promotion) => [promotion.id, promotion.echue])).toEqual([
+      ["pA", true],
+      ["pR", false],
+      ["pC", true],
+    ]);
+  });
+
+  it("donne des dates vides et n'est jamais échue sans année d'entrée", () => {
+    const sansDebut = { [CLE_PROMOTIONS]: JSON.stringify([{ ...RECENTE, debut: undefined }]) };
+    expect(etatPromotions(sansDebut, "2040-01-01", 1)[0]).toMatchObject({ sortie: "", echeance: "", echue: false });
+  });
+
+  it("signale un redoublant d'une promotion en cours retrouvé dans une promotion entrée plus tard", () => {
+    const suivante = { id: "pS", nom: "DNO-2025-2028", debut: 2025, diplomeId: "d3", liste: [{ id: "sR2", nom: "Récent Élève" }] };
+    const avecSuivante = { ...donnees(), [CLE_PROMOTIONS]: JSON.stringify([ANCIENNE, RECENTE, suivante]) };
+    const recente = etatPromotions(avecSuivante, "2026-11-12", 1).find((promotion) => promotion.id === "pR");
+    expect(recente?.redoublants).toEqual([{ id: "sRecent", nom: "Récent Élève", autrePromotion: "DNO-2025-2028" }]);
+  });
+
+  it("ne liste pas une promotion sans élève identifiable", () => {
+    const vide = { [CLE_PROMOTIONS]: JSON.stringify([{ ...RECENTE, liste: [{ id: "sX", nom: `${NOM_ANONYME} 1` }] }]) };
+    expect(etatPromotions(vide, "2026-11-12", 1)).toEqual([]);
   });
 });

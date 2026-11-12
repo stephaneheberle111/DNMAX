@@ -85,56 +85,78 @@ function texte(valeur: unknown): string {
   return typeof valeur === "string" ? valeur : "";
 }
 
+/** Une promotion qui compte encore des élèves identifiables, échue ou non. */
+export interface EtatPromotion extends PromotionEchue {
+  /** Vrai si sa durée de conservation est dépassée. */
+  echue: boolean;
+}
+
 /**
- * Promotions dont les données d'élèves ont dépassé la durée de conservation,
- * avec leurs redoublants probables. Une promotion sans élève, ou sans année
- * d'entrée, n'est jamais proposée.
+ * Toutes les promotions qui comptent encore des élèves identifiables, avec
+ * leurs dates et leurs redoublants probables : l'enseignant peut anonymiser
+ * ou effacer une promotion à tout moment, pas seulement à l'échéance.
+ *
+ * Un redoublant probable est un élève dont le nom figure aussi dans une
+ * promotion entrée plus tard. Une promotion sans année d'entrée n'a ni dates
+ * (texte vide) ni redoublants, et n'est jamais échue.
  *
  * @param aujourdHui date du jour, AAAA-MM-JJ
  * @param anneesConservation années de conservation après la sortie
  */
-export function promotionsEchues(entrees: Entrees, aujourdHui: string, anneesConservation: number): PromotionEchue[] {
+export function etatPromotions(entrees: Entrees, aujourdHui: string, anneesConservation: number): EtatPromotion[] {
   const durees = dureesDiplomes(entrees);
-  const echues: Omit<PromotionEchue, "redoublants">[] = [];
-  const enCours: ObjetJson[] = [];
-  for (const promotion of lireListe(entrees[CLE_PROMOTIONS]).filter(estObjet)) {
-    const debut = Number(promotion.debut);
+  const promotions = lireListe(entrees[CLE_PROMOTIONS])
+    .filter(estObjet)
+    .filter((promotion): promotion is ObjetJson & { id: string } => typeof promotion.id === "string" && promotion.id !== "");
+  return promotions.flatMap((promotion) => {
     // Un élève déjà anonymisé n'a plus rien à traiter.
-    const eleves = elevesDe(promotion).filter((eleve) => !estAnonyme(eleve.nom)).length;
-    if (typeof promotion.id !== "string" || !Number.isInteger(debut) || eleves === 0) {
-      enCours.push(promotion);
-      continue;
+    const identifiables = elevesDe(promotion).filter((eleve) => !estAnonyme(eleve.nom));
+    if (identifiables.length === 0) {
+      return [];
     }
+    const debut = Number(promotion.debut);
+    const connue = Number.isInteger(debut) && promotion.debut !== null && promotion.debut !== undefined && promotion.debut !== "";
     const duree = durees.get(texte(promotion.diplomeId)) ?? DUREE_DIPLOME_PAR_DEFAUT;
-    const sortie = `${String(debut + duree)}-${JOUR_DE_SORTIE}`;
-    const echeance = `${String(debut + duree + anneesConservation)}-${JOUR_DE_SORTIE}`;
-    if (aujourdHui >= echeance) {
-      echues.push({ id: promotion.id, nom: texte(promotion.nom), sortie, echeance, eleves });
-    } else {
-      enCours.push(promotion);
-    }
-  }
-  const promotionsEnCoursParNom = new Map<string, string>();
-  for (const promotion of enCours) {
-    for (const eleve of elevesDe(promotion)) {
+    const sortie = connue ? `${String(debut + duree)}-${JOUR_DE_SORTIE}` : "";
+    const echeance = connue ? `${String(debut + duree + anneesConservation)}-${JOUR_DE_SORTIE}` : "";
+    const plusRecentes = connue ? promotions.filter((autre) => autre.id !== promotion.id && Number(autre.debut) > debut) : [];
+    const redoublants = identifiables.flatMap((eleve) => {
       const nom = normaliserNom(eleve.nom);
-      if (nom !== "" && !promotionsEnCoursParNom.has(nom)) {
-        promotionsEnCoursParNom.set(nom, texte(promotion.nom));
-      }
-    }
-  }
-  const brutes = lireListe(entrees[CLE_PROMOTIONS]).filter(estObjet);
-  return echues.map((echue) => {
-    const promotion = brutes.find((brute) => brute.id === echue.id) ?? {};
-    const redoublants = elevesDe(promotion).flatMap((eleve) => {
-      if (estAnonyme(eleve.nom)) {
-        return [];
-      }
-      const autrePromotion = promotionsEnCoursParNom.get(normaliserNom(eleve.nom));
-      return autrePromotion === undefined ? [] : [{ id: eleve.id, nom: eleve.nom, autrePromotion }];
+      const autre =
+        nom === ""
+          ? undefined
+          : plusRecentes.find((candidate) => elevesDe(candidate).some((element) => normaliserNom(element.nom) === nom));
+      return autre === undefined ? [] : [{ id: eleve.id, nom: eleve.nom, autrePromotion: texte(autre.nom) }];
     });
-    return { ...echue, redoublants };
+    return [
+      {
+        id: promotion.id,
+        nom: texte(promotion.nom),
+        sortie,
+        echeance,
+        eleves: identifiables.length,
+        redoublants,
+        echue: connue && aujourdHui >= echeance,
+      },
+    ];
   });
+}
+
+/**
+ * Promotions dont les données d'élèves ont dépassé la durée de conservation,
+ * avec leurs redoublants probables.
+ */
+export function promotionsEchues(entrees: Entrees, aujourdHui: string, anneesConservation: number): PromotionEchue[] {
+  return etatPromotions(entrees, aujourdHui, anneesConservation)
+    .filter((promotion) => promotion.echue)
+    .map((promotion) => ({
+      id: promotion.id,
+      nom: promotion.nom,
+      sortie: promotion.sortie,
+      echeance: promotion.echeance,
+      eleves: promotion.eleves,
+      redoublants: promotion.redoublants,
+    }));
 }
 
 function evaluationsEtBrouillon(entrees: Entrees): ObjetJson[] {
@@ -259,7 +281,6 @@ export interface BilanConservation {
   eleves: number;
 }
 
-
 /**
  * Efface ou anonymise les données d'élèves des promotions choisies, sauf les
  * élèves gardés, et si demandé les résultats orphelins.
@@ -288,7 +309,11 @@ export function traiterDonneesEchues(entrees: Entrees, choix: ChoixConservation)
     if (traites.size > 0) {
       resultat = effacerEleve(resultat, { cle: "", nom: "", identifiants: [...traites], promotions: [] }, { parNom: false }).entrees;
     }
-    resultat = transformer(resultat, (promotion) => promotion, (evaluation) => sansListeSaisie(evaluation, choisies));
+    resultat = transformer(
+      resultat,
+      (promotion) => promotion,
+      (evaluation) => sansListeSaisie(evaluation, choisies),
+    );
   } else {
     const idsChoisies = new Set(choisies.map((promotion) => promotion.id));
     resultat = transformer(
