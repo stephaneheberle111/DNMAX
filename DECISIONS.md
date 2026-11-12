@@ -176,7 +176,7 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 ## 15. Mises à jour proposées, jamais imposées, et publiées à la main
 
-**Retenu** : quand l'enseignant clique « Rechercher une mise à jour » dans « Mon compte », l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
+**Retenu** : quand l'enseignant clique « Rechercher une mise à jour » dans le pied de page, l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
 
 **Seul appel réseau de l'application, et seulement à la demande.** Jusqu'à la version 0.1.1, la vérification avait lieu à chaque lancement ; elle transmettait à GitHub l'adresse IP du poste à chaque ouverture, sans que l'enseignant l'ait demandé. Elle n'a plus lieu que sur sa demande, ce qui rend l'application silencieuse sur le réseau par défaut (RGPD : minimisation). Aucune donnée de l'enseignant n'est transmise. Si la vérification échoue, l'application le dit et propose de réessayer.
 
