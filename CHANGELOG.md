@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.2.0 — 2026-11-12
+
 ### Ajouté
 
 - Site : page « Confidentialité et mentions légales » (éditeur bénévole), reliée depuis le pied de page.
