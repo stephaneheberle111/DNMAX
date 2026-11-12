@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { analyserJson, CLE_DONNEES, CLE_EVALUATIONS, CLE_PROMOTIONS, estObjet, lireEvaluations } from "./echange/modele";
+import {
+  analyserJson,
+  CLE_DONNEES,
+  CLE_EVALUATIONS,
+  CLE_PROMOTIONS,
+  estObjet,
+  lireDonneesEtablissementDe,
+  lireEvaluations,
+} from "./echange/modele";
 import type { Entrees } from "./magasin-memoire";
+import { diplomeAReferentielValide } from "./validation-referentiel";
 
 /** Visites guidées proposées par l'application. */
 export const PARCOURS = ["prise-en-main", "eleves", "niveaux"] as const;
@@ -13,6 +22,8 @@ export const CLE_MODULES = "dnmade.modules";
 /** Ce que l'enseignant a déjà mis en place, tel que le lit la visite pour savoir où il en est. */
 export interface Avancement {
   referentiel: boolean;
+  /** Au moins un diplôme a une version en vigueur attestée par l'enseignant. */
+  referentielValide: boolean;
   promotions: number;
   elevesInscrits: number;
   enseignants: number;
@@ -61,8 +72,10 @@ export function lireAvancement(entrees: Entrees): Avancement {
   const listePromotions = Array.isArray(promotions) ? promotions : [];
   const modules = analyserJson(entrees[CLE_MODULES]);
   const modulesActifs = estObjet(modules) ? modules : {};
+  const etablissement = lireDonneesEtablissementDe(racine);
   return {
     referentiel: longueur(dictionnaire.competences) > 0,
+    referentielValide: etablissement.diplomes.some((diplome) => diplomeAReferentielValide(etablissement, diplome.id)),
     promotions: listePromotions.filter(estObjet).length,
     elevesInscrits: listePromotions.reduce((total: number, promotion) => total + compterEleves(promotion), 0),
     enseignants: longueur(donnees.enseignants),
