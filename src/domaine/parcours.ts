@@ -95,3 +95,27 @@ export function doitLancerAuDemarrage(entrees: Entrees): boolean {
 export function estIdentifiantParcours(valeur: string | undefined): valeur is IdentifiantParcours {
   return PARCOURS.some((identifiant) => identifiant === valeur);
 }
+
+/** Clé de session où la visite note où elle en est, pour reprendre après un rechargement de la page. */
+export const CLE_REPRISE = "dnmax.parcours.reprise";
+
+export interface Reprise {
+  identifiant: IdentifiantParcours;
+  index: number;
+}
+
+/** Lit l'étape où reprendre ; `null` si rien n'est noté ou si la note est illisible. */
+export function lireReprise(texte: string | null): Reprise | null {
+  const valeur = analyserJson(texte);
+  if (!estObjet(valeur)) {
+    return null;
+  }
+  const { identifiant, index } = valeur;
+  if (typeof identifiant !== "string" || !estIdentifiantParcours(identifiant)) {
+    return null;
+  }
+  if (typeof index !== "number" || !Number.isInteger(index) || index < 0) {
+    return null;
+  }
+  return { identifiant, index };
+}

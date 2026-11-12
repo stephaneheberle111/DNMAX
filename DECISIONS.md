@@ -200,7 +200,7 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Pourquoi** : le référentiel d'un diplôme n'est pas une donnée de l'application ; il évolue, diffère d'une mention à l'autre, et ne concerne pas tous les enseignants. Le livrer d'office l'aurait figé dans chaque version.
 
-**Comment obtenir un référentiel** : sur une installation vide, un encart propose de télécharger celui du DN MADE mention Objet ou mention Espace (fichiers `site/referentiels/dn-made-objet.dnmax` et `dn-made-espace.dnmax`, ouverts dans le navigateur) puis de le recevoir par le circuit habituel de l'échange, qui crée le diplôme (décision 12). On peut aussi recevoir celui d'un autre enseignant ou le construire dans l'onglet Référentiel.
+**Comment obtenir un référentiel** : sur une installation vide, un encart propose ceux du DN MADE mention Objet et mention Espace. Ils sont **livrés avec l'application** (`src/referentiels-embarques.ts` lit les fichiers `site/referentiels/*.dnmax`, source unique avec le site) mais **pas installés d'office** : un clic ouvre le circuit habituel de réception (« Ce que ce fichier changerait »), qui crée le diplôme après validation (décision 12). Auparavant, il fallait les télécharger dans le navigateur puis les recevoir : deux manipulations là où une suffit, sans connexion. On peut aussi recevoir celui d'un autre enseignant ou le construire dans l'onglet Référentiel.
 
 **L'application n'ouvre aucune connexion pour cela** : elle demande au système d'ouvrir l'adresse dans le navigateur. Seules les adresses du site et du dépôt du projet sont autorisées (`src-tauri/capabilities/default.json`, `src/configuration.ts`).
 
@@ -307,5 +307,7 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Retenu** : une visite pas à pas dans l'application (`src/ecran-parcours.ts`, étapes dans `src/parcours-etapes.ts`), plutôt qu'une documentation ou une vidéo. L'écran est grisé sauf la zone où agir ; un curseur animé montre le geste attendu. La prise en main se lance à la première ouverture, une seule fois (entrée `dnmax.parcours` du coffre), et se relance depuis « Mon compte » ; les modules Élèves et Niveaux DN MADE ont chacun leur visite, lancée depuis leur carte dans Paramètres.
 
 **Pourquoi** : les bêta-testeurs doivent pouvoir démarrer seuls, sans démonstration. Chaque étape lit ce qui est réellement fait (référentiel installé, promotions, enseignants, répartition, évaluations, modules ; `src/domaine/parcours.ts`) : elle salue l'objectif atteint et passe à la suite, et saute ce qui était déjà fait quand on relance la visite.
+
+**Déroulé** : la zone éclairée glisse d'une étape à la suivante ; la bulle attend son arrivée pour apparaître directement à sa place. « Suivant » sur une étape qui attend un clic fait ce clic (mène au bon onglet, ouvre le référentiel choisi). La visite note son étape dans la session : après la validation d'un import, qui recharge l'application, elle reprend où elle en était au lieu de recommencer.
 
 **Limites** : la visite ne remplit rien à la place de l'enseignant et ne bloque pas les boîtes de l'application, qui restent au-dessus du voile. Elle ne couvre que l'essentiel ; le détail reste dans la documentation du site.
