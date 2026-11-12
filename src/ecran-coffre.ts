@@ -227,9 +227,9 @@ export function demanderOuvertureCoffre(coffreExiste: boolean): Promise<Entrees>
 
 const GABARIT_IDENTITE = `
   <h1>Qui êtes-vous ?</h1>
-  <p>Votre nom accompagne ce que vous modifiez et signe les fichiers que vous envoyez à d'autres enseignants :
+  <p>Votre prénom et votre nom accompagnent ce que vous modifiez et signent les fichiers que vous envoyez à d'autres enseignants :
      chacun voit ainsi qui a écrit quoi.</p>
-  <label>Votre nom, tel que les autres enseignants le liront
+  <label>Votre prénom et votre nom, tels que les autres enseignants les liront
     <input type="text" name="nom" autocomplete="name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>
   <p class="coffre-erreur" role="alert" hidden></p>
   <div class="coffre-actions"><span></span><button type="submit" class="btn primary">Continuer</button></div>`;
