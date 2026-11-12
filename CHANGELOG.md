@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Application : sur les grands écrans, la zone de travail s'élargit par paliers (jusqu'à 1 600 px, puis 1 920 px au-delà de 2 200 px de fenêtre) et le texte grossit légèrement (15 px puis 16 px) ; rien ne change sous 1 400 px.
+
 ## 0.2.0 — 2026-11-12
 
 ### Ajouté
