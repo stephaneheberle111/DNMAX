@@ -20,6 +20,7 @@ import { CLE_IDENTITE, creerIdentite, lireIdentite } from "./domaine/identite";
 import { proposerPremiersPas } from "./ecran-accueil";
 import { installerCompte } from "./ecran-compte";
 import { suivreHauteurBarre } from "./ecran-entetes";
+import { installerParcours } from "./ecran-parcours";
 import { installerPiedDePage } from "./ecran-pied";
 import { installerDonneesEleves, rappelerConservation } from "./ecran-droits-eleves";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
@@ -162,6 +163,7 @@ async function demarrer(): Promise<void> {
   installerCompte(acces);
   installerPiedDePage(acces);
   await proposerPremiersPas(acces);
+  installerParcours(acces);
 }
 
 function afficherEchecDemarrage(erreur: unknown): void {
