@@ -10,8 +10,8 @@
   RewriteRule ^ https://dnmax.fr%{REQUEST_URI} [L,R=301]
 </IfModule>
 
-# Les référentiels se téléchargent au lieu de s'afficher comme du texte.
-<FilesMatch "\.dnmax$">
+# Les référentiels et les installeurs se téléchargent au lieu de s'afficher.
+<FilesMatch "\.(dnmax|exe|dmg|deb)$">
   ForceType application/octet-stream
   <IfModule mod_headers.c>
     Header set Content-Disposition "attachment"

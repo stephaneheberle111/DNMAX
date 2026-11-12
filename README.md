@@ -115,6 +115,8 @@ Mise en place, une seule fois (Settings → Secrets and variables → Actions) :
 
 Pour obtenir la clé du serveur : renseigner d'abord `OVH_SITE_SERVEUR`, lancer l'atelier « Site » avec l'action **afficher-cle-serveur**, puis copier la ligne affichée dans le résumé de l'exécution dans le secret `OVH_SITE_CLE_HOTE`. La lecture se fait depuis les machines de GitHub, ce qui fonctionne même si le port 22 est fermé sur le réseau de l'enseignant.
 
+L'atelier « Téléchargements » (`.github/workflows/telechargements.yml`) dépose dans `www/telechargements/`, à chaque publication de version (ou à la demande), les installeurs Windows, macOS et `.deb` de la dernière version publiée ; l'atelier « Site » ne touche pas à ce dossier. L'AppImage et les fichiers de mise à jour restent sur GitHub.
+
 **À la main, en secours** : client FTP (FileZilla, par exemple) en **« Connexion FTP explicite sur TLS »**, jamais en FTP clair ; copier le contenu de `site/`, y compris le fichier caché `.htaccess`, dans `www`. Vérifier ensuite <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
 
 Le formulaire « Idées et bugs » de la page ouvre un ticket prérempli sur GitHub.
