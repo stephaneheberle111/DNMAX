@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Sur une installation neuve, seule l'échelle « Niveaux de maîtrise » est active ; « Degrés d'acquisition » se coche dans Paramètres.
+
 ## 0.2.0 — 2026-11-12
 
 ### Ajouté
