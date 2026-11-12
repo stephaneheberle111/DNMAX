@@ -334,7 +334,9 @@ export function traiterDonneesEchues(entrees: Entrees, choix: ChoixConservation)
             return eleve;
           }
           rang += 1;
-          return { ...eleve, nom: `${NOM_ANONYME} ${String(rang)}` };
+          // Prénom et nom saisis à part sont remplacés aussi : rien ne doit rester du vrai nom.
+          const anonyme = `${NOM_ANONYME} ${String(rang)}`;
+          return { ...eleve, nom: anonyme, prenom: "", nomFam: anonyme };
         });
         const noms = liste.filter(estObjet).map((eleve) => texte(eleve.nom));
         return { ...promotion, liste, eleves: noms.join("\n") };
