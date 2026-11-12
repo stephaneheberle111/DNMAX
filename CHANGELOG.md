@@ -2,6 +2,11 @@
 
 ## Non publié
 
+### Modifié
+
+- Les référentiels DN MADE Objet et Espace sont livrés avec l'application : un clic dans l'encart de départ ouvre « Ce que ce fichier changerait », sans téléchargement.
+- Visite guidée : un seul bleu, avec un éclat qui tourne autour de la zone comme le faisceau d'un phare ; la bulle apparaît directement à sa place une fois la zone arrivée ; « Suivant » mène au bon écran ; après la validation d'un import, la visite reprend où elle en était au lieu de recommencer.
+
 ## 0.4.1 — 2026-11-12
 
 ### Ajouté

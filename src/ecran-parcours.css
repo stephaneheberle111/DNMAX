@@ -14,7 +14,7 @@
   z-index: 66;
   pointer-events: none;
   border-radius: 10px;
-  border: 2px solid transparent;
+  border: 2px solid var(--accent, #2f5bd3);
   box-shadow: 0 0 0 0 rgba(47, 91, 211, 0.55);
   animation: parcours-pulsation 1.8s ease-out infinite;
 }
@@ -33,12 +33,22 @@
   inset: -3px;
   padding: 3px;
   border-radius: 12px;
-  background: conic-gradient(from var(--parcours-tour), #2f5bd3, #79a9d3, #f0bb39, #e260a4, #2f5bd3);
+  background: conic-gradient(
+    from var(--parcours-tour),
+    transparent 0deg,
+    transparent 250deg,
+    rgba(47, 91, 211, 0.6) 300deg,
+    #e6efff 335deg,
+    #ffffff 345deg,
+    rgba(47, 91, 211, 0.6) 355deg,
+    transparent 360deg
+  );
   mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
-  animation: parcours-rotation 3s linear infinite;
+  animation: parcours-rotation 2.6s linear infinite;
+  filter: drop-shadow(0 0 4px rgba(170, 200, 255, 0.9));
 }
 
 @keyframes parcours-rotation {
@@ -79,7 +89,7 @@
 }
 
 .parcours-anneau[data-geste="regarder"] {
-  border-color: #f0a830;
+  border-color: #8fb4ee;
   animation: parcours-pulsation-douce 2.4s ease-out infinite;
 }
 
@@ -97,19 +107,19 @@
 
 @keyframes parcours-pulsation-douce {
   0% {
-    box-shadow: 0 0 0 0 rgba(240, 168, 48, 0.5);
+    box-shadow: 0 0 0 0 rgba(143, 180, 238, 0.5);
   }
   70% {
-    box-shadow: 0 0 0 12px rgba(240, 168, 48, 0);
+    box-shadow: 0 0 0 12px rgba(143, 180, 238, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(240, 168, 48, 0);
+    box-shadow: 0 0 0 0 rgba(143, 180, 238, 0);
   }
 }
 
 @keyframes parcours-respiration {
   50% {
-    border-color: #f0a830;
+    border-color: #8fb4ee;
   }
 }
 
@@ -243,9 +253,9 @@
   top: -1px;
   height: 3px;
   border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, #2f5bd3, #79a9d3, #91cc78, #f0bb39, #e260a4, #2f5bd3);
-  background-size: 200% 100%;
-  animation: parcours-ondulation 4s linear infinite;
+  background: linear-gradient(90deg, #2f5bd3 0%, #2f5bd3 40%, #dce8ff 50%, #2f5bd3 60%, #2f5bd3 100%);
+  background-size: 250% 100%;
+  animation: parcours-ondulation 3.2s ease-in-out infinite;
 }
 
 /* Flèche vers la zone éclairée. */
@@ -590,4 +600,23 @@
   box-shadow:
     0 0 0 4px rgba(47, 91, 211, 0.35),
     0 0 28px 6px rgba(121, 169, 211, 0.55);
+}
+
+/* Pendant le trajet de la zone, la bulle attend, invisible, et ses animations aussi. */
+.parcours-en-attente {
+  visibility: hidden;
+}
+
+.parcours-en-attente,
+.parcours-en-attente * {
+  animation-play-state: paused;
+}
+
+.parcours-anneau-dessus {
+  z-index: 78;
+}
+
+.parcours-compacte .parcours-feuille,
+.parcours-compacte .parcours-progression {
+  display: none;
 }

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-accueil.css";
-import { REFERENTIELS_PROPOSES } from "./configuration";
 import { CLE_EVALUATIONS, lireEvaluations } from "./domaine/echange/modele";
 import { estReferentielVide } from "./domaine/echange/referentiel";
-import { ouvrirReception, type AccesDonnees } from "./ecran-echange";
-import { ouvrirDansNavigateur } from "./enveloppe";
+import { ouvrirReception, ouvrirTexteRecu, type AccesDonnees } from "./ecran-echange";
+import { REFERENTIELS_EMBARQUES } from "./referentiels-embarques";
 
 function creerBouton(texte: string, classe: string, action: () => void): HTMLButtonElement {
   const bouton = document.createElement("button");
@@ -36,8 +35,8 @@ function afficher(acces: AccesDonnees): void {
   const texte = document.createElement("p");
   texte.textContent =
     "DNMAX démarre vide : aucun référentiel ni aucune donnée n'est installé d'office. " +
-    "Vous pouvez recevoir celui du DN MADE (mention Objet ou Espace), recevoir celui d'un autre enseignant, " +
-    "ou construire le vôtre dans l'onglet Référentiel.";
+    "Choisissez celui de votre mention : DNMAX vous montre ce qu'il contient avant de l'installer. " +
+    "Vous pouvez aussi recevoir celui d'un autre enseignant, ou construire le vôtre dans l'onglet Référentiel.";
   const erreur = document.createElement("p");
   erreur.className = "accueil-erreur";
   erreur.hidden = true;
@@ -46,11 +45,12 @@ function afficher(acces: AccesDonnees): void {
   etapes.append(
     creerEtape(
       "1",
-      "Téléchargez le référentiel de votre mention (votre navigateur l'enregistre).",
-      ...REFERENTIELS_PROPOSES.map((referentiel) =>
+      "Choisissez le référentiel de votre mention (il est livré avec DNMAX, sans téléchargement).",
+      ...REFERENTIELS_EMBARQUES.map((referentiel) =>
         creerBouton(referentiel.mention, "btn", () => {
-          ouvrirDansNavigateur(referentiel.adresse).catch(() => {
-            erreur.textContent = `Le navigateur n'a pas pu être ouvert. Adresse du fichier : ${referentiel.adresse}`;
+          erreur.hidden = true;
+          ouvrirTexteRecu(acces, referentiel.texte).catch(() => {
+            erreur.textContent = `Le référentiel ${referentiel.nom} n'a pas pu être ouvert.`;
             erreur.hidden = false;
           });
         }),
@@ -58,8 +58,8 @@ function afficher(acces: AccesDonnees): void {
     ),
     creerEtape(
       "2",
-      "Ouvrez le fichier téléchargé : DNMAX vous montre ce qu'il contient avant de l'installer.",
-      creerBouton("Recevoir le fichier…", "btn primary", () => {
+      "Ou recevez le fichier d'un autre enseignant : DNMAX vous montre ce qu'il contient avant de l'installer.",
+      creerBouton("Recevoir un fichier…", "btn ghost", () => {
         ouvrirReception(acces);
       }),
     ),
