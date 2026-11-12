@@ -15,6 +15,9 @@
 
 ### Modifié
 
+- Exports Word et OpenDocument au format portrait, sans le grand cartouche : une ligne de contexte (promotion, livrables, semestre) et l'enseignant·e ; les dates de distribution et de rendu n'y figurent plus, et l'export ne les redemande plus.
+- Exports : le code de chaque compétence précède son libellé dans la même colonne (« C4.1 — … »), pour le report dans un autre logiciel.
+- Le champ d'évaluation s'appelle par défaut « Compétence opérationnelle ».
 - « Mes évaluations » : l'en-tête du tableau reste visible sous la barre du haut quand la liste défile.
 - « Rechercher une mise à jour » passe de « Mon compte » au pied de page de l'application, désormais toujours visible en bas de la fenêtre.
 - Identité de l'enseignant (premier lancement, « Mon compte ») : prénom et nom se saisissent dans deux champs ; une identité déjà enregistrée est séparée d'elle-même (premier mot pour le prénom), à corriger au besoin.
@@ -22,6 +25,7 @@
 
 ### Corrigé
 
+- Les boîtes (« Mon compte », échanges, données des élèves…) se ferment aussi par une croix et par un clic sur le fond, plus seulement par leur bouton ou la touche Échap.
 - L'annonce d'une mise à jour trouvée s'affiche au premier plan, au lieu d'apparaître derrière une boîte ouverte.
 
 ## 0.3.0 — 2026-11-12

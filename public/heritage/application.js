@@ -3659,9 +3659,9 @@ function saveData(repaint,fromDico){
   if(repaint!==false){paintForm();paintPick();paintLignes();paintRef();if(ui.tab==="org")paintOrg()}
 }
 let fiches = LS.get("dnmade.fiches",[]);
-let PREFS = Object.assign({critLabel:"Critère observable"}, LS.get("dnmade.prefs",{}));
+let PREFS = Object.assign({critLabel:"Compétence opérationnelle"}, LS.get("dnmade.prefs",{}));
 const CRIT_PRESETS=["Critère observable","Critère opérationnel","Compétence opérationnelle","Attendu","Indicateur de réussite"];
-function critLabel(){return (PREFS.critLabel||"Critère observable").trim()||"Critère observable"}
+function critLabel(){return (PREFS.critLabel||"Compétence opérationnelle").trim()||"Compétence opérationnelle"}
 function savePrefs(){LS.set("dnmade.prefs",PREFS)}
 let promos = LS.get("dnmade.promos",[]);
 
@@ -3910,35 +3910,6 @@ function askModal(html,onYes,onNo){
   document.addEventListener("keydown",key);
   document.body.appendChild(el);
   el.querySelector("[data-yes]").focus();
-}
-/* rappel des dates prévues avant un export : vérifie si elles sont vides ou passées, permet de les corriger */
-function dateEtat(v,label){const t=isoToday(), fr=v?v.split("-").reverse().join("/"):"";
-  return !v?{c:"warn",t:"⚠ non renseignée"}:v<t?{c:"warn",t:"⚠ passée ("+fr+")"}:{c:"ok",t:"✓ "+(v===t?"aujourd'hui":"le "+fr)}}
-function askExportDates(f,onGo){
-  const prev=document.activeElement, el=document.createElement("div");el.className="modal";
-  el.innerHTML=`<div class="card" role="dialog" aria-modal="true" aria-labelledby="xdT" style="max-width:440px;width:100%">
-    <p id="xdT"><b>Dates prévues</b> — rappel avant l'export de « ${esc(f.titre||"Sans titre")} »</p>
-    <div class="xdr"><label>Distribution aux élèves<input type="date" id="xdD" value="${esc(f.distribPrev||"")}"></label><span class="xds" id="xdDs"></span></div>
-    <div class="xdr"><label>Date butoir de rendu<input type="date" id="xdR" value="${esc(f.renduPrev||"")}"></label><span class="xds" id="xdRs"></span></div>
-    <p class="hint" id="xdH" style="font-size:12.5px"></p>
-    <div class="row"><button class="btn ghost" data-no>Annuler</button><button class="btn primary" data-yes>Exporter</button></div></div>`;
-  const g=id=>el.querySelector("#"+id), D=g("xdD"), R=g("xdR");
-  const paint=()=>{const a=dateEtat(D.value), b=dateEtat(R.value), inv=D.value&&R.value&&R.value<D.value;
-    g("xdDs").className="xds "+a.c;g("xdDs").textContent=a.t;
-    g("xdRs").className="xds "+(inv?"warn":b.c);g("xdRs").textContent=inv?"⚠ avant la distribution":b.t;
-    R.min=D.value||"";
-    g("xdH").textContent=(a.c==="warn"||b.c==="warn"||inv)?"Vous pouvez corriger les dates ici avant d'exporter. Elles figurent sur le document exporté et servent au suivi.":"Ces dates figureront sur le document exporté.";};
-  D.oninput=paint;R.oninput=paint;paint();
-  const close=()=>{el.remove();document.removeEventListener("keydown",key);if(prev&&prev.focus)prev.focus()};
-  const key=e=>{if(e.key==="Escape")close()};
-  el.querySelector("[data-no]").onclick=close;
-  el.onclick=e=>{if(e.target===el)close()};
-  el.querySelector("[data-yes]").onclick=()=>{
-    if(D.value)f.distribPrev=D.value;else delete f.distribPrev;
-    if(R.value)f.renduPrev=R.value;else delete f.renduPrev;
-    if(F&&F.id===f.id){if(f.distribPrev)F.distribPrev=f.distribPrev;else delete F.distribPrev;if(f.renduPrev)F.renduPrev=f.renduPrev;else delete F.renduPrev;save()}
-    LS.set("dnmade.fiches",fiches);close();onGo()};
-  document.addEventListener("keydown",key);document.body.appendChild(el);D.focus();
 }
 function toast(m){const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
 function save(){LS.set("dnmade.draft",F)}
@@ -4987,7 +4958,7 @@ function paintSaved(){
   const syncF=f=>{if(F&&F.id===f.id){F.suivi=structuredClone(f.suivi);F.restit=structuredClone(f.restit||{});save()}LS.set("dnmade.fiches",fiches)};
   h.querySelectorAll("[data-xk]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const i=+b.dataset.xi, f=fiches[i], k=b.dataset.xk;if(!f)return;
     if(b.dataset.xmode==="rest"){askRestitWarn(f,()=>exportFiche(i,k,"rest"));return}
-    askExportDates(f,()=>{exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()})});
+    exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()});
   const openSt=key=>{const [i,k]=String(key).split(":").map(Number), b=h.querySelector(`[data-sts="${i}:${k}"]`);if(!b)return;
     const pop=h.querySelector(`[data-stp="${i}"]`), f=fiches[i];
     pop.innerHTML=stepEditor(f,i,k);pop.style.setProperty("--stx",(b.getBoundingClientRect().left-b.closest(".stw").getBoundingClientRect().left+18-270)+"px");pop.hidden=false;b.classList.add("open");ui.stOpen=key;
@@ -7177,14 +7148,14 @@ function paintSet(){
 function columns(){
   const rs=rows();
   const c=[];
-  if(MOD.ec)c.push({k:"ecn",t:"Enseignement",w:14});
+  if(MOD.ec)c.push({k:"ecn",t:"Enseignement",w:17});
   c.push({k:"comp",t:"Compétence",w:24});
   // une colonne Livrable seulement si les lignes n'ont pas toutes les mêmes livrables
   if(F.livrables.length>1&&new Set(rs.map(r=>r.livr||"")).size>1)c.push({k:"livr",t:"Livrable",w:12});
   c.push({k:"lib",t:critLabel(),w:24});
   if(F.preset==="note")c.push({k:"coef",t:"Coef.",w:5});
   c.push({k:"niv",t:"Niveau d'acquisition",w:30,lv:true});
-  c.push({k:"obs",t:"Observations",w:20});
+  c.push({k:"obs",t:"Observations",w:17});
   return c;
 }
 function ecNoms(codes){
@@ -7202,7 +7173,7 @@ function rows(){
       bloc:[...new Set(cs.map(c=>c.bloc))].sort((a,b)=>+a-+b).join(", "),
       code:its.map(i=>i.code).join(" + "),
       lib:o.libelle||"(compétence opérationnelle à formuler)",
-      comp:cs.map(c=>c.libelle).join("\n"),
+      comp:cs.map(c=>c.code+" — "+c.libelle).join("\n"),   // le code facilite le report dans un autre logiciel
       ec:[...new Set(its.flatMap(i=>i.ecs||[]))].join(", "),
       ecn:ecNoms([...new Set(its.flatMap(i=>i.ecs||[]))]),
       livr:(o.livrables||[]).join(" ; "),
@@ -7211,7 +7182,7 @@ function rows(){
   });
   F.items.filter(i=>!i.op).forEach(it=>{
     const c=REF.competences.find(x=>x.code===it.code)||{libelle:"",bloc:""};
-    out.push({op:false,bloc:c.bloc,code:it.code,comp:c.libelle||it.code,lib:it.libelle&&it.libelle!==c.libelle?it.libelle:"",ec:(it.ecs||[]).join(", "),ecn:ecNoms(it.ecs),
+    out.push({op:false,bloc:c.bloc,code:it.code,comp:c.libelle?it.code+" — "+c.libelle:it.code,lib:it.libelle&&it.libelle!==c.libelle?it.libelle:"",ec:(it.ecs||[]).join(", "),ecn:ecNoms(it.ecs),
       livr:(it.livrables||[]).join(" ; "),key:"one:"+it.code,
       coef:it.coef||1,ord:[1,+c.bloc||99,ecNum(it.code)]});
   });
@@ -7224,24 +7195,12 @@ function fname(ext,who){
   const p=[F.semestre,classesDisp(F),F.titre||"évaluation",who].filter(Boolean).join(" - ");
   return p.replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").slice(0,120)+"."+ext;
 }
-function infoPairs(who){
-  const et=(DATA.etab||{}).nom||"";
-  const out=[...(et?[["Établissement",et]]:[]),["Diplôme",REF.meta.diplome||""],
-   ["Semestre",F.semestre+(MOD.dn?"  ("+dnLabel(F.semestre)+")":"")],
-   [(F.classes||[]).length>1?"Promotions":"Promotion",classesDisp(F)],["Livrables",F.livrables.join(" ; ")]];
-  if(MOD.ec){
-    const us=uesSelected();
-    if(us.length)out.push(["UE",us.join(" ; ")]);
-    if(F.ecCodes.length)out.push(["EC",ecLabels().join(" ; ")]);
-  }
-
-  if(MOD.eleves){const pr=curPromo();if(pr&&!(F.classes||[]).includes(pr.nom))out.push(["Promotion",(pr.nom||"")+" — Année "+pr.annee+(pr.as?" · "+pr.as:"")]);}
-  out.push(["Enseignant·e",F.prof]);
-  // dates prévues (jamais la date de saisie) ; vides, elles restent à compléter sur le document
-  const frD=d=>d?d.split("-").reverse().join("/"):"…… / …… / …………";
-  out.push(["Distribution aux élèves",frD(F.distribPrev)],["Date butoir de rendu",frD(F.renduPrev)]);
-  if(MOD.eleves)out.push(["Élève",who||""]);
-  return out;
+/* En-tête des documents exportés : une ligne de contexte et l'enseignant·e, sans cartouche. */
+function ligneContexte(){
+  return [classesDisp(F),F.livrables.join(" · "),F.semestre+(MOD.dn?" · "+dnLabel(F.semestre):"")].filter(Boolean).join(" — ");
+}
+function ligneEnseignant(who){
+  return [F.prof?"Enseignant·e : "+F.prof:"",who?"Élève : "+who:""].filter(Boolean).join(" · ");
 }
 
 /* ---------- export Excel ---------- */
@@ -7251,7 +7210,8 @@ function buildXlsx(fmt){
   aoa.push([(F.titre||"Évaluation").toUpperCase()]);
   merges.push({s:{r:0,c:0},e:{r:0,c:Math.max(1,cols.length-1)}});
   aoa.push([]);
-  infoPairs("").forEach(([k,v])=>{aoa.push([k,v])});
+  aoa.push([ligneContexte()]);
+  if(F.prof)aoa.push(["Enseignant·e",F.prof]);
   if(MOD.consignes&&F.consignes){aoa.push([]);aoa.push(["Consignes / attendus",F.consignes])}
   aoa.push([]);
   const head=aoa.length;
@@ -7348,24 +7308,15 @@ function ficheXml(el){
   const who=typeof el==="string"?el:(el&&el.nom)||"";
   const res=(el&&el.id)?((F.res||{})[el.id]||{n:{},obs:{},appr:""}):null;
   const cols=columns(), rs=rows();
-  const TOT=14000;
+  const TOT=10500;   // A4 portrait, marges de 1,2 cm
   const sum=cols.reduce((a,c)=>a+c.w,0);
   const widths=cols.map(c=>Math.round(TOT*c.w/sum));
   let x="";
   x+=wp(REF.meta.diplome||"",{sz:8.5,caps:true,color:"5C6472",after:20});
   x+=wp(F.titre||"Évaluation",{b:true,sz:16,after:40});
-  x+=wp((F.livrables.length?F.livrables.join(" · ")+" — ":"")+F.semestre+(MOD.dn?" · "+dnLabel(F.semestre):""),{sz:10,color:"1F4D8F",after:140,border:true});
-  const pairs=infoPairs(who).filter(p=>p[1]);
-  let ir="";
-  for(let i=0;i<pairs.length;i+=2){
-    const a=pairs[i],b=pairs[i+1];
-    ir+=wtr(wtc(wp(a[0],{b:true,sz:8.5,caps:true,color:"5C6472",after:0}),{w:2600,shd:"F4F5F7"})
-      +wtc(wp(a[1],{sz:10,after:0}),{w:4400})
-      +wtc(b?wp(b[0],{b:true,sz:8.5,caps:true,color:"5C6472",after:0}):wp(""),{w:2600,shd:"F4F5F7"})
-      +wtc(b?wp(b[1],{sz:10,after:0}):wp(""),{w:4400}));
-  }
-  x+=wtable(ir,[2600,4400,2600,4400]);
-  x+=wp("",{after:0});
+  x+=wp(ligneContexte(),{sz:10,color:"1F4D8F",after:40,border:true});
+  const ens=ligneEnseignant(who);
+  if(ens)x+=wp(ens,{sz:10,after:120});
   if(MOD.consignes&&F.consignes){
     x+=wp("Consignes et attendus",{b:true,sz:10,caps:true,color:"5C6472",before:120,after:30});
     x+=wp(F.consignes,{sz:10,after:120});
@@ -7393,7 +7344,7 @@ function ficheXml(el){
 }
 function buildDocx(only){
   const els=only||eleveList();
-  const SECT=`<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="680" w:right="680" w:bottom="680" w:left="680" w:header="340" w:footer="340" w:gutter="0"/></w:sectPr>`;
+  const SECT=`<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="680" w:right="680" w:bottom="680" w:left="680" w:header="340" w:footer="340" w:gutter="0"/></w:sectPr>`;
   WIMG={list:[],map:{}};
   const parts = els.length? els.map(e=>ficheXml(e)) : [ficheXml("")];
   const body = parts.map((p,i)=> i<parts.length-1 ? p+`<w:p><w:r><w:br w:type="page"/></w:r></w:p>` : p).join("");
@@ -7448,13 +7399,11 @@ function buildOdt(only){
   const fiche=el=>{
     const who=typeof el==="string"?el:(el&&el.nom)||"";
     const res=(el&&el.id)?((F.res||{})[el.id]||{n:{},obs:{},appr:""}):null;
-    const cols=columns(), rs=rows(), TOT=14600, sum=cols.reduce((a,c)=>a+c.w,0), widths=cols.map(c=>Math.round(TOT*c.w/sum));
+    const cols=columns(), rs=rows(), TOT=10500, sum=cols.reduce((a,c)=>a+c.w,0), widths=cols.map(c=>Math.round(TOT*c.w/sum));   // A4 portrait
     let x=tp(REF.meta.diplome||"","Pk")+tp(F.titre||"Évaluation","Ph")
-      +tp((F.livrables.length?F.livrables.join(" · ")+" — ":"")+F.semestre+(MOD.dn?" · "+dnLabel(F.semestre):""),"Pa");
-    const pairs=infoPairs(who).filter(q=>q[1]);let ir="";
-    for(let i=0;i<pairs.length;i+=2){const a=pairs[i],b=pairs[i+1]||["",""];
-      ir+=row(cell(tp(a[0],"Pk"),"CellK")+cell(tp(a[1]))+cell(tp(b[0],"Pk"),"CellK")+cell(tp(b[1])))}
-    x+=table([2700,4600,2700,4600],ir);
+      +tp(ligneContexte(),"Pa");
+    const ens=ligneEnseignant(who);
+    if(ens)x+=tp(ens);
     if(MOD.consignes&&F.consignes)x+=tp("Consignes et attendus","Ps")+tp(F.consignes);
     x+=tp("Compétences évaluées","Ps")+tp("Niveau d'acquisition : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.","Pi");
     let tr=row(cols.map((c,i)=>cell(tp(c.t,c.lv?"PhC":"PhT")+(c.lv?gaugeHead(widths[i]):""),"CellH")).join(""),true);
@@ -7490,7 +7439,7 @@ function buildOdt(only){
     +`<style:style style:name="CellN" style:family="table-cell"><style:table-cell-properties fo:padding="0cm" fo:border="none" style:vertical-align="bottom"/></style:style>`
     +colSt.join("");
   const content=`<?xml version="1.0" encoding="UTF-8"?><office:document-content ${ns}><office:automatic-styles>${auto}</office:automatic-styles><office:body><office:text>${body}</office:text></office:body></office:document-content>`;
-  const styles=`<?xml version="1.0" encoding="UTF-8"?><office:document-styles ${ns}><office:styles><style:default-style style:family="paragraph"><style:text-properties style:font-name="Calibri" fo:font-family="Calibri, Carlito, sans-serif" fo:font-size="10pt" fo:language="fr" fo:country="FR"/></style:default-style></office:styles><office:automatic-styles><style:page-layout style:name="pm1"><style:page-layout-properties fo:page-width="29.7cm" fo:page-height="21cm" style:print-orientation="landscape" fo:margin-top="1.2cm" fo:margin-bottom="1.2cm" fo:margin-left="1.2cm" fo:margin-right="1.2cm"/></style:page-layout></office:automatic-styles><office:master-styles><style:master-page style:name="Standard" style:page-layout-name="pm1"/></office:master-styles></office:document-styles>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8"?><office:document-styles ${ns}><office:styles><style:default-style style:family="paragraph"><style:text-properties style:font-name="Calibri" fo:font-family="Calibri, Carlito, sans-serif" fo:font-size="10pt" fo:language="fr" fo:country="FR"/></style:default-style></office:styles><office:automatic-styles><style:page-layout style:name="pm1"><style:page-layout-properties fo:page-width="21cm" fo:page-height="29.7cm" style:print-orientation="portrait" fo:margin-top="1.2cm" fo:margin-bottom="1.2cm" fo:margin-left="1.2cm" fo:margin-right="1.2cm"/></style:page-layout></office:automatic-styles><office:master-styles><style:master-page style:name="Standard" style:page-layout-name="pm1"/></office:master-styles></office:document-styles>`;
   const manifest=`<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.3"><manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/><manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>${WIMG.list.map(im=>`<manifest:file-entry manifest:full-path="Pictures/${im.file}" manifest:media-type="image/png"/>`).join("")}</manifest:manifest>`;
   const zip=new JSZip();
   zip.file("mimetype","application/vnd.oasis.opendocument.text",{compression:"STORE"});
