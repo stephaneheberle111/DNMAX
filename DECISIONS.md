@@ -95,7 +95,7 @@ La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en
 
 **Conséquence assumée** : mot de passe **et** code de secours perdus, les données sont irrécupérables, y compris par l'auteur de l'application.
 
-**Reste à faire** : restaurer une sauvegarde depuis l'application, verrouiller sans quitter. (Le changement de mot de passe est décrit dans la décision 18.)
+**Reste à faire** : verrouiller sans quitter. (Le changement de mot de passe est décrit dans la décision 18, la restauration d'une sauvegarde dans la décision 22.)
 
 ## 9. Installeurs construits par l'intégration continue, sans certificat
 
@@ -288,6 +288,19 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 - la vue web de Linux (WebKitGTK) peut ne pas fournir WebRTC : le choix apparaît alors désactivé, avec l'explication ;
 - testé seulement dans Chromium, deux pages d'un même navigateur ; pas encore sur WebView2 (Windows), WKWebView (macOS), WebKitGTK ni entre deux réseaux réels : d'où la mention « bêta ».
 
+## 22. Restaurer une sauvegarde depuis l'application
+
+**Retenu** : Paramètres > « Sauvegardes » liste les copies de `sauvegardes/` (date, taille) et en restaure une après une confirmation qui dit ce qui sera remplacé. Avant de remplacer `coffre.dnmax`, l'état actuel est copié dans `sauvegardes/avant-restauration-AAAA-MM-JJ-HHMMSS.dnmax` (heure universelle), puis le coffre est réécrit comme d'habitude : fichier provisoire forcé sur le disque, puis renommage. La session est ensuite verrouillée et la page rechargée : l'enseignant saisit le mot de passe en vigueur à la date de la sauvegarde (le code de secours reste valable).
+
+**Sécurité** : l'interface ne transmet qu'un nom de fichier, accepté seulement s'il figure dans la liste que l'enveloppe vient de dresser ; cette liste ne retient que les fichiers ordinaires (pas de lien symbolique) dont le nom suit exactement l'une des deux formes produites par DNMAX, avec une date qui existe au calendrier. Aucun chemin venu de l'interface n'atteint le disque. Une sauvegarde dont la forme n'est pas celle d'un coffre est refusée avant tout remplacement.
+
+**Pourquoi verrouiller** : la sauvegarde peut avoir un autre mot de passe que la session en cours, et un enregistrement encore en attente dans la page écraserait sinon le coffre restauré avec l'ancien contenu.
+
+**Copies mises de côté** : elles ne comptent pas dans les dix sauvegardes quotidiennes (une restauration ne doit pas en chasser une) et apparaissent dans la même liste, ce qui permet d'annuler une restauration. Pour qu'une donnée effacée (un élève, décision 20) n'y survive pas indéfiniment, une copie mise de côté est supprimée dès que la rotation est pleine et qu'elle est plus ancienne que la plus ancienne sauvegarde quotidienne gardée : elle suit le même horizon de dix jours d'utilisation.
+
+**Recours** : si l'application ne s'ouvre plus, la copie à la main d'un fichier de `sauvegardes/` à la place de `coffre.dnmax` reste décrite dans la documentation.
+
+**Limites** : la relance après restauration et l'ensemble du parcours n'ont été essayés que par les tests de l'enveloppe et dans Chromium avec des réponses simulées, pas encore dans l'application installée sur chacun des trois systèmes.
 ## 23. Visite guidée intégrée, guidée par l'état réel des données
 
 **Retenu** : une visite pas à pas dans l'application (`src/ecran-parcours.ts`, étapes dans `src/parcours-etapes.ts`), plutôt qu'une documentation ou une vidéo. L'écran est grisé sauf la zone où agir ; un curseur animé montre le geste attendu. La prise en main se lance à la première ouverture, une seule fois (entrée `dnmax.parcours` du coffre), et se relance depuis « Mon compte » ; les modules Élèves et Niveaux DN MADE ont chacun leur visite, lancée depuis leur carte dans Paramètres.

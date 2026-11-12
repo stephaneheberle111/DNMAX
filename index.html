@@ -236,6 +236,15 @@
         </div>
       </div>
     </div>
+    <!-- Ajout à l'interface historique : sauvegardes du coffre, géré par src/ecran-sauvegardes.ts -->
+    <div class="panel" style="max-width:720px;margin-top:18px" id="panneau-sauvegardes" hidden>
+      <div class="pick-head"><h3>Sauvegardes</h3><span class="count" id="nombre-sauvegardes">0</span></div>
+      <div class="panel-body">
+        <div class="hint">DNMAX garde une copie chiffrée de vos données par jour d'utilisation, dix au plus, faite à la première ouverture de la journée. Vous pouvez revenir à l'une d'elles : l'état actuel est d'abord mis de côté.</div>
+        <ul class="sauvegardes-liste" id="liste-sauvegardes"></ul>
+        <p class="sauvegardes-message" id="message-sauvegardes" role="status" hidden></p>
+      </div>
+    </div>
     <div class="panel" style="max-width:720px;margin-top:18px">
       <div class="pick-head"><h3>Échelles d'évaluation<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Les échelles cochées sont actives ; celle marquée « par défaut » s'applique à toute nouvelle évaluation et ne se change pas depuis l'évaluation. Une évaluation déjà enregistrée garde son échelle.</span></span></h3></div>
       <div id="echList"></div>
