@@ -10,6 +10,7 @@
 ### Modifié
 
 - Site : hébergé chez OVH à l'adresse dnmax.fr.
+- Mises à jour : DNMAX ne se connecte plus à Internet au lancement ; la recherche se fait à la demande, depuis « Mon compte ».
 
 ### Sécurité
 

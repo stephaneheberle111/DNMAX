@@ -190,21 +190,25 @@ export interface MiseAJour {
   installer(): Promise<void>;
 }
 
+/** Résultat d'une recherche de mise à jour. */
+export type RechercheMiseAJour =
+  | { issue: "disponible"; miseAJour: MiseAJour }
+  | { issue: "a-jour" }
+  /** Pas de connexion, dépôt injoignable, publication en cours… */
+  | { issue: "impossible" };
+
 /**
  * Cherche une version plus récente auprès du dépôt de l'application.
- * C'est le seul appel réseau de DNMAX ; aucune donnée de l'enseignant n'est transmise.
- *
- * @returns `null` s'il n'y en a pas, ou si la vérification est impossible
- *   (pas de connexion, publication en cours…) : l'application doit rester
- *   pleinement utilisable hors ligne.
+ * N'est appelée qu'à la demande de l'enseignant ; aucune de ses données n'est transmise.
+ * Ne lève jamais d'erreur : un échec est rendu comme une issue.
  */
-export async function chercherMiseAJour(): Promise<MiseAJour | null> {
+export async function chercherMiseAJour(): Promise<RechercheMiseAJour> {
   try {
     const disponible = await check();
     if (disponible === null) {
-      return null;
+      return { issue: "a-jour" };
     }
-    return {
+    const miseAJour: MiseAJour = {
       version: disponible.version,
       notes: disponible.body ?? "",
       installer: async () => {
@@ -212,8 +216,9 @@ export async function chercherMiseAJour(): Promise<MiseAJour | null> {
         await relaunch();
       },
     };
+    return { issue: "disponible", miseAJour };
   } catch {
-    return null;
+    return { issue: "impossible" };
   }
 }
 
