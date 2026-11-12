@@ -2,10 +2,19 @@
 
 ## Non publié
 
+### Ajouté
+
+- Site : publication automatique chez OVH par SFTP à chaque fusion qui touche le site.
+
 ### Modifié
 
+- Site : l'ancienne adresse du site est fermée ; seul dnmax.fr reste en service.
 - Données des élèves : la section passe de « Mon compte » à l'onglet Paramètres, et n'apparaît que si le module Élèves est actif ou si des élèves sont enregistrés.
 - Une promotion peut être anonymisée ou effacée à tout moment, pas seulement après sa durée de conservation (avec une seconde confirmation).
+
+### Corrigé
+
+- Site : sur téléphone, le menu ne sort plus de l'écran et aucune page ne s'élargit au-delà de l'écran.
 
 ## 0.2.0 — 2026-11-12
 
