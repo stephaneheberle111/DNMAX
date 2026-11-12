@@ -102,8 +102,8 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
     get identite() {
       return identite;
     },
-    renommer: (nom) => {
-      const renommee = creerIdentite(nom, identite.id);
+    renommer: (prenom, nomFamille) => {
+      const renommee = creerIdentite(prenom, nomFamille, identite.id);
       if (renommee === null) {
         return false;
       }
@@ -160,7 +160,7 @@ async function demarrer(): Promise<void> {
   installerDonneesEleves(acces);
   rappelerConservation(acces);
   installerCompte(acces);
-  installerPiedDePage();
+  installerPiedDePage(acces);
   await proposerPremiersPas(acces);
 }
 
