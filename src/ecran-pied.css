@@ -1,8 +1,14 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+/* Toujours en bas de la fenêtre, comme une barre d'état ; la page réserve sa hauteur. */
 .pied-app {
-  margin-top: 32px;
-  padding-top: 12px;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 15;
+  padding: 7px max(16px, env(safe-area-inset-left, 0px)) calc(7px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
   border-top: 1px solid var(--line);
   display: flex;
   flex-wrap: wrap;
@@ -36,4 +42,8 @@
 .pied-erreur {
   color: var(--danger);
   font-weight: 600;
+}
+
+body {
+  padding-bottom: var(--hauteur-pied, 0px);
 }

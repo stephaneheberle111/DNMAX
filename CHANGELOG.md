@@ -4,7 +4,7 @@
 
 ### Modifié
 
-- « Rechercher une mise à jour » passe de « Mon compte » au pied de page de l'application.
+- « Rechercher une mise à jour » passe de « Mon compte » au pied de page de l'application, désormais toujours visible en bas de la fenêtre.
 
 ### Corrigé
 
