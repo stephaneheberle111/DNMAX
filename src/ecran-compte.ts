@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-compte.css";
 import { ADRESSE_CODE_SOURCE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./configuration";
+import { construireAdresseRetours, deduireSysteme } from "./domaine/adresse-retours";
 import { decrireVerification } from "./domaine/annonce-mise-a-jour";
 import { LONGUEUR_MAXIMALE_NOM } from "./domaine/identite";
 import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
 import { messagePourErreur } from "./ecran-coffre";
-import { ouvrirConservation, ouvrirDroitsEleves } from "./ecran-droits-eleves";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { verifierMiseAJour } from "./ecran-mise-a-jour";
 import { changerMotDePasse, lireVersion, ouvrirDansNavigateur } from "./enveloppe";
@@ -107,11 +107,18 @@ function creerRubriqueMotDePasse(acces: AccesDonnees): HTMLElement {
   return rubrique;
 }
 
-function creerLien(texte: string, adresse: string, dire: (texte: string, erreur: boolean) => void): HTMLButtonElement {
+/** L'adresse peut n'être connue qu'après coup (version lue auprès de l'enveloppe). */
+function creerLien(
+  texte: string,
+  adresse: string | Promise<string>,
+  dire: (texte: string, erreur: boolean) => void,
+): HTMLButtonElement {
   return creerBouton(texte, "lnk", () => {
-    ouvrirDansNavigateur(adresse).catch(() => {
-      dire(`Le navigateur n'a pas pu être ouvert. Adresse : ${adresse}`, true);
-    });
+    void Promise.resolve(adresse).then((adresseConnue) =>
+      ouvrirDansNavigateur(adresseConnue).catch(() => {
+        dire(`Le navigateur n'a pas pu être ouvert. Adresse : ${adresseConnue}`, true);
+      }),
+    );
   });
 }
 
@@ -152,7 +159,13 @@ function creerRubriqueAPropos(acces: AccesDonnees): HTMLElement {
   const { zone, dire } = creerMessage();
   const liens = creer("div", "compte-liens");
   liens.append(
-    creerLien("Proposer une idée ou signaler un bug", ADRESSE_RETOURS, dire),
+    creerLien(
+      "Proposer une idée ou signaler un bug",
+      versionInstallee.then((numero) =>
+        construireAdresseRetours(ADRESSE_RETOURS, numero, deduireSysteme(navigator.userAgent)),
+      ),
+      dire,
+    ),
     creerLien("Site et documentation", ADRESSE_SITE, dire),
     creerLien("Code source", ADRESSE_CODE_SOURCE, dire),
   );
@@ -172,25 +185,10 @@ function creerRubriqueAPropos(acces: AccesDonnees): HTMLElement {
   return rubrique;
 }
 
-function creerRubriqueEleves(acces: AccesDonnees): HTMLElement {
-  const rubrique = creer("section", "compte-rubrique");
-  rubrique.append(
-    creer("h3", "", "Données des élèves"),
-    creer("p", "", "Exporter tout ce qui concerne un élève, ou l'effacer de DNMAX, à sa demande ou à celle de sa famille."),
-    creerBouton("Données d'un élève…", "btn", () => {
-      ouvrirDroitsEleves(acces);
-    }),
-    creerBouton("Données anciennes…", "btn", () => {
-      ouvrirConservation(acces);
-    }),
-  );
-  return rubrique;
-}
-
 function montrerCompte(acces: AccesDonnees): void {
   const { boite, fermer } = ouvrirBoite("Mon compte");
   const contenu = creer("div", "compte-contenu");
-  contenu.append(creerRubriqueNom(acces), creerRubriqueMotDePasse(acces), creerRubriqueEleves(acces), creerRubriqueAPropos(acces));
+  contenu.append(creerRubriqueNom(acces), creerRubriqueMotDePasse(acces), creerRubriqueAPropos(acces));
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(contenu, actions);

@@ -2,9 +2,23 @@
 
 ## Non publié
 
+### Ajouté
+
+- Site : publication automatique chez OVH par SFTP à chaque fusion qui touche le site.
+- Site : « Idées et bugs » propose aussi l'envoi par e-mail à contact@dnmax.fr (message prérempli dans votre messagerie, lu par le seul éditeur), en plus du ticket public sur GitHub.
+- « Mon compte » : le lien « Proposer une idée ou signaler un bug » transmet au site la version installée et le système, qui préremplissent le signalement.
+- Pied de page de l'application : version et licence, « À propos », « Confidentialité », « Site et documentation », « Proposer une idée ou signaler un bug ».
+
 ### Modifié
 
+- Site : l'ancienne adresse du site est fermée ; seul dnmax.fr reste en service.
+- Données des élèves : la section passe de « Mon compte » à l'onglet Paramètres, et n'apparaît que si le module Élèves est actif ou si des élèves sont enregistrés.
+- Une promotion peut être anonymisée ou effacée à tout moment, pas seulement après sa durée de conservation (avec une seconde confirmation).
 - Sur une installation neuve, seule l'échelle « Niveaux de maîtrise » est active ; « Degrés d'acquisition » se coche dans Paramètres.
+
+### Corrigé
+
+- Site : sur téléphone, le menu ne sort plus de l'écran et aucune page ne s'élargit au-delà de l'écran.
 
 ## 0.2.0 — 2026-11-12
 
