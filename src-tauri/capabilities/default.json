@@ -16,7 +16,7 @@
       "identifier": "opener:allow-open-url",
       "allow": [
         {
-          "url": "https://dnmax.pages.dev/*"
+          "url": "https://dnmax.fr/*"
         },
         {
           "url": "https://github.com/stephaneheberle111/DNMAX"

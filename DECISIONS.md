@@ -237,6 +237,8 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Non retenu** : les pages GitHub, qui auraient gardé un hébergeur américain.
 
+**Transition** : l'application ouvre dnmax.fr à partir de la version 0.2.0. Les postes plus anciens ouvrent encore dnmax.pages.dev : l'ancien site Cloudflare reste en ligne jusqu'à ce que ces postes soient à jour, puis est supprimé.
+
 ## 20. Durée de conservation des données d'élèves
 
 **Retenu** : les données d'élèves d'une promotion sont gardées **1 an** après sa sortie (le 1er juillet suivant la fin de son diplôme, dont la durée est lue dans les données de l'établissement, 3 ans à défaut). La sortie ne déclenche rien par elle-même : passé ce délai, DNMAX le **rappelle** au lancement, et « Mon compte » > « Données anciennes » propose, au choix de l'enseignant :
