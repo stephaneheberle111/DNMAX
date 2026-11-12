@@ -2,23 +2,16 @@
 
 ## Non publié
 
-### Ajouté
-
-- Paramètres > Sauvegardes : liste des sauvegardes quotidiennes et restauration de l'une d'elles. L'état actuel est d'abord mis de côté (restaurable lui aussi), puis l'application se recharge et demande le mot de passe en vigueur à la date de la sauvegarde. La documentation du site décrit la marche à suivre et garde la méthode manuelle en dernier recours.
-- Documentation du site : « RGPD : fiche pour l'établissement » (description du traitement pour le chef d'établissement et le délégué à la protection des données) et « RGPD : information des élèves » (modèle de note à adapter), imprimables.
-- Référentiel DN MADE mention Espace (tableau des compétences 2023), téléchargeable sur dnmax.fr comme celui de la mention Objet ; l'encart des installations vides propose les deux.
-- Visite guidée de prise en main, lancée à la première ouverture : écran grisé sauf la zone utile, qui glisse d'une étape à l'autre jusqu'au prochain endroit où cliquer, curseur animé, feuille de route des grandes étapes, éclats de couleur à chaque étape réussie, consignes pas à pas pour installer le référentiel, déclarer promotions, collègues et répartition de service, puis créer et exporter une première évaluation. Elle repère ce qui est déjà fait, se passe à tout moment et se relance depuis « Mon compte ». Les modules Élèves et Niveaux DN MADE ont leur propre visite.
-
-### Modifié
-
-- « Mes évaluations » : le petit menu « ⋯ » de chaque ligne devient un bouton « Actions… » qui ouvre une fenêtre centrée, titrée avec l'intitulé de l'évaluation, où les actions sont rangées en sections (Évaluer, Exporter avec un grand bouton par format, Autres actions). Elle se ferme par la croix, un clic à côté ou Échap.
-
 ## 0.4.1 — 2026-11-12
 
 ### Ajouté
 
 - « Échanger… » → « Échange en direct (bêta) » : envoyer évaluations, référentiels et, chiffrés, élèves et résultats d'ordinateur à ordinateur, sans fichier ni serveur intermédiaire, en se transmettant un code d'invitation et un code de réponse. Des serveurs publics français servent seulement à ce que les postes se trouvent. Peut échouer selon les réseaux ; l'échange par fichier reste disponible.
 - Les installeurs Windows, macOS et Debian/Ubuntu de chaque version publiée sont déposés sur dnmax.fr, et les boutons du site les y prennent ; l'AppImage reste sur GitHub. Page Confidentialité mise à jour en conséquence.
+- Paramètres > Sauvegardes : liste des sauvegardes quotidiennes et restauration de l'une d'elles. L'état actuel est d'abord mis de côté (restaurable lui aussi), puis l'application se recharge et demande le mot de passe en vigueur à la date de la sauvegarde. La documentation du site décrit la marche à suivre et garde la méthode manuelle en dernier recours.
+- Documentation du site : « RGPD : fiche pour l'établissement » (description du traitement pour le chef d'établissement et le délégué à la protection des données) et « RGPD : information des élèves » (modèle de note à adapter), imprimables.
+- Référentiel DN MADE mention Espace (tableau des compétences 2023), téléchargeable sur dnmax.fr comme celui de la mention Objet ; l'encart des installations vides propose les deux.
+- Visite guidée de prise en main, lancée à la première ouverture : écran grisé sauf la zone utile, qui glisse d'une étape à l'autre jusqu'au prochain endroit où cliquer, curseur animé, feuille de route des grandes étapes, éclats de couleur à chaque étape réussie, consignes pas à pas pour installer le référentiel, déclarer promotions, collègues et répartition de service, puis créer et exporter une première évaluation. Elle repère ce qui est déjà fait, se passe à tout moment et se relance depuis « Mon compte ». Les modules Élèves et Niveaux DN MADE ont leur propre visite.
 
 ### Modifié
 
@@ -29,6 +22,7 @@
 - « Rechercher une mise à jour » passe de « Mon compte » au pied de page de l'application, désormais toujours visible en bas de la fenêtre.
 - Identité de l'enseignant (premier lancement, « Mon compte ») : prénom et nom se saisissent dans deux champs ; une identité déjà enregistrée est séparée d'elle-même (premier mot pour le prénom), à corriger au besoin.
 - Élèves et enseignants (« Mon établissement ») : prénom et nom dans deux champs. Pour ajouter plusieurs élèves, une ligne « Prénom Nom » ou deux colonnes Prénom / Nom collées d'un tableur ; les noms déjà saisis sont séparés d'eux-mêmes (premier mot pour le prénom), à corriger au besoin. L'anonymisation remplace aussi le prénom et le nom.
+- « Mes évaluations » : le petit menu « ⋯ » de chaque ligne devient un bouton « Actions… » qui ouvre une fenêtre centrée, titrée avec l'intitulé de l'évaluation, où les actions sont rangées en sections (Évaluer, Exporter avec un grand bouton par format, Autres actions). Elle se ferme par la croix, un clic à côté ou Échap.
 
 ### Corrigé
 
