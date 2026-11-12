@@ -94,7 +94,7 @@ jobs:
               src-tauri/target/release/bundle/nsis/*.exe
               src-tauri/target/release/bundle/nsis/*.exe.sig
           - nom: macOS
-            machine: macos-latest
+            machine: macos-15
             options: "--target universal-apple-darwin"
             fichiers: |
               src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
