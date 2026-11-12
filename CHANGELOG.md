@@ -2,13 +2,31 @@
 
 ## Non publié
 
-### Corrigé
+### Ajouté
 
-- L'annonce d'une mise à jour trouvée depuis « Mon compte » s'affiche par-dessus la boîte, au lieu d'apparaître derrière.
+- Documentation du site : « RGPD : fiche pour l'établissement » (description du traitement pour le chef d'établissement et le délégué à la protection des données) et « RGPD : information des élèves » (modèle de note à adapter), imprimables.
+
+## 0.4.1 — 2026-11-12
 
 ### Ajouté
 
+- « Échanger… » → « Échange en direct (bêta) » : envoyer évaluations, référentiels et, chiffrés, élèves et résultats d'ordinateur à ordinateur, sans fichier ni serveur intermédiaire, en se transmettant un code d'invitation et un code de réponse. Des serveurs publics français servent seulement à ce que les postes se trouvent. Peut échouer selon les réseaux ; l'échange par fichier reste disponible.
 - Les installeurs Windows, macOS et Debian/Ubuntu de chaque version publiée sont déposés sur dnmax.fr, et les boutons du site les y prennent ; l'AppImage reste sur GitHub. Page Confidentialité mise à jour en conséquence.
+
+### Modifié
+
+- Exports Word et OpenDocument au format portrait, sans le grand cartouche : une ligne de contexte (promotion, livrables, semestre) et l'enseignant·e ; les dates de distribution et de rendu n'y figurent plus, et l'export ne les redemande plus.
+- Exports : le code de chaque compétence précède son libellé dans la même colonne (« C4.1 — … »), pour le report dans un autre logiciel.
+- Le champ d'évaluation s'appelle par défaut « Compétence opérationnelle ».
+- « Mes évaluations » : l'en-tête du tableau reste visible sous la barre du haut quand la liste défile.
+- « Rechercher une mise à jour » passe de « Mon compte » au pied de page de l'application, désormais toujours visible en bas de la fenêtre.
+- Identité de l'enseignant (premier lancement, « Mon compte ») : prénom et nom se saisissent dans deux champs ; une identité déjà enregistrée est séparée d'elle-même (premier mot pour le prénom), à corriger au besoin.
+- Élèves et enseignants (« Mon établissement ») : prénom et nom dans deux champs. Pour ajouter plusieurs élèves, une ligne « Prénom Nom » ou deux colonnes Prénom / Nom collées d'un tableur ; les noms déjà saisis sont séparés d'eux-mêmes (premier mot pour le prénom), à corriger au besoin. L'anonymisation remplace aussi le prénom et le nom.
+
+### Corrigé
+
+- Les boîtes (« Mon compte », échanges, données des élèves…) se ferment aussi par une croix et par un clic sur le fond, plus seulement par leur bouton ou la touche Échap.
+- L'annonce d'une mise à jour trouvée s'affiche au premier plan, au lieu d'apparaître derrière une boîte ouverte.
 
 ## 0.3.0 — 2026-11-12
 

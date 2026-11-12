@@ -40,14 +40,17 @@ import {
   enregistrerFichier,
   enregistrerFichierProtege,
   ouvrirFichierEchange,
+  protegerTexteEchange,
 } from "./enveloppe";
+import { echangeDirectDisponible } from "./canal-direct";
+import { montrerChoixDirect, montrerEnvoiDirect } from "./ecran-echange-direct";
 
 /** Ce dont l'écran d'échange a besoin de l'application. */
 export interface AccesDonnees {
   /** L'enseignant qui utilise l'application : son nom signe les fichiers qu'il envoie. */
   readonly identite: Identite;
   /** Change le nom de l'enseignant ; rend `false` si le nom proposé est vide. */
-  renommer(nom: string): boolean;
+  renommer(prenom: string, nomFamille: string): boolean;
   lireEntrees(): Entrees;
   /** Référentiels présents sur ce poste, avec leur empreinte. */
   dresserCatalogue(entrees: Entrees): Promise<ReferentielLocal[]>;
@@ -127,29 +130,54 @@ function lireTexte(valeur: unknown): string {
   return typeof valeur === "string" ? valeur : "";
 }
 
-/** Ouvre une boîte de dialogue vide et rend de quoi la remplir et la fermer. */
-export function ouvrirBoite(titre: string): { boite: HTMLElement; fermer: () => void } {
+/**
+ * Ouvre une boîte de dialogue vide et rend de quoi la remplir et la fermer.
+ *
+ * @param surFermeture appelé une fois à la fermeture, par `fermer` ou par la touche Échap.
+ */
+export function ouvrirBoite(titre: string, surFermeture?: () => void): { boite: HTMLElement; fermer: () => void } {
   const fond = creer("div", "echange-fond");
   const boite = creer("div", "echange-boite");
   boite.setAttribute("role", "dialog");
   boite.setAttribute("aria-modal", "true");
   boite.append(creer("h2", "", titre));
+  // Plusieurs façons de sortir : la croix, un clic sur le fond, la touche Échap, ou le bouton de la boîte.
+  const croix = creerBouton("×", "echange-fermer", () => {
+    fermer();
+  });
+  croix.setAttribute("aria-label", "Fermer");
+  croix.title = "Fermer";
+  boite.append(croix);
   fond.append(boite);
+  // Le clic doit commencer et finir sur le fond : une sélection de texte relâchée hors de la boîte ne la ferme pas.
+  let appuiSurFond = false;
+  fond.addEventListener("mousedown", (evenement) => {
+    appuiSurFond = evenement.target === fond;
+  });
+  fond.addEventListener("click", (evenement) => {
+    if (appuiSurFond && evenement.target === fond) {
+      fermer();
+    }
+  });
   const surTouche = (evenement: KeyboardEvent): void => {
     if (evenement.key === "Escape") {
       fermer();
     }
   };
   const fermer = (): void => {
+    if (!fond.isConnected) {
+      return;
+    }
     document.removeEventListener("keydown", surTouche);
     fond.remove();
+    surFermeture?.();
   };
   document.addEventListener("keydown", surTouche);
   document.body.append(fond);
   return { boite, fermer };
 }
 
-function afficherMessage(titre: string, message: string): void {
+export function afficherMessage(titre: string, message: string): void {
   const { boite, fermer } = ouvrirBoite(titre);
   boite.append(creer("p", "echange-erreur", message));
   const actions = creer("div", "echange-actions");
@@ -178,7 +206,33 @@ function listerDiplomes(catalogue: readonly ReferentielLocal[]): ReferentielLoca
     .filter((referentiel) => referentiel !== null);
 }
 
-function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonly ReferentielLocal[]): void {
+/** Où part ce que l'enseignant choisit d'envoyer : dans un fichier, ou en direct vers un autre ordinateur. */
+export type DestinationEnvoi = "fichier" | "direct";
+
+/**
+ * Écrit le contenu choisi, chiffré sous `motDePasse` s'il comprend des élèves, et
+ * le fait partir vers sa destination. Le texte est le même pour les deux
+ * destinations : celui d'un fichier `.dnmax`.
+ *
+ * @returns `true` si l'envoi est lancé ou le fichier écrit, `false` si l'enseignant a annulé.
+ */
+async function expedier(destination: DestinationEnvoi, texte: string, motDePasse: string | null): Promise<boolean> {
+  if (destination === "direct") {
+    montrerEnvoiDirect(motDePasse === null ? texte : await protegerTexteEchange(texte, motDePasse), motDePasse !== null);
+    return true;
+  }
+  const nom = `evaluations${EXTENSION_FICHIER}`;
+  return motDePasse === null
+    ? await enregistrerFichier(nom, new TextEncoder().encode(texte))
+    : await enregistrerFichierProtege(nom, texte, motDePasse);
+}
+
+export function montrerExport(
+  acces: AccesDonnees,
+  entrees: Entrees,
+  catalogue: readonly ReferentielLocal[],
+  destination: DestinationEnvoi = "fichier",
+): void {
   const evaluations = lireEvaluations(entrees[CLE_EVALUATIONS]);
   const diplomes = listerDiplomes(catalogue);
   if (evaluations.length === 0 && diplomes.length === 0) {
@@ -188,12 +242,15 @@ function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonl
   const dates = lireDatesModification(entrees[CLE_DATES_MODIFICATION]);
   const choisies = new Set<string>();
   const diplomesChoisis = new Set<string>();
-  const { boite, fermer } = ouvrirBoite("Envoyer des évaluations et des référentiels");
+  const { boite, fermer } = ouvrirBoite(
+    destination === "direct" ? "Envoyer en direct (bêta)" : "Envoyer des évaluations et des référentiels",
+  );
+  const contenant = destination === "direct" ? "L'envoi" : "Le fichier";
   boite.append(
     creer(
       "p",
       "",
-      `Cochez ce que vous envoyez. Le fichier sera signé de votre nom (${acces.identite.nom}) et ne contient ni noms d'élèves, ni résultats, ni votre suivi, sauf si vous cochez l'option en bas de cette fenêtre. ` +
+      `Cochez ce que vous envoyez. ${contenant} sera signé de votre nom (${acces.identite.nom}) et ne contient ni noms d'élèves, ni résultats, ni votre suivi, sauf si vous cochez l'option en bas de cette fenêtre. ` +
         "Chaque évaluation emporte l'empreinte de son référentiel, que vous envoyiez le référentiel ou non.",
     ),
   );
@@ -217,13 +274,9 @@ function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonl
     const texte = JSON.stringify(
       construirePaquet(entrees, choisies, new Date(), acces.identite.nom, catalogue, diplomesChoisis, avecEleves),
     );
-    const nom = `evaluations${EXTENSION_FICHIER}`;
-    const enregistrement = avecEleves
-      ? enregistrerFichierProtege(nom, texte, motDePasse.value)
-      : enregistrerFichier(nom, new TextEncoder().encode(texte));
-    enregistrement
-      .then((fichierEcrit) => {
-        if (fichierEcrit) {
+    expedier(destination, texte, avecEleves ? motDePasse.value : null)
+      .then((parti) => {
+        if (parti) {
           fermer();
         }
       })
@@ -252,7 +305,9 @@ function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonl
     creer(
       "span",
       "",
-      "Inclure les élèves et leurs résultats. Le fichier est alors chiffré : communiquez son mot de passe par un autre moyen que le fichier.",
+      destination === "direct"
+        ? "Inclure les élèves et leurs résultats. L'envoi est alors chiffré : communiquez son mot de passe par un autre moyen que le code d'invitation."
+        : "Inclure les élèves et leurs résultats. Le fichier est alors chiffré : communiquez son mot de passe par un autre moyen que le fichier.",
     ),
   );
   const zoneMotDePasse = creer("div", "echange-outils");
@@ -316,7 +371,8 @@ function montrerExport(acces: AccesDonnees, entrees: Entrees, catalogue: readonl
 
   const actualiser = (): void => {
     const nombre = choisies.size + diplomesChoisis.size;
-    boutonCreer.textContent = `Créer le fichier (${String(nombre)})`;
+    boutonCreer.textContent =
+      destination === "direct" ? `Préparer l'envoi (${String(nombre)})` : `Créer le fichier (${String(nombre)})`;
     boutonCreer.disabled = nombre === 0;
   };
   const cocherVisibles = (coche: boolean): void => {
@@ -712,6 +768,14 @@ async function lancerImport(acces: AccesDonnees): Promise<void> {
   if (texte === null) {
     return;
   }
+  await ouvrirTexteRecu(acces, texte);
+}
+
+/**
+ * Circuit de réception commun au fichier et à l'échange en direct : mot de passe
+ * si le texte est protégé, validation du paquet, puis plan d'import.
+ */
+export async function ouvrirTexteRecu(acces: AccesDonnees, texte: string): Promise<void> {
   const protege = estFichierProtege(texte);
   const clair = protege ? await demanderMotDePasseFichier(texte) : texte;
   if (clair === null) {
@@ -809,7 +873,26 @@ function montrerChoix(acces: AccesDonnees): void {
     creer("b", "", "Changer d'ordinateur"),
     creer("span", "", "Emporter toutes vos données, élèves et résultats compris, vers une nouvelle installation de DNMAX."),
   );
-  choix.append(envoyer, recevoir, transferer);
+  const direct = creerBouton("", "", () => {
+    fermer();
+    montrerChoixDirect(acces);
+  });
+  const titreDirect = creer("b", "");
+  titreDirect.append("Échange en direct (bêta) ", creer("span", "echange-beta", "BÊTA"));
+  const disponible = echangeDirectDisponible();
+  direct.disabled = !disponible;
+  direct.append(
+    titreDirect,
+    creer(
+      "span",
+      "",
+      disponible
+        ? "D'ordinateur à ordinateur, sans fichier : rien ne passe par un serveur. Des serveurs publics français " +
+            "servent seulement à vous trouver. Peut échouer selon les réseaux ; l'échange par fichier reste disponible."
+        : "Indisponible sur cet ordinateur : son afficheur web ne permet pas les connexions directes. Utilisez l'échange par fichier.",
+    ),
+  );
+  choix.append(envoyer, recevoir, direct, transferer);
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(choix, actions);

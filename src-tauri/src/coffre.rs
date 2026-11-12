@@ -816,6 +816,22 @@ mod tests {
     }
 
     #[test]
+    fn un_texte_protege_est_du_texte_transmissible_tel_quel() {
+        let fichier = proteger_texte(
+            "élève fictif",
+            MOT_DE_PASSE,
+            DERIVATION_DE_TEST,
+            &mut alea(),
+        )
+        .expect("protection");
+        let texte = String::from_utf8(fichier).expect("UTF-8");
+        assert_eq!(
+            lire_texte_protege(texte.as_bytes(), MOT_DE_PASSE),
+            Ok("élève fictif".to_owned())
+        );
+    }
+
+    #[test]
     fn un_texte_protege_n_apparait_pas_en_clair() {
         let fichier = proteger_texte(
             "élève fictif",

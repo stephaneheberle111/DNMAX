@@ -91,7 +91,7 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
 2. Sur GitHub, onglet Actions → atelier « Publication » → « Run workflow » sur la branche `main`.
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
-4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés la trouveront en cliquant « Rechercher une mise à jour » dans « Mon compte ».
+4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés la trouveront en cliquant « Rechercher une mise à jour » en bas de la fenêtre.
 
 Si la construction macOS est annulée faute de machine disponible chez GitHub, relancer les jobs en échec depuis la page de l'exécution (« Re-run failed jobs »).
 
@@ -141,7 +141,7 @@ flowchart LR
 - `src/ecran-compte.ts` : « Mon compte » (nom, mot de passe, à propos). `src/ecran-exemple.ts` : le retrait de l'exemple.
 - `src/ecran-accueil.ts` : l'encart des premiers pas sur une installation vide. `src/configuration.ts` : les adresses publiques du projet.
 - `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ».
-- `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans.
+- `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans. `src/canal-direct.ts` et `src/ecran-echange-direct.ts` : l'échange en direct (bêta), d'ordinateur à ordinateur par WebRTC (décision 21).
 - `src-tauri/` : la fenêtre de bureau et ses droits (`capabilities/`). Dans `src-tauri/src/` : `coffre.rs` chiffre (sans toucher au disque), `depot.rs` range les fichiers (sans connaître le chiffrement), `export.rs` écrit les exports, `lib.rs` relie le tout aux commandes appelées par l'interface.
 
 ## Pièges déjà rencontrés

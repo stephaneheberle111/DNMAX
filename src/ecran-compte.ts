@@ -2,12 +2,10 @@
 import "./ecran-compte.css";
 import { ADRESSE_CODE_SOURCE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./configuration";
 import { construireAdresseRetours, deduireSysteme } from "./domaine/adresse-retours";
-import { decrireVerification } from "./domaine/annonce-mise-a-jour";
 import { LONGUEUR_MAXIMALE_NOM } from "./domaine/identite";
 import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
-import { verifierMiseAJour } from "./ecran-mise-a-jour";
 import { changerMotDePasse, lireVersion, ouvrirDansNavigateur } from "./enveloppe";
 
 const IDENTIFIANT_BOUTON = "bouton-compte";
@@ -38,23 +36,27 @@ function creerMessage(): { zone: HTMLElement; dire: (texte: string, erreur: bool
 
 function creerRubriqueNom(acces: AccesDonnees): HTMLElement {
   const rubrique = creer("section", "compte-rubrique");
-  const { ligne, champ } = creerChamp("text", "Votre prénom et votre nom, tels que les autres enseignants les lisent", "name");
-  champ.value = acces.identite.nom;
-  champ.maxLength = LONGUEUR_MAXIMALE_NOM;
+  const prenom = creerChamp("text", "Votre prénom", "given-name");
+  const nom = creerChamp("text", "Votre nom", "family-name");
+  prenom.champ.value = acces.identite.prenom;
+  nom.champ.value = acces.identite.nomFamille;
+  prenom.champ.maxLength = LONGUEUR_MAXIMALE_NOM;
+  nom.champ.maxLength = LONGUEUR_MAXIMALE_NOM;
   const { zone, dire } = creerMessage();
   const formulaire = creer("form", "compte-formulaire");
   formulaire.addEventListener("submit", (evenement) => {
     evenement.preventDefault();
-    if (acces.renommer(champ.value)) {
-      champ.value = acces.identite.nom;
-      dire("Nom enregistré. Il accompagnera vos prochaines modifications et vos prochains envois.", false);
+    if (acces.renommer(prenom.champ.value, nom.champ.value)) {
+      prenom.champ.value = acces.identite.prenom;
+      nom.champ.value = acces.identite.nomFamille;
+      dire(`Enregistré : ${acces.identite.nom}. Ce nom accompagnera vos prochaines modifications et vos prochains envois.`, false);
     } else {
-      dire("Indiquez un nom.", true);
+      dire("Indiquez votre prénom et votre nom.", true);
     }
   });
   const enregistrer = creer("button", "btn", "Enregistrer le nom");
   enregistrer.type = "submit";
-  formulaire.append(ligne, enregistrer);
+  formulaire.append(prenom.ligne, nom.ligne, enregistrer);
   rubrique.append(creer("h3", "", "Votre nom"), formulaire, zone);
   return rubrique;
 }
@@ -122,34 +124,7 @@ function creerLien(
   });
 }
 
-function creerVerificationMiseAJour(acces: AccesDonnees, versionInstallee: Promise<string>): HTMLElement {
-  const bloc = creer("div", "compte-formulaire");
-  const { zone, dire } = creerMessage();
-  const verifier = creerBouton("Rechercher une mise à jour", "btn", () => {
-    verifier.disabled = true;
-    zone.hidden = true;
-    void Promise.all([verifierMiseAJour(() => acces.enregistrerMaintenant()), versionInstallee]).then(([issue, numero]) => {
-      verifier.disabled = false;
-      if (issue === null) {
-        dire("Une nouvelle version est proposée en bas à droite de la fenêtre.", false);
-      } else {
-        dire(decrireVerification(issue, numero), issue === "impossible");
-      }
-    });
-  });
-  bloc.append(
-    creer(
-      "p",
-      "",
-      "DNMAX ne se connecte à Internet que lorsque vous le demandez ici : il interroge alors le dépôt du projet sur GitHub, sans rien transmettre de vos données.",
-    ),
-    verifier,
-    zone,
-  );
-  return bloc;
-}
-
-function creerRubriqueAPropos(acces: AccesDonnees): HTMLElement {
+function creerRubriqueAPropos(): HTMLElement {
   const rubrique = creer("section", "compte-rubrique");
   const version = creer("p", "", "DNMAX");
   const versionInstallee = lireVersion();
@@ -178,7 +153,6 @@ function creerRubriqueAPropos(acces: AccesDonnees): HTMLElement {
       `Logiciel libre sous licence ${LICENCE} : vous pouvez l'utiliser, l'étudier, le modifier et le redistribuer aux mêmes conditions. ` +
         "Vos données restent sur cet ordinateur ; ces liens s'ouvrent dans votre navigateur.",
     ),
-    creerVerificationMiseAJour(acces, versionInstallee),
     liens,
     zone,
   );
@@ -188,7 +162,7 @@ function creerRubriqueAPropos(acces: AccesDonnees): HTMLElement {
 function montrerCompte(acces: AccesDonnees): void {
   const { boite, fermer } = ouvrirBoite("Mon compte");
   const contenu = creer("div", "compte-contenu");
-  contenu.append(creerRubriqueNom(acces), creerRubriqueMotDePasse(acces), creerRubriqueAPropos(acces));
+  contenu.append(creerRubriqueNom(acces), creerRubriqueMotDePasse(acces), creerRubriqueAPropos());
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(contenu, actions);

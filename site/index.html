@@ -353,6 +353,17 @@ svg.dim .dot.off{opacity:.1}
 .doc-page pre{background:var(--sunk);padding:14px 16px;border-radius:8px;overflow-x:auto;font-size:14px}
 .doc-page pre code{background:none;padding:0}
 .doc-page .tbl{overflow-x:auto}
+.doc-page .tbl table{border-collapse:collapse;width:100%;font-size:15px}
+.doc-page .tbl th,.doc-page .tbl td{text-align:left;vertical-align:top;padding:8px 10px;border-top:1px solid var(--line)}
+.doc-page .tbl th{width:28%;font-weight:600}
+.doc-page .modele{border:1px dashed var(--line);border-radius:10px;padding:16px 20px;background:var(--surface)}
+/* Impression d'une fiche : seule la rubrique affichée, sans le site autour. */
+@media print{
+  header.top,footer,.doc-nav,.doc-select,label[for="doc-select"],.page>.wrap>h1,.page>.wrap>.intro,.imprimer{display:none!important}
+  .page{padding:0}
+  .doc-page{border:0;padding:0;max-width:none}
+  body{background:#fff;color:#000}
+}
 .doc-page table{border-collapse:collapse;width:100%;font-size:15px}
 .doc-page th,.doc-page td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 .alerte{border-left:4px solid var(--bug);background:color-mix(in srgb,var(--bug) 9%,transparent);padding:14px 18px;border-radius:0 8px 8px 0;margin:14px 0}
@@ -733,7 +744,7 @@ footer a{color:var(--ink-2)}
       <div class="apres">
         <div><h3>Au premier lancement</h3><p>Choisissez un mot de passe, notez votre code de secours hors de l’ordinateur, puis indiquez votre nom. <a href="#documentation" data-doc-lien="demarrer">Voir le détail</a>.</p></div>
         <div><h3>Pour découvrir</h3><p>Paramètres → «&nbsp;Charger un exemple&nbsp;» remplit une évaluation complète avec des données fictives.</p></div>
-        <div><h3>Les mises à jour</h3><p>Recherchez-les depuis «&nbsp;Mon compte&nbsp;»&nbsp;; elles ne s’installent qu’avec votre accord. Toutes les versions sont sur la <a href="https://github.com/stephaneheberle111/DNMAX/releases" target="_blank" rel="noopener">page des versions</a>.</p></div>
+        <div><h3>Les mises à jour</h3><p>Recherchez-les en bas de la fenêtre de DNMAX&nbsp;; elles ne s’installent qu’avec votre accord. Toutes les versions sont sur la <a href="https://github.com/stephaneheberle111/DNMAX/releases" target="_blank" rel="noopener">page des versions</a>.</p></div>
       </div>
     </div>
   </section>
@@ -797,6 +808,47 @@ footer a{color:var(--ink-2)}
 <p>Le module <strong>Niveaux DN MADE</strong>, qui nécessite le module Élèves, attribue à chaque élève le niveau atteint sur chaque compétence&nbsp;: Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu’il y est évalué avec un niveau de maîtrise suffisant.</p>
 </div>
 
+<div data-doc="rgpd-etablissement" data-titre="RGPD : fiche pour l’établissement">
+<h3>DNMAX et le RGPD&nbsp;: fiche pour l’établissement</h3>
+<p class="imprimer"><button type="button" class="btn" data-imprimer>Imprimer cette fiche</button></p>
+<p>Cette fiche s’adresse au chef d’établissement et au délégué à la protection des données (DPD). Elle décrit l’usage de DNMAX <strong>avec le module Élèves</strong>&nbsp;; sans ce module, DNMAX ne contient que des grilles d’évaluation et des référentiels, sans aucune donnée personnelle d’élève. Elle peut servir à compléter le registre des activités de traitement de l’établissement.</p>
+<div class="tbl"><table>
+<tr><th>Traitement</th><td>Évaluation par compétences des étudiants de DN MADE, avec l’application DNMAX installée sur l’ordinateur de l’enseignant.</td></tr>
+<tr><th>Responsable du traitement</th><td>L’établissement, représenté par son chef d’établissement. L’enseignant utilise DNMAX pour son compte.</td></tr>
+<tr><th>Finalités</th><td>Construire les évaluations sur le référentiel du diplôme, saisir et suivre les acquis de chaque étudiant, restituer les résultats, préparer les bilans de la formation.</td></tr>
+<tr><th>Base légale</th><td>Mission d’intérêt public de l’établissement (article 6.1.e du RGPD) : l’évaluation des étudiants fait partie de sa mission d’enseignement. Le consentement des étudiants n’est donc pas la base légale ; ils sont informés.</td></tr>
+<tr><th>Personnes concernées</th><td>Les étudiants des promotions suivies par l’enseignant.</td></tr>
+<tr><th>Données</th><td>Prénom, nom, promotion ; niveaux atteints par compétence ; observations et appréciations ; dates de rendu et de restitution ; mentions «&nbsp;non rendu&nbsp;» ou «&nbsp;dispensé&nbsp;». Aucune donnée sensible ne doit être saisie dans les champs de texte libre (santé, situation familiale…).</td></tr>
+<tr><th>Destinataires</th><td>L’enseignant ; les collègues de l’équipe pédagogique à qui il transmet volontairement une évaluation (fichier chiffré par mot de passe, ou échange direct d’ordinateur à ordinateur) ; l’étudiant pour ses propres résultats. L’éditeur de DNMAX et l’hébergeur du site n’y ont jamais accès.</td></tr>
+<tr><th>Lieu de stockage</th><td>Uniquement l’ordinateur de l’enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l’Union européenne des données d’élèves.</td></tr>
+<tr><th>Durée de conservation</th><td>Un an après la sortie de la promotion (fin de l’année scolaire où s’achève le diplôme). DNMAX le rappelle ensuite et propose d’anonymiser ou d’effacer les données ; une promotion peut aussi l’être plus tôt. La durée est réglable avec l’établissement.</td></tr>
+<tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l’établissement. Dans DNMAX, Paramètres → «&nbsp;Données des élèves&nbsp;» permet d’exporter toutes les données d’un étudiant, de l’effacer partout, et d’anonymiser ou d’effacer une promotion.</td></tr>
+<tr><th>Sécurité</th><td>Chiffrement de toutes les données saisies ; mot de passe demandé à chaque ouverture ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.</td></tr>
+</table></div>
+<h4>Bonnes pratiques à demander aux enseignants</h4>
+<ul>
+<li>utiliser DNMAX sur un ordinateur protégé par un mot de passe de session, de préférence avec le chiffrement du disque activé&nbsp;;</li>
+<li>ne pas l’installer sur un poste partagé entre plusieurs personnes&nbsp;;</li>
+<li>ranger et supprimer les documents exportés avec le même soin qu’un relevé de notes&nbsp;;</li>
+<li>ne jamais écrire le nom d’un étudiant dans un signalement de bug ou une suggestion.</li>
+</ul>
+<p>Contact de l’éditeur&nbsp;: <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a>. Détails techniques&nbsp;: page <a href="#confidentialite">Confidentialité</a>.</p>
+</div>
+
+<div data-doc="rgpd-eleves" data-titre="RGPD : information des élèves">
+<h3>Modèle de note d’information des étudiants</h3>
+<p class="imprimer"><button type="button" class="btn" data-imprimer>Imprimer ce modèle</button></p>
+<p>Ce modèle est à adapter, puis à remettre aux étudiants ou à intégrer au livret de la formation, si vous utilisez le module Élèves. Il s’agit d’une <strong>information</strong>, pas d’une demande de consentement&nbsp;: l’évaluation relève de la mission de l’établissement, et un étudiant ne peut pas refuser d’être évalué. Remplacez les passages entre crochets.</p>
+<div class="modele">
+<p><strong>Vos données dans le suivi de vos évaluations</strong></p>
+<p>Pour évaluer vos compétences tout au long du DN MADE, vos enseignants peuvent utiliser l’application DNMAX. Elle enregistre votre prénom, votre nom, votre promotion, vos niveaux par compétence, leurs observations et leurs appréciations, et les dates de rendu de vos travaux.</p>
+<p>Ces données servent uniquement à votre évaluation et au suivi de votre progression. Le responsable de ce traitement est [nom de l’établissement], représenté par son chef d’établissement, dans le cadre de sa mission d’enseignement.</p>
+<p>Elles restent sur l’ordinateur de votre enseignant, chiffrées et protégées par un mot de passe. Elles ne sont ni envoyées sur Internet ni confiées à une entreprise. Votre enseignant peut les transmettre à un collègue de l’équipe pédagogique, dans un fichier protégé par un mot de passe.</p>
+<p>Elles sont conservées jusqu’à un an après la fin de votre diplôme, puis anonymisées ou effacées.</p>
+<p>Vous pouvez demander à consulter vos données, à les faire corriger ou, dans les cas prévus par la loi, à les faire effacer, auprès de [service ou personne à contacter] ou du délégué à la protection des données de l’établissement&nbsp;: [contact du DPD]. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (cnil.fr).</p>
+</div>
+</div>
+
 <div data-doc="explorer" data-titre="Explorer le référentiel">
 <h3>Explorer le référentiel</h3>
 <p>L’espace <strong>Référentiel</strong> s’ouvre sur le diplôme et la mention choisis. Les tuiles du haut filtrent tout l’affichage par unité, enseignement, bloc ou compétence. Cinq vues sont proposées.</p>
@@ -812,13 +864,15 @@ footer a{color:var(--ink-2)}
 
 <div data-doc="echanger" data-titre="Échanger entre enseignants">
 <h3>Échanger entre enseignants</h3>
-<p>Les échanges passent par des fichiers <code>.dnmax</code> que vous transmettez comme vous voulez&nbsp;: courriel, clé USB, espace partagé.</p>
+<p>Les échanges passent par des fichiers <code>.dnmax</code> que vous transmettez comme vous voulez&nbsp;: courriel, clé USB, espace partagé. En bêta, ils peuvent aussi se faire en direct, sans fichier (voir plus bas).</p>
 <h4>Une évaluation, sans élèves</h4>
 <p>Vous choisissez les évaluations à envoyer. À la réception, un plan marque chacune comme nouvelle, modifiée ou identique, et l’import attend votre validation. DNMAX vérifie aussi que l’évaluation a été construite sur le même référentiel.</p>
 <h4>Une évaluation avec élèves et résultats</h4>
 <p>Le fichier est chiffré par un mot de passe que vous communiquez séparément. À l’import, promotions et élèves sont rapprochés par leur nom, et les résultats sont fusionnés élève par élève, sans écraser ceux déjà saisis par le destinataire. Un fichier non chiffré ne peut jamais faire entrer de données d’élèves.</p>
 <h4>Un référentiel</h4>
 <p>À la réception, les écarts avec votre référentiel s’affichent en détail. Le référentiel reçu est ajouté comme nouvelle version, sans être activé&nbsp;: vous décidez quand l’utiliser.</p>
+<h4>Échange en direct (bêta)</h4>
+<p>Sans fichier, d’ordinateur à ordinateur&nbsp;: «&nbsp;Échanger…&nbsp;» → «&nbsp;Échange en direct&nbsp;». L’expéditeur choisit ce qu’il envoie, comme pour un fichier, et DNMAX affiche un <strong>code d’invitation</strong> qu’il transmet à son collègue (messagerie, copier-coller). Le collègue le colle dans «&nbsp;Recevoir en direct&nbsp;» et renvoie le <strong>code de réponse</strong> affiché. Dès que l’expéditeur l’a collé, le contenu passe directement d’un ordinateur à l’autre, et le destinataire voit le même plan d’import que pour un fichier. Rien ne passe par un serveur&nbsp;: des serveurs publics français servent seulement à ce que les deux ordinateurs se trouvent. Avec des élèves, le contenu est chiffré par un mot de passe à communiquer autrement que par le code. Selon les réseaux (pare-feu d’établissement notamment), la connexion peut échouer&nbsp;: passez alors par un fichier.</p>
 </div>
 
 <div data-doc="exporter" data-titre="Exporter des documents">
@@ -857,7 +911,7 @@ footer a{color:var(--ink-2)}
 
 <div data-doc="maj" data-titre="Mises à jour">
 <h3>Mises à jour</h3>
-<p>DNMAX ne se connecte pas seul à Internet. De temps en temps, ouvrez «&nbsp;Mon compte&nbsp;» et cliquez «&nbsp;Rechercher une mise à jour&nbsp;»&nbsp;: si une version plus récente existe, elle vous est proposée et ne s’installe qu’avec votre accord.</p>
+<p>DNMAX ne se connecte pas seul à Internet. De temps en temps, cliquez «&nbsp;Rechercher une mise à jour&nbsp;» en bas de la fenêtre&nbsp;: si une version plus récente existe, elle vous est proposée et ne s’installe qu’avec votre accord.</p>
 <p>Le risque&nbsp;: qu’une version modifiée par un tiers, contenant un programme malveillant ou détournant vos données, se fasse passer pour une mise à jour. Pour l’éviter, chaque mise à jour est signée par l’auteur de DNMAX, et l’application refuse toute version dont la signature ne correspond pas.</p>
 <p>Sous Linux, seule l’AppImage se met à jour d’elle-même. Avec le paquet .deb, téléchargez la nouvelle version depuis la page Télécharger.</p>
 </div>
@@ -982,8 +1036,12 @@ npm run dev</code></pre>
       <p>Un fichier d’échange qui contient des élèves est lui aussi chiffré&nbsp;; transmettez son mot de passe par un autre moyen que le fichier. Les documents exportés (PDF, tableur, traitement de texte) ne sont <strong>pas</strong> chiffrés&nbsp;: rangez-les et partagez-les avec la même prudence qu’un relevé de notes papier.</p>
       <h3>Si vous utilisez le module Élèves</h3>
       <p>Sans le module Élèves, DNMAX ne contient que des grilles d’évaluation et des référentiels&nbsp;: aucune donnée d’élève. Avec ce module, vous y enregistrez des noms et des résultats d’élèves, qui sont des données personnelles. L’évaluation des élèves relève de l’établissement scolaire&nbsp;: c’est lui, représenté par son chef d’établissement, qui en est responsable au sens du RGPD, et l’enseignant utilise DNMAX pour son compte. DNMAX vous aide à respecter les droits des élèves&nbsp;: dans Paramètres, «&nbsp;Données des élèves&nbsp;» permet d’exporter ou d’effacer les données d’un élève, et d’anonymiser ou d’effacer une promotion, ce que DNMAX vous rappelle un an après sa sortie. Pour toute question sur les données d’un élève, l’élève ou sa famille s’adresse à l’établissement et à son délégué à la protection des données.</p>
+      <h3>Connexions à Internet</h3>
+      <p>L’application ne se connecte pas seule à Internet. Deux fonctions seulement s’y connectent, et uniquement quand vous les lancez&nbsp;: la recherche de mise à jour et l’échange en direct.</p>
+      <h3>Échange en direct (bêta)</h3>
+      <p>L’échange en direct transmet le contenu choisi directement de votre ordinateur à celui de votre collègue, chiffré pendant le trajet&nbsp;; il ne passe par aucun serveur, ni de l’éditeur ni d’un tiers. Pour que les deux ordinateurs se trouvent, chacun interroge des serveurs publics dits «&nbsp;STUN&nbsp;», <code>stun.aeta.com</code> (AETA), <code>stun.linphone.org</code> (Belledonne Communications) et <code>stun.ippi.fr</code> (ippi), tous exploités en France&nbsp;: ils voient l’adresse IP publique de l’ordinateur et l’heure de la demande, <strong>rien du contenu échangé</strong>. Les codes que vous vous transmettez contiennent ces adresses&nbsp;: ne les envoyez qu’au collègue concerné.</p>
       <h3>Vérification des mises à jour</h3>
-      <p>L’application ne se connecte pas seule à Internet. Quand vous cliquez «&nbsp;Rechercher une mise à jour&nbsp;» dans «&nbsp;Mon compte&nbsp;», elle demande à GitHub si une nouvelle version existe&nbsp;; GitHub reçoit alors l’adresse IP de l’ordinateur et la date de la demande. Aucune donnée saisie dans l’application n’accompagne cette demande. Une mise à jour n’est installée qu’avec votre accord.</p>
+      <p>Quand vous cliquez «&nbsp;Rechercher une mise à jour&nbsp;» en bas de la fenêtre, elle demande à GitHub si une nouvelle version existe&nbsp;; GitHub reçoit alors l’adresse IP de l’ordinateur et la date de la demande. Aucune donnée saisie dans l’application n’accompagne cette demande. Une mise à jour n’est installée qu’avec votre accord.</p>
 
       <h2>Vos droits</h2>
       <p>Pour toute question ou demande sur les données traitées par ce site ou par l’éditeur, écrivez à <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a>. Si la réponse ne vous satisfait pas, vous pouvez saisir la Commission nationale de l’informatique et des libertés&nbsp;: <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">cnil.fr/fr/plaintes</a>.</p>
@@ -1500,6 +1558,9 @@ npm run dev</code></pre>
   demarrer();
 
 })();
+</script>
+<script>
+document.addEventListener("click",function(e){if(e.target.closest("[data-imprimer]"))window.print()});
 </script>
 </body>
 </html>
