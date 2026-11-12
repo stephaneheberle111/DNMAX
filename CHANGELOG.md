@@ -8,7 +8,7 @@
 
 ### Ajouté
 
-- Les installeurs Windows, macOS et Debian/Ubuntu de chaque version publiée sont déposés sur dnmax.fr.
+- Les installeurs Windows, macOS et Debian/Ubuntu de chaque version publiée sont déposés sur dnmax.fr, et les boutons du site les y prennent ; l'AppImage reste sur GitHub. Page Confidentialité mise à jour en conséquence.
 
 ## 0.3.0 — 2026-11-12
 
