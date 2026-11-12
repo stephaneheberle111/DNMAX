@@ -257,6 +257,8 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 **À tout moment** : la même boîte liste aussi les promotions encore dans leur durée de conservation, décochées ; les traiter demande une seconde confirmation. La section « Données des élèves » n'apparaît que si le module Élèves est actif ou si des élèves sont encore enregistrés.
 
+**Avertissement à l'activation** : cocher le module Élèves ouvre d'abord un avertissement RGPD ; le module ne s'active qu'après confirmation. La fenêtre imprime deux documents produits par l'application, sans connexion (`src/domaine/documents-rgpd.ts`, repris des rubriques « RGPD » du site) : la note d'information des élèves, suivie d'un **accusé de réception** à signer, et la note pour le chef d'établissement. Ce n'est **pas un consentement** : la base légale est la mission d'intérêt public de l'établissement, et un élève ne peut pas refuser d'être évalué ; l'accusé atteste seulement que l'information a été remise. L'impression passe par la fenêtre principale (`window.print()`, document seul visible à l'impression), plutôt qu'un cadre ou une nouvelle fenêtre, moins sûrs selon les moteurs ; le dialogue d'impression du système propose l'enregistrement en PDF.
+
 **Jamais de traitement automatique** : l'enseignant peut avoir à remettre un relevé avant. DNMAX rappelle et propose ; l'enseignant décide.
 
 **Limites** : les sauvegardes automatiques du coffre gardent une trace jusqu'à leur remplacement (dix jours d'utilisation) ; un nom cité dans un texte libre d'un autre élève, un titre ou des consignes n'est pas recherché ; un redoublant est repéré par son nom, donc un homonyme peut être pris pour un redoublant (il est alors gardé, ce qui est sans risque).

@@ -1,0 +1,132 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.avertissement-eleves {
+  max-width: 640px;
+  overflow-y: auto;
+}
+
+.avertissement-eleves .avertissement-intro {
+  color: var(--ink, inherit);
+  font-weight: 600;
+}
+
+.avertissement-liste {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.avertissement-documents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.avertissement-eleves .avertissement-astuce {
+  font-size: 12.5px;
+}
+
+/* Document à imprimer : absent de l'écran, seul à l'impression. */
+.document-imprimable {
+  display: none;
+}
+
+@media print {
+  html.impression-document body > :not(.document-imprimable) {
+    display: none !important;
+  }
+
+  html.impression-document,
+  html.impression-document body {
+    background: #fff;
+    color: #000;
+  }
+
+  html.impression-document .document-imprimable {
+    display: block;
+    font-family: var(--fb, serif);
+    font-size: 11pt;
+    line-height: 1.45;
+    color: #000;
+  }
+
+  .document-imprimable h1 {
+    margin: 0 0 4mm;
+    font-size: 16pt;
+  }
+
+  .document-imprimable h2 {
+    margin: 6mm 0 3mm;
+    font-size: 13pt;
+  }
+
+  .document-imprimable p {
+    margin: 0 0 3mm;
+  }
+
+  .document-imprimable .contexte {
+    color: #333;
+    font-size: 10pt;
+  }
+
+  .document-imprimable .a-completer {
+    color: #555;
+  }
+
+  .document-imprimable table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .document-imprimable th,
+  .document-imprimable td {
+    padding: 2mm 3mm;
+    border: 1px solid #999;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .document-imprimable th {
+    width: 32%;
+    font-weight: 600;
+  }
+
+  .document-imprimable .fiche tr {
+    break-inside: avoid;
+  }
+
+  .document-imprimable .decoupe {
+    margin-top: 8mm;
+    padding-top: 2mm;
+    border-top: 1px dashed #000;
+    font-size: 9pt;
+    text-align: center;
+  }
+
+  .document-imprimable .accuse {
+    break-inside: avoid;
+  }
+
+  .document-imprimable .accuse h2 {
+    margin-top: 2mm;
+  }
+
+  .document-imprimable .accuse td {
+    height: 9mm;
+  }
+
+  .document-imprimable .accuse .signature td {
+    height: 20mm;
+  }
+
+  .document-imprimable .nuance {
+    font-size: 9.5pt;
+    font-style: italic;
+  }
+}
