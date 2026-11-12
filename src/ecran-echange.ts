@@ -870,7 +870,7 @@ function montrerChoix(acces: AccesDonnees): void {
       "span",
       "",
       disponible
-        ? "D'ordinateur à ordinateur, sans fichier : rien ne passe par un serveur. Deux serveurs publics (France, Allemagne) " +
+        ? "D'ordinateur à ordinateur, sans fichier : rien ne passe par un serveur. Des serveurs publics français " +
             "servent seulement à vous trouver. Peut échouer selon les réseaux ; l'échange par fichier reste disponible."
         : "Indisponible sur cet ordinateur : son afficheur web ne permet pas les connexions directes. Utilisez l'échange par fichier.",
     ),

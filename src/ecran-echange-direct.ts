@@ -124,7 +124,7 @@ function presenter(boite: HTMLElement): void {
     creer(
       "p",
       "",
-      "En direct d'ordinateur à ordinateur : rien ne passe par un serveur. Deux serveurs publics (en France et en Allemagne) " +
+      "En direct d'ordinateur à ordinateur : rien ne passe par un serveur. Des serveurs publics français " +
         "servent seulement à ce que vos deux ordinateurs se trouvent ; ils voient vos adresses Internet, jamais le contenu. " +
         "Selon les réseaux (pare-feu d'établissement notamment), la connexion peut échouer : l'échange par fichier reste disponible.",
     ),
