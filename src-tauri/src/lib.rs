@@ -420,6 +420,21 @@ fn enregistrer_fichier_protege(
     Ok(true)
 }
 
+/// Chiffre le texte d'un paquet d'échange sous le mot de passe convenu entre les
+/// deux enseignants et le rend tel quel, sans l'enregistrer : c'est le même
+/// texte que celui d'un fichier protégé, envoyé ici par l'échange en direct.
+#[tauri::command(async)]
+fn proteger_texte_echange(texte: String, mot_de_passe: String) -> Result<String, ErreurCommande> {
+    let chiffre = coffre::proteger_texte(
+        &texte,
+        &mot_de_passe,
+        coffre::PARAMETRES_PAR_DEFAUT,
+        &mut OsRng,
+    )?;
+    // Le coffre est écrit en JSON, donc en UTF-8 : un échec ici serait une erreur interne.
+    String::from_utf8(chiffre).map_err(|_| ErreurCommande::Interne)
+}
+
 /// Déchiffre le texte d'un fichier d'échange protégé, déjà lu par l'interface.
 #[tauri::command(async)]
 fn dechiffrer_fichier_echange(
@@ -494,6 +509,7 @@ pub fn lancer() {
             enregistrer_coffre,
             ouvrir_fichier_echange,
             enregistrer_fichier_protege,
+            proteger_texte_echange,
             dechiffrer_fichier_echange,
             exporter_coffre,
             installer_coffre,
