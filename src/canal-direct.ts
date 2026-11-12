@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import {
-  decoderCode,
-  encoderCode,
-  garderServeursStun,
-  type ContenuCode,
-  type ErreurCode,
-} from "./domaine/echange/code-direct";
+import { decoderCode, encoderCode, type ContenuCode, type ErreurCode } from "./domaine/echange/code-direct";
 import { Reassembleur, preparerMessages, type ErreurReassemblage } from "./domaine/echange/morceaux";
 
 /**
  * Transport de l'échange en direct : une connexion WebRTC d'ordinateur à
  * ordinateur, dont l'offre et la réponse passent par des codes texte que les
- * enseignants se transmettent eux-mêmes. Aucun serveur relais : si la
- * connexion directe est impossible, l'échange échoue.
+ * enseignants se transmettent eux-mêmes. Aucun serveur, ni relais ni
+ * découverte d'adresse : les deux ordinateurs doivent être sur le même réseau
+ * local ; sinon, l'échange échoue.
  *
  * Ce module parle à l'extérieur (réseau, horloge) ; les règles qu'il applique
  * (forme des codes, découpage) sont dans `domaine/echange/`.
@@ -26,7 +21,6 @@ export interface DelaisDirect {
 }
 
 export interface ParametresDirect {
-  serveursStun: readonly string[];
   delais: DelaisDirect;
   /** Longueur maximale admise du texte reçu, en unités UTF-16. */
   tailleMaximale: number;
@@ -41,7 +35,7 @@ export type CodeErreurDirect =
   | "autre-seance"
   /** L'autre enseignant ne s'est pas manifesté à temps. */
   | "delai-depasse"
-  /** Pas de chemin direct entre les deux ordinateurs (pare-feu, réseau d'entreprise…). */
+  /** Pas de chemin entre les deux ordinateurs (réseaux différents, postes isolés les uns des autres…). */
   | "connexion-impossible"
   /** La connexion s'est rompue ou s'est tue pendant le transfert. */
   | "transfert-interrompu"
@@ -80,15 +74,21 @@ export function echangeDirectDisponible(): boolean {
   return typeof globalThis.RTCPeerConnection === "function";
 }
 
-function creerConnexion(parametres: ParametresDirect): RTCPeerConnection {
+/**
+ * Réglages de toute connexion de l'échange en direct : aucun serveur. Sans
+ * serveur de découverte d'adresse (STUN) ni relais (TURN), seuls les candidats
+ * locaux sont rassemblés : la connexion ne s'établit qu'entre deux ordinateurs
+ * d'un même réseau, et aucun tiers n'est contacté. Voir DECISIONS.md, décision 21.
+ */
+export function configurationConnexion(): RTCConfiguration {
+  return { iceServers: [], iceTransportPolicy: "all" };
+}
+
+function creerConnexion(): RTCPeerConnection {
   if (!echangeDirectDisponible()) {
     throw new ErreurDirect("indisponible");
   }
-  return new RTCPeerConnection({
-    iceServers: garderServeursStun(parametres.serveursStun).map((adresse) => ({ urls: adresse })),
-    // Sans serveur relais déclaré, « all » se limite aux chemins directs (locaux ou par adresse publique).
-    iceTransportPolicy: "all",
-  });
+  return new RTCPeerConnection(configurationConnexion());
 }
 
 /**
@@ -147,7 +147,7 @@ function attendre(
  * Pose la description locale et attend que les candidats de connexion soient
  * rassemblés, pour qu'ils partent dans le code (pas d'échange au fil de l'eau
  * sans serveur de signalisation). Au-delà du délai, le code part avec ce qui a
- * été trouvé : un serveur STUN injoignable ne bloque pas l'échange local.
+ * été trouvé.
  */
 async function decrireAvecCandidats(
   connexion: RTCPeerConnection,
@@ -241,7 +241,7 @@ export class Expediteur {
 
   /** Ouvre une connexion et écrit le code d'invitation. */
   static async preparer(parametres: ParametresDirect): Promise<Expediteur> {
-    const connexion = creerConnexion(parametres);
+    const connexion = creerConnexion();
     try {
       const canal = connexion.createDataChannel("dnmax-echange", { ordered: true });
       const seance = crypto.randomUUID();
@@ -361,7 +361,7 @@ export class Destinataire {
   /** Lit le code d'invitation et écrit le code de réponse. */
   static async rejoindre(codeInvitation: string, parametres: ParametresDirect): Promise<Destinataire> {
     const invitation = lireCode(codeInvitation, "invitation");
-    const connexion = creerConnexion(parametres);
+    const connexion = creerConnexion();
     const destinataire = new Destinataire(connexion, parametres);
     try {
       try {
