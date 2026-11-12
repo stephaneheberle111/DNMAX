@@ -225,6 +225,17 @@
       </div>
       <div id="modList"></div>
     </div>
+    <!-- Ajout à l'interface historique : données des élèves, géré par src/ecran-droits-eleves.ts -->
+    <div class="panel" style="max-width:720px;margin-top:18px" id="panneau-donnees-eleves" hidden>
+      <div class="pick-head"><h3>Données des élèves</h3></div>
+      <div class="panel-body">
+        <div class="hint">Avec le module Élèves, DNMAX garde des noms et des résultats d'élèves. Un élève ou sa famille peut demander à consulter ses données ou à les faire effacer ; une promotion se conserve un temps limité après sa sortie, puis s'anonymise ou s'efface.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn ghost" id="bouton-donnees-eleve">Données d'un élève…</button>
+          <button type="button" class="btn ghost" id="bouton-donnees-promotions">Anonymiser ou effacer des promotions…</button>
+        </div>
+      </div>
+    </div>
     <div class="panel" style="max-width:720px;margin-top:18px">
       <div class="pick-head"><h3>Échelles d'évaluation<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Les échelles cochées sont actives ; celle marquée « par défaut » s'applique à toute nouvelle évaluation et ne se change pas depuis l'évaluation. Une évaluation déjà enregistrée garde son échelle.</span></span></h3></div>
       <div id="echList"></div>
