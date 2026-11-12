@@ -4851,6 +4851,53 @@ function actsMenu(f,i){
 /* nombre d'élèves ayant une évaluation individuelle enregistrée (niveaux, observations, appréciation ou restitution) */
 function nbIndiv(f){return Object.values(f.res||{}).filter(r=>r&&(Object.values(r.n||{}).some(v=>v!=null&&v!=="")||Object.values(r.obs||{}).some(Boolean)||r.appr||r.rest)).length}
 function armList(key){ui.delArm=key;paintSaved();setTimeout(()=>{if(ui.delArm===key){ui.delArm=null;paintSaved()}},6000)}
+/* Fenêtre des actions d'une évaluation. Elle remplace un petit menu déroulant que l'on remarquait mal :
+   les exports y deviennent de vrais boutons. Les gestionnaires restent ceux de paintSaved (bind). */
+let XA=null, XA_RETOUR=null;
+function actionsHtml(f,i){
+  const sec=(titre,corps)=>`<section class="xasec"><h3>${titre}</h3>${corps}</section>`;
+  if(f.annulee)return sec("Autres actions",`<div class="xalist">${actsMenu(f,i)}</div>`);
+  return (MOD.eleves?sec("Évaluer",`<button type="button" class="btn primary xabig" data-sai="${i}">Évaluer les élèves</button>`):"")
+    +sec("Exporter",exportItems(i))
+    +sec("Autres actions",`<div class="xalist"><button type="button" data-dup="${i}">Dupliquer</button>${actsMenu(f,i)}</div>`);
+}
+/* rendreFocus : faux quand l'action quitte la liste (saisie, duplication). Sinon le focus revient au bouton
+   de la ligne, et encore après le prochain dessin de la liste (XA_RETOUR), qui remplace ce bouton. */
+function fermerActions(rendreFocus=true){
+  if(!XA)return;const {el,i,prev,key}=XA;XA=null;
+  document.removeEventListener("keydown",key);el.remove();
+  if(!rendreFocus)return;
+  XA_RETOUR=i;
+  const b=document.querySelector(`#savedList [data-xm="${i}"]`)||prev;if(b&&b.isConnected&&b.focus)b.focus();
+}
+function ouvrirActions(i,bind){
+  const f=fiches[i];if(!f)return;
+  const prev=XA?XA.prev:document.activeElement;fermerActions(false);XA_RETOUR=null;
+  const el=document.createElement("div");el.className="modal xamodal";
+  const sous=[classesDisp(f)||f.classe,f.semestre].filter(Boolean).join(" · ")+(f.annulee?" · annulée":"");
+  el.innerHTML=`<div class="card xabox" role="dialog" aria-modal="true" aria-labelledby="xaT">
+    <button type="button" class="xaclose" aria-label="Fermer" title="Fermer">×</button>
+    <h2 id="xaT">${esc(f.titre||"Sans titre")}</h2>${sous?`<p class="hint">${esc(sous)}</p>`:""}
+    <div class="xabody"></div></div>`;
+  const card=el.querySelector(".xabox"), body=el.querySelector(".xabody");
+  const focusables=()=>[...card.querySelectorAll("button:not([disabled])")];
+  const remplir=bd=>{body.innerHTML=actionsHtml(fiches[i],i);bd(body);
+    if(el.isConnected&&!card.contains(document.activeElement))(body.querySelector("button:not([disabled])")||card.querySelector(".xaclose")).focus()};
+  /* le clic doit commencer et finir sur le fond : une sélection relâchée hors de la boîte ne la ferme pas */
+  let surFond=false;
+  el.onmousedown=e=>{surFond=e.target===el};
+  el.onclick=e=>{e.stopPropagation();if(surFond&&e.target===el)fermerActions()};
+  el.querySelector(".xaclose").onclick=()=>fermerActions();
+  const key=e=>{if(e.key==="Escape"){e.preventDefault();fermerActions();return}
+    if(e.key!=="Tab")return;const L=focusables();if(!L.length)return;
+    const a=L[0], z=L[L.length-1];
+    if(e.shiftKey&&(document.activeElement===a||!card.contains(document.activeElement))){e.preventDefault();z.focus()}
+    else if(!e.shiftKey&&(document.activeElement===z||!card.contains(document.activeElement))){e.preventDefault();a.focus()}};
+  XA={el,i,prev,key,id:f.id,refresh:bd=>{if(fiches[i]&&fiches[i].id===XA.id)remplir(bd);else fermerActions(false)}};
+  remplir(bind);
+  document.addEventListener("keydown",key);document.body.appendChild(el);
+  const premier=body.querySelector("button:not([disabled])")||el.querySelector(".xaclose");premier.focus();
+}
 /* filtres de la liste des évaluations : par défaut, promotions en cours et évaluations dont je suis l'enseignant·e */
 /* Visibilité : un enseignant ne voit que les promotions de sa répartition de service (et leurs élèves).
    Si « C'est moi » n'est pas défini, ou s'il n'a encore aucune affectation, tout reste visible. */
@@ -4941,26 +4988,39 @@ function paintSaved(){
   <td>${esc(f.titre||"Sans titre")}</td><td>${liv.length?esc(liv[0])+(liv.length>1?` <span class="hint">+${liv.length-1}</span>`:""):`<span class="hint">—</span>`}</td>
   <td class="mono">${(f.items||[]).length}</td>
   <td class="sact csuivi">${suiviCell(f,i)}</td>
-  <td style="white-space:nowrap;text-align:right" class="sact">${f.annulee?"":`<span class="xmenu"><button class="btn ghost xdots" data-xm="${i}" aria-haspopup="true" aria-expanded="false" aria-label="Actions" title="Évaluer, exporter, dupliquer…">⋯</button>
-    <span class="xpop" hidden>${MOD.eleves?`<button type="button" data-sai="${i}"><b>Évaluer les élèves</b></button><span class="xsep"></span>`:""}${exportItems(i)}<span class="xsep"></span><button type="button" data-dup="${i}">Dupliquer</button>${actsMenu(f,i)}</span></span>`}${f.annulee?`<span class="xmenu"><button class="btn ghost xdots" data-xm="${i}" aria-haspopup="true" aria-expanded="false" aria-label="Actions">⋯</button><span class="xpop" hidden>${actsMenu(f,i)}</span></span>`:""}${f.annulee?`<button class="btn ghost${ui.delArm==="f:"+f.id?" danger":""}" data-del="${i}" title="${nbIndiv(f)?"Supprimez d'abord les évaluations individuelles (menu Actions)":"Suppression définitive"}">${ui.delArm==="f:"+f.id?"Confirmer la suppression":"Supprimer"}</button>`:""}</td></tr>`}).join("")}
+  <td style="white-space:nowrap;text-align:right" class="sact"><button type="button" class="btn xact" data-xm="${i}" aria-haspopup="dialog" title="${f.annulee?"Rétablir, supprimer les évaluations individuelles…":"Évaluer, exporter, dupliquer…"}">Actions…</button>${f.annulee?`<button class="btn ghost${ui.delArm==="f:"+f.id?" danger":""}" data-del="${i}" title="${nbIndiv(f)?"Supprimez d'abord les évaluations individuelles (bouton « Actions… »)":"Suppression définitive"}">${ui.delArm==="f:"+f.id?"Confirmer la suppression":"Supprimer"}</button>`:""}</td></tr>`}).join("")}
   </tbody></table>`;
   {const r2=document.getElementById("sfReset2");if(r2)r2.onclick=()=>{ui.sf=sfDefault();paintSaved()};
    const al=document.getElementById("sfAll");if(al)al.onclick=()=>{ui.sf={per:[],mine:false,sem:[],st:[],q:""};paintSaved()}}
-  h.querySelectorAll("[data-sai]").forEach(b=>b.onclick=e=>{e.stopPropagation();
-    F=migF(structuredClone(fiches[+b.dataset.sai]));vueMention(mentionDeFiche(F));save();
-    ui.tab="new";ui.step=4;ui.eleve="";paintTabs();paintForm();paintPick();paintLignes();goStep(4)});
   h.querySelectorAll("[data-rst]").forEach(b=>b.onclick=e=>{e.stopPropagation();
     const f=fiches[+b.dataset.rst], k=b.dataset.rp;f.restit=f.restit||{};
     if(f.restit[k])delete f.restit[k];else f.restit[k]=new Date().toISOString().slice(0,10);
     if(F&&F.id===f.id){F.restit=structuredClone(f.restit);save()}
     LS.set("dnmade.fiches",fiches);paintSaved()});
-  const closeX=()=>h.querySelectorAll(".xpop").forEach(p=>{p.hidden=true;p.previousElementSibling.setAttribute("aria-expanded","false")});
-  h.querySelectorAll("[data-xm]").forEach(b=>b.onclick=e=>{e.stopPropagation();const pop=b.nextElementSibling,was=!pop.hidden;closeX();
-    if(!was){pop.hidden=false;b.setAttribute("aria-expanded","true")}});
+  /* les actions vivent dans une fenêtre (ouvrirActions) : on les relie chaque fois qu'elle est remplie */
+  const closeX=()=>fermerActions();
+  h.querySelectorAll("[data-xm]").forEach(b=>b.onclick=e=>{e.stopPropagation();ouvrirActions(+b.dataset.xm,bindActs)});
   const syncF=f=>{if(F&&F.id===f.id){F.suivi=structuredClone(f.suivi);F.restit=structuredClone(f.restit||{});save()}LS.set("dnmade.fiches",fiches)};
-  h.querySelectorAll("[data-xk]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const i=+b.dataset.xi, f=fiches[i], k=b.dataset.xk;if(!f)return;
-    if(b.dataset.xmode==="rest"){askRestitWarn(f,()=>exportFiche(i,k,"rest"));return}
-    exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()});
+  const bindActs=root=>{
+    root.querySelectorAll("[data-sai]").forEach(b=>b.onclick=e=>{e.stopPropagation();fermerActions(false);
+      F=migF(structuredClone(fiches[+b.dataset.sai]));vueMention(mentionDeFiche(F));save();
+      ui.tab="new";ui.step=4;ui.eleve="";paintTabs();paintForm();paintPick();paintLignes();goStep(4)});
+    root.querySelectorAll("[data-xk]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const i=+b.dataset.xi, f=fiches[i], k=b.dataset.xk;if(!f)return;
+      if(b.dataset.xmode==="rest"){askRestitWarn(f,()=>exportFiche(i,k,"rest"));return}
+      exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()});
+    root.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const f=fiches[+b.dataset.xi];if(!f)return;
+      const s=suiviOf(f);
+      if(b.dataset.act==="fin"){if(s.evalue){delete s.evalue;delete s.mode}else{if(rendusManquants(f)){toast("Renseigne d'abord le rendu de chaque élève.");return}s.evalue=isoToday();s.mode=MOD.eleves?"dnmax":"main"}}
+      if(b.dataset.act==="rest"){f.restit=f.restit||{};const k=b.dataset.rp;if(f.restit[k])delete f.restit[k];else f.restit[k]=isoToday()}
+      if(b.dataset.act==="annul"){f.annulee=isoToday();toast("Évaluation annulée. Elle peut être rétablie depuis le bouton « Actions… ».")}
+      if(b.dataset.act==="retab"){delete f.annulee;ui.delArm=null}
+      if(b.dataset.act==="delres"){const k="r:"+f.id;
+        if(ui.delArm!==k){toast("Action irréversible : cliquez à nouveau pour confirmer.");armList(k);const m=document.querySelector('#savedList [data-xm="'+b.dataset.xi+'"]');if(m)m.click();return}
+        ui.delArm=null;const n=nbIndiv(f);f.res={};if(F&&F.id===f.id){F.res={};save()}toast(n+" évaluation"+(n>1?"s":"")+" individuelle"+(n>1?"s":"")+" supprimée"+(n>1?"s":"")+".")}
+      if(F&&F.id===f.id){if(f.annulee)F.annulee=f.annulee;else delete F.annulee}
+      syncF(f);paintSaved()});
+    root.querySelectorAll("[data-dup]").forEach(b=>b.onclick=e=>{e.stopPropagation();fermerActions(false);F=migF(structuredClone(fiches[+b.dataset.dup]));vueMention(mentionDeFiche(F));F.id=uid();F.titre+=" (copie)";F.date=new Date().toISOString().slice(0,10);delete F.distribPrev;delete F.renduPrev;if(F.suivi)F.suivi.saisie=F.date;save();ui.tab="new";paintTabs();paintForm();paintPick()});
+  };
   const openSt=key=>{const [i,k]=String(key).split(":").map(Number), b=h.querySelector(`[data-sts="${i}:${k}"]`);if(!b)return;
     const pop=h.querySelector(`[data-stp="${i}"]`), f=fiches[i];
     pop.innerHTML=stepEditor(f,i,k);pop.style.setProperty("--stx",(b.getBoundingClientRect().left-b.closest(".stw").getBoundingClientRect().left+18-270)+"px");pop.hidden=false;b.classList.add("open");ui.stOpen=key;
@@ -4979,29 +5039,21 @@ function paintSaved(){
     ui.stOpen=null;if(!was)openSt(key)});
   if(ui.stOpen!=null)openSt(ui.stOpen);
   if(!document._stClose){document._stClose=true;document.addEventListener("click",()=>{if(ui.stOpen!=null){ui.stOpen=null;document.querySelectorAll("#savedList .sd.open").forEach(x=>x.classList.remove("open"))}})}
-  h.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const f=fiches[+b.dataset.xi];if(!f)return;
-    const s=suiviOf(f);
-    if(b.dataset.act==="fin"){if(s.evalue){delete s.evalue;delete s.mode}else{if(rendusManquants(f)){toast("Renseigne d'abord le rendu de chaque élève.");return}s.evalue=isoToday();s.mode=MOD.eleves?"dnmax":"main"}}
-    if(b.dataset.act==="rest"){f.restit=f.restit||{};const k=b.dataset.rp;if(f.restit[k])delete f.restit[k];else f.restit[k]=isoToday()}
-    if(b.dataset.act==="annul"){f.annulee=isoToday();toast("Évaluation annulée. Elle peut être rétablie depuis le menu Actions.")}
-    if(b.dataset.act==="retab"){delete f.annulee;ui.delArm=null}
-    if(b.dataset.act==="delres"){const k="r:"+f.id;
-      if(ui.delArm!==k){toast("Action irréversible : cliquez à nouveau pour confirmer.");armList(k);const m=document.querySelector('#savedList [data-xm="'+b.dataset.xi+'"]');if(m)m.click();return}
-      ui.delArm=null;const n=nbIndiv(f);f.res={};if(F&&F.id===f.id){F.res={};save()}toast(n+" évaluation"+(n>1?"s":"")+" individuelle"+(n>1?"s":"")+" supprimée"+(n>1?"s":"")+".")}
-    if(F&&F.id===f.id){if(f.annulee)F.annulee=f.annulee;else delete F.annulee}
-    syncF(f);paintSaved()});
   if(!document._xmClose){document._xmClose=true;document.addEventListener("click",()=>document.querySelectorAll(".xpop").forEach(p=>{if(!p.hidden){p.hidden=true;p.previousElementSibling.setAttribute("aria-expanded","false")}}))}
   const openF=i=>{F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));save();ui.tab="new";paintTabs();paintForm();paintPick()};
   h.querySelectorAll("tr[data-open]").forEach(tr=>{
     tr.onclick=e=>{if(e.target.closest(".sact"))return;openF(+tr.dataset.open)};
     tr.onkeydown=e=>{if(e.target===tr&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openF(+tr.dataset.open)}}});
-  h.querySelectorAll("[data-dup]").forEach(b=>b.onclick=e=>{e.stopPropagation();F=migF(structuredClone(fiches[+b.dataset.dup]));vueMention(mentionDeFiche(F));F.id=uid();F.titre+=" (copie)";F.date=new Date().toISOString().slice(0,10);delete F.distribPrev;delete F.renduPrev;if(F.suivi)F.suivi.saisie=F.date;save();ui.tab="new";paintTabs();paintForm();paintPick()});
   h.querySelectorAll("[data-del]").forEach(b=>b.onclick=e=>{e.stopPropagation();const f=fiches[+b.dataset.del];if(!f||!f.annulee)return;
     const n=nbIndiv(f);
-    if(n){toast("Suppression impossible : supprimez d'abord les "+n+" évaluation"+(n>1?"s":"")+" individuelle"+(n>1?"s":"")+" (menu Actions).");return}
+    if(n){toast("Suppression impossible : supprimez d'abord les "+n+" évaluation"+(n>1?"s":"")+" individuelle"+(n>1?"s":"")+" (bouton « Actions… »).");return}
     const k="f:"+f.id;
     if(ui.delArm!==k){toast("Suppression définitive : cliquez sur « Confirmer la suppression ».");armList(k);return}
     ui.delArm=null;fiches.splice(+b.dataset.del,1);LS.set("dnmade.fiches",fiches);paintSaved();toast("Évaluation supprimée.")});
+  /* liste redessinée pendant que la fenêtre est ouverte (fin du délai de confirmation) : on la remet à jour */
+  if(XA)XA.refresh(bindActs);
+  else if(XA_RETOUR!=null){const b=h.querySelector(`[data-xm="${XA_RETOUR}"]`);XA_RETOUR=null;
+    if(b&&(!document.activeElement||document.activeElement===document.body))b.focus()}
 }
 const GROUPS = {bloc:"Par bloc de compétences",ue:"Par unité d'enseignement",ec:"Par enseignement constitutif",
   annee:"Par année",semestre:"Par semestre",liste:"Liste à plat"};
@@ -7694,12 +7746,12 @@ function askRestitWarn(f,onGo){
   el.querySelector("[data-yes]").onclick=()=>{close();onGo()};
   document.addEventListener("keydown",key);document.body.appendChild(el);el.querySelector("[data-yes]").focus();
 }
-/* menu d'export d'une ligne : l'évaluation (grille vierge) et, avec le module Élèves, les restitutions par élève */
+/* exports d'une ligne (fenêtre des actions) : l'évaluation (grille vierge) et, avec le module Élèves, les restitutions par élève */
 function exportItems(i){
-  const fm=m=>[["docx","Word"],["xlsx","Excel"],["odt","OpenDocument texte"],["ods","OpenDocument tableur"]]
-    .map(([k,l])=>`<button type="button" data-xk="${k}" data-xmode="${m}" data-xi="${i}">${l} <span class="hint">.${k}</span></button>`).join("");
-  return MOD.eleves?`<span class="xh">L'évaluation · grille vierge</span>${fm("eval")}<span class="xsep"></span><span class="xh">Les restitutions · résultats par élève</span>${fm("rest")}`
-    :`<span class="xh">Grille à remplir à la main</span>${fm("eval")}`;
+  const fm=m=>`<div class="xfmt">${[["docx","Word"],["xlsx","Excel"],["odt","OpenDocument texte"],["ods","OpenDocument tableur"]]
+    .map(([k,l])=>`<button type="button" data-xk="${k}" data-xmode="${m}" data-xi="${i}"><b>${l}</b><span class="hint">.${k}</span></button>`).join("")}</div>`;
+  return MOD.eleves?`<p class="xh">L'évaluation · grille vierge</p>${fm("eval")}<p class="xh">Les restitutions · résultats par élève</p>${fm("rest")}`
+    :`<p class="xh">Grille à remplir à la main</p>${fm("eval")}`;
 }
 async function offer(filename,data,eleves=false){
   if(!dl){toast("Téléchargement indisponible ici.");return}
