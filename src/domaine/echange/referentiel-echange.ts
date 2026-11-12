@@ -245,11 +245,15 @@ export function creerDiplome(
   const diplomes =
     diplomeARemplacer === null
       ? [...existants, { id: diplomeId, nom: recu.diplome, mention: recu.mention }]
-      : existants.map((diplome): unknown =>
-          estObjet(diplome) && diplome.id === diplomeARemplacer
-            ? { ...diplome, nom: recu.diplome, mention: recu.mention }
-            : diplome,
-        );
+      : existants.map((diplome): unknown => {
+          if (!estObjet(diplome) || diplome.id !== diplomeARemplacer) {
+            return diplome;
+          }
+          // Le cadre caché de l'installation devient un vrai diplôme : il doit apparaître.
+          const renseigne: ObjetJson = { ...diplome, nom: recu.diplome, mention: recu.mention };
+          delete renseigne.cadre;
+          return renseigne;
+        });
   // Les niveaux (Initié, Guidé…) sont communs à tout le poste : ils ne sont repris que s'il n'en a pas.
   const meta = estObjet(recu.contenuLisible) ? recu.contenuLisible.meta : null;
   const niveauxRecus: unknown = estObjet(meta) ? meta.niveaux : null;

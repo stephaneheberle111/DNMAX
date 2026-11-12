@@ -163,6 +163,7 @@ describe("trouverDiplomeVierge", () => {
 
   it("reconnaît le diplôme vide d'une installation neuve", () => {
     expect(trouverDiplomeVierge(vierge, new Set())).toBe("d0");
+    expect(trouverDiplomeVierge({ ...vierge, diplomes: [{ id: "d0", nom: "", mention: "", cadre: true }] }, new Set())).toBe("d0");
     expect(trouverDiplomeVierge({ diplomes: vierge.diplomes }, new Set())).toBe("d0");
   });
 
@@ -203,6 +204,12 @@ describe("creerDiplome", () => {
       valide: { d0: "vNouvelle" },
       niveaux: NIVEAUX,
     });
+  });
+
+  it("retire la marque de cadre du diplôme vierge qu'il renseigne, pour qu'il devienne visible", () => {
+    const cadre = { ...vierge, diplomes: [{ id: "d0", nom: "", mention: "", cadre: true }] };
+    const apres = creerDiplome(cadre, recu(), VERSION, "d0", compteur());
+    expect(apres?.diplomes).toEqual([{ id: "d0", nom: "DN MADE", mention: "Objet" }]);
   });
 
   it("ajoute un diplôme à côté des autres sans changer le diplôme affiché ni leurs données", () => {
