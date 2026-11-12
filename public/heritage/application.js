@@ -3353,6 +3353,10 @@ function autoDipCode(dp){
   const b=String((dp||{}).mention||"").replace(/[^A-Za-zÀ-ÿ]/g,"").slice(0,1).toUpperCase();
   return a+b;
 }
+/* Diplômes montrés à l'enseignant : le cadre vierge d'une installation neuve reste caché.
+   Le premier référentiel reçu, ou le premier diplôme créé à la main, le réutilise. */
+function estCadreVierge(id){return window.dnmaxPont.estCadreVierge(DATA,id,promos)}
+function dipVisibles(){return DATA.diplomes.filter(dp=>!estCadreVierge(dp.id))}
 function dipCode(dp){return String((dp||{}).code||"").trim()||autoDipCode(dp)}
 /* identifiant d'une année : celui du diplôme suivi du numéro d'année, sauf si on l'a réécrit */
 function anneeCode(a,d,dp){
@@ -3581,7 +3585,9 @@ function migrateData(d){
   if(!Array.isArray(d.diplomes)||!d.diplomes.length){
     const full=d.diplome||"";
     const men=(full.match(/mention\s+(.+)$/i)||[])[1]||"";
-    d.diplomes=[{id:"d0",nom:full.replace(/\s*mention\s+.+$/i,"").trim()||"Diplôme",mention:men.trim()}];
+    const nom=full.replace(/\s*mention\s+.+$/i,"").trim();
+    // sans référentiel, un diplôme-cadre caché tient lieu de diplôme actif (voir dipVisibles)
+    d.diplomes=[nom?{id:"d0",nom,mention:men.trim()}:{id:"d0",nom:"",mention:"",cadre:true}];
   }
   if(!d.activeDiplome||!d.diplomes.some(x=>x.id===d.activeDiplome))d.activeDiplome=d.diplomes[0].id;
   if(!(d.dico&&d.refs)){
@@ -3688,6 +3694,9 @@ F.items.forEach(it=>{if(it.op===undefined)it.op="";if(it.libelle===undefined)it.
 if(!Array.isArray(F.ecCodes))F.ecCodes=F.ecCode?[F.ecCode]:[];
 delete F.ecCode;
 delete F.ec;
+/* un diplôme-cadre vierge resté à côté d'un vrai diplôme n'a plus lieu d'être */
+{const nt=window.dnmaxPont.nettoyerDiplomesVierges(DATA,promos);
+  if(nt&&nt.modifie){DATA=nt.donnees;materialize(DATA);REF=computeREF();persistData()}}
 syncItemEcs();
 let ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"diplome"},ref:{pane:"explorer",chain:"",edq:"",q:"",group:"bloc",annee:"*",sems:[]}};
 let dl = window.dnmaxPont.telechargements;
@@ -3973,10 +3982,10 @@ function paintForm(){
   REF=computeREF();
   try{paintEchForm()}catch(e){console.error(e)}
   const g=id=>document.getElementById(id);
-  const nd=DATA.diplomes.length;
+  const dvs=dipVisibles(), nd=dvs.length;
   g("fld-dip").hidden = true;   // la mention découle des promotions cochées
   if(nd>1){
-    g("f-dip").innerHTML=DATA.diplomes.map(dp=>`<option value="${dp.id}">${esc(dipLabel(dp))}</option>`).join("");
+    g("f-dip").innerHTML=dvs.map(dp=>`<option value="${dp.id}">${esc(dipLabel(dp))}</option>`).join("");
     g("f-dip").value=DATA.activeDiplome;
   }
   paintLivrables();
@@ -5320,7 +5329,7 @@ function paintRadial(){
     });
     a+=span;
   });
-  const dipL=wrapN(m.diplomeNom||m.diplome||"Diplôme",14,3);
+  const dipL=wrapN(m.diplomeNom||m.diplome||"Aucun diplôme",14,3);
   const men=m.mention?"mention "+m.mention:"";
   const n=dipL.length+(men?1:0);
   let hy=c-((n-1)*16)/2;
@@ -5454,7 +5463,7 @@ function chainItemText(k,x,M){
   if(k==="sem")return {code:"",label:"Semestre "+x.num+" · année "+x.annee};
   if(k==="ec")return {code:ecCodeLbl(x),label:ecName(x)};
   if(k==="ue")return {code:x.code||"",label:x.nom};
-  return {code:"",label:(x.nom||"Diplôme")+(x.mention?" · mention "+x.mention:"")};
+  return {code:"",label:(x.nom||"Aucun diplôme")+(x.mention?" · mention "+x.mention:"")};
 }
 function paintChain(){
   const D=DATA, f=refFilter(), M=chainModel();
@@ -6243,12 +6252,12 @@ function paintPromosOrg(host){
     return a<1?"à venir":a>n?"terminée":promoShort(pr)+" · Année "+a};
   const css="grid-template-columns:240px 92px minmax(0,1fr) 118px"+(MOD.eleves?" 120px":"")+" 92px";
   const openId=ui.org.promo||"";
-  const moveOpts=(cur)=>D.diplomes.map(dp=>{const ps=list.filter(x=>x.diplomeId===dp.id);
+  const moveOpts=(cur)=>dipVisibles().map(dp=>{const ps=list.filter(x=>x.diplomeId===dp.id);
     return ps.length?`<optgroup label="${esc(dipLabel(dp))}">${ps.map(x=>`<option value="${x.id}" ${x.id===cur?"selected":""}>${esc(x.nom||"Sans nom")}</option>`).join("")}</optgroup>`:""}).join("");
   const rows=list.map(pr=>{
     const n=(pr.liste||[]).length, open=MOD.eleves&&openId===pr.id;
     let h=`<div class="ed" style="${css}">
-      <select data-pd="${pr.id}" aria-label="Diplôme et mention">${D.diplomes.map(dp=>`<option value="${dp.id}" ${dp.id===pr.diplomeId?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>
+      <select data-pd="${pr.id}" aria-label="Diplôme et mention">${dipVisibles().map(dp=>`<option value="${dp.id}" ${dp.id===pr.diplomeId?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>
       <input type="number" min="2000" max="2100" value="${pr.debut}" data-py="${pr.id}" class="mono" aria-label="Année de début">
       <span class="ro mono" title="Code du diplôme · début · fin (${promoDuree(pr)} ans)">${esc(pr.nom)}</span>
       <span class="num">${esc(etat(pr))}</span>
@@ -6760,14 +6769,14 @@ function paintEditor(pane,host){
   const D=DATA;
   if(pane==="diplome"){
     const css="grid-template-columns:minmax(0,1fr) 110px 100px";
-    const grs=[];
-    D.diplomes.forEach((dp,i)=>{
+    const grs=[], dvs=dipVisibles();
+    dvs.forEach(dp=>{const i=D.diplomes.indexOf(dp);
       const key=(dp.nom||"").trim().toLowerCase();
       let gr=grs.find(g=>g.key===key);
       if(!gr){gr={key,nom:dp.nom||"",rows:[]};grs.push(gr)}
       gr.rows.push({dp,i});
     });
-    host.innerHTML=edPanel("Diplômes et mentions",D.diplomes.length+" mention"+(D.diplomes.length>1?"s":""),
+    host.innerHTML=edPanel("Diplômes et mentions",dvs.length+" mention"+(dvs.length>1?"s":""),
       `<button class="btn ghost" id="edAdd">+ Nouveau diplôme</button>`,
       {css,cells:["Mention","Code",""]},
       grs.map((gr,gi)=>`<div class="dgrp">
@@ -6782,10 +6791,10 @@ function paintEditor(pane,host){
         ${gr.rows.map(({dp,i})=>`<div class="ed" style="${css}">
           <input type="text" value="${esc(dp.mention)}" data-dm="${i}" placeholder="Objet" aria-label="Mention">
           <input type="text" value="${esc(dp.code||"")}" data-dc="${i}" placeholder="${esc(autoDipCode(dp)||"DNO")}" aria-label="Code" class="mono">
-          ${D.diplomes.length>1?delBtn("dip"+i,"Supprimer"):`<span class="hint">—</span>`}</div>`).join("")}
-      </div>`).join(""),
+          ${dvs.length>1?delBtn("dip"+i,"Supprimer"):`<span class="hint">—</span>`}</div>`).join("")}
+      </div>`).join("")||`<div class="empty">Aucun diplôme : installez un référentiel depuis l'encart de départ, ou créez-en un avec « + Nouveau diplôme ».</div>`,
       "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments du dictionnaire, pour que tu n'aies qu'à ajuster les variations (Référentiel › Dictionnaire, ou les volets du référentiel une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.")
-      +`<div class="panel" style="max-width:720px;margin-top:18px"><div class="pick-head"><h3>Réglages du référentiel</h3>${D.diplomes.length>1?`<select id="edDipAct" aria-label="Mention dont on règle le référentiel" style="width:auto;margin-left:auto">${D.diplomes.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>`:`<span class="hint" style="margin-left:auto">${esc(dipLabel(D.diplomes[0]||{}))}</span>`}</div>
+      +(dvs.length?`<div class="panel" style="max-width:720px;margin-top:18px"><div class="pick-head"><h3>Réglages du référentiel</h3>${dvs.length>1?`<select id="edDipAct" aria-label="Mention dont on règle le référentiel" style="width:auto;margin-left:auto">${dvs.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>`:`<span class="hint" style="margin-left:auto">${esc(dipLabel(dvs[0]))}</span>`}</div>
         <div class="panel-body">
           <div class="field"><label>Années et niveaux</label>
             <div class="hint" style="margin:0 0 6px">L'identifiant d'une année suit le code du diplôme (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.</div>
@@ -6793,10 +6802,14 @@ function paintEditor(pane,host){
               <input type="text" data-nvc="${i}" value="${esc(n.code||"")}" placeholder="${esc(dipCode(D.diplomes.find(x=>x.id===D.activeDiplome)||{})+n.annee)}" style="flex:0 1 90px" aria-label="Identifiant de l'année" class="mono">
               <input type="text" data-nvl="${i}" value="${esc(n.label)}" aria-label="Libellé du niveau"></div>`).join("")}
             </div>
-        </div></div>`;
+        </div></div>`:"");
     host.querySelector("#edAdd").onclick=()=>{
-      const dp={id:newId("d"),nom:"Nouveau diplôme",mention:"",code:"",duree:3};
-      D.diplomes.push(dp);D.activeDiplome=dp.id;saveData();toast("Diplôme ajouté — son référentiel est vide")};
+      // le cadre caché d'une installation neuve devient ce diplôme, plutôt que d'en ajouter un second
+      const cadre=D.diplomes.find(x=>estCadreVierge(x.id));
+      const dp=Object.assign(cadre||{id:newId("d")},{nom:"Nouveau diplôme",mention:"",code:"",duree:3});
+      delete dp.cadre;
+      if(!cadre)D.diplomes.push(dp);
+      D.activeDiplome=dp.id;saveData();toast("Diplôme ajouté — son référentiel est vide")};
     host.querySelectorAll("[data-dgadd]").forEach(b=>b.onclick=()=>{
       const gr=grs[+b.dataset.dgadd], src=gr.rows[gr.rows.length-1].dp;
       const dp=addMention(src.id,gr.nom);dp.duree=+src.duree||3;D.activeDiplome=dp.id;saveData();
@@ -7196,7 +7209,9 @@ function loadDemo(){
   // sans référentiel, l'exemple apporte le sien : celui du DN MADE mention Objet
   const refExemple=!refOf(DATA,DATA.activeDiplome).competences.length;
   if(refExemple){
-    DATA=migrateData(buildData(REF_DEFAULT,SUPPORTS_DEF));REF=projectRef(DATA);persistData();
+    // les enseignants déjà déclarés (dont « moi ») ne dépendent pas du référentiel : on les garde
+    const ens=DATA.enseignants,moi=DATA.moi;
+    DATA=migrateData(buildData(REF_DEFAULT,SUPPORTS_DEF));DATA.enseignants=ens;if(moi)DATA.moi=moi;REF=projectRef(DATA);persistData();
   }
   const dipsAvant=new Set(refExemple?[]:DATA.diplomes.map(d=>d.id));
   [["Sophie Hébert","Atelier de création"],["Marc Lenoir","Technologies et matériaux"],["Amina Benali","Humanités"]]
@@ -7973,6 +7988,15 @@ window.dnmaxPont.projeterReferentiel=(diplomeId,versionId)=>{
   if(!DATA.diplomes.some(d=>d.id===diplomeId))return null;
   const v=versionsOf(diplomeId).find(x=>x.id===versionId);
   return projectSnap(DATA,diplomeId,JSON.parse(JSON.stringify(v?v.snap:refOf(DATA,diplomeId))));
+};
+
+/* Pont vers l'application : elle fait appliquer ses règles aux enseignants (déclarer l'enseignant de
+   l'installation, reporter son changement de nom). La règle reçoit les données et rend les nouvelles, ou null. */
+window.dnmaxPont.ajusterEnseignants=regle=>{
+  const r=regle({enseignants:DATA.enseignants.slice(),moi:DATA.moi});
+  if(!r||!Array.isArray(r.enseignants))return;
+  DATA.enseignants=r.enseignants.slice();DATA.moi=typeof r.moi==="string"?r.moi:DATA.moi;persistData();
+  if(ui.tab==="org")paintOrg();
 };
 
 /* Pont vers l'application : les données de l'établissement (diplômes, dictionnaire, référentiels) ne sont

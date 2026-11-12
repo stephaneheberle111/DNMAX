@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   CLE_PARCOURS,
+  colleguesDeclares,
   doitLancerAuDemarrage,
   estIdentifiantParcours,
   lireAvancement,
@@ -125,5 +126,19 @@ describe("lireReprise", () => {
     expect(lireReprise(JSON.stringify({ identifiant: "autre", index: 1 }))).toBeNull();
     expect(lireReprise(JSON.stringify({ identifiant: "eleves", index: -1 }))).toBeNull();
     expect(lireReprise(JSON.stringify({ identifiant: "eleves", index: 1.5 }))).toBeNull();
+  });
+});
+
+describe("colleguesDeclares", () => {
+  it("ne compte pas l'enseignant de l'installation, seul dans la liste", () => {
+    expect(colleguesDeclares({ enseignants: 1 })).toBe(false);
+  });
+
+  it("voit l'équipe déclarée dès un collègue ajouté", () => {
+    expect(colleguesDeclares({ enseignants: 2 })).toBe(true);
+  });
+
+  it("ne voit rien de déclaré dans une liste vide", () => {
+    expect(colleguesDeclares({ enseignants: 0 })).toBe(false);
   });
 });
