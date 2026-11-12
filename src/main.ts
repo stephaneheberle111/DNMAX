@@ -160,7 +160,7 @@ async function demarrer(): Promise<void> {
   installerDonneesEleves(acces);
   rappelerConservation(acces);
   installerCompte(acces);
-  installerPiedDePage();
+  installerPiedDePage(acces);
   await proposerPremiersPas(acces);
 }
 
