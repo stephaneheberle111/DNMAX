@@ -774,3 +774,29 @@ html[data-device="phone"] svg.radial{margin:0 auto!important;max-width:100%!impo
 html[data-device="phone"] .radwrap>.radinfo{align-self:stretch}
 html[data-device="phone"] .xpop{right:auto;left:0}
 html[data-device="phone"] .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+
+/* ===================== Grands écrans ===================== */
+/* Sur un écran de 1920 ou 2560 px, la zone utile figée à 1240 px laissait de larges marges vides
+   et un texte de 14 px difficile à lire de loin. On élargit par paliers plutôt que d'occuper toute
+   la largeur : au-delà de ~1900 px, des lignes et des tableaux trop étirés se lisent mal.
+   Rien ne change sous 1400 px. Les règles html[data-device="phone"] restent prioritaires. */
+@media (min-width:1400px){
+  .bar-in,main{max-width:1360px}
+}
+/* 15 px à partir de 1700 px : le gain de place absorbe le texte plus grand sans resserrer les grilles. */
+@media (min-width:1700px){
+  body{font-size:15px}
+  .bar-in,main{max-width:1600px}
+  .work{grid-template-columns:360px minmax(0,1fr)}
+  .cols3{grid-template-columns:280px minmax(0,1fr)}
+  .radwrap{grid-template-columns:minmax(0,1fr) 290px}
+}
+/* 16 px et ~1920 px utiles au-delà de 2200 px (écrans 2560 et plus). La roue reste bornée par la hauteur. */
+@media (min-width:2200px){
+  body{font-size:16px}
+  .bar-in,main{max-width:1920px}
+  .work{grid-template-columns:400px minmax(0,1fr)}
+  .cols3{grid-template-columns:310px minmax(0,1fr)}
+  .radwrap{grid-template-columns:minmax(0,1fr) 320px}
+  svg.radial{max-width:min(1120px,calc(100vh - 110px))}
+}
