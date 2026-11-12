@@ -28,6 +28,7 @@ const MESSAGES_ERREUR: Record<CodeErreurCoffre, string> = {
   "coffre-verrouille": "Les données sont verrouillées. Relancez l'application.",
   "disque-inaccessible": "Impossible de lire ou d'écrire sur le disque. Vérifiez l'espace libre et réessayez.",
   "fichier-trop-volumineux": "Ce fichier est trop volumineux pour être un fichier d'échange DNMAX.",
+  "sauvegarde-inconnue": "Cette sauvegarde n'est plus disponible. La liste a été mise à jour : choisissez-en une autre.",
   interne: "Une erreur inattendue s'est produite. Réessayez.",
 };
 
