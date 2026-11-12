@@ -16,6 +16,7 @@ import {
   lireDatesModification,
   mettreAJourDates,
 } from "./domaine/echange/suivi-modifications";
+import { provisionnerEnseignantMoi, renommerEnseignantMoi } from "./domaine/enseignant-moi";
 import { CLE_IDENTITE, creerIdentite, lireIdentite } from "./domaine/identite";
 import { proposerPremiersPas } from "./ecran-accueil";
 import { installerCompte } from "./ecran-compte";
@@ -35,7 +36,7 @@ import {
   lireCoffre,
   lireEtatCoffre,
 } from "./enveloppe";
-import { chargerInterfaceHistorique } from "./heritage/pont";
+import { ajusterEnseignants, chargerInterfaceHistorique } from "./heritage/pont";
 import { dresserCatalogue } from "./heritage/referentiels";
 
 const NOM_APPLICATION = "DNMAX";
@@ -111,6 +112,7 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
       }
       identite = renommee;
       magasin.setItem(CLE_IDENTITE, JSON.stringify(identite));
+      ajusterEnseignants((donnees) => renommerEnseignantMoi(donnees, renommee));
       return true;
     },
     dresserCatalogue,
@@ -157,6 +159,8 @@ async function demarrer(): Promise<void> {
   const { magasin, acces } = await creerMagasinProtege();
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
   await chargerInterfaceHistorique(magasin, proposerOuvertureExport);
+  // L'enseignant qui a donné son nom figure d'office parmi les enseignants de l'établissement, marqué « moi ».
+  ajusterEnseignants((donnees) => provisionnerEnseignantMoi(donnees, acces.identite));
   installerEchange(acces);
   suivreExemple(acces);
   installerDonneesEleves(acces);
