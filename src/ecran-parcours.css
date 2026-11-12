@@ -244,20 +244,6 @@
   animation: parcours-apparition 0.45s cubic-bezier(0.2, 1.35, 0.4, 1);
 }
 
-/* Liseré dégradé qui ondule en haut de la bulle. */
-.parcours-bulle::after {
-  content: "";
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  top: -1px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, #2f5bd3 0%, #2f5bd3 40%, #dce8ff 50%, #2f5bd3 60%, #2f5bd3 100%);
-  background-size: 250% 100%;
-  animation: parcours-ondulation 3.2s ease-in-out infinite;
-}
-
 /* Flèche vers la zone éclairée. */
 .parcours-bulle[data-position="dessous"]::before,
 .parcours-bulle[data-position="dessus"]::before {
@@ -284,12 +270,6 @@
   border-top: 0;
 }
 
-@keyframes parcours-ondulation {
-  to {
-    background-position: -200% 0;
-  }
-}
-
 .parcours-cascade {
   animation: parcours-cascade 0.4s ease-out both;
   animation-delay: calc(var(--rang, 0) * 70ms + 80ms);
@@ -307,10 +287,6 @@
   width: min(460px, calc(100vw - 24px));
   padding-top: 0;
   overflow: hidden;
-}
-
-.parcours-accueil::after {
-  display: none;
 }
 
 .parcours-banniere {
@@ -566,7 +542,6 @@
 
   .parcours-anneau,
   .parcours-anneau::before,
-  .parcours-bulle::after,
   .parcours-banniere,
   .parcours-cascade,
   .parcours-chapitre,
