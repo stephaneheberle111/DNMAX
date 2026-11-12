@@ -7,6 +7,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 import type { Entrees } from "./domaine/magasin-memoire";
 import { estJeuEntrees } from "./domaine/saisie-coffre";
+import { estListeSauvegardes, type Sauvegarde } from "./domaine/sauvegardes";
 
 /** En-tête lu par la commande `enregistrer_fichier` de l'enveloppe. */
 const ENTETE_NOM_FICHIER = "x-nom-fichier";
@@ -37,6 +38,7 @@ const CODES_ERREUR_COFFRE = [
   "coffre-verrouille",
   "disque-inaccessible",
   "fichier-trop-volumineux",
+  "sauvegarde-inconnue",
   "interne",
 ] as const;
 
@@ -274,4 +276,25 @@ export async function lireVersion(): Promise<string> {
  */
 export async function ouvrirDernierExport(): Promise<void> {
   await invoke("ouvrir_dernier_export");
+}
+
+/** Liste les sauvegardes du coffre, de la plus récente à la plus ancienne. */
+export async function listerSauvegardes(): Promise<Sauvegarde[]> {
+  const liste = await appelerCoffre("lister_sauvegardes");
+  if (!estListeSauvegardes(liste)) {
+    throw new ErreurCoffre("interne");
+  }
+  return liste;
+}
+
+/**
+ * Remplace les données par la sauvegarde `nom` (un nom rendu par `listerSauvegardes`),
+ * après avoir mis l'état actuel de côté. Les données sont ensuite verrouillées :
+ * la page doit être rechargée pour redemander le mot de passe.
+ *
+ * @throws ErreurCoffre « sauvegarde-inconnue » si le nom n'est plus dans la liste,
+ *   « fichier-illisible » si la sauvegarde est endommagée.
+ */
+export async function restaurerSauvegarde(nom: string): Promise<void> {
+  await appelerCoffre("restaurer_sauvegarde", { nom });
 }
