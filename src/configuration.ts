@@ -8,6 +8,7 @@
 export const ADRESSE_SITE = "https://dnmax.fr/";
 export const ADRESSE_RETOURS = "https://dnmax.fr/#idees";
 export const ADRESSE_CODE_SOURCE = "https://github.com/stephaneheberle111/DNMAX";
+export const ADRESSE_CONFIDENTIALITE = "https://dnmax.fr/#confidentialite";
 
 /** Référentiel proposé aux installations neuves, à télécharger puis à recevoir par « Échanger… ». */
 export const REFERENTIEL_PROPOSE = {

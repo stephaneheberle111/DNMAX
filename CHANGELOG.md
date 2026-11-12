@@ -4,6 +4,7 @@
 
 ### Ajouté
 
+- Pied de page de l'application : version et licence, « À propos », « Confidentialité », « Site et documentation », « Proposer une idée ou signaler un bug ».
 - Site : « Idées et bugs » propose aussi l'envoi par e-mail à contact@dnmax.fr (message prérempli dans votre messagerie, lu par le seul éditeur), en plus du ticket public sur GitHub.
 - « Mon compte » : le lien « Proposer une idée ou signaler un bug » transmet au site la version installée et le système, qui préremplissent le signalement.
 

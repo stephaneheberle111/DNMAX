@@ -1,0 +1,35 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.pied-app {
+  margin-top: 32px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.pied-liens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-left: auto;
+}
+
+.pied-app .lnk {
+  font-size: inherit;
+  color: var(--muted);
+}
+
+.pied-app .lnk:hover {
+  color: var(--ink);
+}
+
+.pied-erreur {
+  flex-basis: 100%;
+  color: var(--danger);
+  font-weight: 600;
+}
