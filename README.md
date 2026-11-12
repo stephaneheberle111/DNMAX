@@ -139,7 +139,7 @@ flowchart LR
 - `src/ecran-compte.ts` : « Mon compte » (nom, mot de passe, à propos). `src/ecran-exemple.ts` : le retrait de l'exemple.
 - `src/ecran-accueil.ts` : l'encart des premiers pas sur une installation vide. `src/configuration.ts` : les adresses publiques du projet.
 - `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ».
-- `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans.
+- `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans. `src/canal-direct.ts` et `src/ecran-echange-direct.ts` : l'échange en direct (bêta), d'ordinateur à ordinateur par WebRTC (décision 21).
 - `src-tauri/` : la fenêtre de bureau et ses droits (`capabilities/`). Dans `src-tauri/src/` : `coffre.rs` chiffre (sans toucher au disque), `depot.rs` range les fichiers (sans connaître le chiffrement), `export.rs` écrit les exports, `lib.rs` relie le tout aux commandes appelées par l'interface.
 
 ## Pièges déjà rencontrés
