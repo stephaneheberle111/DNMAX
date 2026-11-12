@@ -208,6 +208,8 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Adaptations de l'interface historique** : référentiel de départ vide (`REF_VIDE`), brouillon de départ vide, et installation du référentiel d'origine par `loadDemo` quand il n'y en a aucun.
 
+**Diplôme-cadre caché** : l'interface historique a besoin d'un diplôme actif. Une installation neuve en crée donc un, vide, marqué `cadre` et sans nom, que l'enseignant ne voit pas (`dipVisibles`) tant qu'il est vierge (`src/domaine/diplome-vierge.ts`). Le premier référentiel reçu ou « + Nouveau diplôme » le réutilise et retire la marque. Les versions antérieures le nommaient « Diplôme » et le laissaient visible, parfois à côté du premier vrai diplôme : au démarrage, un cadre vierge (sans référentiel, version ni promotion ; les évaluations et la répartition passent par les promotions) est retiré dès qu'un autre diplôme existe. Un diplôme créé à la main et encore vide n'est pas un cadre et reste.
+
 ## 17. L'exemple se retire sans toucher au travail de l'enseignant
 
 **Retenu** : au moment où l'enseignant charge l'exemple, l'application note l'état de ses données juste avant et juste après (clé `dnmax.exemple`, dans le coffre). Un bouton « Retirer l'exemple » apparaît alors ; il annonce ce qui sera retiré avant de le faire.

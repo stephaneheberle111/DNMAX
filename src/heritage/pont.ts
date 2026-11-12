@@ -2,6 +2,7 @@
 import JSZip from "jszip";
 import * as XLSX from "xlsx";
 import { convertirEnOctets, type ContenuFichier } from "../domaine/contenu-fichier";
+import { estCadreVierge, nettoyerDiplomesVierges } from "../domaine/diplome-vierge";
 import { CLE_IDENTITE, lireIdentite } from "../domaine/identite";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
 import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
@@ -36,6 +37,10 @@ interface Pont {
    * @param etablissement nom de l'établissement saisi dans « Mon établissement », vide s'il ne l'est pas
    */
   readonly confirmerModuleEleves: (etablissement: unknown) => Promise<boolean>;
+  /** Le diplôme-cadre vierge, à cacher à l'enseignant (voir `domaine/diplome-vierge`). */
+  readonly estCadreVierge: typeof estCadreVierge;
+  /** Appelée au chargement : retire les diplômes-cadres vierges devenus inutiles. */
+  readonly nettoyerDiplomesVierges: typeof nettoyerDiplomesVierges;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: DemandeEnregistrement): Promise<void>;
@@ -90,6 +95,8 @@ export async function chargerInterfaceHistorique(
   window.dnmaxPont = {
     stockage: magasin,
     telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport) },
+    estCadreVierge,
+    nettoyerDiplomesVierges,
     // L'interface historique n'est pas typée : le nom reçu est vérifié.
     confirmerModuleEleves: (etablissement) =>
       confirmerActivationEleves({
