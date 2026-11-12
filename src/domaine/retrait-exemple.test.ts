@@ -120,4 +120,15 @@ describe("retirerExemple", () => {
     expect(lire(apres, CLE_EVALUATIONS)).toEqual([MIENNE]);
     expect(bilan.evaluationsRetirees).toBe(0);
   });
+
+  it("garde l'enseignant « moi » déclaré avant le chargement de l'exemple", () => {
+    const moi = { id: "poste-1", prenom: "Hélène", nomFam: "Durand", nom: "Hélène Durand", discipline: "" };
+    const exemple = { id: "t9", prenom: "Sophie", nomFam: "Hébert", nom: "Sophie Hébert", discipline: "Atelier" };
+    const avant = entrees([], [], { [CLE_ETABLISSEMENT]: JSON.stringify({ enseignants: [moi], moi: "poste-1" }) });
+    const apres = entrees([EXEMPLE], [P_EXEMPLE], {
+      [CLE_ETABLISSEMENT]: JSON.stringify({ enseignants: [moi, exemple], moi: "poste-1" }),
+    });
+    const { entrees: sansExemple } = retirerExemple(apres, composerInstantane(avant, apres, null));
+    expect(lire(sansExemple, CLE_ETABLISSEMENT)).toEqual({ enseignants: [moi], moi: "poste-1" });
+  });
 });
