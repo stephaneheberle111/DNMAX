@@ -7,6 +7,7 @@
 - Site : page « Confidentialité et mentions légales », reliée depuis le pied de page.
 - Site : la page Télécharger propose le référentiel DN MADE mention Objet et explique comment l'importer.
 - Export : un document qui contient des noms ou des résultats d'élèves rappelle, une fois enregistré, qu'il n'est pas protégé par mot de passe.
+- « Mon compte » > « Données d'un élève » : exporter tout ce qui concerne un élève, ou l'effacer partout (promotions, évaluations, brouillon), à sa demande ou à celle de sa famille.
 
 ### Modifié
 
