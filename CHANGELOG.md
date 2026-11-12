@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- « Rechercher une mise à jour » passe de « Mon compte » au pied de page de l'application.
+
 ### Corrigé
 
 - L'annonce d'une mise à jour trouvée depuis « Mon compte » s'affiche par-dessus la boîte, au lieu d'apparaître derrière.
