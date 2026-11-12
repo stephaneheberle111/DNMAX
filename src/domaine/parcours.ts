@@ -73,6 +73,14 @@ export function lireAvancement(entrees: Entrees): Avancement {
   };
 }
 
+/**
+ * Vrai si des collègues sont déclarés : l'enseignant de l'installation figure
+ * déjà dans la liste dès le premier lancement, il en faut donc au moins un autre.
+ */
+export function colleguesDeclares(avancement: Pick<Avancement, "enseignants">): boolean {
+  return avancement.enseignants > 1;
+}
+
 /** Visites déjà vues ; une valeur illisible vaut « aucune ». */
 export function lireParcoursVus(texte: string | undefined): IdentifiantParcours[] {
   const valeur = analyserJson(texte);
