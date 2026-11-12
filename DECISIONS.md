@@ -236,3 +236,20 @@ Le nom se corrige dans « Mon compte » (décision 18).
 **Contreparties** : pas de déploiement automatique comme chez Cloudflare. L'offre gratuite n'a qu'un accès FTP ; le site change rarement, un envoi à la main suffit et évite de confier ce mot de passe aux ateliers GitHub ; les réglages du serveur passent par `site/.htaccess` (Apache) au lieu de `site/_headers`, gardé tant que l'ancienne adresse sert de transition.
 
 **Non retenu** : les pages GitHub, qui auraient gardé un hébergeur américain.
+
+## 20. Durée de conservation des données d'élèves
+
+**Retenu** : les données d'élèves d'une promotion sont gardées **1 an** après sa sortie (le 1er juillet suivant la fin de son diplôme, dont la durée est lue dans les données de l'établissement, 3 ans à défaut). La sortie ne déclenche rien par elle-même : passé ce délai, DNMAX le **rappelle** au lancement, et « Mon compte » > « Données anciennes » propose, au choix de l'enseignant :
+
+- **anonymiser** : chaque élève devient « Élève anonyme <n> » ; ses niveaux et ses dates restent, utiles aux bilans de la formation ; ses observations et son appréciation, textes libres qui peuvent l'identifier, sont retirées ;
+- **effacer** : l'élève quitte la promotion et ses résultats quittent les évaluations.
+
+Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou des consignes ne sont pas des données personnelles. La même boîte traite les résultats restés sans élève après le retrait d'un élève ou d'une promotion.
+
+**Redoublement** : un élève déplacé dans sa nouvelle promotion garde son identifiant et n'appartient plus à l'ancienne : il n'est pas touché. Un élève ressaisi dans la nouvelle promotion figure dans les deux : son nom, retrouvé dans une promotion encore en cours, le signale comme redoublant probable, et il est proposé **à garder** (case cochée par défaut). Une promotion où il ne reste que des redoublants gardés ne fait plus l'objet d'un rappel.
+
+**Pourquoi** : le RGPD impose une durée de conservation limitée et proportionnée. Un an après la sortie couvre les demandes d'attestation et les recours de fin de cursus. La durée est un réglage (`ANNEES_CONSERVATION_ELEVES` dans `src/configuration.ts`), à ajuster avec l'établissement et son délégué à la protection des données.
+
+**Jamais de traitement automatique** : l'enseignant peut avoir à remettre un relevé avant. DNMAX rappelle et propose ; l'enseignant décide.
+
+**Limites** : les sauvegardes automatiques du coffre gardent une trace jusqu'à leur remplacement (dix jours d'utilisation) ; un nom cité dans un texte libre d'un autre élève, un titre ou des consignes n'est pas recherché ; un redoublant est repéré par son nom, donc un homonyme peut être pris pour un redoublant (il est alors gardé, ce qui est sans risque).
