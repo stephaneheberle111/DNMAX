@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-droits-eleves.css";
 import { ANNEES_CONSERVATION_ELEVES } from "./configuration";
-import { identifiantsOrphelins, promotionsEchues, traiterDonneesEchues, type Traitement } from "./domaine/conservation";
+import {
+  etatPromotions,
+  identifiantsOrphelins,
+  promotionsEchues,
+  traiterDonneesEchues,
+  type EtatPromotion,
+  type Traitement,
+} from "./domaine/conservation";
 import { effacerEleve, extraireEleve, listerEleves, type BilanEffacement, type EleveRepere } from "./domaine/droits-eleve";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
@@ -20,7 +27,11 @@ function aujourdHui(): string {
 
 /** Nom de fichier proposé : le nom de l'élève, sans caractère refusé par les systèmes de fichiers. */
 function nomFichier(eleve: EleveRepere, date: string): string {
-  const nom = eleve.nom.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim() || "eleve";
+  const nom =
+    eleve.nom
+      .replace(/[\\/:*?"<>|]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() || "eleve";
   return `Données DNMAX - ${nom} - ${date}.json`;
 }
 
@@ -132,27 +143,39 @@ function ecrireJour(jourIso: string): string {
   return `${jour ?? ""}/${mois ?? ""}/${annee ?? ""}`;
 }
 
+function decrirePromotion(promotion: EtatPromotion): string {
+  const eleves = `${String(promotion.eleves)} élève(s)`;
+  if (promotion.sortie === "") {
+    return `${promotion.nom} : ${eleves}, année d'entrée inconnue`;
+  }
+  return promotion.echue
+    ? `${promotion.nom} : ${eleves}, sortie le ${ecrireJour(promotion.sortie)}, durée de conservation dépassée depuis le ${ecrireJour(promotion.echeance)}`
+    : `${promotion.nom} : ${eleves}, sortie le ${ecrireJour(promotion.sortie)}, à conserver jusqu'au ${ecrireJour(promotion.echeance)}`;
+}
+
 /**
- * Ouvre la boîte « Données anciennes » : effacer ou anonymiser les données
- * d'élèves des promotions sorties depuis plus longtemps que la durée de
- * conservation, et les résultats restés sans élève. Les redoublants probables
- * sont proposés à garder. Rien n'est traité sans confirmation.
+ * Ouvre la boîte « Anonymiser ou effacer des promotions ». Toutes les
+ * promotions qui comptent des élèves identifiables y figurent ; celles dont
+ * la durée de conservation est dépassée sont cochées d'office. Les
+ * redoublants probables sont proposés à garder, et les résultats restés sans
+ * élève peuvent être traités de même. Traiter une promotion encore dans sa
+ * durée de conservation demande une seconde confirmation.
  */
 export function ouvrirConservation(acces: AccesDonnees): void {
   const entrees = acces.lireEntrees();
-  const echues = promotionsEchues(entrees, aujourdHui(), ANNEES_CONSERVATION_ELEVES);
+  const promotions = etatPromotions(entrees, aujourdHui(), ANNEES_CONSERVATION_ELEVES);
   const orphelins = identifiantsOrphelins(entrees);
-  const { boite, fermer } = ouvrirBoite("Données anciennes");
+  const { boite, fermer } = ouvrirBoite("Anonymiser ou effacer des promotions");
   boite.append(
     creer(
       "p",
       "",
-      `Les données d'élèves sont gardées ${String(ANNEES_CONSERVATION_ELEVES)} an(s) après la sortie de leur promotion. Ensuite, effacez-les, ou anonymisez-les pour garder les niveaux atteints sans rien qui identifie les élèves. Les évaluations elles-mêmes (grilles, consignes) sont conservées.`,
+      `Les données d'élèves sont gardées ${String(ANNEES_CONSERVATION_ELEVES)} an(s) après la sortie de leur promotion ; DNMAX le rappelle ensuite. Vous pouvez aussi anonymiser ou effacer une promotion plus tôt. Les évaluations elles-mêmes (grilles, consignes) sont conservées.`,
     ),
   );
   const actions = creer("div", "echange-actions");
-  if (echues.length === 0 && orphelins.length === 0) {
-    boite.append(creer("p", "", "Aucune donnée d'élève n'a dépassé sa durée de conservation."));
+  if (promotions.length === 0 && orphelins.length === 0) {
+    boite.append(creer("p", "", "Aucune promotion ne compte d'élève identifiable."));
     actions.append(creerBouton("Fermer", "btn ghost", fermer));
     boite.append(actions);
     return;
@@ -166,15 +189,13 @@ export function ouvrirConservation(acces: AccesDonnees): void {
     boite.append(ligne);
     return caseACocher;
   };
-  const promotionsCochees: { id: string; caseACocher: HTMLInputElement }[] = [];
+  const promotionsCochees: { id: string; echue: boolean; caseACocher: HTMLInputElement }[] = [];
   const gardes: { id: string; caseACocher: HTMLInputElement }[] = [];
-  for (const promotion of echues) {
+  for (const promotion of promotions) {
     promotionsCochees.push({
       id: promotion.id,
-      caseACocher: creerCase(
-        `${promotion.nom} : ${String(promotion.eleves)} élève(s), sortie le ${ecrireJour(promotion.sortie)}, échue depuis le ${ecrireJour(promotion.echeance)}`,
-        true,
-      ),
+      echue: promotion.echue,
+      caseACocher: creerCase(decrirePromotion(promotion), promotion.echue),
     });
     for (const redoublant of promotion.redoublants) {
       gardes.push({
@@ -193,11 +214,21 @@ export function ouvrirConservation(acces: AccesDonnees): void {
       : null;
   const erreur = creer("p", "echange-erreur");
   erreur.hidden = true;
+  // Traitement déjà demandé une fois pour des promotions encore dans leur durée de conservation.
+  let confirmationDemandee: Traitement | null = null;
   const traiter = (traitement: Traitement, bouton: HTMLButtonElement): void => {
-    const choisies = promotionsCochees.filter((element) => element.caseACocher.checked).map((element) => element.id);
+    const cochees = promotionsCochees.filter((element) => element.caseACocher.checked);
+    const choisies = cochees.map((element) => element.id);
     const avecOrphelins = caseOrphelins?.checked === true;
     if (choisies.length === 0 && !avecOrphelins) {
       erreur.textContent = "Cochez au moins une promotion ou les résultats sans élève.";
+      erreur.hidden = false;
+      return;
+    }
+    const enCours = cochees.filter((element) => !element.echue).length;
+    if (enCours > 0 && confirmationDemandee !== traitement) {
+      confirmationDemandee = traitement;
+      erreur.textContent = `${String(enCours)} promotion(s) cochée(s) sont encore dans leur durée de conservation. Cliquez de nouveau sur « ${bouton.textContent} » pour confirmer.`;
       erreur.hidden = false;
       return;
     }
@@ -229,7 +260,7 @@ export function ouvrirConservation(acces: AccesDonnees): void {
   const effacer: HTMLButtonElement = creerBouton("Effacer définitivement", "btn primary", () => {
     traiter("effacer", effacer);
   });
-  actions.append(creerBouton("Plus tard", "btn ghost", fermer), anonymiser, effacer);
+  actions.append(creerBouton("Fermer", "btn ghost", fermer), anonymiser, effacer);
   boite.append(actions);
 }
 
@@ -265,4 +296,52 @@ export function rappelerConservation(acces: AccesDonnees): void {
     boutons,
   );
   document.body.append(annonce);
+}
+
+const IDENTIFIANT_PANNEAU = "panneau-donnees-eleves";
+/** Clé des modules de l'interface historique ; `eleves` vaut vrai quand le module Élèves est actif. */
+const CLE_MODULES = "dnmade.modules";
+
+/** Vrai si le module Élèves est actif, ou si des élèves sont encore enregistrés. */
+function moduleElevesActif(texte: string | undefined): boolean {
+  try {
+    const modules: unknown = JSON.parse(texte ?? "{}");
+    return typeof modules === "object" && modules !== null && (modules as Record<string, unknown>).eleves === true;
+  } catch {
+    return false;
+  }
+}
+
+function donneesElevesConcernees(acces: AccesDonnees): boolean {
+  const entrees = acces.lireEntrees();
+  return moduleElevesActif(entrees[CLE_MODULES]) || listerEleves(entrees).length > 0;
+}
+
+/**
+ * Branche le panneau « Données des élèves » de l'onglet Paramètres. Il ne
+ * s'affiche que si le module Élèves est actif ou si des élèves sont encore
+ * enregistrés : sans élève, il n'y a pas de donnée personnelle à gérer.
+ */
+export function installerDonneesEleves(acces: AccesDonnees): void {
+  const panneau = document.getElementById(IDENTIFIANT_PANNEAU);
+  if (panneau === null) {
+    return;
+  }
+  const actualiser = (): void => {
+    panneau.hidden = !donneesElevesConcernees(acces);
+  };
+  document.getElementById("bouton-donnees-eleve")?.addEventListener("click", () => {
+    ouvrirDroitsEleves(acces);
+  });
+  document.getElementById("bouton-donnees-promotions")?.addEventListener("click", () => {
+    ouvrirConservation(acces);
+  });
+  // L'interface historique active ou coupe le module Élèves dans Paramètres, et peut charger l'exemple.
+  document.addEventListener("change", () => {
+    window.setTimeout(actualiser, 0);
+  });
+  document.addEventListener("click", () => {
+    window.setTimeout(actualiser, 0);
+  });
+  actualiser();
 }
