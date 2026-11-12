@@ -119,7 +119,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "Bienvenue dans DNMAX",
       texte:
-        "En quelques minutes, vous allez installer votre référentiel, déclarer vos promotions, vos collègues et votre répartition de service, puis créer et exporter votre première évaluation. " +
+        "En quelques minutes, vous allez installer et valider votre référentiel, déclarer vos promotions, vos collègues et votre répartition de service, puis créer et exporter votre première évaluation. " +
         "Vous pouvez passer cette visite à tout moment et la relancer depuis « Mon compte ».",
     },
     {
@@ -139,6 +139,44 @@ const PRISE_EN_MAIN: Parcours = {
       cibles: [".echange-boite .echange-actions .btn.primary", ".accueil-vide li:first-child", "#t-ref"],
       geste: "cliquer",
       objectif: (avancement) => avancement.referentiel,
+    },
+    {
+      titre: "1. Mon référentiel",
+      texte:
+        "Avant une première évaluation, vérifiez le référentiel : vous en êtes responsable, même s'il est livré avec DNMAX. Ouvrez l'onglet « Référentiel ».",
+      cibles: ["#t-ref"],
+      geste: "cliquer",
+      atteinte: ongletOuvert("v-ref"),
+      groupeFait: (avancement) => avancement.referentielValide,
+      avanceAuClic: true,
+    },
+    {
+      titre: "1. Constituer",
+      texte: "Choisissez « Constituer » : les UE, les EC et la planification par semestre s'y relisent étape par étape.",
+      cibles: ['#refNav [data-pane="constituer"]'],
+      geste: "cliquer",
+      atteinte: () => visible("#v-ref") && document.querySelector('#refNav [data-pane="constituer"][aria-pressed="true"]') !== null,
+      groupeFait: (avancement) => avancement.referentielValide,
+      avanceAuClic: true,
+    },
+    {
+      titre: "1. Validation",
+      texte: "Ouvrez la dernière étape, « Validation ».",
+      cibles: ['#refPane .steps [data-cp="valider"]'],
+      geste: "cliquer",
+      atteinte: () => visible("#cAtteste"),
+      groupeFait: (avancement) => avancement.referentielValide,
+      avanceAuClic: true,
+    },
+    {
+      titre: "1. Valider le référentiel",
+      texte:
+        "Relisez le référentiel. Cochez ensuite la case par laquelle vous attestez l'avoir vérifié et en assumer le contenu, puis cliquez « Valider cette version ». Sans validation, aucune évaluation ne peut être créée.",
+      texteFait: "Votre référentiel est validé : vous pouvez évaluer avec.",
+      cibles: ["#cpMain .panel", "#t-ref"],
+      pointe: "#cAtteste",
+      geste: "cliquer",
+      objectif: (avancement) => avancement.referentielValide,
     },
     { ...ALLER_ETABLISSEMENT, groupeFait: (avancement) => avancement.promotions > 0 },
     allerVolet("promos", "Promotions", (avancement) => avancement.promotions > 0),

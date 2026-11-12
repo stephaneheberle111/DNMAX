@@ -13,6 +13,9 @@ import {
 const DONNEES_COMPLETES = {
   "dnmade.data": JSON.stringify({
     dico: { competences: [{ id: "c0" }] },
+    diplomes: [{ id: "d0", nom: "DN MADE", mention: "Objet" }],
+    versions: { d0: [{ id: "v1", date: "2026-09-01", attestation: "2026-09-01" }] },
+    valide: { d0: "v1" },
     enseignants: [{ id: "t1" }, { id: "t2" }],
     affectH: { "2026-2027": { p1: { e0: ["t1"] } } },
   }),
@@ -28,6 +31,7 @@ describe("lireAvancement", () => {
   it("compte ce qui est en place dans une installation remplie", () => {
     expect(lireAvancement(DONNEES_COMPLETES)).toEqual({
       referentiel: true,
+      referentielValide: true,
       promotions: 2,
       elevesInscrits: 4,
       enseignants: 2,
@@ -41,6 +45,7 @@ describe("lireAvancement", () => {
   it("ne voit rien de fait sur une installation vide", () => {
     expect(lireAvancement({})).toEqual({
       referentiel: false,
+      referentielValide: false,
       promotions: 0,
       elevesInscrits: 0,
       enseignants: 0,
@@ -66,6 +71,18 @@ describe("lireAvancement", () => {
   it("reconnaît l'ancienne répartition non datée", () => {
     const donnees = JSON.stringify({ affect: { p1: { e0: ["t1"] } } });
     expect(lireAvancement({ "dnmade.data": donnees }).repartition).toBe(true);
+  });
+
+  it("ne tient pas pour validé un référentiel installé dont la version n'est pas attestée", () => {
+    const donnees = JSON.stringify({
+      dico: { competences: [{ id: "c0" }] },
+      diplomes: [{ id: "d0", nom: "DN MADE", mention: "Objet" }],
+      versions: { d0: [{ id: "v1", date: "2026-09-01", note: "Reçu de Noé Baptiste" }] },
+      valide: { d0: "v1" },
+    });
+    const avancement = lireAvancement({ "dnmade.data": donnees });
+    expect(avancement.referentiel).toBe(true);
+    expect(avancement.referentielValide).toBe(false);
   });
 });
 

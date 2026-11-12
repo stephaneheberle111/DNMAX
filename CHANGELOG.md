@@ -4,6 +4,8 @@
 
 ### Ajouté
 
+- Le référentiel doit être validé par l'enseignant avant une première évaluation : tant que le référentiel d'une promotion n'est pas validé, DNMAX refuse de créer, d'enregistrer ou de dupliquer une évaluation pour elle et d'y saisir des résultats, explique pourquoi et mène à Référentiel → Constituer → Validation. La validation demande de cocher « J'ai vérifié ce référentiel et j'en assume le contenu : l'hébergeur et le développeur de DNMAX n'en sont pas responsables. » Les référentiels livrés avec l'application ou reçus d'un collègue arrivent non validés ; les versions validées avant cette version sont à valider de nouveau, une fois. Les évaluations existantes restent consultables et exportables. L'exemple valide le référentiel qu'il installe lui-même. La visite guidée mène au volet de validation juste après l'installation du référentiel.
+
 - Activer le module Élèves dans Paramètres ouvre d'abord un avertissement RGPD : ce que le module conserve, informer les élèves, prévenir le chef d'établissement ou le délégué à la protection des données, durée de conservation, droits d'accès et d'effacement. La fenêtre imprime (ou enregistre en PDF) la fiche d'information des élèves, suivie d'un accusé de réception à signer, et la note pour le chef d'établissement, préremplies avec le nom de l'établissement et de l'enseignant, sans connexion. Le module ne s'active qu'après confirmation ; fermer la fenêtre l'annule.
 
 ### Modifié
