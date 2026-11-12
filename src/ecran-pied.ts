@@ -18,10 +18,6 @@ const IDENTIFIANT_BOUTON_COMPTE = "bouton-compte";
  * seul endroit d'où DNMAX interroge le dépôt du projet, et seulement sur clic.
  */
 export function installerPiedDePage(acces: AccesDonnees): void {
-  const zone = document.querySelector("main");
-  if (zone === null) {
-    return;
-  }
   const pied = creer("footer", "pied-app");
   const identite = creer("span", "pied-identite", `DNMAX · licence ${LICENCE}`);
   const versionInstallee = lireVersion();
@@ -77,5 +73,11 @@ export function installerPiedDePage(acces: AccesDonnees): void {
     }),
   );
   pied.append(identite, liens, message);
-  zone.append(pied);
+  document.body.append(pied);
+  // La page et les annonces flottantes laissent la place du pied, dont la hauteur varie (message, retour à la ligne).
+  const reserverPlace = (): void => {
+    document.documentElement.style.setProperty("--hauteur-pied", `${String(pied.offsetHeight)}px`);
+  };
+  new ResizeObserver(reserverPlace).observe(pied);
+  reserverPlace();
 }
