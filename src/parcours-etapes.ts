@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import type { Avancement, IdentifiantParcours } from "./domaine/parcours";
+import { colleguesDeclares, type Avancement, type IdentifiantParcours } from "./domaine/parcours";
 
 /** Geste que l'animation suggère sur la zone éclairée. */
 export type Geste = "cliquer" | "remplir" | "regarder";
@@ -152,17 +152,17 @@ const PRISE_EN_MAIN: Parcours = {
       geste: "cliquer",
       objectif: (avancement) => avancement.promotions > 0,
     },
-    { ...ALLER_ETABLISSEMENT, groupeFait: (avancement) => avancement.enseignants > 0 },
-    allerVolet("enseignants", "Enseignants", (avancement) => avancement.enseignants > 0),
+    { ...ALLER_ETABLISSEMENT, groupeFait: colleguesDeclares },
+    allerVolet("enseignants", "Enseignants", colleguesDeclares),
     {
       titre: "3. Déclarer vos collègues",
       texte:
-        "Ajoutez-vous, puis vos collègues, avec « + Ajouter » : prénom, nom et discipline. Cochez la case « moi » sur votre ligne : la progression montrera alors vos promotions.",
-      texteFait: "L'équipe est déclarée. Pensez à cocher « moi » sur votre ligne.",
+        "Vous êtes déjà dans la liste, marqué « moi » : la progression montrera vos promotions. Ajoutez vos collègues avec « + Ajouter » : prénom, nom et discipline.",
+      texteFait: "L'équipe est déclarée. Vous pourrez ajouter d'autres collègues ici.",
       cibles: ["#orgPane"],
       pointe: "#edAdd",
       geste: "cliquer",
-      objectif: (avancement) => avancement.enseignants > 0,
+      objectif: colleguesDeclares,
     },
     { ...ALLER_ETABLISSEMENT, groupeFait: (avancement) => avancement.repartition },
     allerVolet("affect", "Répartition de service", (avancement) => avancement.repartition),
