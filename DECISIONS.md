@@ -231,13 +231,13 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Retenu** : le site <https://dnmax.fr> est hébergé sur l'hébergement web gratuit qui accompagne le nom de domaine chez OVH, et publié à la main par FTP chiffré (voir le README).
 
-**Pourquoi** : un hébergeur français, soumis au droit européen, supprime le transfert des adresses IP des visiteurs vers les États-Unis qu'impliquait Cloudflare Pages ; le nom de domaine, l'adresse de contact et le site sont chez le même prestataire. Le site est statique et léger (moins d'un mégaoctet) : l'offre gratuite suffit.
+**Pourquoi** : un hébergeur français, soumis au droit européen, supprime le transfert des adresses IP des visiteurs vers les États-Unis qu'impliquait l'hébergeur précédent ; le nom de domaine, l'adresse de contact et le site sont chez le même prestataire. Le site est statique et léger (moins d'un mégaoctet) : l'offre gratuite suffit.
 
-**Contreparties** : pas de déploiement automatique comme chez Cloudflare. L'offre gratuite n'a qu'un accès FTP ; le site change rarement, un envoi à la main suffit et évite de confier ce mot de passe aux ateliers GitHub ; les réglages du serveur passent par `site/.htaccess` (Apache) au lieu de `site/_headers`, gardé tant que l'ancienne adresse sert de transition.
+**Contreparties** : pas de déploiement automatique depuis le dépôt. L'offre gratuite n'a qu'un accès FTP ; le site change rarement, un envoi à la main suffit et évite de confier ce mot de passe aux ateliers GitHub ; les réglages du serveur passent par `site/.htaccess` (Apache).
 
 **Non retenu** : les pages GitHub, qui auraient gardé un hébergeur américain.
 
-**Transition** : l'application ouvre dnmax.fr à partir de la version 0.2.0. Les postes plus anciens ouvrent encore dnmax.pages.dev : l'ancien site Cloudflare reste en ligne jusqu'à ce que ces postes soient à jour, puis est supprimé.
+**Transition** : l'application ouvre dnmax.fr à partir de la version 0.2.0 ; l'ancienne adresse du site est fermée.
 
 ## 20. Durée de conservation des données d'élèves
 

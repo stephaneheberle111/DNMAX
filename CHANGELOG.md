@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Site : l'ancienne adresse du site est fermée ; seul dnmax.fr reste en service.
+
 ## 0.2.0 — 2026-11-12
 
 ### Ajouté

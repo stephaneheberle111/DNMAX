@@ -105,7 +105,7 @@ Le site se publie **à la main**, par FTP, après chaque fusion qui touche `site
 
 1. Dans l'espace client OVH, onglet « FTP-SSH » de l'hébergement : relever le serveur FTP et l'identifiant (le mot de passe se change au même endroit).
 2. Dans un client FTP (FileZilla, par exemple), choisir **« Connexion FTP explicite sur TLS »** : jamais de FTP en clair, qui ferait circuler le mot de passe lisiblement.
-3. Copier le **contenu** du dossier `site/` dans le dossier `www` du serveur, en remplaçant les fichiers existants, **y compris `.htaccess`** (fichier caché : afficher les fichiers cachés si besoin). `_headers` ne sert qu'à Cloudflare et peut être ignoré.
+3. Copier le **contenu** du dossier `site/` dans le dossier `www` du serveur, en remplaçant les fichiers existants, **y compris `.htaccess`** (fichier caché : afficher les fichiers cachés si besoin).
 4. Supprimer côté serveur un fichier retiré du dépôt, s'il y en a un.
 5. Vérifier <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
 
