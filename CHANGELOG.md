@@ -2,6 +2,11 @@
 
 ## Non publié
 
+### Ajouté
+
+- Site : « Idées et bugs » propose aussi l'envoi par e-mail à contact@dnmax.fr (message prérempli dans votre messagerie, lu par le seul éditeur), en plus du ticket public sur GitHub.
+- « Mon compte » : le lien « Proposer une idée ou signaler un bug » transmet au site la version installée et le système, qui préremplissent le signalement.
+
 ## 0.2.0 — 2026-11-12
 
 ### Ajouté
