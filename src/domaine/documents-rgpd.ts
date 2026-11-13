@@ -14,6 +14,7 @@
 import { ecrireDateLongue } from "./date-longue";
 import { gras, lien, texte, type Bloc, type DocumentImprimable } from "./document-imprimable";
 import { estObjet } from "./echange/modele";
+import { LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES } from "./saisie-coffre";
 
 /** Ce que l'enseignant a saisi dans Mon établissement > Établissement. */
 export interface SaisieEtablissement {
@@ -34,6 +35,8 @@ export interface ChampsDocumentsRgpd extends SaisieEtablissement {
   date: Date;
   /** Adresse du code source de DNMAX, citée dans la note au chef d'établissement. */
   adresseCodeSource: string;
+  /** Minutes sans activité après lesquelles DNMAX se verrouille, avec le module Élèves. */
+  minutesVerrouillage: number;
 }
 
 /**
@@ -276,7 +279,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Sécurité",
           contenu: [
             texte(
-              "Chiffrement de toutes les données saisies ; mot de passe demandé à chaque ouverture ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.",
+              `Chiffrement de toutes les données saisies ; mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères, demandé à chaque ouverture ; verrouillage après ${String(champs.minutesVerrouillage)} minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.`,
             ),
           ],
         },

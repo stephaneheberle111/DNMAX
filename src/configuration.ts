@@ -19,3 +19,13 @@ export const LICENCE = "AGPL-3.0-or-later";
  * DNMAX propose de les effacer. Voir DECISIONS.md, « Durée de conservation ».
  */
 export const ANNEES_CONSERVATION_ELEVES = 1;
+
+/**
+ * Verrouillage après inactivité, quand le module Élèves est actif : au-delà de
+ * ce délai sans action de l'enseignant (souris, clavier), les données quittent
+ * la mémoire et le mot de passe est redemandé. Voir DECISIONS.md, décision 27.
+ */
+export const DELAI_VERROUILLAGE_INACTIVITE_MS = 15 * 60_000;
+
+/** Fréquence à laquelle l'inactivité est contrôlée, en millisecondes. */
+export const INTERVALLE_CONTROLE_INACTIVITE_MS = 15_000;

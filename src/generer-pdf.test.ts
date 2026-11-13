@@ -10,6 +10,7 @@ const CHAMPS: ChampsDocumentsRgpd = {
   anneesConservation: 1,
   date: new Date(2026, 10, 13),
   adresseCodeSource: ADRESSE_CODE_SOURCE,
+  minutesVerrouillage: 15,
 };
 
 /** Le PDF en texte brut, pour y compter les pages et chercher les liens. */

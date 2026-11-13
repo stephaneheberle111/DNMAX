@@ -62,6 +62,36 @@
   color: var(--signal);
 }
 
+.ecran-coffre form.coffre-large {
+  max-width: 600px;
+}
+
+.ecran-coffre .coffre-pratiques {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.ecran-coffre .coffre-pratiques b {
+  color: var(--ink);
+}
+
+.ecran-coffre .coffre-pratiques ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+
+.ecran-coffre .coffre-avis {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
 .ecran-coffre .coffre-erreur {
   color: var(--danger);
   font-weight: 600;

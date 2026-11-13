@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-avertissement-eleves.css";
-import { ADRESSE_CODE_SOURCE, ANNEES_CONSERVATION_ELEVES } from "./configuration";
+import { ADRESSE_CODE_SOURCE, ANNEES_CONSERVATION_ELEVES, DELAI_VERROUILLAGE_INACTIVITE_MS } from "./configuration";
+import { LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES } from "./domaine/saisie-coffre";
 import {
   champsManquants,
   composerFicheEleves,
@@ -21,6 +22,8 @@ export interface ContexteAvertissement {
   /** Date imprimée sur les documents. */
   date: Date;
 }
+
+const MINUTES_VERROUILLAGE = Math.round(DELAI_VERROUILLAGE_INACTIVITE_MS / 60_000);
 
 const LIBELLES_MANQUANTS: Readonly<Record<ChampManquant, string>> = {
   nom: "le nom de l'établissement",
@@ -74,6 +77,11 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
         "",
         "L'accusé de réception n'est pas un consentement : l'évaluation relève de la mission de l'établissement, les élèves en sont informés.",
       ),
+      creer(
+        "p",
+        "avertissement-securite",
+        `Sécurité : avec ce module, DNMAX exige un mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères et se verrouille après ${String(MINUTES_VERROUILLAGE)} minutes sans activité. Chiffrez aussi le disque de l'ordinateur (BitLocker sous Windows, FileVault sur Mac, LUKS sous Linux) : c'est conseillé, pas obligatoire. Les exports Word et Excel, eux, ne sont pas chiffrés.`,
+      ),
     );
 
     const documents = creer("div", "avertissement-documents");
@@ -98,6 +106,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
         anneesConservation: ANNEES_CONSERVATION_ELEVES,
         date: contexte.date,
         adresseCodeSource: ADRESSE_CODE_SOURCE,
+        minutesVerrouillage: MINUTES_VERROUILLAGE,
       };
       documents.append(
         creerBouton("Information aux étudiants (avec accusé de réception)", "btn", () => {

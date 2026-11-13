@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-compte.css";
-import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
+import { longueurMinimaleExigee, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
+import { moduleElevesActif } from "./domaine/securite";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { changerMotDePasse } from "./enveloppe";
@@ -35,12 +36,10 @@ function creerMessage(): { zone: HTMLElement; dire: (texte: string, erreur: bool
 function montrerMotDePasse(acces: AccesDonnees): void {
   const { boite, fermer } = ouvrirBoite("Mot de passe");
   boite.classList.add("boite-etroite");
+  // Le module Élèves exige un mot de passe plus long (voir `longueurMinimaleExigee`).
+  const longueurMinimale = longueurMinimaleExigee(moduleElevesActif(acces.lireEntrees()));
   const ancien = creerChamp("password", "Mot de passe actuel", "current-password");
-  const nouveau = creerChamp(
-    "password",
-    `Nouveau mot de passe (${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères au moins)`,
-    "new-password",
-  );
+  const nouveau = creerChamp("password", `Nouveau mot de passe (${String(longueurMinimale)} caractères au moins)`, "new-password");
   const confirmation = creerChamp("password", "Nouveau mot de passe, une seconde fois", "new-password");
   const { zone, dire } = creerMessage();
   const changer = creer("button", "btn primary", "Changer le mot de passe");
@@ -48,11 +47,11 @@ function montrerMotDePasse(acces: AccesDonnees): void {
   const formulaire = creer("form", "compte-formulaire");
   formulaire.addEventListener("submit", (evenement) => {
     evenement.preventDefault();
-    const defaut = verifierNouveauMotDePasse(nouveau.champ.value, confirmation.champ.value);
+    const defaut = verifierNouveauMotDePasse(nouveau.champ.value, confirmation.champ.value, longueurMinimale);
     if (defaut !== null) {
       dire(
         defaut === "trop-court"
-          ? `Le nouveau mot de passe doit compter au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères.`
+          ? `Le nouveau mot de passe doit compter au moins ${String(longueurMinimale)} caractères.`
           : "Les deux saisies du nouveau mot de passe ne sont pas identiques.",
         true,
       );

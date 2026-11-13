@@ -298,3 +298,21 @@ export async function listerSauvegardes(): Promise<Sauvegarde[]> {
 export async function restaurerSauvegarde(nom: string): Promise<void> {
   await appelerCoffre("restaurer_sauvegarde", { nom });
 }
+
+/**
+ * Vérifie le mot de passe des données ouvertes, sans rien changer.
+ *
+ * @throws ErreurCoffre « acces-refuse » si le mot de passe est incorrect.
+ */
+export async function verifierMotDePasse(motDePasse: string): Promise<void> {
+  await appelerCoffre("verifier_mot_de_passe", { motDePasse });
+}
+
+/**
+ * Referme les données : l'enveloppe oublie la clé et refuse tout
+ * enregistrement ultérieur. Ce qui est en attente doit avoir été écrit avant ;
+ * la page doit ensuite être rechargée pour redemander le mot de passe.
+ */
+export async function verrouillerCoffre(): Promise<void> {
+  await appelerCoffre("verrouiller_coffre");
+}
