@@ -3,6 +3,8 @@
    Seules différences : le stockage et l'enregistrement de fichiers passent par
    `window.dnmaxPont`, fourni par l'application avant le chargement de ce script. */
 const STOCKAGE = window.dnmaxPont.stockage;
+/* Règles de la saisie des résultats : écrites et testées dans src/domaine/saisie-resultats.ts. */
+const SAISIE = window.dnmaxPont.saisie;
 /* Téléphone ou ordinateur : on croise plusieurs indices plutôt que la seule largeur d'écran —
    indication « mobile » du navigateur, type d'appareil annoncé, pointeur tactile sans survol
    et petite taille physique d'écran (le plus petit côté). Une tablette (tactile, grand écran)
@@ -3808,11 +3810,7 @@ function resOf(f,eid){
 }
 function evalStats(f){
   const ff=f||F, els=studentsOf(ff), keys=lignesOf(ff).map(ligKey);
-  let faits=0, partiels=0;
-  els.forEach(e=>{const r=(ff.res||{})[e.id]||{n:{}};
-    const n=keys.filter(k=>(r.n||{})[k]!=null&&(r.n||{})[k]!=="").length;
-    if(keys.length&&n>=keys.length)faits++;else if(n)partiels++;});
-  return {els:els.length,lignes:keys.length,faits,partiels};
+  return {els:els.length,lignes:keys.length,...SAISIE.bilanSaisie(ff.res,els.map(e=>e.id),keys)};
 }
 function setClasses(list){
   F.classes=[...new Set((list||[]).map(x=>String(x||"").trim()).filter(Boolean))];
@@ -3930,7 +3928,7 @@ function toast(m){const d=document.createElement("div");d.className="toast";d.te
 function save(){enregistrerDansListe();LS.set("dnmade.draft",F);paintEnregistrement()}
 /* Une nouvelle évaluation n'entre dans la liste qu'une fois commencée, pour qu'un clic sur
    « + Nouvelle évaluation » sans suite n'y laisse pas une ligne vide. */
-function evaluationCommencee(f){return !!(String(f.titre||"").trim()||(f.livrables||[]).length||(f.items||[]).length)}
+function evaluationCommencee(f){return SAISIE.evaluationCommencee(f)}
 /* Rend "liste" si l'évaluation en cours est dans « Mes évaluations », "bloquee" si son référentiel
    non validé l'empêche d'y entrer, "vide" si elle n'est pas encore commencée. */
 function etatEnregistrement(){
@@ -4486,11 +4484,7 @@ function curEleve(){
   const els=studentsOf(F);if(!els.length)return null;
   return els.find(e=>e.id===ui.eleve)||els[0];
 }
-function eleveDone(eid){
-  const keys=lignes().map(ligKey), r=(F.res||{})[eid]||{n:{}};
-  const n=keys.filter(k=>(r.n||{})[k]!=null&&(r.n||{})[k]!=="").length;
-  return {n,tot:keys.length};
-}
+function eleveDone(eid){return SAISIE.avancementEtudiant((F.res||{})[eid],lignes().map(ligKey))}
 function paintEprog(){
   const els=studentsOf(F), L=lignes(), st=evalStats(F);
   const c=document.getElementById("eCount");if(c)c.textContent=els.length;
@@ -4509,23 +4503,11 @@ function paintEprog(){
    (15 % pour 4 niveaux), les niveaux intermédiaires se partagent le reste à parts égales.
    Dans le premier et le dernier niveau, la jauge ne se remplit pas progressivement :
    elle vaut 0 dans le premier, 100 dans le dernier. r.n[k] garde l'indice du niveau, r.p[k] le pourcentage. */
-function pctBounds(N){
-  if(N<=1)return [0,100];
-  if(N===2)return [0,50,100];
-  const ed=60/N, mid=(100-2*ed)/(N-2), t=[0];
-  for(let i=1;i<N;i++)t.push(ed+(i-1)*mid);
-  t.push(100);return t;
-}
-function pctLvl(p,N){const t=pctBounds(N);let l=0;for(let i=1;i<N;i++)if(p>=t[i]-1e-9)l=i;return l}
-function pctSnap(p,N){const t=pctBounds(N);if(N<=1)return 100;
-  if(p<t[1])return 0;if(p>=t[N-1])return 100;return Math.round(p)}
-function pctOf(r,k){
-  const N=(F.niveaux||[]).length, v=(r.n||{})[k];if(v==null||v==="")return null;
-  const p=(r.p||{})[k];
-  if(p!=null&&pctLvl(+p,N)===+v)return +p;
-  const t=pctBounds(N);
-  return +v<=0?0:+v>=N-1?100:Math.round((t[+v]+t[+v+1])/2);
-}
+/* Seuils des niveaux, position du curseur : règles testées dans src/domaine/saisie-resultats.ts */
+function pctBounds(N){return SAISIE.bornesNiveaux(N)}
+function pctLvl(p,N){return SAISIE.niveauDuPourcentage(p,N)}
+function pctSnap(p,N){return SAISIE.aimanterPourcentage(p,N)}
+function pctOf(r,k){return SAISIE.pourcentageAffiche(r,k,(F.niveaux||[]).length)}
 function nivColor(i,n){const h=Math.round(8+137*(n>1?i/(n-1):1));return `hsl(${h} 58% 56%)`}
 function nivHex(i,n){const h=(8+137*(n>1?i/(n-1):1))/360,sat=.58,l=.70;
   const f=t=>{t=(t+1)%1;const q=l<.5?l*(1+sat):l+sat-l*sat,p=2*l-q;
@@ -4575,27 +4557,29 @@ function wireNtk(host,after){
   });
 }
 function setPct(eid,key,p){
-  const r=resOf(F,eid);if(!r.p)r.p={};
-  if(r.c)delete r.c[key];
-  if(p==null){delete r.n[key];delete r.p[key]}else{r.n[key]=pctLvl(p,(F.niveaux||[]).length);r.p[key]=p}
-  // un niveau saisi = travail rendu
-  if(p!=null&&!r.rendu){const was=r.nr||r.disp;delete r.nr;delete r.disp;r.rendu=new Date().toISOString().slice(0,10);
-    if(was){save();paintEleves();paintSteps();return}
-    document.querySelectorAll(`[data-est="${CSS.escape(eid)}"],#eEst`).forEach(sl=>{sl.value="rendu";sl.classList.remove("vide","on")})}
+  // un niveau saisi = travail rendu (règle dans src/domaine/saisie-resultats.ts)
+  const r=resOf(F,eid), s=SAISIE.noterNiveau(r,key,p==null?null:p,(F.niveaux||[]).length,new Date().toISOString().slice(0,10));
+  remplacerResultat(r,s.resultat);
+  if(s.effet==="absence-levee"){save();paintEleves();paintSteps();return}
+  if(s.effet==="devenu-rendu")
+    document.querySelectorAll(`[data-est="${CSS.escape(eid)}"],#eEst`).forEach(sl=>{sl.value="rendu";sl.classList.remove("vide","on")});
   save();paintEprog();paintSteps();
 }
 /* Rendu de chaque étudiant (module Étudiants) : vide au départ, « Rendu » dès qu'un niveau est saisi,
    « Non rendu » ou « Dispensé » vident ce qui avait été saisi pour lui. */
-const hasSaisie=r=>Object.values((r||{}).n||{}).some(v=>v!=null&&v!=="");
-function estOf(r){r=r||{};return r.nr?"nr":r.disp?"disp":(r.rendu||hasSaisie(r))?"rendu":""}
+const hasSaisie=r=>SAISIE.aDesNiveaux(r);
+function estOf(r){return SAISIE.statutRendu(r)}
 function estSelect(r,attr,lbl){const st=estOf(r);
   return `<select class="est${st==="nr"||st==="disp"?" on":st===""?" vide":""}" ${attr} aria-label="${esc(lbl)}"><option value="" ${st===""?"selected":""}>—</option><option value="rendu" ${st==="rendu"?"selected":""}>Rendu</option><option value="nr" ${st==="nr"?"selected":""}>Non rendu</option><option value="disp" ${st==="disp"?"selected":""}>Dispensé</option></select>`}
-function rendusManquants(f){if(!MOD.eleves)return 0;return studentsOf(f).filter(e=>!estOf((f.res||{})[e.id])).length}
-function setEst(eid,v){const r=resOf(F,eid), had=hasSaisie(r)||Object.values(r.obs||{}).some(Boolean)||!!r.appr, t=new Date().toISOString().slice(0,10);
-  delete r.nr;delete r.disp;delete r.rendu;
-  if(v==="rendu")r.rendu=t;
-  if(v==="nr"||v==="disp"){r[v]=t;r.n={};r.c={};r.p={};r.obs={};r.appr="";if(had)toast("Niveaux, observations et appréciation de l'étudiant effacés.")}
-  if(v===""&&hasSaisie(r)){r.rendu=t;toast("Des niveaux sont saisis pour cet étudiant : il reste « Rendu ».")}
+function rendusManquants(f){if(!MOD.eleves)return 0;return SAISIE.etudiantsSansRendu(f.res,studentsOf(f).map(e=>e.id))}
+/* Les règles rendent un nouveau résultat ; on le verse dans l'objet existant, que des gestionnaires
+   déjà posés à l'écran (observations, appréciation) tiennent encore et dans lequel ils écriront. */
+function remplacerResultat(r,nouveau){for(const k of Object.keys(r))delete r[k];Object.assign(r,nouveau)}
+function setEst(eid,v){
+  const r=resOf(F,eid), s=SAISIE.changerRendu(r,v,new Date().toISOString().slice(0,10));
+  remplacerResultat(r,s.resultat);
+  if(s.avis==="saisie-effacee")toast("Niveaux, observations et appréciation de l'étudiant effacés.");
+  if(s.avis==="reste-rendu")toast("Des niveaux sont saisis pour cet étudiant : il reste « Rendu ».");
   save();paintEleves();paintSteps()}
 function paintEleves(){
   const host=document.getElementById("elevesPane");if(!host)return;
