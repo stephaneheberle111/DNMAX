@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.5.1 — 2026-11-13
+
 ### Modifié
 
 - Vocabulaire : « étudiant » partout à la place d'« élève » (module « Étudiants », « Données des étudiants », aides, messages, documents produits, visite guidée, site), et « > » pour écrire un chemin de menu (« Mon établissement > Enseignants »). Les nouveaux noms anonymisés s'écrivent « Étudiant anonyme n » ; ceux déjà anonymisés restent reconnus.
