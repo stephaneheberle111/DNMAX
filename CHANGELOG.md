@@ -2,6 +2,14 @@
 
 ## Non publié
 
+### Corrigé
+
+- Visite guidée : rangée dans un coin, la bulle ne cache plus le bouton à cliquer (« Valider cette version », « Choisir les compétences → », « Formuler et lier → », choix de la mention en petite fenêtre).
+- Thème sombre : le texte des boutons principaux est foncé sur le bleu, pour rester lisible.
+- Référentiel › Constituer : les titres d'étapes longs ne débordent plus de leur carte ; la bulle d'aide de la carte radiale n'élargit plus la page.
+- L'information aux étudiants mentionne l'échange en direct ; la page Confidentialité décrit complètement l'annonce sur le réseau local ; les textes du site citent les libellés réels (« Appliquer », « Restaurer et recharger », « Changer d'ordinateur ») et la mise à jour de l'AppImage se fait depuis DNMAX, sur demande.
+- Les derniers messages au tutoiement sont passés au vouvoiement.
+
 ## 0.5.0 — 2026-11-13
 
 ### Ajouté
