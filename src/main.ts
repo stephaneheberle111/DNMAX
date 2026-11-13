@@ -23,6 +23,7 @@ import { installerCompte } from "./ecran-compte";
 import { suivreHauteurBarre } from "./ecran-entetes";
 import { installerParcours } from "./ecran-parcours";
 import { installerPiedDePage } from "./ecran-pied";
+import { montrerNouveautesAuLancement } from "./ecran-nouveautes";
 import { appliquerThemeEnregistre, installerChoixTheme } from "./ecran-preferences";
 import { installerDonneesEleves, rappelerConservation } from "./ecran-droits-eleves";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
@@ -76,6 +77,8 @@ async function creerMagasinProtege(): Promise<{
   reprendreNom: (prenom: unknown, nomFamille: unknown) => void;
   /** Écrit ce qui est en attente ; rend `false` s'il en reste après un échec d'écriture. */
   ecrireEnAttente: () => Promise<boolean>;
+  /** Vrai si des données existaient avant ce lancement (mise à jour, pas première installation). */
+  installationExistante: boolean;
 }> {
   const entrees = await ouvrirDonnees();
   const enregistreur = new EnregistreurDiffere(
@@ -158,7 +161,7 @@ async function creerMagasinProtege(): Promise<{
     await enregistreur.vider();
     return !enregistreur.aDesModificationsEnAttente;
   };
-  return { magasin, acces, reprendreNom, ecrireEnAttente };
+  return { magasin, acces, reprendreNom, ecrireEnAttente, installationExistante: identiteConnue !== null };
 }
 
 async function demarrer(): Promise<void> {
@@ -175,7 +178,7 @@ async function demarrer(): Promise<void> {
     installerCompte(null);
     return;
   }
-  const { magasin, acces, reprendreNom, ecrireEnAttente } = await creerMagasinProtege();
+  const { magasin, acces, reprendreNom, ecrireEnAttente, installationExistante } = await creerMagasinProtege();
   surveillerInactivite({ verrouillageExige: () => moduleElevesActif(magasin.entrees()), ecrireEnAttente });
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
   await chargerInterfaceHistorique(magasin, proposerOuvertureExport, () =>
@@ -193,6 +196,8 @@ async function demarrer(): Promise<void> {
   installerCompte(acces);
   installerPiedDePage(acces);
   await proposerPremiersPas(acces);
+  // La visite guidée attend que l'enseignant ait lu les nouveautés : les deux ne se superposent pas.
+  await montrerNouveautesAuLancement(installationExistante);
   installerParcours(acces);
 }
 

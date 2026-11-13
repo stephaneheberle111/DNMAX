@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-mise-a-jour.css";
 import { resumerNotes, type IssueSansMiseAJour } from "./domaine/annonce-mise-a-jour";
+import { lireRubriques } from "./domaine/nouveautes";
+import { creerListeNouveautes } from "./ecran-nouveautes";
 import { chercherMiseAJour, type MiseAJour } from "./enveloppe";
 
 function creerBouton(texte: string, classe: string, action: () => void): HTMLButtonElement {
@@ -12,6 +14,9 @@ function creerBouton(texte: string, classe: string, action: () => void): HTMLBut
   return bouton;
 }
 
+/** Entrées montrées dans l'annonce ; le détail complet s'affiche après l'installation. */
+const ENTREES_ANNONCE = 6;
+
 function annoncer(miseAJour: MiseAJour, avantInstallation: () => Promise<void>): void {
   const annonce = document.createElement("div");
   annonce.className = "annonce-mise-a-jour";
@@ -19,8 +24,12 @@ function annoncer(miseAJour: MiseAJour, avantInstallation: () => Promise<void>):
 
   const titre = document.createElement("b");
   titre.textContent = `DNMAX ${miseAJour.version} est disponible`;
-  const notes = document.createElement("p");
-  notes.textContent = resumerNotes(miseAJour.notes) || "Vos données sont conservées.";
+  // Notes classées par type de changement quand elles suivent le journal ; sinon, une ligne.
+  const groupes = lireRubriques(miseAJour.notes);
+  const notes = groupes.length > 0 ? creerListeNouveautes(groupes, ENTREES_ANNONCE) : document.createElement("p");
+  if (groupes.length === 0) {
+    notes.textContent = resumerNotes(miseAJour.notes) || "Vos données sont conservées.";
+  }
   const erreur = document.createElement("p");
   erreur.className = "annonce-erreur";
   erreur.hidden = true;

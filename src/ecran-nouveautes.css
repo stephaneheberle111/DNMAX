@@ -1,0 +1,43 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.nouveautes-boite .nouveautes {
+  max-height: min(60vh, 520px);
+  overflow-y: auto;
+}
+
+.nouveautes-rubrique {
+  margin: 14px 0 6px;
+  font-family: var(--fd);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+}
+
+.nouveautes-rubrique:first-child {
+  margin-top: 4px;
+}
+
+.nouveautes-correction {
+  color: #2e9b5d;
+}
+
+.nouveautes-securite {
+  color: var(--danger);
+}
+
+.nouveautes ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.nouveautes li {
+  margin: 0 0 5px;
+  line-height: 1.45;
+}
+
+.nouveautes-suite {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-style: italic;
+}
