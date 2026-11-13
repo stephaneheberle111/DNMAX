@@ -28,6 +28,7 @@ Ne pas changer de pile sans demander.
 - 🔒 Une **branche par changement**, nommée `type/sujet` (`feat/`, `fix/`, `docs/`, `refactor/`, `chore/`). Pas de commit direct sur `main`.
 - ⚠️ **Un changement = une intention**. Correctif, réaménagement et nouvelle fonction ne se mélangent pas.
 - ⚠️ **Regrouper les petites retouches d'une même demande** (libellés, mise en page, petits correctifs d'interface) dans une seule branche ; un sujet conséquent (nouvelle fonction, données, sécurité, ateliers) garde sa propre branche.
+- 🔒 **Revue de cohérence globale avant chaque publication de version** (application, site, page Confidentialité, documents produits, visite guidée, CHANGELOG…), selon `docs/revue-coherence.md`, sans attendre qu'on la demande. Son compte rendu accompagne la demande de fusion qui passe le numéro de version.
 - ⚠️ **Fusion par Claude quand l'intégration continue est verte**, sans attendre mon accord, **sauf** : publication d'une version (lancement de l'atelier « Publication » compris), changement notable du site en ligne, migration ou effacement de données des utilisateurs. Ceux-là, me les signaler avant de fusionner.
 - 🔒 Avant de fusionner : linter à zéro erreur, typage sans erreur, tests verts.
 - ⚠️ Commit : première ligne à l'impératif (~70 caractères), puis le **pourquoi**, pas le quoi.

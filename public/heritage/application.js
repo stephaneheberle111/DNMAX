@@ -5241,7 +5241,11 @@ function curve(cx,cy,r,a0,a1,txt,cls,size){
     `<text class="${cls}" font-size="${size}"><textPath href="#${id}" startOffset="50%" text-anchor="middle">${esc(t)}</textPath></text>`;
 }
 let wheelAngle=0, wheelRaf=0;
-const RAD={RARR:505,ZMAX:1.65,S:760,c:380,PAD:100,HUB:84,RB:360,RL:380,DIST:[9,17,25,33]};
+// carte radiale : nouvelle mise à l'échelle quand la colonne ou la fenêtre change de taille
+let radRedim=null, radObs=null;
+window.addEventListener("resize",()=>{if(radRedim)radRedim()});
+// Z0 : zoom de départ (quart bas-droit de la roue) ; ZMAX : grossissement le plus fort permis
+const RAD={RARR:505,Z0:1.65,ZMAX:2.5,S:760,c:380,PAD:100,HUB:84,RB:360,RL:380,DIST:[9,17,25,33]};
 function wrapN(txt,n,max,cut){
   const raw=String(txt==null?"":txt).split(/\s+/),ws=[];
   raw.forEach(w=>{
@@ -5735,6 +5739,7 @@ function radialWire(host){
   const parts=[...svg.querySelectorAll("[data-am]")];
   const segs=parts.filter(x=>x.classList.contains("sg"));
   let cur=null, frozen=null, badges=[], callouts=[], v=0, last=0, relT=0, lastTarget=null, calR=RAD.RL;
+  let vue=null;   // vue affichée (zoom et centre, en unités du dessin), voir domaine/zoom-carte
   const NS="http://www.w3.org/2000/svg";
   const mk=(tag,attrs,txt)=>{const el=document.createElementNS(NS,tag);
     for(const k in attrs)el.setAttribute(k,attrs[k]);if(txt!=null)el.textContent=txt;return el};
@@ -5814,7 +5819,7 @@ function radialWire(host){
       const th=am+wheelAngle*Math.PI/180, sn=Math.abs(Math.sin(th)), cs=Math.abs(Math.cos(th));
       const rows=Math.min(3,n), cols=Math.ceil(n/rows);
       const maxLen=Math.max(...list.map(({c})=>String(c.code).length));
-      const zf=1/(1+0.45*(((ui.radZoom==null?RAD.ZMAX:ui.radZoom))-1));
+      const zf=1/(1+0.45*((vue?vue.zoom:RAD.Z0)-1));
       let sc=zf;
       const dims=()=>{const BW=(maxLen*6.6+12)*sc, BH=19*sc;
         return {BW,BH,PITCH:BW*sn+BH*cs+4*sc,ROWH:BW*cs+BH*sn+3*sc}};
@@ -5919,9 +5924,18 @@ function radialWire(host){
     v=pad&&!reduce?(+pad.dataset.dir)*60:0;
   });
   svg.addEventListener("pointerleave",()=>{v=0;clearTimeout(relT);relT=0;if(!frozen){clear();radInfo(null)}});
-  // zoom à la molette : au départ, le quart bas-droit de la roue remplit la vue (centre de la roue
-  // en haut à gauche) ; en dézoomant, la roue rétrécit et se recentre jusqu'à la vue entière.
-  const ZMAX=RAD.ZMAX, ZM=RAD.HUB+14;   // au zoom maximal, le cercle du diplôme reste entier et les compétences éclatées restent visibles
+  // zoom : au départ, le quart bas-droit de la roue remplit la vue (centre de la roue en haut à gauche) ;
+  // en dézoomant, la roue rétrécit et se recentre jusqu'à la vue entière. Le cadre garde la même taille
+  // à tous les zooms (seul le viewBox change) : rien ne saute ni ne déborde sur les blocs voisins.
+  // Les calculs (bornes, centrage sur le pointeur, animation) sont dans src/domaine/zoom-carte.ts.
+  const ZC=window.dnmaxPont.zoomCarte;
+  const ZM=RAD.HUB+14;   // au zoom de départ, le cercle du diplôme reste entier et les compétences éclatées restent visibles
+  const GEO={cote:VB,origine:-P,centreRoue:C,rayonCoeur:ZM,zoomMin:1,zoomMax:RAD.ZMAX,zoomDepart:RAD.Z0};
+  // tailles de police (unités du dessin) des libellés qui disparaissent quand ils deviennent illisibles
+  const LIBELLES={lue:10,lecn:9,lan:10.5};
+  const cadre=host.querySelector(".radcadre"), barre=host.querySelector(".radzoom");
+  const sortie=barre&&barre.querySelector("output");
+  let rapport=1, hautCadre=0, cible=null, animRaf=0, animT=0;
   const NS2="http://www.w3.org/2000/svg";
   const zn0=svg.querySelector(".zone");if(zn0)zn0.remove();
   // flèches de rotation : deux arcs fléchés qui tournent autour de la roue, au-delà de la zone
@@ -5929,35 +5943,33 @@ function radialWire(host){
   const pads=[-1,1].map(dir=>{const g=document.createElementNS(NS2,"g");g.setAttribute("class","rpad");g.dataset.dir=dir;
     g.innerHTML=`<path class="hit"/><path class="arc"/><path class="ah"/><title>${dir<0?"Tourner la roue dans le sens inverse":"Tourner la roue dans le sens des aiguilles d'une montre"} (survoler)</title>`;
     svg.appendChild(g);return g});
-  const applyZoom=()=>{if(ui.radZoom!=null&&ui.radZoom>ZMAX)ui.radZoom=ZMAX;
-    let z=DEVICE.phone?1:(ui.radZoom==null?ZMAX:ui.radZoom);
-    let zoomed=z>1.01;
-    // zoomée, la carte prend toute la largeur disponible (plus de vide jusqu'à l'encadré) ;
-    // la vue s'étend donc vers la droite, à hauteur constante
-    svg.style.maxWidth=zoomed?"none":"";
-    svg.style.height=zoomed?`min(940px, calc(100vh - 110px))`:"";
-    // la vue zoomée reste toujours plus large que haute (au moins 5:4), y compris sur grand écran où la
-    // colonne est haute : la place à droite accueille les compétences éclatées et la flèche du haut
-    if(zoomed){const cw=svg.getBoundingClientRect().width;
-      if(cw)svg.style.height=`min(940px, calc(100vh - 110px), ${Math.round(cw*0.8)}px)`}
-    svg.style.margin=zoomed?"0":"";
-    svg.style.overflow=zoomed?"hidden":"";
-    let rc=svg.getBoundingClientRect();
-    // zone d'affichage étroite (grands écrans où la colonne est plus haute que large) : la vue entière
-    // est déjà grande à l'écran ; on garde la roue entière pour que flèches et compétences éclatées restent visibles
-    if(zoomed&&rc.width&&rc.width<480){z=1;zoomed=false;
-      svg.style.maxWidth="";svg.style.height="";svg.style.margin="";svg.style.overflow="";rc=svg.getBoundingClientRect()}
-    const t=(z-1)/(ZMAX-1), w=VB/z, o=-P+t*((C-ZM)+P);
-    const asp=zoomed&&rc.height?Math.max(1,rc.width/rc.height):1;
-    const vw=w*asp, vh=w;
-    svg.setAttribute("viewBox",`${o.toFixed(1)} ${o.toFixed(1)} ${vw.toFixed(1)} ${vh.toFixed(1)}`);
-    svg.setAttribute("preserveAspectRatio",zoomed?"xMinYMin meet":"xMidYMid meet");
-    const u=vh/(rc.height||600);
+  // taille du cadre : largeur de la colonne, hauteur tenant dans la fenêtre (sous la barre de zoom)
+  const dimensionner=()=>{
+    const w=cadre?cadre.clientWidth:svg.getBoundingClientRect().width;
+    const reste=window.innerHeight-(barre?barre.getBoundingClientRect().height+6:0);
+    const h=ZC.hauteurCadre(w,reste,window.innerWidth>=2200?1120:940);
+    if(cadre&&h)cadre.style.height=h+"px";
+    hautCadre=h||svg.getBoundingClientRect().height;rapport=hautCadre?w/hautCadre:1;
+  };
+  const zoomDepart=()=>DEVICE.phone||(cadre&&cadre.clientWidth<480)?1:RAD.Z0;
+  const dessiner=vz=>{
+    vue=vz;
+    const {largeur:vw,hauteur:vh}=ZC.tailleVue(vz.zoom,VB,rapport);
+    const ox=vz.centreX-vw/2, oy=vz.centreY-vh/2;
+    svg.setAttribute("viewBox",`${ox.toFixed(2)} ${oy.toFixed(2)} ${vw.toFixed(2)} ${vh.toFixed(2)}`);
+    svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+    const u=vh/(hautCadre||600);
+    // libellés trop petits à l'écran : masqués plutôt que superposés en bouillie
+    const vis=ZC.libellesVisibles(1/u,LIBELLES);
+    for(const k in vis)svg.classList.toggle("sans-"+k,!vis[k]);
+    if(sortie)sortie.textContent=Math.round(vz.zoom*100)+" %";
+    if(barre){barre.querySelector('[data-rz="-1"]').disabled=vz.zoom<=GEO.zoomMin+1e-3;
+      barre.querySelector('[data-rz="1"]').disabled=vz.zoom>=GEO.zoomMax-1e-3}
     // flèches : deux arcs sur un même cercle virtuel autour de la roue (au-delà de la zone d'éclatement),
     // placés là où ce cercle est visible : en haut à droite (un peu plus haut) et en bas à gauche
     const R=RAD.RARR, M=26*u, span=0.24;
-    const vis=ang=>{const x=C+R*Math.cos(ang),y=C+R*Math.sin(ang);return x>=o+M&&x<=o+vw-M&&y>=o+M&&y<=o+vh-M};
-    const fits=c=>{for(let k=-6;k<=6;k++)if(!vis(c+span*k/6))return false;return true};
+    const vis2=ang=>{const x=C+R*Math.cos(ang),y=C+R*Math.sin(ang);return x>=ox+M&&x<=ox+vw-M&&y>=oy+M&&y<=oy+vh-M};
+    const fits=c=>{for(let k=-6;k<=6;k++)if(!vis2(c+span*k/6))return false;return true};
     const near=tgt=>{for(let d=0;d<=Math.PI;d+=0.01){if(fits(tgt+d))return tgt+d;if(fits(tgt-d))return tgt-d}return tgt};
     // flèche du haut : la position la plus haute possible côté droit ; flèche du bas : la plus à gauche côté bas
     const best=(from,to,score,fb)=>{let b=null,bs=Infinity;for(let a=from;a<=to;a+=0.01)if(fits(a)){const sc=score(a);if(sc<bs){bs=sc;b=a}}return b==null?near(fb):b};
@@ -5972,7 +5984,30 @@ function radialWire(host){
       pg.querySelector(".ah").setAttribute("d",`M${-14} ${-8}L2 0L${-14} 8`);
       pg._g={a0,a1,dir,u};pg.style.setProperty("--u",u.toFixed(3));
       placeHead(pg);
-    });};
+    });
+  };
+  // animation douce vers la vue visée ; saut immédiat si les mouvements sont réduits
+  const animer=ts=>{animRaf=0;if(!svg.isConnected||!cible)return;
+    const dt=animT?Math.min(64,ts-animT):16;animT=ts;
+    const suivante=ZC.pasAnimation(vue||cible,cible,dt,reduce?0:60);
+    dessiner(suivante);
+    if(suivante!==cible)animRaf=requestAnimationFrame(animer);else animT=0};
+  // seule une vue choisie par l'enseignant est retenue d'un affichage à l'autre ; sinon, la vue de
+  // départ est recalculée à chaque changement de taille du cadre
+  const viser=(vz,instant,retenir=true)=>{
+    cible=ZC.bornerVue(vz,rapport,GEO);if(retenir)ui.radVue=cible;
+    if(instant||reduce||!vue){if(animRaf){cancelAnimationFrame(animRaf);animRaf=0;animT=0}dessiner(cible);return}
+    if(!animRaf)animRaf=requestAnimationFrame(animer);
+  };
+  // point du dessin sous le pointeur (vue affichée, pas la vue visée)
+  const pointDessin=(cx,cy)=>{const r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal;
+    return [vb.x+(cx-r.left)*(vb.width/(r.width||1)), vb.y+(cy-r.top)*(vb.height/(r.height||1))]};
+  const zoomer=(facteur,cx,cy)=>{const base=cible||vue;if(!base)return;
+    const [px,py]=cx==null?[base.centreX,base.centreY]:pointDessin(cx,cy);
+    viser(ZC.zoomerAutour(base,facteur,px,py,rapport,GEO))};
+  const vueInitiale=()=>ui.radVue||ZC.vueDepart(rapport,GEO,zoomDepart());
+  const ajuster=()=>{ui.radVue=null;viser(ZC.vueDepart(rapport,GEO,zoomDepart()),false,false)};
+  const PAS=1.15;   // un clic sur + ou − : petit pas, sans à-coup
   // la pointe remonte le long du trait, dans le sens de rotation (plus vite au survol)
   // au toucher, pas de survol : la roue tourne tant qu'on appuie sur une flèche
   pads.forEach(pg=>{
@@ -5992,9 +6027,32 @@ function radialWire(host){
   if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))requestAnimationFrame(padRaf);
   else pads.forEach(pg=>pg._ph=0.999);
   svg.addEventListener("wheel",e=>{e.preventDefault();
-    const z=ui.radZoom==null?ZMAX:ui.radZoom, dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?100:1);
-    ui.radZoom=Math.max(1,Math.min(ZMAX,z*Math.exp(-dy*0.0015)));applyZoom()},{passive:false});
-  applyZoom();
+    zoomer(ZC.facteurMolette(e.deltaY,e.deltaMode,e.ctrlKey),e.clientX,e.clientY)},{passive:false});
+  // pincement à deux doigts (écran tactile) : le zoom suit l'écart des doigts, autour de leur milieu
+  const doigts=new Map();let pince=null;
+  const ecart=()=>{const [a,b]=[...doigts.values()];return {d:Math.hypot(a.x-b.x,a.y-b.y),x:(a.x+b.x)/2,y:(a.y+b.y)/2}};
+  svg.addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;doigts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(doigts.size===2){const g=ecart();pince={d:g.d||1,vue:cible||vue,pt:pointDessin(g.x,g.y)}}});
+  svg.addEventListener("pointermove",e=>{if(!doigts.has(e.pointerId))return;doigts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pince&&doigts.size===2){const g=ecart();
+      viser(ZC.zoomerAutour(pince.vue,g.d/pince.d,pince.pt[0],pince.pt[1],rapport,GEO),true)}});
+  const lever=e=>{doigts.delete(e.pointerId);if(doigts.size<2)pince=null};
+  ["pointerup","pointercancel","pointerleave"].forEach(t=>svg.addEventListener(t,lever));
+  if(barre)barre.querySelectorAll("[data-rz]").forEach(b=>b.onclick=()=>{const k=+b.dataset.rz;
+    if(k)zoomer(k>0?PAS:1/PAS);else ajuster()});
+  svg.addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
+    if(e.key==="+"||e.key==="="){e.preventDefault();zoomer(PAS)}
+    else if(e.key==="-"||e.key==="_"){e.preventDefault();zoomer(1/PAS)}
+    else if(e.key==="0"){e.preventDefault();ajuster()}});
+  // mise en place, puis suivi de la taille de la colonne (fenêtre redimensionnée, panneau latéral, écran changé)
+  dimensionner();
+  viser(vueInitiale(),true,false);
+  radRedim=()=>{if(!svg.isConnected)return;const avant=rapport, h0=hautCadre;dimensionner();
+    if(rapport===avant&&hautCadre===h0&&vue)return;
+    viser(vueInitiale(),true,false)};
+  if(radObs)radObs.disconnect();
+  radObs=window.ResizeObserver&&cadre?new ResizeObserver(()=>{if(radRedim)radRedim()}):null;
+  if(radObs)radObs.observe(cadre);
   radInfo(null);
   wheelRaf=requestAnimationFrame(tick);
 }
@@ -6068,9 +6126,16 @@ function paintMap(){
         :view==="table"?"Une ligne par enseignement constitutif, groupée par unité : la case donne le code que porte l'EC à ce semestre — il change d'une année de diplôme à l'autre. Un clic sur une case ouvre l'EC dans Constituer ; un clic sur une unité bascule sur « Recherche »."
         :view==="tablec"?"Une ligne par compétence, groupée par bloc : chaque case donne les EC qui la portent à ce semestre. Vide = la compétence n'est pas mobilisable ce semestre-là. Un clic sur une pastille d'EC l'ouvre dans Constituer ; un clic sur la compétence bascule sur « Recherche »."
         :view==="search"?"Recherche par code, UE ou mot-clé, regroupement au choix, filtres d'année et de semestres."
-        :"Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que tu survoles une flèche de rotation. La roue tourne quand tu survoles l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette zoome et dézoome.")}
+        :"Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que tu survoles une flèche de rotation. La roue tourne quand tu survoles l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment autour du point visé ; « Ajuster » revient à la vue de départ.")}
     </div>
-    ${view==="radial"?`<div class="radwrap">${paintRadial()}<div class="radinfo" id="radInfo"></div></div>`:""}
+    ${view==="radial"?`<div class="radwrap"><div class="radcol">
+      <div class="radzoom" role="group" aria-label="Zoom de la carte">
+        <button type="button" class="btn ghost" data-rz="-1" aria-label="Dézoomer" title="Dézoomer (−)">−</button>
+        <output aria-live="polite"></output>
+        <button type="button" class="btn ghost" data-rz="1" aria-label="Zoomer" title="Zoomer (+)">+</button>
+        <button type="button" class="btn ghost" data-rz="0" title="Revenir à la vue de départ (0)">Ajuster</button>
+      </div>
+      <div class="radcadre">${paintRadial()}</div></div><div class="radinfo" id="radInfo"></div></div>`:""}
     ${view==="chain"?paintChain():""}
 ${MOD.dn?`<div class="hint">${(m.niveaux||[]).map(n=>esc(anneeCode(n.annee)+" "+n.label)).join(" · ")}</div>`:""}
     ${view!=="table"?"":`<div class="tw"><table class="mx">
@@ -6874,8 +6939,8 @@ function paintEditor(pane,host){
       {css,cells:["C'est moi","Prénom","Nom",""]},
       D.enseignants.map((t,i)=>`<div class="ed" style="${css}">
         <input type="radio" name="moi" data-moi="${esc(t.id)}" ${D.moi===t.id?"checked":""} aria-label="C'est moi : ${esc(t.nom)}" style="justify-self:center;width:18px;height:18px">
-        <input type="text" value="${esc(t.prenom)}" data-tp="${i}" placeholder="Camille" aria-label="Prénom">
-        <input type="text" value="${esc(t.nomFam)}" data-tn="${i}" placeholder="Martin" aria-label="Nom">
+        <input type="text" value="${esc(t.prenom)}" data-tp="${i}" placeholder="Prénom" aria-label="Prénom">
+        <input type="text" value="${esc(t.nomFam)}" data-tn="${i}" placeholder="Nom" aria-label="Nom">
         ${delBtn("ens"+i,"Supprimer")}</div>`).join(""),
       "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur de DNMAX : sa répartition de service cadre la page Progression, et il est coché d'office dans une nouvelle évaluation.");
     host.querySelectorAll("[data-moi]").forEach(r=>r.onchange=()=>{D.moi=r.dataset.moi;persistData();toast("Répartition de service de "+((D.enseignants.find(t=>t.id===D.moi)||{}).nom||"")+" prise en compte.")});
