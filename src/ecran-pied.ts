@@ -1,21 +1,61 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-pied.css";
-import { ADRESSE_CONFIDENTIALITE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./configuration";
+import { ADRESSE_CODE_SOURCE, ADRESSE_CONFIDENTIALITE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./configuration";
 import { construireAdresseRetours, deduireSysteme } from "./domaine/adresse-retours";
 import { decrireVerification } from "./domaine/annonce-mise-a-jour";
-import { creer, creerBouton, type AccesDonnees } from "./ecran-echange";
+import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { verifierMiseAJour } from "./ecran-mise-a-jour";
 import { lireVersion, ouvrirDansNavigateur } from "./enveloppe";
 
-const IDENTIFIANT_BOUTON_COMPTE = "bouton-compte";
+/** Version, licence et liens du projet ; l'adresse des retours n'est connue qu'une fois la version lue. */
+function montrerAPropos(versionInstallee: Promise<string>, adresseRetours: Promise<string>): void {
+  const { boite, fermer } = ouvrirBoite("À propos");
+  const version = creer("p", "", "DNMAX");
+  void versionInstallee.then((numero) => {
+    version.textContent = numero === "" ? "DNMAX" : `DNMAX, version ${numero}`;
+  });
+  const message = creer("p", "echange-erreur");
+  message.setAttribute("role", "status");
+  message.hidden = true;
+  const lien = (texte: string, adresse: string | Promise<string>): HTMLButtonElement =>
+    creerBouton(texte, "lnk", () => {
+      void Promise.resolve(adresse).then((adresseConnue) =>
+        ouvrirDansNavigateur(adresseConnue).catch(() => {
+          message.textContent = `Le navigateur n'a pas pu être ouvert. Adresse : ${adresseConnue}`;
+          message.hidden = false;
+        }),
+      );
+    });
+  const liens = creer("div", "compte-liens");
+  liens.append(
+    lien("Proposer une idée ou signaler un bug", adresseRetours),
+    lien("Site et documentation", ADRESSE_SITE),
+    lien("Code source", ADRESSE_CODE_SOURCE),
+  );
+  const actions = creer("div", "echange-actions");
+  actions.append(creerBouton("Fermer", "btn ghost", fermer));
+  boite.append(
+    version,
+    creer(
+      "p",
+      "",
+      `Logiciel libre sous licence ${LICENCE} : vous pouvez l'utiliser, l'étudier, le modifier et le redistribuer aux mêmes conditions. ` +
+        "Vos données restent sur cet ordinateur ; ces liens s'ouvrent dans votre navigateur.",
+    ),
+    liens,
+    message,
+    actions,
+  );
+}
 
 /**
  * Ajoute en bas de l'application une ligne discrète : version et licence,
  * « Rechercher une mise à jour », puis les liens « À propos »,
  * « Confidentialité », « Site et documentation » et « Proposer une idée ou
  * signaler un bug ». Les liens s'ouvrent dans le navigateur ; « À propos »
- * ouvre « Mon compte », qui le contient. La recherche de mise à jour est le
- * seul endroit d'où DNMAX interroge le dépôt du projet, et seulement sur clic.
+ * ouvre une boîte avec la version, la licence et le code source. La recherche
+ * de mise à jour est le seul endroit d'où DNMAX interroge le dépôt du projet,
+ * et seulement sur clic.
  */
 export function installerPiedDePage(acces: AccesDonnees): void {
   const pied = creer("footer", "pied-app");
@@ -55,12 +95,14 @@ export function installerPiedDePage(acces: AccesDonnees): void {
     });
   });
   rechercher.title = "DNMAX interroge alors le dépôt du projet sur GitHub, sans rien transmettre de vos données.";
+  const adresseRetours = (): Promise<string> =>
+    versionInstallee.then((numero) => construireAdresseRetours(ADRESSE_RETOURS, numero, deduireSysteme(navigator.userAgent)));
   const liens = creer("nav", "pied-liens");
   liens.setAttribute("aria-label", "Liens utiles");
   liens.append(
     rechercher,
     creerBouton("À propos", "lnk", () => {
-      document.getElementById(IDENTIFIANT_BOUTON_COMPTE)?.click();
+      montrerAPropos(versionInstallee, adresseRetours());
     }),
     creerBouton("Confidentialité", "lnk", () => {
       ouvrir(ADRESSE_CONFIDENTIALITE);
@@ -69,7 +111,7 @@ export function installerPiedDePage(acces: AccesDonnees): void {
       ouvrir(ADRESSE_SITE);
     }),
     creerBouton("Proposer une idée ou signaler un bug", "lnk", () => {
-      ouvrir(versionInstallee.then((numero) => construireAdresseRetours(ADRESSE_RETOURS, numero, deduireSysteme(navigator.userAgent))));
+      ouvrir(adresseRetours());
     }),
   );
   pied.append(identite, liens, message);
