@@ -4401,7 +4401,7 @@ function paintLignes(){
   const L=lignes(), host=document.getElementById("lignes");
   document.getElementById("lCount").textContent=L.length;
   document.getElementById("bLink").disabled=ui.sel.length<2;
-  document.getElementById("n3hint").textContent=ui.sel.length?ui.sel.length+" ligne(s) cochée(s)":"Glisse-dépose, ou coche deux lignes et clique « Lier ».";
+  document.getElementById("n3hint").textContent=ui.sel.length?ui.sel.length+" ligne(s) cochée(s)":"Glissez-déposez, ou cochez deux lignes et cliquez « Lier ».";
   if(!L.length){host.innerHTML=`<div class="empty">Aucune compétence retenue. Revenez à l'étape 2.</div>`;return}
   host.innerHTML=L.map((l,n)=>{
     const key=l.k==="op"?"op:"+l.o.id:"one:"+l.it.code;
@@ -4422,7 +4422,7 @@ function paintLignes(){
             placeholder="${l.k==="op"?"Formuler ce qui est attendu pour ce regroupement…":"Formuler ce qui est attendu (sinon l'intitulé du référentiel)…"}"></div>
         <div class="ro livrow">${liv.length
           ? liv.map(x=>`<button type="button" class="liv on drg" data-lliv="${esc(key)}" data-v="${esc(x)}" aria-pressed="true" title="Glisser à l'écart pour retirer">${esc(x)}</button>`).join("")
-          : `<span class="hint">aucun livrable — glisse-en un ici</span>`}</div>
+          : `<span class="hint">aucun livrable — glissez-en un ici</span>`}</div>
       </div></div>`}).join("");
   host.querySelectorAll("[data-lsel]").forEach(cb=>cb.onchange=()=>{
     const k=cb.dataset.lsel;ui.sel=cb.checked?[...ui.sel,k]:ui.sel.filter(x=>x!==k);paintLignes()});
@@ -5684,7 +5684,7 @@ function radInfo(kind,sel,frozen,tint){
   if(!box)return;
   if(!kind){
     box.innerHTML=`<div class="k">Carte du référentiel</div>
-      <div class="hint">Survole pour éclater une portion, clique pour la figer.</div>`;
+      <div class="hint">Survolez pour éclater une portion, cliquez pour la figer.</div>`;
     return;
   }
   const compsOfEcIds=ids=>filtComps(D.competences.filter(c=>c.ecIds.some(x=>ids.includes(x))));
