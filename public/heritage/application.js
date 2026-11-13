@@ -46,7 +46,7 @@ const REF_DEFAULT = {
    },
    {
     "code": "DN3",
-    "label": "Autonomie",
+    "label": "Autonome",
     "annee": 3,
     "semestres": [
      "S5",
@@ -4860,7 +4860,7 @@ function actsMenu(f,i){
   else if(s.evalue)h+=`<button type="button" data-act="fin" data-xi="${i}">Rouvrir l'évaluation</button>`;
   else if(d&&d.any&&d.full<d.tot){const m=rendusManquants(f);h+=m?`<button type="button" disabled title="${m} étudiant${m>1?"s":""} sans statut de rendu : à renseigner dans l'évaluation" style="opacity:.5;cursor:not-allowed">Terminer l'évaluation <span class="hint">${m} sans rendu</span></button>`:`<button type="button" data-act="fin" data-xi="${i}">Terminer l'évaluation <span class="hint">${d.full}/${d.tot}</span></button>`}
   if(ps.length)h+=ps.map(n=>`<button type="button" data-act="rest" data-rp="${esc(n)}" data-xi="${i}">${R[n]?"Annuler la restitution":"Marquer restituée"}${ps.length>1?` <span class="hint">${esc(promoDisp(n))}</span>`:""}</button>`).join("");
-  h+=`<span class="xsep"></span><button type="button" class="danger" data-act="annul" data-xi="${i}">Annuler l'évaluation</button>`;
+  h+=`<span class="xsep"></span><button type="button" class="danger" data-act="annul" data-xi="${i}">Annuler l'évaluation <span class="hint">rien n'est supprimé · peut être rétablie</span></button>`;
   return h;
 }
 /* nombre d'étudiants ayant une évaluation individuelle enregistrée (niveaux, observations, appréciation ou restitution) */
@@ -6889,11 +6889,11 @@ function paintEditor(pane,host){
           <input type="text" value="${esc(dp.code||"")}" data-dc="${i}" placeholder="${esc(autoDipCode(dp)||"DNO")}" aria-label="Code" class="mono">
           ${dvs.length>1?delBtn("dip"+i,"Supprimer"):`<span class="hint">—</span>`}</div>`).join("")}
       </div>`).join("")||`<div class="empty">Aucun diplôme : installez un référentiel depuis l'encart de départ, ou créez-en un avec « + Nouveau diplôme ».</div>`,
-      "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments, pour que vous n'ayez qu'à ajuster les variations (Référentiel > Constituer, une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.")
+      "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments, pour que vous n'ayez qu'à ajuster les variations (Référentiel > Constituer, une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laissez-le vide pour qu'il suive, ou écrivez le vôtre.")
       +(dvs.length?`<div class="panel" style="max-width:720px;margin-top:18px"><div class="pick-head"><h3>Réglages du référentiel</h3>${dvs.length>1?`<select id="edDipAct" aria-label="Mention dont on règle le référentiel" style="width:auto;margin-left:auto">${dvs.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>`:`<span class="hint" style="margin-left:auto">${esc(dipLabel(dvs[0]))}</span>`}</div>
         <div class="panel-body">
           <div class="field"><label>Années et niveaux</label>
-            <div class="hint" style="margin:0 0 6px">L'identifiant d'une année suit le code du diplôme (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.</div>
+            <div class="hint" style="margin:0 0 6px">L'identifiant d'une année suit le code du diplôme (DNO1, DNO2…) — laissez-le vide pour qu'il suive, ou écrivez le vôtre.</div>
             ${(D.niveaux||[]).map((n,i)=>`<div class="lv"><span class="num" style="width:62px">Année ${n.annee}</span>
               <input type="text" data-nvc="${i}" value="${esc(n.code||"")}" placeholder="${esc(dipCode(D.diplomes.find(x=>x.id===D.activeDiplome)||{})+n.annee)}" style="flex:0 1 90px" aria-label="Identifiant de l'année" class="mono">
               <input type="text" data-nvl="${i}" value="${esc(n.label)}" aria-label="Libellé du niveau"></div>`).join("")}
@@ -7684,7 +7684,7 @@ function paintProg(){
       ${shown.filter(r=>String(r.c.bloc)===b).sort((x,y)=>(x.inSem.length?1:0)-(y.inSem.length?1:0)).map(r=>`<div class="pgrow ${r.state}">
         <span class="pill pst ${r.state}">${stTxt[r.state]}</span>
         <div class="pgc"><div>${esc(r.c.libelle||r.c.code)}</div><div class="hint">${esc(r.ecn)}</div></div>
-        <div class="pgev">${r.inSem.length?r.inSem.map(f=>`<div>${esc(f.titre||"Sans titre")} <span class="hint">${esc(f.date||"")}</span></div>`).join(""):
+        <div class="pgev">${r.inSem.length?r.inSem.map(f=>`<div>${esc(f.titre||"Sans titre")} <span class="hint">${esc(fmtD(f.date))}</span></div>`).join(""):
           r.cover.length?`<span class="hint">${r.cover.map(f=>esc((f.semestre||"")+" · "+(f.titre||""))).join("<br>")}</span>`:`<span class="hint">—</span>`}</div>
         <div class="pgst">${MOD.eleves&&r.inSem.length&&els.length?`<div class="pgdist" title="${LV.map((l,i)=>l+" : "+r.dist[i]).join(" · ")}">${r.dist.map((n,i)=>n?`<i style="flex:${n};background:${nivColor(i,NL)}"></i>`:"").join("")}${els.length-r.done?`<i style="flex:${els.length-r.done}" class="none"></i>`:""}</div>
           <span class="hint">${r.done}/${els.length} étudiants</span>`:""}</div>
