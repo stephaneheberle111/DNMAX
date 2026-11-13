@@ -99,7 +99,7 @@ Si la construction macOS est annulée faute de machine disponible chez GitHub, r
 1. Lancer « Publication » en décochant « avec_macos » : le brouillon ne contient que Windows et Linux, et son `latest.json` ne propose la mise à jour qu'à ces systèmes. Le publier.
 2. Lancer ensuite l'atelier « Complément macOS » avec l'étiquette de la version (`v0.4.1`), autant de fois qu'il le faut. Il construit le code de cette version, ajoute les fichiers Mac à la version, complète `latest.json` et redépose les installeurs sur dnmax.fr. D'ici là, le site garde l'installeur Mac précédent.
 
-Sous Linux, seule l'AppImage se met à jour d'elle-même.
+Sous Linux, seule l'AppImage se met à jour depuis DNMAX (« Rechercher une mise à jour ») ; un paquet `.deb` se remplace à la main.
 
 ## Site web
 

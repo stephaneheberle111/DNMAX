@@ -26,6 +26,8 @@ export interface Etape {
   cibles?: readonly string[];
   /** Élément, dans la zone éclairée, vers lequel le curseur animé se dirige (par défaut, la zone elle-même). */
   pointe?: string;
+  /** Boutons que la bulle, rangée dans un coin, doit laisser visibles (en plus de `pointe`). */
+  aDegager?: string;
   geste?: Geste;
   atteinte?: () => boolean;
   objectif?: (avancement: Avancement) => boolean;
@@ -133,8 +135,8 @@ const PRISE_EN_MAIN: Parcours = {
       avanceAuClic: true,
     },
     {
-      titre: "1. Valider l'installation",
-      texte: "DNMAX montre ce que le référentiel ajouterait. Validez : l'application se recharge et la visite reprend à l'étape suivante.",
+      titre: "1. Installer le référentiel",
+      texte: "DNMAX montre ce que le référentiel ajouterait. Cliquez « Appliquer » : l'application se recharge et la visite reprend à l'étape suivante.",
       texteFait: "Votre référentiel est installé. Vous le retrouvez dans l'onglet « Référentiel ».",
       cibles: [".echange-boite .echange-actions .btn.primary", ".accueil-vide li:first-child", "#t-ref"],
       geste: "cliquer",
@@ -185,6 +187,7 @@ const PRISE_EN_MAIN: Parcours = {
       texteFait: "Votre référentiel est validé : vous pouvez évaluer avec.",
       cibles: ["#cpMain .panel", "#t-ref"],
       pointe: "#cAtteste",
+      aDegager: "#cValid",
       geste: "cliquer",
       objectif: (avancement) => avancement.referentielValide,
     },
@@ -240,6 +243,7 @@ const PRISE_EN_MAIN: Parcours = {
         "Donnez un intitulé, cochez la ou les promotions concernées et les livrables attendus. Passez ensuite à l'étape 2, « Compétences ».",
       cibles: ["#step1"],
       pointe: "#f-titre",
+      aDegager: '[data-go="2"]',
       geste: "remplir",
       atteinte: () => visible("#step2") || visible("#step3"),
       groupeFait: (avancement) => avancement.evaluations > 0,
@@ -248,6 +252,7 @@ const PRISE_EN_MAIN: Parcours = {
       titre: "5. Les compétences",
       texte: "Cochez les compétences évaluées, choisies dans votre référentiel, puis passez à l'étape 3, « Formulation ».",
       cibles: ["#step2"],
+      aDegager: '[data-go="3"]',
       geste: "remplir",
       atteinte: () => visible("#step3"),
       groupeFait: (avancement) => avancement.evaluations > 0,

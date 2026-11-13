@@ -65,7 +65,7 @@ function afficher(acces: AccesDonnees): void {
     ),
   );
   const pied = document.createElement("p");
-  pied.textContent = "Pour simplement découvrir l'application, utilisez « charge un exemple » ci-dessous.";
+  pied.textContent = "Pour simplement découvrir l'application, chargez un exemple depuis l'onglet « Mes évaluations ».";
   const fermer = creerBouton("Masquer", "btn ghost", () => {
     carte.remove();
   });

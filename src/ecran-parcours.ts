@@ -11,6 +11,7 @@ import {
   type Avancement,
   type IdentifiantParcours,
 } from "./domaine/parcours";
+import { choisirCoin, type Rectangle } from "./domaine/coin-bulle";
 import type { AccesDonnees } from "./ecran-echange";
 import { chapitreDe, PARCOURS_DEFINIS, type Etape, type Parcours } from "./parcours-etapes";
 
@@ -542,7 +543,8 @@ function placerBulleACoteDe(boite: Element, visee: DOMRect): void {
   bulle.style.top = `${String(Math.round(hautFinal))}px`;
 }
 
-function placerBulle(trou: DOMRect | null, enCoin: boolean): void {
+/** `evite` : l'élément que la bulle ne doit pas cacher quand elle se range dans un coin. */
+function placerBulle(trou: DOMRect | null, enCoin: boolean, evite: readonly Rectangle[] = []): void {
   const bulle = elements.bulle;
   if (bulle === null) {
     return;
@@ -557,8 +559,7 @@ function placerBulle(trou: DOMRect | null, enCoin: boolean): void {
   bulle.dataset.position = "centre";
   if (trou === null || enCoin) {
     if (enCoin) {
-      gauche = largeur - dimensions.width - marge;
-      haut = hauteur - piedPage - dimensions.height - marge;
+      ({ gauche, haut } = choisirCoin(dimensions, { width: largeur, height: hauteur, piedPage }, evite.length > 0 ? evite : trou === null ? [] : [trou], marge));
       bulle.dataset.position = "coin";
     } else {
       gauche = (largeur - dimensions.width) / 2;
@@ -574,8 +575,7 @@ function placerBulle(trou: DOMRect | null, enCoin: boolean): void {
       haut = trou.top - dimensions.height - marge;
       bulle.dataset.position = "dessus";
     } else {
-      haut = hauteur - piedPage - dimensions.height - marge;
-      gauche = largeur - dimensions.width - marge;
+      ({ gauche, haut } = choisirCoin(dimensions, { width: largeur, height: hauteur, piedPage }, evite.length > 0 ? evite : [trou], marge));
       bulle.dataset.position = "coin";
     }
   }
@@ -586,6 +586,16 @@ function placerBulle(trou: DOMRect | null, enCoin: boolean): void {
   }
   bulle.style.left = `${String(gaucheFinale)}px`;
   bulle.style.top = `${String(Math.round(Math.max(marge, haut)))}px`;
+}
+
+/** Éléments que la bulle rangée dans un coin ne doit pas cacher ; à défaut, la zone éclairée. */
+function zonesADegager(etape: Etape, visee: DOMRect | null): DOMRect[] {
+  const selecteurs = [etape.pointe, etape.aDegager].filter((selecteur) => selecteur !== undefined);
+  const zones = selecteurs
+    .flatMap((selecteur) => [...document.querySelectorAll(selecteur)])
+    .filter((element) => estVisible(element))
+    .map((element) => element.getBoundingClientRect());
+  return zones.length > 0 || visee === null ? zones : [visee];
 }
 
 /** Fait glisser le curseur animé de la bulle vers la zone éclairée. */
@@ -664,7 +674,8 @@ function redessiner(): void {
       if (cibleDansBoite && visee !== null) {
         placerBulleACoteDe(boiteOuverte.querySelector(".echange-boite") ?? boiteOuverte, visee);
       } else {
-        placerBulle(visee === null || masquer ? null : visee, masquer || tropGrande);
+        // Rangée dans un coin, la bulle ne doit pas cacher le bouton que l'étape fait cliquer.
+        placerBulle(visee === null || masquer ? null : visee, masquer || tropGrande, masquer ? [] : zonesADegager(etape, visee));
       }
       if (!bulleRevelee) {
         bulleRevelee = true;
