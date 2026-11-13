@@ -389,3 +389,24 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Pourquoi** : le DN MADE est un diplôme de l'enseignement supérieur, qui s'adresse à des étudiants ; et trois séparateurs différents pour la même chose laissaient croire à des sens distincts.
 
 **Inchangé** : identifiants, clés de stockage, champs de données, noms de fichiers et sélecteurs (`eleves`, `dnmax.eleves`, `data-mod="eleves"`…), pour ne rien casser dans les données existantes. Les noms déjà anonymisés en « Élève anonyme n » restent reconnus comme anonymes ; les nouveaux s'écrivent « Étudiant anonyme n » (`src/domaine/conservation.ts`). Les sections publiées du CHANGELOG et les décisions précédentes gardent leur vocabulaire d'origine.
+
+## 29. Une évaluation est gardée d'elle-même, en brouillon jusqu'à « Enregistrer l'évaluation »
+
+**Constat** : l'interface historique tenait l'évaluation ouverte dans un brouillon unique (`dnmade.draft`), recopié dans la liste (`dnmade.fiches`) seulement au clic sur « Enregistrer l'évaluation ». Ouvrir une autre évaluation remplaçait ce brouillon sans prévenir : des résultats saisis étaient perdus. Rien à l'écran ne permettait de savoir si une saisie était en sécurité.
+
+**Retenu** : deux choses distinctes, que l'ancien bouton confondait.
+
+- **Garder** est automatique : chaque modification est recopiée aussitôt dans la liste (`save()` de l'interface historique). Une nouvelle évaluation y entre dès qu'elle a un intitulé, un livrable ou une compétence, pour qu'un clic sur « + Nouvelle évaluation » sans suite n'y laisse pas de ligne vide.
+- **Terminer** reste un geste de l'enseignant : une évaluation entrée ainsi dans la liste porte la marque `brouillon`. Un brouillon ne compte pas dans Progression, ne peut être ni évalué, ni exporté, ni dupliqué, ni envoyé à un collègue, et n'a pas de suivi. « Enregistrer l'évaluation », à l'étape Formulation, retire la marque ; il faut un intitulé et au moins une compétence. Une évaluation enregistrée le reste : ses modifications et les résultats saisis sont pris en compte sans autre clic.
+
+**Conséquences** :
+
+- les évaluations d'avant cette version n'ont pas la marque : elles restent enregistrées ;
+- une copie faite par « Dupliquer » est un brouillon, à enregistrer à son tour ;
+- on ne peut plus abandonner des modifications d'une évaluation enregistrée en quittant sans enregistrer : pour essayer, « Dupliquer » d'abord ;
+- tant que le référentiel d'une évaluation n'est pas validé (décision 24), rien n'est recopié dans la liste ; l'en-tête le dit, et le bouton explique pourquoi ;
+- au démarrage, une évaluation en cours d'édition qui diffère de celle de même identifiant dans la liste est réalignée sur elle : des modifications laissées sans « Enregistrer » avant cette version ne sont pas appliquées d'office ;
+- supprimer une évaluation vide aussi l'évaluation en cours d'édition qui la portait, sans quoi la modification suivante la ferait réapparaître ;
+- la marque `brouillon` est un champ local (`CHAMPS_LOCAUX`) : elle ne voyage pas dans un échange et sa disparition ne vaut pas « évaluation modifiée » ; pour la visite guidée, une évaluation « créée » est une évaluation sans cette marque (`lireAvancement`).
+
+**Vérification** : `npm run verifier:saisie` déroule ces cas dans un navigateur, sur l'exemple, et regarde ce qui est réellement écrit dans le stockage. Lancé par l'intégration continue.

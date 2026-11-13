@@ -24,7 +24,7 @@ const DONNEES_COMPLETES = {
     { id: "p1", liste: [{ id: "s1" }, { id: "s2" }] },
     { id: "p2", eleves: "Léa Martin\n\nNoé Petit\n" },
   ]),
-  "dnmade.fiches": JSON.stringify([{ id: "f1" }]),
+  "dnmade.fiches": JSON.stringify([{ id: "f1" }, { id: "f2", titre: "Commencée", brouillon: true }]),
   "dnmade.modules": JSON.stringify({ eleves: true, dn: false }),
 };
 
@@ -62,6 +62,21 @@ describe("lireAvancement", () => {
     expect(avancement.referentiel).toBe(false);
     expect(avancement.promotions).toBe(0);
     expect(avancement.moduleEleves).toBe(false);
+  });
+
+  it("compte une évaluation enregistrée", () => {
+    const evaluations = JSON.stringify([{ id: "f1", titre: "Fiche de lecture" }]);
+    expect(lireAvancement({ "dnmade.fiches": evaluations }).evaluations).toBe(1);
+  });
+
+  it("ne compte pas un brouillon", () => {
+    const evaluations = JSON.stringify([{ id: "f1", titre: "Fiche de lecture", brouillon: true }]);
+    expect(lireAvancement({ "dnmade.fiches": evaluations }).evaluations).toBe(0);
+  });
+
+  it("ne tient pour brouillon que la marque exacte posée par l'application", () => {
+    const evaluations = JSON.stringify([{ id: "f1", brouillon: false }, { id: "f2", brouillon: "oui" }]);
+    expect(lireAvancement({ "dnmade.fiches": evaluations }).evaluations).toBe(2);
   });
 
   it("ne compte pas une répartition dont toutes les listes sont vides", () => {

@@ -260,7 +260,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "5. Formuler et enregistrer",
       texte:
-        "Pour chaque compétence, rédigez ce que vous attendez (la compétence opérationnelle). Cliquez enfin « Enregistrer l'évaluation » : elle rejoint « Mes évaluations ».",
+        "Pour chaque compétence, rédigez ce que vous attendez (la compétence opérationnelle). Votre saisie est gardée en brouillon au fur et à mesure. Cliquez enfin « Enregistrer l'évaluation » : elle sort des brouillons et peut être distribuée.",
       texteFait: "Votre évaluation est enregistrée.",
       cibles: ["#step3", "#t-saved"],
       pointe: "#bSave3",

@@ -233,7 +233,8 @@ export function montrerExport(
   catalogue: readonly ReferentielLocal[],
   destination: DestinationEnvoi = "fichier",
 ): void {
-  const evaluations = lireEvaluations(entrees[CLE_EVALUATIONS]);
+  // Un brouillon n'est pas terminé : il ne s'envoie pas (décision 29).
+  const evaluations = lireEvaluations(entrees[CLE_EVALUATIONS]).filter((evaluation) => evaluation.brouillon !== true);
   const diplomes = listerDiplomes(catalogue);
   if (evaluations.length === 0 && diplomes.length === 0) {
     afficherMessage("Envoyer", "Vous n'avez encore ni évaluation enregistrée ni référentiel à envoyer.");
