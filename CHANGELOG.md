@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Référentiel : le volet « Définir » disparaît. « Constituer » compte désormais cinq étapes : unités d'enseignement, enseignements constitutifs, blocs et compétences (nouvelle étape), planification par semestre, validation. Chaque étape crée, renomme et retire seulement ses propres éléments ; les autres y sont en lecture seule (le nom d'une UE ne se modifie plus à l'étape des EC, et la planification ne crée plus de blocs ni de compétences). Changer le numéro d'un bloc fait suivre ses compétences, et un numéro déjà pris est refusé. Un clic sur un EC ou une compétence dans Explorer ou dans la planification ouvre l'étape où il se modifie. Aucune donnée n'est transformée. La visite guidée présente les cinq étapes avant la validation ; documentation du site mise à jour.
+
 ## 0.4.2 — 2026-11-13
 
 ### Ajouté

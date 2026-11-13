@@ -4,6 +4,7 @@ import * as XLSX from "xlsx";
 import { convertirEnOctets, type ContenuFichier } from "../domaine/contenu-fichier";
 import { estObjet, lireDonneesEtablissementDe, lirePromotion } from "../domaine/echange/modele";
 import { estCadreVierge, nettoyerDiplomesVierges } from "../domaine/diplome-vierge";
+import { renumeroterBloc } from "../domaine/numero-bloc";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { CLE_IDENTITE, lireIdentite } from "../domaine/identite";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
@@ -62,6 +63,8 @@ interface Pont {
   readonly estCadreVierge: typeof estCadreVierge;
   /** Appelée au chargement : retire les diplômes-cadres vierges devenus inutiles. */
   readonly nettoyerDiplomesVierges: typeof nettoyerDiplomesVierges;
+  /** Référentiel › Constituer › Blocs et compétences : nouveau numéro d'un bloc (voir `domaine/numero-bloc`). */
+  readonly renumeroterBloc: typeof renumeroterBloc;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: DemandeEnregistrement): Promise<void>;
@@ -118,6 +121,7 @@ export async function chargerInterfaceHistorique(
     telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport) },
     estCadreVierge,
     nettoyerDiplomesVierges,
+    renumeroterBloc,
     // L'interface historique n'est pas typée : le nom reçu est vérifié.
     confirmerModuleEleves: (etablissement) =>
       confirmerActivationEleves({
