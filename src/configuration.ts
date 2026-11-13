@@ -13,24 +13,6 @@ export const ADRESSE_CONFIDENTIALITE = "https://dnmax.fr/#confidentialite";
 
 export const LICENCE = "AGPL-3.0-or-later";
 
-/** Délais de l'échange en direct, en millisecondes. */
-export const DELAIS_ECHANGE_DIRECT = {
-  /** Recherche des adresses locales avant d'écrire un code ; au-delà, le code part avec celles trouvées. */
-  rassemblement: 10_000,
-  /** Attente de l'autre enseignant : le temps de se transmettre les codes à la main. */
-  attenteCorrespondant: 15 * 60_000,
-  /** Établissement de la connexion, une fois les deux codes connus de chaque côté. */
-  connexion: 30_000,
-  /** Silence admis pendant un transfert avant de le déclarer interrompu. */
-  inactivite: 60_000,
-} as const;
-
-/**
- * Taille maximale d'un paquet reçu en direct, en unités UTF-16 : même ordre que
- * la limite d'un fichier d'échange (20 Mo, `TAILLE_MAXIMALE_ECHANGE` côté enveloppe).
- */
-export const TAILLE_MAXIMALE_ECHANGE_DIRECT = 20 * 1024 * 1024;
-
 /**
  * Années pendant lesquelles les données d'élèves d'une promotion sont gardées
  * après sa sortie (fin de l'année scolaire où s'achève son diplôme). Au-delà,
