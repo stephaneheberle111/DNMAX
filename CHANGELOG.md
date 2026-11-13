@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.5.0 — 2026-11-13
+
 ### Ajouté
 
 - Au premier lancement, avant le choix du mot de passe, une page « Avant de commencer » rappelle les bonnes pratiques : session protégée et non partagée, écran verrouillé, chiffrement du disque conseillé (BitLocker, FileVault, LUKS), sauvegardes hors de l'ordinateur, exports Word et Excel non chiffrés, code de secours gardé hors de l'ordinateur. Rien n'est bloquant : « J'ai compris, continuer ».
