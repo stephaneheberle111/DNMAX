@@ -125,29 +125,15 @@ export function vueDepart(rapport: number, geometrie: GeometrieCarte, zoom: numb
 }
 
 /**
- * Nouvelle vue après un changement de zoom qui garde immobile, à l'écran, le
- * point du dessin `(pointX, pointY)` (le pointeur, ou le centre de la vue pour
- * les boutons). Le résultat est borné.
+ * Nouvelle vue après un changement de zoom (molette, pincement, boutons, touches) :
+ * la vue reste sur le trajet de la vue de départ, son coin haut-gauche sur la
+ * diagonale du dessin. À l'écran, la roue ne se déplace donc que le long d'un
+ * seul axe, en grossissant ou en rétrécissant, quel que soit l'endroit visé ;
+ * un zoom centré sur le pointeur la faisait glisser dans tous les sens.
  */
-export function zoomerAutour(
-  vue: VueCarte,
-  facteur: number,
-  pointX: number,
-  pointY: number,
-  rapport: number,
-  geometrie: GeometrieCarte,
-): VueCarte {
+export function zoomerSurDiagonale(vue: VueCarte, facteur: number, rapport: number, geometrie: GeometrieCarte): VueCarte {
   const zoom = bornerZoom(vue.zoom * (Number.isFinite(facteur) && facteur > 0 ? facteur : 1), geometrie.zoomMin, geometrie.zoomMax);
-  const echelle = vue.zoom / zoom;
-  return bornerVue(
-    {
-      zoom,
-      centreX: pointX + (vue.centreX - pointX) * echelle,
-      centreY: pointY + (vue.centreY - pointY) * echelle,
-    },
-    rapport,
-    geometrie,
-  );
+  return vueDepart(rapport, geometrie, zoom);
 }
 
 /**

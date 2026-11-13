@@ -9,6 +9,8 @@
 - Référentiel › Constituer : les titres d'étapes longs ne débordent plus de leur carte ; la bulle d'aide de la carte radiale n'élargit plus la page.
 - L'information aux étudiants mentionne l'échange en direct ; la page Confidentialité décrit complètement l'annonce sur le réseau local ; les textes du site citent les libellés réels (« Appliquer », « Restaurer et recharger », « Changer d'ordinateur ») et la mise à jour de l'AppImage se fait depuis DNMAX, sur demande.
 - Les derniers messages au tutoiement sont passés au vouvoiement.
+- Carte radiale : au zoom et au dézoom, la roue glisse de nouveau le long d'une seule diagonale, comme avant la 0.5.0, au lieu de suivre le pointeur dans tous les sens.
+- Visite guidée : les éclats de réussite partent de l'endroit cliqué.
 
 ## 0.5.0 — 2026-11-13
 
