@@ -129,7 +129,7 @@ La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en
 
 **Dates de modification** : l'interface historique n'en tenait pas. Elles sont déduites à chaque enregistrement, en comparant le modèle avant et après, et rangées sous la clé `dnmax.modifications`. Une évaluation antérieure à cette fonction affiche « date inconnue » jusqu'à sa prochaine modification.
 
-**Reste à faire** : échanger le référentiel lui-même (et voir ce qui diffère entre deux référentiels), échanger des évaluations avec élèves et résultats dans un fichier protégé par mot de passe, transférer toutes ses données vers un autre ordinateur.
+**Depuis** : l'échange du référentiel (décision 12), celui des élèves et de leurs résultats dans un fichier chiffré (décision 13) et le transfert vers un autre ordinateur (décision 14) ont été ajoutés.
 
 ## 11. L'enseignant est identifié par son nom
 
