@@ -181,7 +181,7 @@ async function demarrer(): Promise<void> {
   await chargerInterfaceHistorique(magasin, proposerOuvertureExport, () =>
     confirmerMotDePasseEleves(() => acces.enregistrerMaintenant()),
   );
-  // L'enseignant qui a donné son nom figure d'office parmi les enseignants de l'établissement, marqué « moi ».
+  // L'enseignant qui a donné son nom figure d'office parmi les enseignants de l'établissement, marqué « C'est moi ».
   ajusterEnseignants((donnees) => provisionnerEnseignantMoi(donnees, acces.identite));
   suivreRenommageMoi(reprendreNom);
   installerChoixTheme();

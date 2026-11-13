@@ -205,7 +205,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "3. Déclarer vos collègues",
       texte:
-        "Vous êtes déjà dans la liste, marqué « moi » : la progression montrera vos promotions. Ajoutez vos collègues avec « + Ajouter » : prénom, nom et discipline.",
+        "Vous êtes déjà dans la liste, marqué « C'est moi » : la progression montrera vos promotions. Ajoutez vos collègues avec « + Ajouter » : prénom et nom.",
       texteFait: "L'équipe est déclarée. Vous pourrez ajouter d'autres collègues ici.",
       cibles: ["#orgPane"],
       pointe: "#edAdd",

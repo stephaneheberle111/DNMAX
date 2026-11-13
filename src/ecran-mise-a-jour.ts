@@ -33,7 +33,7 @@ function annoncer(miseAJour: MiseAJour, avantInstallation: () => Promise<void>):
       .then(() => miseAJour.installer())
       .catch(() => {
         erreur.textContent =
-          "La mise à jour n'a pas pu être installée. Vérifiez votre connexion ; elle vous sera proposée de nouveau au prochain lancement.";
+          "La mise à jour n'a pas pu être installée. Vérifiez votre connexion, puis réessayez ; « Rechercher une mise à jour », en bas de la fenêtre, la proposera de nouveau.";
         erreur.hidden = false;
         installer.disabled = false;
         installer.textContent = "Réessayer";
