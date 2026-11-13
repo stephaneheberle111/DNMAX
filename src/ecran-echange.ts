@@ -158,7 +158,9 @@ export function ouvrirBoite(titre: string, surFermeture?: () => void): { boite: 
     }
   });
   const surTouche = (evenement: KeyboardEvent): void => {
-    if (evenement.key === "Escape") {
+    // Avec deux boîtes ouvertes l'une sur l'autre (un aperçu sur un avertissement), Échap ne ferme que celle du dessus.
+    const fonds = document.querySelectorAll(".echange-fond");
+    if (evenement.key === "Escape" && fonds[fonds.length - 1] === fond) {
       fermer();
     }
   };

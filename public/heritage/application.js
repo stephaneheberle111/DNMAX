@@ -6239,13 +6239,14 @@ function paintOrg(){
   paintEditor(pane,host);
 }
 function paintEtab(host){
-  const D=DATA;D.etab=D.etab||{nom:"",uai:"",ville:"",academie:""};
-  const E=D.etab, f=(k,l,ph,cls)=>`<div class="field"><label for="et-${k}">${l}</label>
+  const D=DATA;D.etab=D.etab||{nom:"",uai:"",ville:"",academie:"",contactDpo:""};
+  const E=D.etab, f=(k,l,ph,cls,style)=>`<div class="field"${style?` style="${style}"`:""}><label for="et-${k}">${l}</label>
     <input type="text" id="et-${k}" data-et="${k}" value="${esc(E[k]||"")}" placeholder="${esc(ph)}" ${cls?`class="${cls}"`:""}></div>`;
-  host.innerHTML=`<div class="panel"><div class="pick-head"><h3>Établissement${help("Le nom de l'établissement figure en tête des documents Word et Excel exportés.")}</h3></div>
+  host.innerHTML=`<div class="panel"><div class="pick-head"><h3>Établissement${help("Le nom de l'établissement figure en tête des documents Word et Excel exportés. Avec le contact du délégué à la protection des données, il est repris dans les documents RGPD proposés à l'activation du module Élèves.")}</h3></div>
     <div style="padding:14px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:13px">
       ${f("nom","Nom de l'établissement","Lycée …")}${f("uai","Code UAI (RNE)","0000000A","mono")}
       ${f("ville","Ville","")}${f("academie","Académie","")}
+      ${f("contactDpo","Contact du délégué à la protection des données","Adresse électronique, téléphone ou service","","grid-column:1/-1")}
     </div></div>`;
   host.querySelectorAll("[data-et]").forEach(inp=>inp.oninput=()=>{E[inp.dataset.et]=inp.value;persistData()});
 }
@@ -7266,7 +7267,7 @@ function paintSet(){
     // Activer le module Élèves passe par un avertissement RGPD : la case ne reste cochée que si l'enseignant confirme.
     if(cb.dataset.mod==="eleves"&&cb.checked&&!MOD.eleves){
       cb.checked=false;
-      window.dnmaxPont.confirmerModuleEleves((DATA.etab||{}).nom||"").then(ok=>{if(ok&&!MOD.eleves){cb.checked=true;appliquerModule(cb)}});
+      window.dnmaxPont.confirmerModuleEleves(DATA.etab||{}).then(ok=>{if(ok&&!MOD.eleves){cb.checked=true;appliquerModule(cb)}});
       return;
     }
     appliquerModule(cb);
@@ -7972,6 +7973,14 @@ window.dnmaxPont.ajusterEnseignants=regle=>{
   if(!r||!Array.isArray(r.enseignants))return;
   DATA.enseignants=r.enseignants.slice();DATA.moi=typeof r.moi==="string"?r.moi:DATA.moi;persistData();
   if(ui.tab==="org")paintOrg();
+};
+
+/* Pont vers l'application : les documents RGPD du module Élèves demandent le nom de l'établissement et le contact
+   du délégué à la protection des données. Mène à leur saisie, curseur sur le premier des deux qui est vide. */
+window.dnmaxPont.ouvrirEtablissement=()=>{
+  ui.tab="org";ui.org.pane="etab";paintTabs();paintOrg();window.scrollTo({top:0,behavior:"smooth"});
+  const E=DATA.etab||{}, k=!(E.nom||"").trim()?"nom":"contactDpo";
+  const inp=document.getElementById("et-"+k);if(inp)inp.focus();
 };
 
 /* Pont vers l'application : les données de l'établissement (diplômes, dictionnaire, référentiels) ne sont
