@@ -5,14 +5,14 @@ import type { Entrees } from "./magasin-memoire";
 import { CLE_INSTANTANE_EXEMPLE } from "./retrait-exemple";
 
 /**
- * Droits d'un élève sur ses données (RGPD, articles 15 et 17) : retrouver tout
+ * Droits d'un étudiant sur ses données (RGPD, articles 15 et 17) : retrouver tout
  * ce qui le concerne, le lui remettre, l'effacer partout.
  *
- * Un élève vit à plusieurs endroits des données de l'interface historique :
+ * Un étudiant vit à plusieurs endroits des données de l'interface historique :
  * - dans la liste d'une promotion (`liste`, et sa copie texte `eleves`), sous un identifiant ;
  * - dans les évaluations et le brouillon : résultats `res` indexés par cet
- *   identifiant, élèves visés `eleveIds`, et liste saisie à la main `eleves`
- *   (un nom par ligne), dont les élèves sont identifiés par leur rang : « libre0 »…
+ *   identifiant, étudiants visés `eleveIds`, et liste saisie à la main `eleves`
+ *   (un nom par ligne), dont les étudiants sont identifiés par leur rang : « libre0 »…
  * - dans l'instantané gardé pour retirer l'exemple, qui copie tout cela.
  */
 
@@ -21,12 +21,12 @@ export const CLE_BROUILLON = "dnmade.draft";
 
 const PREFIXE_LIBRE = "libre";
 
-/** Un élève tel que proposé à l'enseignant. */
+/** Un étudiant tel que proposé à l'enseignant. */
 export interface EleveRepere {
-  /** Clé stable du repère : identifiant de promotion, ou nom normalisé pour un élève saisi à la main. */
+  /** Clé stable du repère : identifiant de promotion, ou nom normalisé pour un étudiant saisi à la main. */
   cle: string;
   nom: string;
-  /** Identifiants de l'élève dans les promotions (vide pour un élève saisi à la main seulement). */
+  /** Identifiants de l'étudiant dans les promotions (vide pour un étudiant saisi à la main seulement). */
   identifiants: string[];
   /** Noms des promotions où il figure. */
   promotions: string[];
@@ -55,7 +55,7 @@ function evaluationsEtBrouillon(entrees: Entrees): ObjetJson[] {
 }
 
 /**
- * Liste les élèves présents dans les données : ceux des promotions, puis ceux
+ * Liste les étudiants présents dans les données : ceux des promotions, puis ceux
  * qui n'apparaissent que dans une liste saisie à la main. Triés par nom.
  */
 export function listerEleves(entrees: Entrees): EleveRepere[] {
@@ -88,7 +88,7 @@ function rangsDuNom(evaluation: ObjetJson, nomNormalise: string): number[] {
   return lireNoms(evaluation.eleves).flatMap((nom, rang) => (normaliserNom(nom) === nomNormalise ? [rang] : []));
 }
 
-/** Identifiants sous lesquels l'élève figure dans cette évaluation. */
+/** Identifiants sous lesquels l'étudiant figure dans cette évaluation. */
 function identifiantsDans(evaluation: ObjetJson, eleve: EleveRepere): string[] {
   const libres = rangsDuNom(evaluation, normaliserNom(eleve.nom)).map((rang) => `${PREFIXE_LIBRE}${String(rang)}`);
   return [...eleve.identifiants, ...libres];
@@ -114,7 +114,7 @@ function texte(valeur: unknown): string {
 }
 
 /**
- * Rassemble tout ce qui concerne un élève dans les évaluations enregistrées
+ * Rassemble tout ce qui concerne un étudiant dans les évaluations enregistrées
  * (le brouillon n'est pas une évaluation remise : il n'y figure pas).
  *
  * @param aujourdHui date de l'extraction, AAAA-MM-JJ
@@ -143,7 +143,7 @@ export function extraireEleve(entrees: Entrees, eleve: EleveRepere, aujourdHui: 
 }
 
 export interface BilanEffacement {
-  /** Promotions d'où l'élève est retiré. */
+  /** Promotions d'où l'étudiant est retiré. */
   promotions: number;
   /** Évaluations (brouillon compris) d'où ses résultats sont retirés. */
   evaluations: number;
@@ -196,7 +196,7 @@ function retirerRangs(evaluation: ObjetJson, rangs: number[]): ObjetJson {
   return copie;
 }
 
-/** Façon de retrouver l'élève : par identifiant seulement, ou aussi par son nom dans les listes saisies à la main. */
+/** Façon de retrouver l'étudiant : par identifiant seulement, ou aussi par son nom dans les listes saisies à la main. */
 export interface OptionsEffacement {
   parNom: boolean;
 }
@@ -272,14 +272,14 @@ function lireTextes(valeur: unknown): Entrees {
 }
 
 /**
- * Efface un élève de toutes les données : promotions, évaluations, brouillon,
+ * Efface un étudiant de toutes les données : promotions, évaluations, brouillon,
  * et les copies gardées pour retirer l'exemple. Le reste est inchangé.
  *
- * Limites : un nom cité dans un texte libre (appréciation d'un autre élève,
+ * Limites : un nom cité dans un texte libre (appréciation d'un autre étudiant,
  * titre, consignes) n'est pas recherché ; les sauvegardes automatiques du
- * coffre conservent l'élève jusqu'à leur renouvellement.
+ * coffre conservent l'étudiant jusqu'à leur renouvellement.
  *
- * @param options par défaut, l'élève est aussi retrouvé par son nom dans les
+ * @param options par défaut, l'étudiant est aussi retrouvé par son nom dans les
  *   listes saisies à la main ; un effacement en masse s'en tient aux identifiants.
  */
 export function effacerEleve(

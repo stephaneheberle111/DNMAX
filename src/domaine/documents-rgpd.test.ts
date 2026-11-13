@@ -156,7 +156,7 @@ describe("composerFicheEleves", () => {
 });
 
 describe("composerNoteEtablissement", () => {
-  it("cite la longueur du mot de passe et le délai de verrouillage du module Élèves", () => {
+  it("cite la longueur du mot de passe et le délai de verrouillage du module Étudiants", () => {
     const texte = texteDe(composerNoteEtablissement({ ...CHAMPS, minutesVerrouillage: 20 }));
     expect(texte).toContain("mot de passe d'au moins 12 caractères");
     expect(texte).toContain("verrouillage après 20 minutes sans activité");

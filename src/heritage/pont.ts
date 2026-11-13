@@ -21,7 +21,7 @@ const ADRESSE_SCRIPT_HISTORIQUE = "/heritage/application.js";
 interface DemandeEnregistrement {
   filename: string;
   data: ContenuFichier;
-  /** Vrai si le document contient des noms ou des résultats d'élèves. */
+  /** Vrai si le document contient des noms ou des résultats d'étudiants. */
   eleves?: boolean;
 }
 
@@ -64,7 +64,7 @@ interface Pont {
    */
   ouvrirEtablissement?: () => void;
   /**
-   * Appelée quand l'enseignant coche le module Élèves : avertissement RGPD et
+   * Appelée quand l'enseignant coche le module Étudiants : avertissement RGPD et
    * documents à remettre, puis mot de passe renforcé. Rend `true` s'il
    * confirme l'activation.
    *
@@ -86,7 +86,7 @@ interface Pont {
   readonly nettoyerDiplomesVierges: typeof nettoyerDiplomesVierges;
   /** Calculs du zoom de la carte radiale du référentiel (voir `domaine/zoom-carte`). */
   readonly zoomCarte: typeof zoomCarte;
-  /** Référentiel › Constituer › Blocs et compétences : nouveau numéro d'un bloc (voir `domaine/numero-bloc`). */
+  /** Référentiel > Constituer > Blocs et compétences : nouveau numéro d'un bloc (voir `domaine/numero-bloc`). */
   readonly renumeroterBloc: typeof renumeroterBloc;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
@@ -131,8 +131,8 @@ async function enregistrerPourInterfaceHistorique(
  * contenir les données de l'enseignant quand cette fonction est appelée.
  *
  * @param surExport appelée après chaque document enregistré, avec le nom proposé pour ce document
- *   et l'indication qu'il contient, ou non, des données d'élèves
- * @param confirmerMotDePasseEleves dernière étape de l'activation du module Élèves, après
+ *   et l'indication qu'il contient, ou non, des données d'étudiants
+ * @param confirmerMotDePasseEleves dernière étape de l'activation du module Étudiants, après
  *   l'avertissement RGPD : rend `true` si le mot de passe convient au module. Hors de
  *   l'enveloppe, il n'y a pas de mot de passe : rien n'est demandé.
  */

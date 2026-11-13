@@ -286,24 +286,24 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "C'est prêt",
       texte:
-        "Vous savez l'essentiel. Pour saisir les résultats élève par élève, activez le module Élèves dans « Paramètres » : il a sa propre visite, comme le module Niveaux DN MADE. Cette visite se relance depuis « Paramètres », panneau « Visites guidées ».",
+        "Vous savez l'essentiel. Pour saisir les résultats étudiant par étudiant, activez le module Étudiants dans « Paramètres » : il a sa propre visite, comme le module Niveaux DN MADE. Cette visite se relance depuis « Paramètres », panneau « Visites guidées ».",
     },
   ],
 };
 
 const MODULE_ELEVES: Parcours = {
-  titre: "Module Élèves",
+  titre: "Module Étudiants",
   etapes: [
     {
-      titre: "Le module Élèves",
+      titre: "Le module Étudiants",
       texte:
-        "Il sert à évaluer chaque élève dans l'application : grille de saisie de la promotion, observations, non-rendus, un document par élève, et la progression de chacun. Les noms et résultats restent sur cet ordinateur.",
+        "Il sert à évaluer chaque étudiant dans l'application : grille de saisie de la promotion, observations, non-rendus, un document par étudiant, et la progression de chacun. Les noms et résultats restent sur cet ordinateur.",
     },
     { ...ALLER_PARAMETRES, groupeFait: (avancement) => avancement.moduleEleves },
     {
       titre: "Activer le module",
-      texte: "Activez l'interrupteur du module « Élèves ».",
-      texteFait: "Le module Élèves est actif.",
+      texte: "Activez l'interrupteur du module « Étudiants ».",
+      texteFait: "Le module Étudiants est actif.",
       cibles: ['#modList .mod:has([data-mod="eleves"])'],
       pointe: ".tg",
       geste: "cliquer",
@@ -312,38 +312,38 @@ const MODULE_ELEVES: Parcours = {
     { ...ALLER_ETABLISSEMENT, groupeFait: (avancement) => avancement.elevesInscrits > 0 },
     allerVolet("promos", "Promotions", (avancement) => avancement.elevesInscrits > 0),
     {
-      titre: "Inscrire les élèves",
+      titre: "Inscrire les étudiants",
       texte:
-        "Dans chaque promotion, collez la liste des élèves : un élève par ligne, prénom puis nom. Vous pourrez corriger chaque nom ensuite.",
-      texteFait: "Des élèves sont inscrits.",
+        "Dans chaque promotion, collez la liste des étudiants : un étudiant par ligne, prénom puis nom. Vous pourrez corriger chaque nom ensuite.",
+      texteFait: "Des étudiants sont inscrits.",
       cibles: ["#orgPane"],
       geste: "remplir",
       objectif: (avancement) => avancement.elevesInscrits > 0,
     },
     ALLER_EVALUATIONS,
     {
-      titre: "Évaluer les élèves",
+      titre: "Évaluer les étudiants",
       texte: "Ouvrez les actions d'une évaluation…",
       cibles: ACTIONS_EVALUATION,
       geste: "cliquer",
       avanceAuClic: true,
     },
     {
-      titre: "Évaluer les élèves",
-      texte: "…puis « Évaluer les élèves » : la grille de la promotion s'ouvre, une ligne par élève, avec observations et appréciation.",
+      titre: "Évaluer les étudiants",
+      texte: "…puis « Évaluer les étudiants » : la grille de la promotion s'ouvre, une ligne par étudiant, avec observations et appréciation.",
       cibles: ["[data-sai]", ...FENETRE_ACTIONS],
       geste: "cliquer",
     },
     {
-      titre: "Suivre chaque élève",
-      texte: "Dans « Progression », la vue « Élève » montre où en est chacun dans le semestre, comparé au reste de la promotion.",
+      titre: "Suivre chaque étudiant",
+      texte: "Dans « Progression », la vue « Étudiant » montre où en est chacun dans le semestre, comparé au reste de la promotion.",
       cibles: ["#t-prog"],
       geste: "cliquer",
     },
     {
-      titre: "Données des élèves",
+      titre: "Données des étudiants",
       texte:
-        "Dans « Paramètres », le panneau « Données des élèves » répond aux demandes d'accès ou d'effacement et propose d'anonymiser les promotions sorties depuis plus d'un an.",
+        "Dans « Paramètres », le panneau « Données des étudiants » répond aux demandes d'accès ou d'effacement et propose d'anonymiser les promotions sorties depuis plus d'un an.",
     },
   ],
 };
@@ -354,13 +354,13 @@ const MODULE_NIVEAUX: Parcours = {
     {
       titre: "Le module Niveaux DN MADE",
       texte:
-        "Il attribue à chaque élève le niveau atteint sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec une maîtrise suffisante. Il s'appuie sur le module Élèves.",
+        "Il attribue à chaque étudiant le niveau atteint sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec une maîtrise suffisante. Il s'appuie sur le module Étudiants.",
     },
     { ...ALLER_PARAMETRES, groupeFait: (avancement) => avancement.moduleNiveaux },
     {
-      titre: "Activer le module Élèves",
-      texte: "Le module Niveaux DN MADE a besoin du module Élèves : activez d'abord celui-ci.",
-      texteFait: "Le module Élèves est actif.",
+      titre: "Activer le module Étudiants",
+      texte: "Le module Niveaux DN MADE a besoin du module Étudiants : activez d'abord celui-ci.",
+      texteFait: "Le module Étudiants est actif.",
       cibles: ['#modList .mod:has([data-mod="eleves"])'],
       pointe: ".tg",
       geste: "cliquer",
@@ -378,7 +378,7 @@ const MODULE_NIVEAUX: Parcours = {
     {
       titre: "Où voir les niveaux",
       texte:
-        "Les niveaux s'affichent dans « Progression », vue « Élève », dans les intitulés d'année et dans les exports. Ils se mettent à jour à chaque résultat saisi.",
+        "Les niveaux s'affichent dans « Progression », vue « Étudiant », dans les intitulés d'année et dans les exports. Ils se mettent à jour à chaque résultat saisi.",
       cibles: ["#t-prog"],
       geste: "regarder",
     },

@@ -9,7 +9,7 @@ import {
   pasAnimation,
   tailleVue,
   vueDepart,
-  zoomerAutour,
+  zoomerSurDiagonale,
   type GeometrieCarte,
 } from "./zoom-carte";
 
@@ -103,24 +103,30 @@ describe("bornerVue", () => {
   });
 });
 
-describe("zoomerAutour", () => {
-  it("garde immobile le point visé", () => {
-    const depart = { zoom: 1.5, centreX: 400, centreY: 400 };
+describe("zoomerSurDiagonale", () => {
+  it("garde le coin haut-gauche de la vue sur la diagonale du dessin", () => {
     const rapport = 1.25;
-    const vue = zoomerAutour(depart, 1.2, 450, 420, rapport, GEOMETRIE);
-    const avant = tailleVue(depart.zoom, GEOMETRIE.cote, rapport);
-    const apres = tailleVue(vue.zoom, GEOMETRIE.cote, rapport);
-    // position relative du point dans la vue, avant et après
-    const relatifAvant = (450 - (depart.centreX - avant.largeur / 2)) / avant.largeur;
-    const relatifApres = (450 - (vue.centreX - apres.largeur / 2)) / apres.largeur;
-    expect(relatifApres).toBeCloseTo(relatifAvant, 9);
+    let vue = vueDepart(rapport, GEOMETRIE);
+    for (const facteur of [1.15, 1.15, 1 / 1.15, 1 / 1.15, 1 / 1.15, 1.3]) {
+      vue = zoomerSurDiagonale(vue, facteur, rapport, GEOMETRIE);
+      if (vue.zoom <= GEOMETRIE.zoomMin) continue;
+      const { largeur, hauteur } = tailleVue(vue.zoom, GEOMETRIE.cote, rapport);
+      expect(vue.centreX - largeur / 2).toBeCloseTo(vue.centreY - hauteur / 2, 9);
+    }
+  });
+  it("revient exactement à la vue de départ après un aller-retour", () => {
+    const depart = vueDepart(1.25, GEOMETRIE);
+    const retour = zoomerSurDiagonale(zoomerSurDiagonale(depart, 1.2, 1.25, GEOMETRIE), 1 / 1.2, 1.25, GEOMETRIE);
+    expect(retour.zoom).toBeCloseTo(depart.zoom, 9);
+    expect(retour.centreX).toBeCloseTo(depart.centreX, 9);
+    expect(retour.centreY).toBeCloseTo(depart.centreY, 9);
   });
   it("ne dépasse pas le zoom maximal", () => {
-    expect(zoomerAutour({ zoom: 2.4, centreX: 380, centreY: 380 }, 3, 380, 380, 1, GEOMETRIE).zoom).toBe(2.5);
+    expect(zoomerSurDiagonale({ zoom: 2.4, centreX: 380, centreY: 380 }, 3, 1, GEOMETRIE).zoom).toBe(2.5);
   });
   it("ignore un facteur invalide", () => {
     const vue = { zoom: 1.65, centreX: 600, centreY: 520 };
-    expect(zoomerAutour(vue, Number.NaN, 0, 0, 1.25, GEOMETRIE).zoom).toBe(1.65);
+    expect(zoomerSurDiagonale(vue, Number.NaN, 1.25, GEOMETRIE).zoom).toBe(1.65);
   });
 });
 

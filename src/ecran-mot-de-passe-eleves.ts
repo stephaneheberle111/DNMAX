@@ -21,7 +21,7 @@ function creerChampMotDePasse(libelle: string, completion: AutoFill): { ligne: H
 }
 
 /**
- * Dernière étape de l'activation du module Élèves : l'enseignant confirme son
+ * Dernière étape de l'activation du module Étudiants : l'enseignant confirme son
  * mot de passe et, s'il compte moins de `LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES`
  * caractères, en choisit un plus long. Le mot de passe ne sort pas de cette
  * boîte : il n'est ni conservé ni écrit.
@@ -34,7 +34,7 @@ function creerChampMotDePasse(libelle: string, completion: AutoFill): { ligne: H
 export function confirmerMotDePasseEleves(enregistrerMaintenant: () => Promise<void>): Promise<boolean> {
   return new Promise((resoudre) => {
     let confirme = false;
-    const { boite, fermer } = ouvrirBoite("Module Élèves : votre mot de passe", () => {
+    const { boite, fermer } = ouvrirBoite("Module Étudiants : votre mot de passe", () => {
       resoudre(confirme);
     });
     boite.classList.add("mot-de-passe-eleves");
@@ -124,7 +124,7 @@ export function confirmerMotDePasseEleves(enregistrerMaintenant: () => Promise<v
       creer(
         "p",
         "",
-        `Avec le module Élèves, DNMAX exige un mot de passe de ${LONGUEUR} caractères au moins et se verrouille après une période sans activité. Confirmez d'abord votre mot de passe.`,
+        `Avec le module Étudiants, DNMAX exige un mot de passe de ${LONGUEUR} caractères au moins et se verrouille après une période sans activité. Confirmez d'abord votre mot de passe.`,
       ),
       actuel.ligne,
       message,

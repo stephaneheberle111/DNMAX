@@ -36,7 +36,7 @@ function creerMessage(): { zone: HTMLElement; dire: (texte: string, erreur: bool
 function montrerMotDePasse(acces: AccesDonnees): void {
   const { boite, fermer } = ouvrirBoite("Mot de passe");
   boite.classList.add("boite-etroite");
-  // Le module Élèves exige un mot de passe plus long (voir `longueurMinimaleExigee`).
+  // Le module Étudiants exige un mot de passe plus long (voir `longueurMinimaleExigee`).
   const longueurMinimale = longueurMinimaleExigee(moduleElevesActif(acces.lireEntrees()));
   const ancien = creerChamp("password", "Mot de passe actuel", "current-password");
   const nouveau = creerChamp("password", `Nouveau mot de passe (${String(longueurMinimale)} caractères au moins)`, "new-password");

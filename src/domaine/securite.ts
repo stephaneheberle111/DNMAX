@@ -3,7 +3,7 @@ import { analyserJson, estObjet } from "./echange/modele";
 import type { Entrees } from "./magasin-memoire";
 import { CLE_MODULES } from "./parcours";
 
-/** Vrai si le module Élèves est actif dans ces données ; une entrée absente ou illisible vaut « inactif ». */
+/** Vrai si le module Étudiants est actif dans ces données ; une entrée absente ou illisible vaut « inactif ». */
 export function moduleElevesActif(entrees: Entrees): boolean {
   const modules = analyserJson(entrees[CLE_MODULES]);
   return estObjet(modules) && modules.eleves === true;
@@ -30,7 +30,7 @@ export class SurveillanceInactivite {
   /**
    * @param delaiMs durée sans activité au-delà de laquelle verrouiller, en millisecondes
    * @param horloge rend l'heure courante en millisecondes (passée en paramètre pour les tests)
-   * @param verrouillageExige dit si le verrouillage s'applique en ce moment (module Élèves actif)
+   * @param verrouillageExige dit si le verrouillage s'applique en ce moment (module Étudiants actif)
    * @throws RangeError si le délai n'est pas un nombre positif et fini
    */
   constructor(delaiMs: number, horloge: () => number, verrouillageExige: () => boolean) {

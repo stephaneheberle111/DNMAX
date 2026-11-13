@@ -840,7 +840,7 @@ html[data-device="phone"] .toast{bottom:calc(76px + env(safe-area-inset-bottom,0
 }
 
 .mod .modvisite{margin-top:8px;padding:4px 10px;font-size:12.5px}
-/* Constituer › Blocs et compétences : un bloc par groupe, son numéro et son intitulé dans l'en-tête */
+/* Constituer > Blocs et compétences : un bloc par groupe, son numéro et son intitulé dans l'en-tête */
 .cgrp>.hd input.mono{flex:0 0 58px;font-weight:600}
 .ed input[aria-invalid=true]{border-color:var(--signal)}
 

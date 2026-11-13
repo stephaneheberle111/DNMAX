@@ -13,7 +13,7 @@ function entrees(evaluations: unknown[], promotions: unknown[], autres: Record<s
 }
 
 const MIENNE = { id: "mienne", titre: "Mon évaluation", promoId: "pMienne" };
-const P_MIENNE = { id: "pMienne", nom: "Ma promo", liste: [{ id: "s1", nom: "Élève réel fictif" }] };
+const P_MIENNE = { id: "pMienne", nom: "Ma promo", liste: [{ id: "s1", nom: "Étudiant réel fictif" }] };
 const EXEMPLE = { id: "ex1", titre: "Exemple", promoId: "pEx" };
 const P_EXEMPLE = { id: "pEx", nom: "Promo d'exemple", liste: [] };
 
@@ -87,14 +87,14 @@ describe("retirerExemple", () => {
   });
 
   it("rend son état d'avant à une promotion que l'exemple avait modifiée", () => {
-    const ecrasee = { ...P_MIENNE, liste: [{ id: "d1", nom: "Élève d'exemple" }] };
+    const ecrasee = { ...P_MIENNE, liste: [{ id: "d1", nom: "Étudiant d'exemple" }] };
     const instantane = composerInstantane(AVANT, { ...APRES, [CLE_PROMOTIONS]: JSON.stringify([ecrasee, P_EXEMPLE]) }, null);
     const courantes = { ...APRES, [CLE_PROMOTIONS]: JSON.stringify([ecrasee, P_EXEMPLE]) };
     expect(lire(retirerExemple(courantes, instantane).entrees, CLE_PROMOTIONS)).toEqual([P_MIENNE]);
   });
 
   it("laisse telle quelle une promotion modifiée par l'exemple puis par moi", () => {
-    const ecrasee = { ...P_MIENNE, liste: [{ id: "d1", nom: "Élève d'exemple" }] };
+    const ecrasee = { ...P_MIENNE, liste: [{ id: "d1", nom: "Étudiant d'exemple" }] };
     const retouchee = { ...ecrasee, liste: [...ecrasee.liste, { id: "s9", nom: "Ajouté par moi" }] };
     const instantane = composerInstantane(AVANT, { ...APRES, [CLE_PROMOTIONS]: JSON.stringify([ecrasee, P_EXEMPLE]) }, null);
     const courantes = { ...APRES, [CLE_PROMOTIONS]: JSON.stringify([retouchee, P_EXEMPLE]) };

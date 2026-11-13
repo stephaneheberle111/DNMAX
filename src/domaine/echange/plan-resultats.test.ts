@@ -9,8 +9,8 @@ import { appliquerResultats, calculerPlanResultats } from "./plan-resultats";
 
 const MAINTENANT = new Date("2026-03-09T10:00:00.000Z");
 const ELEVES = [
-  { id: "s1", nom: "Élève Un" },
-  { id: "s2", nom: "Élève Deux" },
+  { id: "s1", nom: "Étudiant Un" },
+  { id: "s2", nom: "Étudiant Deux" },
 ];
 const PROMOTION = { id: "p1", nom: "DNO-2025-2028", diplomeId: "d0", debut: 2025, liste: ELEVES };
 const RESULTATS = { s1: { n: { "C1.1": 3 } }, s2: { n: { "C1.1": 2 } } };
@@ -19,7 +19,7 @@ function entreesAvec(evaluations: unknown[], promotions: unknown[]): Entrees {
   return { ...creerEntrees(evaluations), [CLE_PROMOTIONS]: JSON.stringify(promotions) };
 }
 
-/** Fichier protégé tel que l'envoie un enseignant qui a évalué les deux élèves. */
+/** Fichier protégé tel que l'envoie un enseignant qui a évalué les deux étudiants. */
 function paquetAvecResultats(surcharge: Record<string, unknown> = {}): Paquet {
   const evaluation = creerEvaluation({ res: RESULTATS, eleves: "", ...surcharge });
   return construirePaquet(entreesAvec([evaluation], [PROMOTION]), new Set(["eval1"]), MAINTENANT, "Noé Baptiste", CATALOGUE, new Set(), true);
@@ -38,13 +38,13 @@ function importer(ici: Entrees, paquet: Paquet, aRemplacer: string[] = []): Entr
   return appliquerResultats(avecModeles, paquet, CATALOGUE, new Set(["eval1"]), new Set(aRemplacer), generateur());
 }
 
-describe("fichier d'échange avec élèves", () => {
-  it("n'emporte les élèves que si l'envoi protégé est demandé", () => {
+describe("fichier d'échange avec étudiants", () => {
+  it("n'emporte les étudiants que si l'envoi protégé est demandé", () => {
     const entrees = entreesAvec([creerEvaluation({ res: RESULTATS })], [PROMOTION]);
     const sansEleves = construirePaquet(entrees, new Set(["eval1"]), MAINTENANT, "Noé Baptiste", CATALOGUE);
     expect(sansEleves.promotions).toEqual([]);
     expect(sansEleves.evaluations[0]?.donneesEleves).toBeNull();
-    expect(JSON.stringify(sansEleves)).not.toContain("Élève Un");
+    expect(JSON.stringify(sansEleves)).not.toContain("Étudiant Un");
   });
 
   it("emporte la promotion, désignée par son diplôme, et les résultats", () => {
@@ -55,7 +55,7 @@ describe("fichier d'échange avec élèves", () => {
     expect(paquet.evaluations[0]?.donneesEleves).toMatchObject({ promotionId: "p1", champs: { res: RESULTATS } });
   });
 
-  it("un fichier en clair ne fait jamais entrer de données d'élèves, même s'il en contient", () => {
+  it("un fichier en clair ne fait jamais entrer de données d'étudiants, même s'il en contient", () => {
     const texte = JSON.stringify(paquetAvecResultats());
     const lu = lirePaquet(texte);
     expect(lu).toMatchObject({ promotions: [], evaluations: [{ donneesEleves: null }] });
@@ -95,7 +95,7 @@ describe("calculerPlanResultats", () => {
     expect(plan.get("eval1")?.possible).toBe(false);
   });
 
-  it("n'a pas de ligne pour une évaluation reçue sans données d'élèves", () => {
+  it("n'a pas de ligne pour une évaluation reçue sans données d'étudiants", () => {
     const sansEleves = construirePaquet(entreesAvec([creerEvaluation()], [PROMOTION]), new Set(["eval1"]), MAINTENANT, "Noé", CATALOGUE);
     expect(calculerPlanResultats(entreesAvec([], []), sansEleves, CATALOGUE).size).toBe(0);
   });
@@ -108,15 +108,15 @@ describe("appliquerResultats", () => {
     expect(JSON.parse(apres[CLE_PROMOTIONS] ?? "[]")).toMatchObject([{ id: "p1", diplomeId: "d0", liste: ELEVES }]);
   });
 
-  it("retrouve par leur nom les élèves d'une promotion saisie séparément", () => {
-    const promotionLocale = { id: "pLocal", nom: "DNO-2025-2028", diplomeId: "d0", liste: [{ id: "a", nom: "élève un" }] };
+  it("retrouve par leur nom les étudiants d'une promotion saisie séparément", () => {
+    const promotionLocale = { id: "pLocal", nom: "DNO-2025-2028", diplomeId: "d0", liste: [{ id: "a", nom: "étudiant un" }] };
     const ici = entreesAvec([creerEvaluation({ promoId: "pLocal", res: {} })], [promotionLocale]);
     const apres = importer(ici, paquetAvecResultats());
     const evaluation = lireEvaluations(apres[CLE_EVALUATIONS])[0];
     expect(evaluation?.res).toEqual({ a: RESULTATS.s1, neuf1: RESULTATS.s2 });
     expect(evaluation?.promoId).toBe("pLocal");
     expect(JSON.parse(apres[CLE_PROMOTIONS] ?? "[]")).toMatchObject([
-      { id: "pLocal", liste: [{ id: "a", nom: "élève un" }, { id: "neuf1", nom: "Élève Deux" }] },
+      { id: "pLocal", liste: [{ id: "a", nom: "étudiant un" }, { id: "neuf1", nom: "Étudiant Deux" }] },
     ]);
   });
 
@@ -130,12 +130,12 @@ describe("appliquerResultats", () => {
     expect(lireEvaluations(importer(ici, paquetAvecResultats(), ["eval1"])[CLE_EVALUATIONS])[0]?.res).toEqual(RESULTATS);
   });
 
-  it("rapproche par les noms une liste d'élèves saisie à la main", () => {
-    const paquet = paquetAvecResultats({ promoId: "", classes: [], eleves: "Élève Un\nÉlève Deux", res: { libre0: { n: {} }, libre1: { n: { a: 1 } } } });
-    const ici = entreesAvec([creerEvaluation({ promoId: "", classes: [], eleves: "Élève Deux", res: {} })], []);
+  it("rapproche par les noms une liste d'étudiants saisie à la main", () => {
+    const paquet = paquetAvecResultats({ promoId: "", classes: [], eleves: "Étudiant Un\nÉtudiant Deux", res: { libre0: { n: {} }, libre1: { n: { a: 1 } } } });
+    const ici = entreesAvec([creerEvaluation({ promoId: "", classes: [], eleves: "Étudiant Deux", res: {} })], []);
     const apres = importer(ici, paquet);
     expect(lireEvaluations(apres[CLE_EVALUATIONS])[0]).toMatchObject({
-      eleves: "Élève Deux\nÉlève Un",
+      eleves: "Étudiant Deux\nÉtudiant Un",
       res: { libre0: { n: { a: 1 } }, libre1: { n: {} } },
     });
   });

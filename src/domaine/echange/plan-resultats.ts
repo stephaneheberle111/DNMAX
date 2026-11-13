@@ -12,14 +12,14 @@ import { CLE_EVALUATIONS, CLE_PROMOTIONS, analyserJson, estEvaluation, type Eval
 import type { EvaluationEchangee, Paquet } from "./paquet";
 import { normaliserNom, type ReferentielLocal } from "./referentiel";
 
-/** Ce que l'import ferait des résultats d'élèves d'une évaluation du fichier. */
+/** Ce que l'import ferait des résultats d'étudiants d'une évaluation du fichier. */
 export interface LigneResultats {
   /** Identifiant de l'évaluation concernée. */
   identifiant: string;
   /** Faux si la promotion de l'expéditeur ne peut être ni retrouvée ni créée ici. */
   possible: boolean;
   bilan: BilanResultats;
-  /** Élèves de l'expéditeur absents d'ici, qui seraient ajoutés. */
+  /** Étudiants de l'expéditeur absents d'ici, qui seraient ajoutés. */
   elevesAjoutes: number;
   promotionCreee: boolean;
 }
@@ -102,7 +102,7 @@ function preparer(
 
   const fusion = fusionnerResultats(locale?.res, donnees.champs.res, correspondances, remplacerDifferents);
   champs.res = fusion.resultats;
-  // L'état des restitutions est indexé par élève : il n'est repris que si aucun identifiant n'a changé.
+  // L'état des restitutions est indexé par étudiant : il n'est repris que si aucun identifiant n'a changé.
   if (locale?.restit === undefined && donnees.champs.restit !== undefined && estIdentite(correspondances)) {
     champs.restit = donnees.champs.restit;
   }
@@ -119,8 +119,8 @@ function lireEvaluationsBrutes(entrees: Entrees): unknown[] {
 }
 
 /**
- * Calcule ce que l'import ferait des résultats d'élèves du fichier, évaluation
- * par évaluation, sans rien modifier. Les évaluations sans données d'élèves
+ * Calcule ce que l'import ferait des résultats d'étudiants du fichier, évaluation
+ * par évaluation, sans rien modifier. Les évaluations sans données d'étudiants
  * n'ont pas de ligne.
  */
 export function calculerPlanResultats(
@@ -150,11 +150,11 @@ export function calculerPlanResultats(
 }
 
 /**
- * Applique les résultats d'élèves des évaluations choisies.
+ * Applique les résultats d'étudiants des évaluations choisies.
  *
  * À appeler après l'application du plan des évaluations : une évaluation du
  * fichier absente d'ici (non créée) est ignorée. Les promotions sont
- * complétées ou créées au besoin ; aucun élève ni résultat d'ici n'est retiré.
+ * complétées ou créées au besoin ; aucun étudiant ni résultat d'ici n'est retiré.
  *
  * @param aRemplacer évaluations pour lesquelles les résultats différents du fichier remplacent ceux d'ici
  */

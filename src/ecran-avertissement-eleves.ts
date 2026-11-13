@@ -37,7 +37,7 @@ function enumerer(manquants: readonly ChampManquant[]): string {
 }
 
 /**
- * Avertit l'enseignant qui active le module Élèves : données conservées,
+ * Avertit l'enseignant qui active le module Étudiants : données conservées,
  * obligations, documents à remettre. Il peut voir ces documents, les
  * enregistrer en PDF ou les imprimer, puis activer le module, ou renoncer.
  * Sans nom d'établissement ni contact du délégué à la protection des données,
@@ -49,7 +49,7 @@ function enumerer(manquants: readonly ChampManquant[]): string {
 export function confirmerActivationEleves(contexte: ContexteAvertissement): Promise<boolean> {
   return new Promise((resoudre) => {
     let confirme = false;
-    const { boite, fermer } = ouvrirBoite("Module Élèves : données personnelles", () => {
+    const { boite, fermer } = ouvrirBoite("Module Étudiants : données personnelles", () => {
       resoudre(confirme);
     });
     boite.classList.add("avertissement-eleves");
@@ -57,16 +57,16 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
       creer(
         "p",
         "",
-        "Avec ce module, DNMAX conserve les noms de vos élèves et leurs résultats (niveaux, observations, appréciations), sur cet ordinateur seulement, chiffrés par votre mot de passe. Ce sont des données personnelles, soumises au RGPD.",
+        "Avec ce module, DNMAX conserve les noms de vos étudiants et leurs résultats (niveaux, observations, appréciations), sur cet ordinateur seulement, chiffrés par votre mot de passe. Ce sont des données personnelles, soumises au RGPD.",
       ),
-      creer("p", "avertissement-intro", "Avant de saisir vos élèves :"),
+      creer("p", "avertissement-intro", "Avant de saisir vos étudiants :"),
     );
     const obligations = creer("ul", "avertissement-liste");
     for (const obligation of [
       "informez-les\u00a0: remettez-leur la note d'information, avec son accusé de réception à signer\u00a0;",
       "prévenez votre chef d'établissement ou le délégué à la protection des données, avec la note prévue pour eux\u00a0;",
       `gardez leurs données au plus ${ecrireDuree(ANNEES_CONSERVATION_ELEVES)} après la sortie de leur promotion\u00a0: DNMAX vous le rappellera\u00a0;`,
-      "une demande d'accès ou d'effacement se traite dans Paramètres > Données des élèves.",
+      "une demande d'accès ou d'effacement se traite dans Paramètres > Données des étudiants.",
     ]) {
       obligations.append(creer("li", "", obligation));
     }
@@ -75,7 +75,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
       creer(
         "p",
         "",
-        "L'accusé de réception n'est pas un consentement : l'évaluation relève de la mission de l'établissement, les élèves en sont informés.",
+        "L'accusé de réception n'est pas un consentement : l'évaluation relève de la mission de l'établissement, les étudiants en sont informés.",
       ),
       creer(
         "p",

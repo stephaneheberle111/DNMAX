@@ -6,15 +6,15 @@ import type { Entrees } from "./magasin-memoire";
 import { CLE_INSTANTANE_EXEMPLE } from "./retrait-exemple";
 
 /**
- * Durée de conservation des données d'élèves (RGPD : limitation de la conservation).
+ * Durée de conservation des données d'étudiants (RGPD : limitation de la conservation).
  *
  * Une promotion « sort » à la fin de l'année scolaire où s'achève son diplôme.
- * Ses données d'élèves sont échues quand la durée de conservation est passée
+ * Ses données d'étudiants sont échues quand la durée de conservation est passée
  * depuis cette sortie : DNMAX le rappelle et propose de les effacer ou de les
  * anonymiser, sans jamais le faire seul. Les évaluations elles-mêmes (grilles,
  * consignes) sont gardées.
  *
- * Un élève qui redouble change de promotion : déplacé, il garde son
+ * Un étudiant qui redouble change de promotion : déplacé, il garde son
  * identifiant et n'appartient plus à l'ancienne ; ressaisi, il figure dans les
  * deux, et c'est son nom, retrouvé dans une promotion encore en cours, qui le
  * signale. Il est alors proposé à garder.
@@ -24,13 +24,15 @@ import { CLE_INSTANTANE_EXEMPLE } from "./retrait-exemple";
 const DUREE_DIPLOME_PAR_DEFAUT = 3;
 /** Jour où une promotion est considérée comme sortie : lendemain de la fin de l'année scolaire. */
 const JOUR_DE_SORTIE = "07-01";
-/** Préfixe des identifiants d'élèves de promotion (« s » suivi d'un horodatage ou d'un tirage). */
+/** Préfixe des identifiants d'étudiants de promotion (« s » suivi d'un horodatage ou d'un tirage). */
 const PREFIXE_ELEVE_PROMOTION = "s";
 const PREFIXE_LIBRE = "libre";
-/** Préfixe du nom donné à un élève anonymisé, suivi de son rang dans la promotion. */
-export const NOM_ANONYME = "Élève anonyme";
+/** Préfixe du nom donné à un étudiant anonymisé, suivi de son rang dans la promotion. */
+export const NOM_ANONYME = "Étudiant anonyme";
+/** Préfixes donnés par des versions antérieures, encore présents dans des données déjà anonymisées. */
+const NOMS_ANONYMES_ANCIENS: readonly string[] = ["Élève anonyme"];
 
-/** Élève d'une promotion échue dont le nom figure aussi dans une promotion encore en cours. */
+/** Étudiant d'une promotion échue dont le nom figure aussi dans une promotion encore en cours. */
 export interface RedoublantProbable {
   id: string;
   nom: string;
@@ -43,9 +45,9 @@ export interface PromotionEchue {
   nom: string;
   /** Date de sortie, AAAA-MM-JJ. */
   sortie: string;
-  /** Date à partir de laquelle ses données d'élèves sont échues, AAAA-MM-JJ. */
+  /** Date à partir de laquelle ses données d'étudiants sont échues, AAAA-MM-JJ. */
   echeance: string;
-  /** Élèves encore identifiables (les élèves déjà anonymisés ne comptent pas). */
+  /** Étudiants encore identifiables (les étudiants déjà anonymisés ne comptent pas). */
   eleves: number;
   redoublants: RedoublantProbable[];
 }
@@ -77,26 +79,32 @@ function identifiantsEleves(promotion: ObjetJson): string[] {
   return elevesDe(promotion).map((eleve) => eleve.id);
 }
 
+/** Rang d'un nom anonyme (0 s'il n'en porte pas de lisible), ou `undefined` si le nom n'est pas anonyme. */
+function rangAnonyme(nom: string): number | undefined {
+  const prefixe = [NOM_ANONYME, ...NOMS_ANONYMES_ANCIENS].find((candidat) => nom.startsWith(`${candidat} `));
+  return prefixe === undefined ? undefined : Number(nom.slice(prefixe.length + 1)) || 0;
+}
+
 function estAnonyme(nom: string): boolean {
-  return nom.startsWith(`${NOM_ANONYME} `);
+  return rangAnonyme(nom) !== undefined;
 }
 
 function texte(valeur: unknown): string {
   return typeof valeur === "string" ? valeur : "";
 }
 
-/** Une promotion qui compte encore des élèves identifiables, échue ou non. */
+/** Une promotion qui compte encore des étudiants identifiables, échue ou non. */
 export interface EtatPromotion extends PromotionEchue {
   /** Vrai si sa durée de conservation est dépassée. */
   echue: boolean;
 }
 
 /**
- * Toutes les promotions qui comptent encore des élèves identifiables, avec
+ * Toutes les promotions qui comptent encore des étudiants identifiables, avec
  * leurs dates et leurs redoublants probables : l'enseignant peut anonymiser
  * ou effacer une promotion à tout moment, pas seulement à l'échéance.
  *
- * Un redoublant probable est un élève dont le nom figure aussi dans une
+ * Un redoublant probable est un étudiant dont le nom figure aussi dans une
  * promotion entrée plus tard. Une promotion sans année d'entrée n'a ni dates
  * (texte vide) ni redoublants, et n'est jamais échue.
  *
@@ -109,7 +117,7 @@ export function etatPromotions(entrees: Entrees, aujourdHui: string, anneesConse
     .filter(estObjet)
     .filter((promotion): promotion is ObjetJson & { id: string } => typeof promotion.id === "string" && promotion.id !== "");
   return promotions.flatMap((promotion) => {
-    // Un élève déjà anonymisé n'a plus rien à traiter.
+    // Un étudiant déjà anonymisé n'a plus rien à traiter.
     const identifiables = elevesDe(promotion).filter((eleve) => !estAnonyme(eleve.nom));
     if (identifiables.length === 0) {
       return [];
@@ -143,7 +151,7 @@ export function etatPromotions(entrees: Entrees, aujourdHui: string, anneesConse
 }
 
 /**
- * Promotions dont les données d'élèves ont dépassé la durée de conservation,
+ * Promotions dont les données d'étudiants ont dépassé la durée de conservation,
  * avec leurs redoublants probables.
  */
 export function promotionsEchues(entrees: Entrees, aujourdHui: string, anneesConservation: number): PromotionEchue[] {
@@ -166,9 +174,9 @@ function evaluationsEtBrouillon(entrees: Entrees): ObjetJson[] {
 }
 
 /**
- * Identifiants d'élèves de promotion encore présents dans des évaluations
+ * Identifiants d'étudiants de promotion encore présents dans des évaluations
  * alors qu'ils ne figurent plus dans aucune promotion : des résultats laissés
- * derrière eux par le retrait d'un élève ou d'une promotion.
+ * derrière eux par le retrait d'un étudiant ou d'une promotion.
  */
 export function identifiantsOrphelins(entrees: Entrees): string[] {
   const connus = new Set(lireListe(entrees[CLE_PROMOTIONS]).filter(estObjet).flatMap(identifiantsEleves));
@@ -235,7 +243,7 @@ function transformer(
 }
 
 /**
- * Dans les évaluations rattachées à ces promotions, retire la liste d'élèves
+ * Dans les évaluations rattachées à ces promotions, retire la liste d'étudiants
  * saisie à la main et ses résultats : l'interface historique ne s'en sert plus
  * dès qu'une promotion est choisie, mais les noms y restent écrits.
  */
@@ -253,7 +261,7 @@ function sansListeSaisie(evaluation: ObjetJson, promotions: ObjetJson[]): ObjetJ
   return copie;
 }
 
-/** Champs de résultat en texte libre, qui peuvent identifier un élève. */
+/** Champs de résultat en texte libre, qui peuvent identifier un étudiant. */
 const CHAMPS_TEXTE_LIBRE = ["appr", "obs"];
 
 function sansTexteLibre(resultat: unknown): unknown {
@@ -263,30 +271,30 @@ function sansTexteLibre(resultat: unknown): unknown {
   return Object.fromEntries(Object.entries(resultat).filter(([champ]) => !CHAMPS_TEXTE_LIBRE.includes(champ)));
 }
 
-/** Effacer : retirer toute trace. Anonymiser : garder les niveaux sans rien qui identifie l'élève. */
+/** Effacer : retirer toute trace. Anonymiser : garder les niveaux sans rien qui identifie l'étudiant. */
 export type Traitement = "effacer" | "anonymiser";
 
 export interface ChoixConservation {
   /** Promotions échues à traiter. */
   promotions: readonly string[];
-  /** Élèves à garder tels quels, par exemple un redoublant. */
+  /** Étudiants à garder tels quels, par exemple un redoublant. */
   gardes: readonly string[];
-  /** Traiter aussi les résultats restés sans élève. */
+  /** Traiter aussi les résultats restés sans étudiant. */
   orphelins: boolean;
   traitement: Traitement;
 }
 
 export interface BilanConservation {
-  /** Élèves traités, ceux des promotions et les identifiants orphelins confondus. */
+  /** Étudiants traités, ceux des promotions et les identifiants orphelins confondus. */
   eleves: number;
 }
 
 /**
- * Efface ou anonymise les données d'élèves des promotions choisies, sauf les
- * élèves gardés, et si demandé les résultats orphelins.
+ * Efface ou anonymise les données d'étudiants des promotions choisies, sauf les
+ * étudiants gardés, et si demandé les résultats orphelins.
  *
- * - Effacer : l'élève quitte la promotion, ses résultats quittent les évaluations.
- * - Anonymiser : l'élève devient « Élève anonyme <n> » ; ses niveaux et ses
+ * - Effacer : l'étudiant quitte la promotion, ses résultats quittent les évaluations.
+ * - Anonymiser : l'étudiant devient « Étudiant anonyme <n> » ; ses niveaux et ses
  *   dates restent, utiles aux bilans ; ses observations et son appréciation,
  *   textes libres qui peuvent l'identifier, sont retirées.
  *
@@ -322,12 +330,10 @@ export function traiterDonneesEchues(entrees: Entrees, choix: ChoixConservation)
         if (!idsChoisies.has(promotion.id)) {
           return promotion;
         }
-        // La numérotation reprend après les élèves déjà anonymisés, pour ne pas créer de doublon.
+        // La numérotation reprend après les étudiants déjà anonymisés, pour ne pas créer de doublon.
         let rang = Math.max(
           0,
-          ...elevesDe(promotion)
-            .filter((eleve) => estAnonyme(eleve.nom))
-            .map((eleve) => Number(eleve.nom.slice(NOM_ANONYME.length + 1)) || 0),
+          ...elevesDe(promotion).map((eleve) => rangAnonyme(eleve.nom) ?? 0),
         );
         const liste = (Array.isArray(promotion.liste) ? promotion.liste : []).map((eleve): unknown => {
           if (!estObjet(eleve) || typeof eleve.id !== "string" || !traites.has(eleve.id) || estAnonyme(texte(eleve.nom))) {

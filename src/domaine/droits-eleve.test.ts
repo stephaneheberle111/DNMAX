@@ -50,17 +50,17 @@ function lire(entrees: Entrees, cle: string): unknown {
 function repere(nom: string): EleveRepere {
   const trouve = listerEleves(donnees()).find((eleve) => eleve.nom === nom);
   if (trouve === undefined) {
-    throw new Error(`élève absent : ${nom}`);
+    throw new Error(`étudiant absent : ${nom}`);
   }
   return trouve;
 }
 
 describe("listerEleves", () => {
-  it("liste les élèves des promotions et ceux des seules listes saisies à la main, par ordre alphabétique", () => {
+  it("liste les étudiants des promotions et ceux des seules listes saisies à la main, par ordre alphabétique", () => {
     expect(listerEleves(donnees()).map((eleve) => eleve.nom)).toEqual(["Alice Martin", "Bruno Petit", "Chloé Roux", "Damien Faure"]);
   });
 
-  it("ne liste pas deux fois un élève de promotion aussi saisi à la main", () => {
+  it("ne liste pas deux fois un étudiant de promotion aussi saisi à la main", () => {
     expect(listerEleves(donnees()).filter((eleve) => eleve.nom === "Alice Martin")).toHaveLength(1);
   });
 
@@ -70,7 +70,7 @@ describe("listerEleves", () => {
 });
 
 describe("extraireEleve", () => {
-  it("rassemble les résultats de l'élève dans chaque évaluation, par identifiant et par liste saisie", () => {
+  it("rassemble les résultats de l'étudiant dans chaque évaluation, par identifiant et par liste saisie", () => {
     const extrait = extraireEleve(donnees(), repere("Alice Martin"), "2026-11-12");
     expect(extrait.eleve).toEqual({ nom: "Alice Martin", promotions: ["DNO-2025-2028"] });
     expect(extrait.extraitLe).toBe("2026-11-12");
@@ -80,34 +80,34 @@ describe("extraireEleve", () => {
     ]);
   });
 
-  it("ne contient rien des autres élèves", () => {
+  it("ne contient rien des autres étudiants", () => {
     const extrait = JSON.stringify(extraireEleve(donnees(), repere("Alice Martin"), "2026-11-12"));
     expect(extrait).not.toContain("Bruno");
     expect(extrait).not.toContain("Chloé");
   });
 
-  it("rend une liste d'évaluations vide pour un élève sans résultat", () => {
+  it("rend une liste d'évaluations vide pour un étudiant sans résultat", () => {
     const sansResultat: EleveRepere = { cle: "sZoe", nom: "Zoé Blanc", identifiants: ["sZoe"], promotions: [] };
     expect(extraireEleve(donnees(), sansResultat, "2026-11-12").evaluations).toEqual([]);
   });
 });
 
 describe("effacerEleve", () => {
-  it("retire l'élève de sa promotion, liste et texte", () => {
+  it("retire l'étudiant de sa promotion, liste et texte", () => {
     const { entrees } = effacerEleve(donnees(), repere("Alice Martin"));
     expect(lire(entrees, CLE_PROMOTIONS)).toEqual([
       { ...PROMO, liste: [{ id: "sBruno", nom: "Bruno Petit" }], eleves: "Bruno Petit" },
     ]);
   });
 
-  it("retire ses résultats et son identifiant des évaluations, sans toucher aux autres élèves", () => {
+  it("retire ses résultats et son identifiant des évaluations, sans toucher aux autres étudiants", () => {
     const { entrees } = effacerEleve(donnees(), repere("Alice Martin"));
     const [evaluation] = lire(entrees, CLE_EVALUATIONS) as [Record<string, unknown>];
     expect(evaluation.res).toEqual({ sBruno: RESULTAT_BRUNO });
     expect(evaluation.eleveIds).toEqual(["sBruno"]);
   });
 
-  it("retire son nom d'une liste saisie à la main et renumérote les élèves suivants", () => {
+  it("retire son nom d'une liste saisie à la main et renumérote les étudiants suivants", () => {
     const { entrees } = effacerEleve(donnees(), repere("Alice Martin"));
     const libre = (lire(entrees, CLE_EVALUATIONS) as Record<string, unknown>[])[1];
     expect(libre?.eleves).toBe("Chloé Roux\nDamien Faure");
@@ -115,7 +115,7 @@ describe("effacerEleve", () => {
     expect(libre?.eleveIds).toEqual(["libre1"]);
   });
 
-  it("efface aussi l'élève du brouillon et des copies gardées pour retirer l'exemple", () => {
+  it("efface aussi l'étudiant du brouillon et des copies gardées pour retirer l'exemple", () => {
     const copie = JSON.stringify({ avant: donnees(), apres: donnees() });
     const { entrees } = effacerEleve(
       donnees({ [CLE_BROUILLON]: JSON.stringify(EVAL_PROMO), [CLE_INSTANTANE_EXEMPLE]: copie }),
@@ -138,7 +138,7 @@ describe("effacerEleve", () => {
     expect(bilan).toEqual({ promotions: 1, evaluations: 3, listesSaisies: 1 });
   });
 
-  it("efface un élève saisi à la main seulement, sans toucher aux promotions", () => {
+  it("efface un étudiant saisi à la main seulement, sans toucher aux promotions", () => {
     const { entrees, bilan } = effacerEleve(donnees(), repere("Chloé Roux"));
     expect(entrees[CLE_PROMOTIONS]).toBe(donnees()[CLE_PROMOTIONS]);
     const libre = (lire(entrees, CLE_EVALUATIONS) as Record<string, unknown>[])[1];
@@ -152,7 +152,7 @@ describe("effacerEleve", () => {
     expect(entrees["dnmade.data"]).toBe('{"etab":"x"}');
   });
 
-  it("ne change rien pour un élève absent des données", () => {
+  it("ne change rien pour un étudiant absent des données", () => {
     const absent: EleveRepere = { cle: "sZoe", nom: "Zoé Blanc", identifiants: ["sZoe"], promotions: [] };
     const { bilan } = effacerEleve(donnees(), absent);
     expect(bilan).toEqual({ promotions: 0, evaluations: 0, listesSaisies: 0 });

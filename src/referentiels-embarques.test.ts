@@ -5,7 +5,7 @@ import { REFERENTIELS_EMBARQUES } from "./referentiels-embarques";
 
 describe("référentiels embarqués", () => {
   it.each(REFERENTIELS_EMBARQUES.map((referentiel) => [referentiel.mention, referentiel.texte] as const))(
-    "le fichier %s est un paquet lisible qui porte ce seul référentiel, sans évaluation ni élève",
+    "le fichier %s est un paquet lisible qui porte ce seul référentiel, sans évaluation ni étudiant",
     (mention, texte) => {
       const paquet = lirePaquet(texte);
       expect(typeof paquet).not.toBe("string");
