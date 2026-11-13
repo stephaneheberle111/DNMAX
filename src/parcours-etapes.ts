@@ -258,14 +258,14 @@ const PRISE_EN_MAIN: Parcours = {
       groupeFait: (avancement) => avancement.evaluations > 0,
     },
     {
-      titre: "5. Formuler",
+      titre: "5. Formuler et enregistrer",
       texte:
-        "Pour chaque compétence, rédigez ce que vous attendez (la compétence opérationnelle). Rien à enregistrer : chaque modification rejoint aussitôt « Mes évaluations ». Cliquez enfin « Retour à « Mes évaluations » ».",
-      cibles: ["#step3"],
+        "Pour chaque compétence, rédigez ce que vous attendez (la compétence opérationnelle). Votre saisie est gardée en brouillon au fur et à mesure. Cliquez enfin « Enregistrer l'évaluation » : elle sort des brouillons et peut être distribuée.",
+      texteFait: "Votre évaluation est enregistrée.",
+      cibles: ["#step3", "#t-saved"],
       pointe: "#bSave3",
       geste: "cliquer",
-      // Sans l'écran de formulation (visite reprise ailleurs), l'étape n'a rien à montrer : elle se saute.
-      atteinte: () => visible("#v-saved") || !visible("#step3"),
+      objectif: (avancement) => avancement.evaluations > 0,
     },
     ALLER_EVALUATIONS,
     {

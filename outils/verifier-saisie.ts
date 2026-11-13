@@ -26,6 +26,7 @@ const DELAI_MS = 20000;
 interface EvaluationLue {
   id?: string;
   titre?: string;
+  brouillon?: boolean;
   res?: Record<string, { nr?: string }>;
 }
 
@@ -114,7 +115,7 @@ async function verifier(page: Page): Promise<string[]> {
     ecarts.push("la saisie est perdue après être passé par une autre évaluation");
   }
 
-  // 4. Une nouvelle évaluation rejoint la liste dès qu'elle a un intitulé, et y reste si l'on en ouvre une autre.
+  // 4. Une nouvelle évaluation est gardée dès qu'elle a un intitulé, en brouillon, et le reste si l'on en ouvre une autre.
   await revenirALaListe(page);
   const nombreAvant = (await lireEvaluations(page)).length;
   await page.locator("#bNew").click();
@@ -123,8 +124,11 @@ async function verifier(page: Page): Promise<string[]> {
   await revenirALaListe(page);
   await ouvrirParSaLigne(page, EVALUATION_B);
   const apres = await lireEvaluations(page);
-  if (apres.length !== nombreAvant + 1 || !apres.some((lue) => lue.titre === NOUVEL_INTITULE)) {
-    ecarts.push("une nouvelle évaluation dotée d'un intitulé n'est pas enregistrée d'elle-même");
+  const gardee = apres.find((lue) => lue.titre === NOUVEL_INTITULE);
+  if (apres.length !== nombreAvant + 1 || gardee === undefined) {
+    ecarts.push("une nouvelle évaluation dotée d'un intitulé n'est pas gardée d'elle-même");
+  } else if (gardee.brouillon !== true) {
+    ecarts.push("une évaluation commencée n'est pas marquée comme brouillon");
   }
 
   // 5. Une nouvelle évaluation laissée vide n'encombre pas la liste.
@@ -135,16 +139,42 @@ async function verifier(page: Page): Promise<string[]> {
     ecarts.push("une nouvelle évaluation vide a été ajoutée à la liste");
   }
 
-  // 6. Une évaluation supprimée ne revient pas : le brouillon ne la garde pas.
-  if ((await page.locator("tr[data-open]", { hasText: NOUVEL_INTITULE }).count()) === 0) {
-    ecarts.push("la nouvelle évaluation n'apparaît pas dans la liste");
+  // 6. Un brouillon ne s'évalue pas, n'avance pas dans le suivi, et ne s'enregistre pas sans compétence.
+  const rangee = page.locator("tr[data-open]", { hasText: NOUVEL_INTITULE }).first();
+  if ((await rangee.count()) === 0) {
+    ecarts.push("le brouillon n'apparaît pas dans la liste");
     return ecarts;
   }
-  await page.locator("tr[data-open]", { hasText: NOUVEL_INTITULE }).first().click();
+  if ((await rangee.locator("[data-xm]").count()) > 0 || (await rangee.locator(".stp, [data-sv]").count()) > 0) {
+    ecarts.push("un brouillon propose encore ses actions (évaluer, exporter) ou son suivi");
+  }
+  if (!((await rangee.textContent()) ?? "").includes("Brouillon")) {
+    ecarts.push("un brouillon n'est pas signalé dans la liste");
+  }
+  await rangee.click();
+  await page.locator('#steps [data-step="3"]').click();
+  await page.locator("#bSave3").click();
   const idNouvelle = (await lireEvaluations(page)).find((lue) => lue.titre === NOUVEL_INTITULE)?.id;
-  await revenirALaListe(page);
-  const rangee = page.locator("tr[data-open]", { hasText: NOUVEL_INTITULE }).first();
-  await rangee.locator("[data-xm]").click();
+  if ((await lireEvaluations(page)).find((lue) => lue.id === idNouvelle)?.brouillon !== true) {
+    ecarts.push("une évaluation sans compétence a pu sortir des brouillons");
+  }
+
+  // 7. Avec une compétence, « Enregistrer l'évaluation » la sort des brouillons : elle retrouve ses actions.
+  await page.locator('#steps [data-step="2"]').click();
+  await page.locator("#step2 input[data-code]").first().check();
+  await page.locator('#steps [data-step="3"]').click();
+  await page.locator("#bSave3").click();
+  await page.locator("tr[data-open]").first().waitFor();
+  const enregistree = (await lireEvaluations(page)).find((lue) => lue.id === idNouvelle);
+  if (enregistree === undefined || enregistree.brouillon !== undefined) {
+    ecarts.push("« Enregistrer l'évaluation » ne sort pas l'évaluation des brouillons");
+  }
+  if ((await page.locator("tr[data-open]", { hasText: NOUVEL_INTITULE }).first().locator("[data-xm]").count()) !== 1) {
+    ecarts.push("une évaluation enregistrée ne retrouve pas son bouton « Actions… »");
+  }
+
+  // 8. Une évaluation supprimée ne revient pas : l'évaluation en cours d'édition ne la garde pas.
+  await page.locator("tr[data-open]", { hasText: NOUVEL_INTITULE }).first().locator("[data-xm]").click();
   await page.locator('[data-act="annul"]').click();
   await page.locator("[data-del]").first().click();
   await page.locator("[data-del]").first().click();
