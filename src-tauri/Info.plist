@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Complète l'Info.plist produit par Tauri : l'échange en direct a besoin du réseau local (décision 21). -->
+<plist version="1.0">
+<dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>DNMAX utilise le réseau local pour l'échange en direct avec un collègue, sur le même wifi. Rien ne sort du réseau local.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dnmax-direct._tcp</string>
+	</array>
+</dict>
+</plist>

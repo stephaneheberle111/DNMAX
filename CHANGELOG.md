@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Échange en direct : un code de 8 chiffres à dicter (« 4821 7395 ») remplace les longs codes d'invitation et de réponse à copier-coller. Le collègue le saisit, DNMAX trouve l'ordinateur de l'expéditeur sur le réseau local et le contenu passe, chiffré et authentifié par le code ; un tiers du même wifi ne peut ni le lire ni se faire passer pour l'un des deux. Le code est valable 5 minutes, pour un seul essai. Messages d'échec précis (envoi introuvable, réseau qui isole les postes, code erroné, code expiré) avec renvoi vers l'échange par fichier. La fonction n'est plus en bêta. Documentation et page Confidentialité du site mises à jour.
+
 ## 0.4.2 — 2026-11-13
 
 ### Ajouté
