@@ -4,11 +4,14 @@ import * as XLSX from "xlsx";
 import { convertirEnOctets, type ContenuFichier } from "../domaine/contenu-fichier";
 import { estObjet, lireDonneesEtablissementDe, lirePromotion } from "../domaine/echange/modele";
 import { estCadreVierge, nettoyerDiplomesVierges } from "../domaine/diplome-vierge";
+import * as zoomCarte from "../domaine/zoom-carte";
+import { renumeroterBloc } from "../domaine/numero-bloc";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
-import { CLE_IDENTITE, lireIdentite } from "../domaine/identite";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
+import { lireSaisieEtablissement } from "../domaine/documents-rgpd";
 import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
+import { confirmerChangementEchelle } from "../ecran-preferences";
 import { enregistrerFichier } from "../enveloppe";
 
 /** Adresse du script de l'interface historique, servi depuis `public/`. */
@@ -42,12 +45,30 @@ interface Pont {
    * si la règle rend autre chose que `null`.
    */
   ajusterEnseignants?: (regle: RegleEnseignants) => void;
+  /** Posée par l'interface historique à son chargement : affiche la page Préférences. */
+  ouvrirPreferences?: () => void;
+  /**
+   * Posée par l'application (voir `suivreRenommageMoi`) : appelée quand
+   * l'enseignant corrige le prénom ou le nom de sa ligne « C'est moi ».
+   * Les valeurs ne sont pas typées.
+   */
+  renommerMoi?: (prenom: unknown, nomFamille: unknown) => void;
+  /**
+   * Appelée avant tout changement d'échelle d'évaluation dans Préférences.
+   * Rend `true` si l'enseignant confirme.
+   */
+  readonly confirmerChangementEchelle: () => Promise<boolean>;
+  /**
+   * Posée par l'interface historique à son chargement : ouvre Mon établissement > Établissement
+   * et place le curseur sur le premier champ utile aux documents RGPD qui est vide.
+   */
+  ouvrirEtablissement?: () => void;
   /**
    * Appelée quand l'enseignant coche le module Élèves : avertissement RGPD et
    * documents à remettre, puis mot de passe renforcé. Rend `true` s'il
    * confirme l'activation.
    *
-   * @param etablissement nom de l'établissement saisi dans « Mon établissement », vide s'il ne l'est pas
+   * @param etablissement l'objet `DATA.etab` de « Mon établissement » (champs `nom` et `contactDpo` lus)
    */
   readonly confirmerModuleEleves: (etablissement: unknown) => Promise<boolean>;
   /**
@@ -63,6 +84,10 @@ interface Pont {
   readonly estCadreVierge: typeof estCadreVierge;
   /** Appelée au chargement : retire les diplômes-cadres vierges devenus inutiles. */
   readonly nettoyerDiplomesVierges: typeof nettoyerDiplomesVierges;
+  /** Calculs du zoom de la carte radiale du référentiel (voir `domaine/zoom-carte`). */
+  readonly zoomCarte: typeof zoomCarte;
+  /** Référentiel › Constituer › Blocs et compétences : nouveau numéro d'un bloc (voir `domaine/numero-bloc`). */
+  readonly renumeroterBloc: typeof renumeroterBloc;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: DemandeEnregistrement): Promise<void>;
@@ -123,11 +148,17 @@ export async function chargerInterfaceHistorique(
     telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport) },
     estCadreVierge,
     nettoyerDiplomesVierges,
-    // L'interface historique n'est pas typée : le nom reçu est vérifié.
+    zoomCarte,
+    renumeroterBloc,
+    confirmerChangementEchelle,
+    // L'interface historique n'est pas typée : les champs reçus sont vérifiés.
     confirmerModuleEleves: async (etablissement) =>
       (await confirmerActivationEleves({
-        etablissement: typeof etablissement === "string" ? etablissement : "",
-        enseignant: lireIdentite(magasin.getItem(CLE_IDENTITE))?.nom ?? "",
+        etablissement: lireSaisieEtablissement(etablissement),
+        allerSaisirEtablissement: () => {
+          window.dnmaxPont?.ouvrirEtablissement?.();
+        },
+        date: new Date(),
       })) && (await confirmerMotDePasseEleves()),
     // Données non typées : elles sont relues prudemment, et tout ce qui est illisible vaut « non validé ».
     referentielValide: {
@@ -157,4 +188,15 @@ export async function chargerInterfaceHistorique(
  */
 export function ajusterEnseignants(regle: RegleEnseignants): void {
   window.dnmaxPont?.ajusterEnseignants?.(regle);
+}
+
+/**
+ * Fait appeler `rappel` à chaque correction du prénom ou du nom de la ligne
+ * « C'est moi » de « Mon établissement », avec les valeurs saisies, non vérifiées.
+ * Sans interface chargée, ne fait rien.
+ */
+export function suivreRenommageMoi(rappel: (prenom: unknown, nomFamille: unknown) => void): void {
+  if (window.dnmaxPont !== undefined) {
+    window.dnmaxPont.renommerMoi = rappel;
+  }
 }

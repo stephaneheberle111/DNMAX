@@ -25,6 +25,8 @@ const DUREE_GLISSEMENT = 750;
 /** Au-delà de cette part de l'écran, la zone éclairée est trop grande pour y accoler la bulle. */
 const PART_ECRAN_MAX = 0.55;
 
+const IDENTIFIANT_PANNEAU_VISITES = "panneau-visites";
+
 /** Boîtes de dialogue de l'application : quand l'une est ouverte, elle grise déjà le reste. */
 const SELECTEUR_BOITES = '.echange-fond, .modal:not([hidden]), [role="dialog"][aria-modal="true"]';
 
@@ -736,6 +738,11 @@ export function lancerParcours(identifiant: IdentifiantParcours, depart = 0): vo
  */
 export function installerParcours(accesDonnees: Acces): void {
   acces = accesDonnees;
+  // Le panneau « Visites guidées » de Paramètres n'a de sens qu'une fois les visites installées.
+  const panneauVisites = document.getElementById(IDENTIFIANT_PANNEAU_VISITES);
+  if (panneauVisites !== null) {
+    panneauVisites.hidden = false;
+  }
   document.addEventListener("click", (evenement) => {
     const bouton = evenement.target instanceof Element ? evenement.target.closest<HTMLElement>("[data-parcours]") : null;
     const identifiant = bouton?.dataset.parcours;

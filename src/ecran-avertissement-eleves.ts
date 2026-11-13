@@ -1,65 +1,52 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-avertissement-eleves.css";
-import { ANNEES_CONSERVATION_ELEVES, DELAI_VERROUILLAGE_INACTIVITE_MS } from "./configuration";
+import { ADRESSE_CODE_SOURCE, ANNEES_CONSERVATION_ELEVES, DELAI_VERROUILLAGE_INACTIVITE_MS } from "./configuration";
 import { LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES } from "./domaine/saisie-coffre";
 import {
+  champsManquants,
   composerFicheEleves,
   composerNoteEtablissement,
   ecrireDuree,
+  type ChampManquant,
   type ChampsDocumentsRgpd,
-  type DocumentImprimable,
+  type SaisieEtablissement,
 } from "./domaine/documents-rgpd";
+import { montrerApercuDocument } from "./ecran-apercu-document";
 import { creer, creerBouton, ouvrirBoite } from "./ecran-echange";
 
-/** Ce que l'avertissement sait de l'enseignant et de son établissement, pour préremplir les documents. */
-export type ContexteAvertissement = Pick<ChampsDocumentsRgpd, "etablissement" | "enseignant">;
+/** Ce que l'avertissement sait de l'établissement, et de quoi mener l'enseignant à sa saisie. */
+export interface ContexteAvertissement {
+  etablissement: SaisieEtablissement;
+  /** Mène à Mon établissement > Établissement, pour saisir ce qui manque aux documents. */
+  allerSaisirEtablissement: () => void;
+  /** Date imprimée sur les documents. */
+  date: Date;
+}
 
-const CLASSE_IMPRESSION = "impression-document";
-const CLASSE_DOCUMENT = "document-imprimable";
+const MINUTES_VERROUILLAGE = Math.round(DELAI_VERROUILLAGE_INACTIVITE_MS / 60_000);
 
-/**
- * Imprime un document seul, sans l'application autour : il est posé dans la
- * page, masqué à l'écran, et une feuille de style d'impression masque tout le
- * reste. Imprimer la fenêtre principale évite un cadre ou une nouvelle
- * fenêtre, dont l'impression varie selon les moteurs ; le dialogue
- * d'impression du système propose l'enregistrement en PDF.
- *
- * Le document reste dans la page jusqu'à `afterprint` : selon les moteurs,
- * `window.print()` rend la main avant que l'impression soit composée.
- */
-function imprimer(imprimable: DocumentImprimable): void {
-  document.querySelector(`.${CLASSE_DOCUMENT}`)?.remove();
-  const conteneur = creer("article", CLASSE_DOCUMENT);
-  // Le HTML vient de `composerFicheEleves` ou `composerNoteEtablissement`, qui échappent les champs saisis.
-  conteneur.innerHTML = imprimable.html;
-  document.body.append(conteneur);
-  const racine = document.documentElement;
-  const titreApplication = document.title;
-  // Le titre de la page est proposé comme nom du fichier PDF.
-  document.title = imprimable.titre;
-  racine.classList.add(CLASSE_IMPRESSION);
-  window.addEventListener(
-    "afterprint",
-    () => {
-      racine.classList.remove(CLASSE_IMPRESSION);
-      document.title = titreApplication;
-      conteneur.remove();
-    },
-    { once: true },
-  );
-  window.print();
+const LIBELLES_MANQUANTS: Readonly<Record<ChampManquant, string>> = {
+  nom: "le nom de l'établissement",
+  contactDelegue: "le contact du délégué à la protection des données",
+};
+
+/** « a », « a et b » : les champs à saisir, en toutes lettres. */
+function enumerer(manquants: readonly ChampManquant[]): string {
+  const libelles = manquants.map((champ) => LIBELLES_MANQUANTS[champ]);
+  return libelles.length <= 1 ? (libelles[0] ?? "") : `${libelles.slice(0, -1).join(", ")} et ${libelles.at(-1) ?? ""}`;
 }
 
 /**
  * Avertit l'enseignant qui active le module Élèves : données conservées,
- * obligations, documents à remettre. Il peut imprimer ces documents puis
- * activer le module, ou renoncer.
+ * obligations, documents à remettre. Il peut voir ces documents, les
+ * enregistrer en PDF ou les imprimer, puis activer le module, ou renoncer.
+ * Sans nom d'établissement ni contact du délégué à la protection des données,
+ * aucun document n'est produit : l'avertissement mène à leur saisie.
  *
  * @returns `true` si l'enseignant confirme l'activation, `false` s'il annule
- *   (bouton « Annuler », croix, clic sur le fond ou Échap).
+ *   (bouton « Annuler », croix, clic sur le fond, Échap, ou départ vers la saisie de l'établissement).
  */
 export function confirmerActivationEleves(contexte: ContexteAvertissement): Promise<boolean> {
-  const champs: ChampsDocumentsRgpd = { ...contexte, anneesConservation: ANNEES_CONSERVATION_ELEVES };
   return new Promise((resoudre) => {
     let confirme = false;
     const { boite, fermer } = ouvrirBoite("Module Élèves : données personnelles", () => {
@@ -76,7 +63,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
     );
     const obligations = creer("ul", "avertissement-liste");
     for (const obligation of [
-      "informez-les\u00a0: remettez-leur la fiche d'information, avec son accusé de réception à signer\u00a0;",
+      "informez-les\u00a0: remettez-leur la note d'information, avec son accusé de réception à signer\u00a0;",
       "prévenez votre chef d'établissement ou le délégué à la protection des données, avec la note prévue pour eux\u00a0;",
       `gardez leurs données au plus ${ecrireDuree(ANNEES_CONSERVATION_ELEVES)} après la sortie de leur promotion\u00a0: DNMAX vous le rappellera\u00a0;`,
       "une demande d'accès ou d'effacement se traite dans Paramètres > Données des élèves.",
@@ -93,23 +80,45 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
       creer(
         "p",
         "avertissement-securite",
-        `Sécurité : avec ce module, DNMAX exige un mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères et se verrouille après ${String(Math.round(DELAI_VERROUILLAGE_INACTIVITE_MS / 60_000))} minutes sans activité. Chiffrez aussi le disque de l'ordinateur (BitLocker sous Windows, FileVault sur Mac, LUKS sous Linux) : c'est conseillé, pas obligatoire. Les exports Word et Excel, eux, ne sont pas chiffrés.`,
+        `Sécurité : avec ce module, DNMAX exige un mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères et se verrouille après ${String(MINUTES_VERROUILLAGE)} minutes sans activité. Chiffrez aussi le disque de l'ordinateur (BitLocker sous Windows, FileVault sur Mac, LUKS sous Linux) : c'est conseillé, pas obligatoire. Les exports Word et Excel, eux, ne sont pas chiffrés.`,
       ),
     );
 
     const documents = creer("div", "avertissement-documents");
-    documents.append(
-      creerBouton("Fiche d'information des élèves (avec accusé de réception)", "btn", () => {
-        imprimer(composerFicheEleves(champs));
-      }),
-      creerBouton("Note pour le chef d'établissement", "btn", () => {
-        imprimer(composerNoteEtablissement(champs));
-      }),
-    );
-    boite.append(
-      documents,
-      creer("p", "avertissement-astuce", "Pour obtenir un PDF, choisissez « Enregistrer en PDF » à l'impression."),
-    );
+    const manquants = champsManquants(contexte.etablissement);
+    if (manquants.length > 0) {
+      documents.classList.add("avertissement-manque");
+      documents.append(
+        creer(
+          "p",
+          "avertissement-manque-texte",
+          `Pour produire les documents à remettre, saisissez d'abord ${enumerer(manquants)} dans Mon établissement > Établissement : les documents les citent.`,
+        ),
+        creerBouton("Saisir dans Mon établissement", "btn", () => {
+          fermer();
+          contexte.allerSaisirEtablissement();
+        }),
+        creer("p", "avertissement-astuce", "Le module n'est pas activé pour autant : revenez ensuite l'activer dans Paramètres."),
+      );
+    } else {
+      const champs: ChampsDocumentsRgpd = {
+        ...contexte.etablissement,
+        anneesConservation: ANNEES_CONSERVATION_ELEVES,
+        date: contexte.date,
+        adresseCodeSource: ADRESSE_CODE_SOURCE,
+        minutesVerrouillage: MINUTES_VERROUILLAGE,
+      };
+      documents.append(
+        creerBouton("Information aux étudiants (avec accusé de réception)", "btn", () => {
+          montrerApercuDocument(composerFicheEleves(champs));
+        }),
+        creerBouton("Note au chef d'établissement", "btn", () => {
+          montrerApercuDocument(composerNoteEtablissement(champs));
+        }),
+        creer("p", "avertissement-astuce", "Chaque document s'ouvre d'abord en aperçu, pour l'enregistrer en PDF ou l'imprimer."),
+      );
+    }
+    boite.append(documents);
 
     const actions = creer("div", "echange-actions");
     const activer = creerBouton("J'ai compris, activer le module", "btn primary", () => {

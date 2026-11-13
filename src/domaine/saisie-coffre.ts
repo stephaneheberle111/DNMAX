@@ -11,7 +11,7 @@ export const LONGUEUR_MINIMALE_MOT_DE_PASSE = 8;
 /**
  * Longueur minimale exigée quand le module Élèves est actif : les données
  * d'élèves sont des données personnelles, que seul le mot de passe protège
- * (voir DECISIONS.md, décision 25). Cette règle est
+ * (voir DECISIONS.md, décision 27). Cette règle est
  * appliquée par l'interface seulement ; l'enveloppe ne connaît pas les modules.
  */
 export const LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES = 12;
