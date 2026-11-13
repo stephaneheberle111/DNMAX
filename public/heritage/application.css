@@ -243,10 +243,21 @@ body.dragging-now{cursor:grabbing;user-select:none}
 .cp .optag{display:inline-flex;gap:5px;align-items:center;font-size:11px;color:var(--accent);background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:99px;padding:2px 8px;margin-top:6px}
 .radwrap{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:start}
 @media (max-width:900px){.radwrap{grid-template-columns:minmax(0,1fr)}}
-svg.radial{width:100%;height:auto;max-width:min(940px,calc(100vh - 110px));margin:-6% auto -5%;display:block;touch-action:pan-y;overflow:visible}
+/* La carte vit dans un cadre de taille fixe (calculée selon la colonne et la fenêtre) : le zoom ne change
+   que le viewBox, donc ni saut de mise en page ni débordement sur la barre d'onglets ou l'encadré voisin.
+   touch-action laisse défiler la page au doigt mais réserve le pincement à la carte. */
+.radcol{min-width:0;display:flex;flex-direction:column;gap:6px}
+.radcadre{position:relative;width:100%;aspect-ratio:5/4;max-height:min(940px,calc(100vh - 150px));overflow:hidden;contain:paint}
+.radcadre[style*="height"]{max-height:none}
+svg.radial{width:100%;height:100%;display:block;touch-action:pan-x pan-y;overflow:hidden;text-rendering:geometricPrecision}
+.radzoom{display:flex;align-items:center;justify-content:flex-end;gap:2px;font-size:13px}
+.radzoom .btn.ghost{min-width:30px;justify-content:center;padding:3px 8px;line-height:1.2;font-variant-numeric:tabular-nums}
+.radzoom output{min-width:4.2em;text-align:center;color:var(--muted);font-family:var(--fm);font-size:12px}
+/* libellés devenus trop petits à l'écran : effacés plutôt qu'entassés (l'encadré reste au survol) */
+@media (prefers-reduced-motion:no-preference){svg.radial .lue,svg.radial .lecn,svg.radial .lan{transition:opacity .15s linear}}
+svg.radial.sans-lue .lue,svg.radial.sans-lecn .lecn,svg.radial.sans-lan .lan{opacity:0}
 .radwrap>.radinfo{align-self:center;position:relative;z-index:3}
 #refMeta .subnav{position:relative;z-index:3}
-@media (max-width:900px){svg.radial{margin:-5% auto}}
 .radinfo{position:relative;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
   padding:12px 14px 12px 18px;display:flex;flex-direction:column;gap:4px;min-width:0;min-height:0}
 .radinfo .cr{font-size:11px;color:var(--muted);line-height:1.35}
@@ -430,6 +441,7 @@ table.mx td.n{font-family:var(--fm);color:var(--muted);text-align:right;font-var
 .ed .ments{display:flex;gap:4px;flex-wrap:wrap}
 .addsel{width:auto;flex:0 1 260px}
 .pick-head .addsel[data-add]{flex:0 1 158px;min-width:0;font-size:12px;padding:5px 8px}
+.pick-head .addsel[data-cadd],.pick-head #cq{flex:0 1 190px;min-width:0;font-size:12px;padding:5px 8px}
 .dkinds{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 12px}
 .dkinds button{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:5px 11px;cursor:pointer;color:var(--muted);font-size:12.5px}
 .dkinds button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:600}
@@ -663,11 +675,6 @@ table.mx.mtx thead tr:nth-child(3) th{top:calc(var(--h1,34px) + var(--h2,40px))}
 table.mx.mtx thead th.st{left:0;z-index:5;background:var(--surface-2)}
 table.mx.mtx thead th.n,table.mx.mtx thead th:last-child{background:var(--surface-2)}
 table.mx.mtx tr.band th .bl{position:sticky;left:14px;display:inline-flex;align-items:center;gap:10px;max-width:calc(100vw - 260px)}
-table.mx.mtx .mxdel{float:right;margin:0 0 0 6px;color:var(--muted)}
-table.mx.mtx tr.band .mxdel{float:none}
-table.mx.mtx tr.mxaddrow th,table.mx.mtx tr.mxaddrow td{padding:4px 8px;background:var(--surface)}
-table.mx.mtx tr.mxaddrow .addsel{font-size:12px;padding:3px 6px;color:var(--muted);max-width:320px}
-table.mx.mtx .blocsel{width:auto;margin-top:4px;padding:2px 6px;font-size:11px;color:var(--muted)}
 .cbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin:0 0 10px;
   background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .cbar .cf{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
@@ -690,17 +697,8 @@ table.mx.mtx .blocsel{width:auto;margin-top:4px;padding:2px 6px;font-size:11px;c
 .ed .codes3 label{display:flex;align-items:center;gap:6px;min-width:0}
 .ed .codes3 b{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;width:28px;flex:none}
 .ed .codes3 input{padding:3px 6px;font-size:12.5px}
-.ed .ecpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:5px}
-.ecl{border:1px solid var(--line);border-radius:8px;padding:4px 5px;display:grid;gap:4px;background:var(--surface-2);min-width:0}
-.ecl.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface))}
-.ecl>.ec{display:flex;align-items:center;gap:6px;min-width:0;width:100%;background:none;border:0;padding:1px 2px;cursor:pointer;text-align:left;color:inherit}
-.ecl>.ec .k{font-family:var(--fm);font-size:11px;font-weight:700;color:var(--c);white-space:nowrap}
-.ecl>.ec .n{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.ecl.on>.ec .n{color:var(--text)}
-.ecl .muted{font-size:11px;color:var(--muted)}
 .ecpick:empty::after{content:"Aucun EC pour ce semestre";font-size:12px;color:var(--muted)}
 .semfilter{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
-.mxadd select{width:auto!important}
 .sflab{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .semfilter .seg{flex:1 1 auto}
 .semfilter .seg button{flex:0 1 auto;padding:5px 11px;background:var(--surface)}
@@ -793,7 +791,6 @@ html[data-device="phone"] .ntk .nt{height:18px;border-radius:9px}
 html[data-device="phone"] .ntk .nf{border-radius:9px}
 html[data-device="phone"] .ntk .ns{display:none}
 /* carte radiale : vue entière, encadré dessous */
-html[data-device="phone"] svg.radial{margin:0 auto!important;max-width:100%!important}
 html[data-device="phone"] .radwrap>.radinfo{align-self:stretch}
 html[data-device="phone"] .xpop{right:auto;left:0}
 html[data-device="phone"] .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
@@ -810,6 +807,13 @@ html[data-device="phone"] .toast{bottom:calc(76px + env(safe-area-inset-bottom,0
 @media (min-width:1700px){
   body{font-size:15px}
   .bar-in,main{max-width:1600px}
+  /* menus : barre, onglets et sous-onglets à l'échelle du texte agrandi */
+  .bar-in{padding-block:12px;gap:18px}
+  .brand b{font-size:18px}
+  nav.tabs{padding:3px;gap:3px}
+  nav.tabs button{padding:7px 15px}
+  .subnav{gap:7px;margin-bottom:18px}
+  .subnav button{padding:7px 16px;font-size:14px}
   .work{grid-template-columns:360px minmax(0,1fr)}
   .cols3{grid-template-columns:280px minmax(0,1fr)}
   .radwrap{grid-template-columns:minmax(0,1fr) 290px}
@@ -821,7 +825,6 @@ html[data-device="phone"] .toast{bottom:calc(76px + env(safe-area-inset-bottom,0
   .work{grid-template-columns:400px minmax(0,1fr)}
   .cols3{grid-template-columns:310px minmax(0,1fr)}
   .radwrap{grid-template-columns:minmax(0,1fr) 320px}
-  svg.radial{max-width:min(1120px,calc(100vh - 110px))}
 }
 
 /* ---------- En-tête du tableau « Mes évaluations » toujours visible ----------
@@ -837,3 +840,21 @@ html[data-device="phone"] .toast{bottom:calc(76px + env(safe-area-inset-bottom,0
 }
 
 .mod .modvisite{margin-top:8px;padding:4px 10px;font-size:12.5px}
+/* Constituer › Blocs et compétences : un bloc par groupe, son numéro et son intitulé dans l'en-tête */
+.cgrp>.hd input.mono{flex:0 0 58px;font-weight:600}
+.ed input[aria-invalid=true]{border-color:var(--signal)}
+
+/* ---------- Paramètres et Préférences : une colonne centrée ----------
+   Ces pages empilent des panneaux de réglages : une colonne de lecture confortable,
+   centrée dans la zone utile, plutôt qu'une colonne étroite collée à gauche. */
+.vue-reglages{max-width:860px;margin-inline:auto;display:flex;flex-direction:column;gap:18px}
+.vue-titre{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.choix-theme{display:flex;gap:8px;flex-wrap:wrap}
+.choix-theme label{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface-2);cursor:pointer;font-weight:500}
+.choix-theme label:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.choix-theme label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.choix-theme input{accent-color:var(--accent);margin:0}
+.visites-liste{display:flex;gap:8px;flex-wrap:wrap}
+@media (min-width:1700px){.vue-reglages{max-width:960px}}
+@media (min-width:2200px){.vue-reglages{max-width:1040px}}

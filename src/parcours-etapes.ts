@@ -120,7 +120,7 @@ const PRISE_EN_MAIN: Parcours = {
       titre: "Bienvenue dans DNMAX",
       texte:
         "En quelques minutes, vous allez installer et valider votre référentiel, déclarer vos promotions, vos collègues et votre répartition de service, puis créer et exporter votre première évaluation. " +
-        "Vous pouvez passer cette visite à tout moment et la relancer depuis « Mon compte ».",
+        "Vous pouvez passer cette visite à tout moment et la relancer depuis « Paramètres », panneau « Visites guidées ».",
     },
     {
       titre: "1. Choisir le référentiel",
@@ -152,7 +152,8 @@ const PRISE_EN_MAIN: Parcours = {
     },
     {
       titre: "1. Constituer",
-      texte: "Choisissez « Constituer » : les UE, les EC et la planification par semestre s'y relisent étape par étape.",
+      texte:
+        "Choisissez « Constituer » : le référentiel s'y relit en cinq étapes, des unités d'enseignement à la validation.",
       cibles: ['#refNav [data-pane="constituer"]'],
       geste: "cliquer",
       atteinte: () => visible("#v-ref") && document.querySelector('#refNav [data-pane="constituer"][aria-pressed="true"]') !== null,
@@ -160,8 +161,17 @@ const PRISE_EN_MAIN: Parcours = {
       avanceAuClic: true,
     },
     {
+      titre: "1. Les cinq étapes",
+      texte:
+        "UE, puis EC, puis blocs et compétences ; la planification rattache ensuite chaque compétence aux EC, semestre par semestre, avant la validation. " +
+        "Chaque étape ne modifie que ses propres éléments : le nom d'une UE se change à l'étape 1, pas à l'étape 2. Corrigez ce qui doit l'être, puis « Suivant ».",
+      cibles: ["#refPane .steps"],
+      geste: "regarder",
+      groupeFait: (avancement) => avancement.referentielValide,
+    },
+    {
       titre: "1. Validation",
-      texte: "Ouvrez la dernière étape, « Validation ».",
+      texte: "Ouvrez la dernière étape, « 5. Validation ».",
       cibles: ['#refPane .steps [data-cp="valider"]'],
       geste: "cliquer",
       atteinte: () => visible("#cAtteste"),
@@ -271,7 +281,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "C'est prêt",
       texte:
-        "Vous savez l'essentiel. Pour saisir les résultats élève par élève, activez le module Élèves dans « Paramètres » : il a sa propre visite, comme le module Niveaux DN MADE. Cette visite se relance depuis « Mon compte ».",
+        "Vous savez l'essentiel. Pour saisir les résultats élève par élève, activez le module Élèves dans « Paramètres » : il a sa propre visite, comme le module Niveaux DN MADE. Cette visite se relance depuis « Paramètres », panneau « Visites guidées ».",
     },
   ],
 };

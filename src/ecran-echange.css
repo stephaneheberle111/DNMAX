@@ -1,9 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-#bouton-echange {
-  margin-left: auto;
-}
-
 .echange-fond {
   position: fixed;
   inset: 0;
@@ -279,4 +275,9 @@
 .echange-boite .echange-etat {
   color: inherit;
   font-weight: 600;
+}
+
+/* Boîte courte : un formulaire de quelques champs ou une simple confirmation. */
+.echange-boite.boite-etroite {
+  max-width: 480px;
 }

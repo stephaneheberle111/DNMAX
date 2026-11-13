@@ -1,41 +1,9 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.compte-contenu {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow: auto;
-  /* La zone défile, donc rogne ce qui dépasse : le contour de focus des champs
-     (2 px, décalé de 2 px) doit tenir dans ce retrait, compensé par la marge. */
-  padding: 4px;
-  margin: -4px;
-}
-
-.compte-rubrique {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-
-.compte-rubrique:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.compte-rubrique h3 {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-}
-
 .compte-formulaire {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
+  gap: 10px;
 }
 
 .compte-champ {
@@ -67,4 +35,67 @@
   display: flex;
   gap: 6px 18px;
   flex-wrap: wrap;
+}
+
+/* ---- Menu « Mon compte » de la barre du haut ---- */
+.menu-compte {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 270px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+}
+
+.menu-compte-nom {
+  padding: 6px 10px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.menu-compte-entree {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-compte-entree b {
+  font-weight: 600;
+}
+
+.menu-compte-entree span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.menu-compte-entree:hover,
+.menu-compte-entree:focus-visible {
+  background: var(--accent-soft);
+  outline: none;
+}
+
+.menu-compte-entree:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Un échec se lit en rouge, comme dans les autres boîtes. */
+.echange-boite .compte-message.echange-erreur {
+  color: var(--danger);
 }

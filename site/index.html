@@ -319,6 +319,9 @@ svg.dim .dot.off{opacity:.1}
 .sys .badge{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;background:var(--signal);color:var(--signal-ink);padding:2px 8px;border-radius:99px}
 .sys p{margin:0;color:var(--ink-2);font-size:15px}
 .sys .fmt{font-family:var(--mono);font-size:13px;color:var(--ink)}
+/* Tous les boutons de téléchargement de la page ont la même taille. */
+.sys>.btn,.referentiel>.btn{width:280px;justify-content:center;text-align:center}
+@media (max-width:760px){.sys>.btn,.referentiel>.btn{width:100%}}
 @media (max-width:760px){.sys{grid-template-columns:1fr;gap:10px}}
 .referentiel{margin-top:16px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:24px;padding:22px 24px;background:var(--surface);border:1px dashed var(--line);border-radius:12px}
 .referentiel h3{margin:0 0 4px;font-size:17px}
@@ -702,7 +705,7 @@ footer a{color:var(--ink-2)}
   <section class="page">
     <div class="wrap">
       <h1>Télécharger DNMAX</h1>
-      <p class="intro">Dernière version publiée, avec ses nouveautés dans le <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/CHANGELOG.md">journal des modifications</a>. Choisissez l’installeur de votre système&nbsp;; les fichiers sont hébergés sur GitHub.</p>
+      <p class="intro">Dernière version publiée, avec ses nouveautés dans le <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/CHANGELOG.md">journal des modifications</a>. Choisissez l’installeur de votre système&nbsp;; les installeurs sont hébergés en France, chez OVH (l’AppImage Linux reste sur GitHub).</p>
       <div class="systemes" id="systemes">
         <div class="sys" data-os="win">
           <div><h3>Windows</h3></div>
@@ -723,18 +726,18 @@ footer a{color:var(--ink-2)}
       <div class="referentiel">
         <div>
           <h3>Référentiel DN MADE mention Objet</h3>
-          <p>DNMAX est livré vide&nbsp;: importez ce référentiel pour commencer. Dans DNMAX, cliquez «&nbsp;Échanger…&nbsp;», puis «&nbsp;Recevoir&nbsp;», et choisissez ce fichier.</p>
+          <p>Il est aussi livré avec DNMAX&nbsp;: au premier lancement, choisissez «&nbsp;Objet&nbsp;» dans l’encart de départ. Ce fichier sert à le transmettre ou à le réinstaller («&nbsp;Échanger…&nbsp;» puis «&nbsp;Recevoir&nbsp;»).</p>
           <p class="fmt">dn-made-objet.dnmax</p>
         </div>
-        <a class="btn" href="referentiels/dn-made-objet.dnmax" download>Télécharger le référentiel</a>
+        <a class="btn" href="referentiels/dn-made-objet.dnmax" download>Télécharger Objet</a>
       </div>
       <div class="referentiel">
         <div>
           <h3>Référentiel DN MADE mention Espace</h3>
-          <p>Même démarche pour la mention Espace&nbsp;: dans DNMAX, cliquez «&nbsp;Échanger…&nbsp;», puis «&nbsp;Recevoir&nbsp;», et choisissez ce fichier.</p>
+          <p>Même chose pour la mention Espace&nbsp;: livré avec DNMAX («&nbsp;Espace&nbsp;» dans l’encart de départ), ce fichier sert à le transmettre ou à le réinstaller.</p>
           <p class="fmt">dn-made-espace.dnmax</p>
         </div>
-        <a class="btn" href="referentiels/dn-made-espace.dnmax" download>Télécharger le référentiel</a>
+        <a class="btn" href="referentiels/dn-made-espace.dnmax" download>Télécharger Espace</a>
       </div>
       <div class="sources">
         <h3>Toutes les sources de téléchargement</h3>
@@ -789,7 +792,7 @@ footer a{color:var(--ink-2)}
 <li><strong>Indiquez votre nom.</strong> Il signe les fichiers que vous envoyez à d’autres enseignants et apparaît dans leur plan d’import. Il vous inscrit aussi parmi les enseignants de «&nbsp;Mon établissement&nbsp;», marqué «&nbsp;C’est moi&nbsp;»&nbsp;: il ne reste qu’à y ajouter vos collègues.</li>
 </ol>
 <div class="alerte"><p><strong>Personne ne pourra vous aider si vous perdez à la fois votre mot de passe et votre code de secours.</strong> DNMAX n’a ni compte ni serveur&nbsp;: ni l’auteur de l’application, ni votre établissement, ni un service technique n’ont de copie de vos données ou de moyen de les déchiffrer. Notez ce code sur papier, ou dans un gestionnaire de mots de passe, mais pas dans un fichier posé à côté de DNMAX.</p></div>
-<p>Une <strong>visite guidée</strong> démarre ensuite d’elle-même&nbsp;: elle grise l’écran sauf là où cliquer et vous accompagne pas à pas pour installer et valider votre référentiel, déclarer vos promotions, vos collègues et votre répartition de service, puis créer et exporter une première évaluation. Elle repère ce qui est déjà fait. Les référentiels DN MADE Objet et Espace sont livrés avec DNMAX&nbsp;: un clic sur votre mention suffit, puis validez. Vous pouvez la passer et la relancer depuis «&nbsp;Mon compte&nbsp;»&nbsp;; les modules Élèves et Niveaux DN MADE ont aussi la leur («&nbsp;Visite guidée&nbsp;» dans Paramètres).</p>
+<p>Une <strong>visite guidée</strong> démarre ensuite d’elle-même&nbsp;: elle grise l’écran sauf là où cliquer et vous accompagne pas à pas pour installer et valider votre référentiel, déclarer vos promotions, vos collègues et votre répartition de service, puis créer et exporter une première évaluation. Elle repère ce qui est déjà fait. Les référentiels DN MADE Objet et Espace sont livrés avec DNMAX&nbsp;: un clic sur votre mention suffit, puis validez. Vous pouvez la passer et la relancer depuis Paramètres, panneau «&nbsp;Visites guidées&nbsp;»&nbsp;; les modules Élèves et Niveaux DN MADE ont aussi la leur («&nbsp;Visite guidée&nbsp;» dans Paramètres).</p>
 <p>Pour voir l’application en situation, ouvrez Paramètres puis «&nbsp;Charger un exemple&nbsp;». Une évaluation complète, deux promotions fictives et leurs résultats sont créés. Attention, l’évaluation en cours est remplacée.</p>
 <p>Si vous changez d’ordinateur, vous pouvez aussi, à cette étape, installer la copie de vos données faite sur l’ancien poste (voir «&nbsp;Changer d’ordinateur&nbsp;»).</p>
 </div>
@@ -803,11 +806,12 @@ footer a{color:var(--ink-2)}
 <h4>2. Les compétences</h4>
 <p>Cochez les compétences évaluées. Elles viennent du référentiel du diplôme.</p>
 <h4>3. La formulation</h4>
-<p>Formulez chaque ligne avec vos mots, cochez plusieurs lignes et liez-les pour les regrouper sous une même attente, puis faites glisser les livrables sur les lignes qu’ils permettent d’évaluer. Le nom de la colonne («&nbsp;Critère observable&nbsp;», «&nbsp;Indicateur de réussite&nbsp;»…) se règle dans Paramètres, rubrique Vocabulaire&nbsp;; il est repris dans les exports.</p>
+<p>Formulez chaque ligne avec vos mots, cochez plusieurs lignes et liez-les pour les regrouper sous une même attente, puis faites glisser les livrables sur les lignes qu’ils permettent d’évaluer. Le nom de la colonne («&nbsp;Critère observable&nbsp;», «&nbsp;Indicateur de réussite&nbsp;»…) se règle dans «&nbsp;Mon compte&nbsp;» → «&nbsp;Préférences&nbsp;», rubrique Vocabulaire&nbsp;; il est repris dans les exports.</p>
 <h4>4. Les élèves</h4>
 <p>Cette étape n’apparaît qu’avec le module Élèves (voir «&nbsp;Avec ou sans élèves&nbsp;»).</p>
 <h4>Les échelles</h4>
-<p>Quatre échelles sont proposées&nbsp;: niveaux de maîtrise, degrés d’acquisition, note chiffrée, ou une échelle personnalisée. Choisissez dans Paramètres celles qui sont actives et celle qui s’applique par défaut. Une évaluation déjà enregistrée garde son échelle.</p>
+<p>Quatre échelles sont proposées&nbsp;: niveaux de maîtrise, degrés d’acquisition, note chiffrée, ou une échelle personnalisée. Choisissez dans «&nbsp;Mon compte&nbsp;» → «&nbsp;Préférences&nbsp;» celles qui sont actives et celle qui s’applique par défaut&nbsp;; DNMAX rappelle alors que l’échelle officielle des DN MADE est celle des niveaux de maîtrise. Une évaluation déjà enregistrée garde son échelle.</p>
+<p>Les mêmes Préférences règlent la liste des livrables proposés et le thème&nbsp;: clair, sombre ou comme le système. Votre prénom et votre nom se corrigent sur votre ligne «&nbsp;C’est moi&nbsp;» de «&nbsp;Mon établissement&nbsp;» → «&nbsp;Enseignants&nbsp;».</p>
 <p>Chaque évaluation garde la date et l’auteur de sa dernière modification. Vos changements sont enregistrés automatiquement, y compris quand vous fermez la fenêtre.</p>
 </div>
 
@@ -824,7 +828,7 @@ footer a{color:var(--ink-2)}
 <li>produire un document Word par élève&nbsp;;</li>
 <li>suivre chacun dans la page «&nbsp;Progression élève&nbsp;».</li>
 </ul>
-<p>À l’activation, DNMAX rappelle ce que le module conserve et vos obligations au titre du RGPD&nbsp;: informer les élèves, prévenir le chef d’établissement ou le délégué à la protection des données, ne garder les données qu’un an après la sortie de la promotion. La même fenêtre imprime, ou enregistre en PDF, deux documents préremplis avec le nom de l’établissement et le vôtre&nbsp;: la fiche d’information des élèves, suivie d’un accusé de réception à leur faire signer, et la note pour le chef d’établissement (rubriques <a href="#documentation" data-doc-lien="rgpd-eleves">RGPD&nbsp;: information des élèves</a> et <a href="#documentation" data-doc-lien="rgpd-etablissement">RGPD&nbsp;: fiche pour l’établissement</a>). L’accusé de réception atteste que l’information a été remise&nbsp;; ce n’est pas un consentement. Vous confirmez ensuite l’activation, ou vous l’annulez.</p>
+<p>À l’activation, DNMAX rappelle ce que le module conserve et vos obligations au titre du RGPD&nbsp;: informer les élèves, prévenir le chef d’établissement ou le délégué à la protection des données, ne garder les données qu’un an après la sortie de la promotion. La même fenêtre propose deux documents, préremplis avec le nom de l’établissement et le contact de son délégué à la protection des données (à saisir d’abord dans Mon établissement &gt; Établissement), sans aucun nom de personne&nbsp;: l’information aux étudiants, suivie d’un accusé de réception à leur faire signer, et la note au chef d’établissement (rubriques <a href="#documentation" data-doc-lien="rgpd-eleves">RGPD&nbsp;: information des élèves</a> et <a href="#documentation" data-doc-lien="rgpd-etablissement">RGPD&nbsp;: fiche pour l’établissement</a>). Chacun s’ouvre d’abord en aperçu, pour l’enregistrer en PDF ou l’imprimer. L’accusé de réception atteste que l’information a été remise&nbsp;; ce n’est pas un consentement. Vous confirmez ensuite l’activation, ou vous l’annulez.</p>
 <p>Le module <strong>Niveaux DN MADE</strong>, qui nécessite le module Élèves, attribue à chaque élève le niveau atteint sur chaque compétence&nbsp;: Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu’il y est évalué avec un niveau de maîtrise suffisant.</p>
 </div>
 
@@ -842,7 +846,7 @@ footer a{color:var(--ink-2)}
 <tr><th>Destinataires</th><td>L’enseignant ; les collègues de l’équipe pédagogique à qui il transmet volontairement une évaluation (fichier chiffré par mot de passe, ou échange direct d’ordinateur à ordinateur) ; l’étudiant pour ses propres résultats. L’éditeur de DNMAX et l’hébergeur du site n’y ont jamais accès.</td></tr>
 <tr><th>Lieu de stockage</th><td>Uniquement l’ordinateur de l’enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l’Union européenne des données d’élèves.</td></tr>
 <tr><th>Durée de conservation</th><td>Un an après la sortie de la promotion (fin de l’année scolaire où s’achève le diplôme). DNMAX le rappelle ensuite et propose d’anonymiser ou d’effacer les données ; une promotion peut aussi l’être plus tôt. La durée est réglable avec l’établissement.</td></tr>
-<tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l’établissement. Dans DNMAX, Paramètres → «&nbsp;Données des élèves&nbsp;» permet d’exporter toutes les données d’un étudiant, de l’effacer partout, et d’anonymiser ou d’effacer une promotion.</td></tr>
+<tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l’enseignant ou du délégué à la protection des données de l’établissement. Dans DNMAX, Paramètres &gt; Données des élèves permet d’exporter toutes les données d’un étudiant, de l’effacer partout, et d’anonymiser ou d’effacer une promotion.</td></tr>
 <tr><th>Sécurité</th><td>Chiffrement de toutes les données saisies ; mot de passe d’au moins 12 caractères, demandé à chaque ouverture ; verrouillage après 15 minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.</td></tr>
 </table></div>
 <h4>Bonnes pratiques à demander aux enseignants</h4>
@@ -852,20 +856,21 @@ footer a{color:var(--ink-2)}
 <li>ranger et supprimer les documents exportés avec le même soin qu’un relevé de notes&nbsp;;</li>
 <li>ne jamais écrire le nom d’un étudiant dans un signalement de bug ou une suggestion.</li>
 </ul>
+<p>DNMAX est un logiciel libre (licence AGPL-3.0-or-later)&nbsp;: son code source est public et peut être vérifié par l’établissement ou par toute personne qu’il mandate&nbsp;: <a href="https://github.com/stephaneheberle111/DNMAX">github.com/stephaneheberle111/DNMAX</a>.</p>
 <p>Contact de l’éditeur&nbsp;: <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a>. Détails techniques&nbsp;: page <a href="#confidentialite">Confidentialité</a>.</p>
 </div>
 
 <div data-doc="rgpd-eleves" data-titre="RGPD : information des élèves">
 <h3>Modèle de note d’information des étudiants</h3>
 <p class="imprimer"><button type="button" class="btn" data-imprimer>Imprimer ce modèle</button></p>
-<p>Ce modèle est à adapter, puis à remettre aux étudiants ou à intégrer au livret de la formation, si vous utilisez le module Élèves. Il s’agit d’une <strong>information</strong>, pas d’une demande de consentement&nbsp;: l’évaluation relève de la mission de l’établissement, et un étudiant ne peut pas refuser d’être évalué. Remplacez les passages entre crochets. DNMAX imprime aussi cette note à l’activation du module Élèves, préremplie et suivie d’un accusé de réception à faire signer.</p>
+<p>Ce modèle est à adapter, puis à remettre aux étudiants ou à intégrer au livret de la formation, si vous utilisez le module Élèves. Il s’agit d’une <strong>information</strong>, pas d’une demande de consentement&nbsp;: l’évaluation relève de la mission de l’établissement, et un étudiant ne peut pas refuser d’être évalué. Remplacez les passages entre crochets. DNMAX propose aussi cette note à l’activation du module Élèves, préremplie, en aperçu puis en PDF ou à imprimer, suivie d’un accusé de réception à faire signer.</p>
 <div class="modele">
-<p><strong>Vos données dans le suivi de vos évaluations</strong></p>
+<p><strong>Information aux étudiants&nbsp;: vos données dans le suivi de vos évaluations</strong></p>
 <p>Pour évaluer vos compétences tout au long du DN MADE, vos enseignants peuvent utiliser l’application DNMAX. Elle enregistre votre prénom, votre nom, votre promotion, vos niveaux par compétence, leurs observations et leurs appréciations, et les dates de rendu de vos travaux.</p>
 <p>Ces données servent uniquement à votre évaluation et au suivi de votre progression. Le responsable de ce traitement est [nom de l’établissement], représenté par son chef d’établissement, dans le cadre de sa mission d’enseignement.</p>
 <p>Elles restent sur l’ordinateur de votre enseignant, chiffrées et protégées par un mot de passe. Elles ne sont ni envoyées sur Internet ni confiées à une entreprise. Votre enseignant peut les transmettre à un collègue de l’équipe pédagogique, dans un fichier protégé par un mot de passe.</p>
 <p>Elles sont conservées jusqu’à un an après la fin de votre diplôme, puis anonymisées ou effacées.</p>
-<p>Vous pouvez demander à consulter vos données, à les faire corriger ou, dans les cas prévus par la loi, à les faire effacer, auprès de [service ou personne à contacter] ou du délégué à la protection des données de l’établissement&nbsp;: [contact du DPD]. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (cnil.fr).</p>
+<p>Vous pouvez demander à consulter vos données, à les faire corriger ou, dans les cas prévus par la loi, à les faire effacer, auprès de votre enseignant ou du délégué à la protection des données de l’établissement&nbsp;: [contact du DPD]. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (cnil.fr).</p>
 </div>
 </div>
 
@@ -880,8 +885,18 @@ footer a{color:var(--ink-2)}
 <p>Le tableau enseignements × semestres donne le code que porte chaque enseignement à chaque semestre. Le tableau compétences × semestres donne les enseignements qui portent chaque compétence&nbsp;; une case vide signifie qu’elle n’y est pas mobilisable.</p>
 <h4>Recherche</h4>
 <p>Par code, unité ou mot-clé, avec regroupement au choix et filtres d’année et de semestres.</p>
+<h4>Constituer le référentiel</h4>
+<p>Référentiel → <strong>Constituer</strong> construit ou corrige le référentiel de la mention choisie, en cinq étapes&nbsp;:</p>
+<ol>
+<li><strong>Unités d’enseignement</strong>&nbsp;: couleur, code, nom et semestres de chaque UE.</li>
+<li><strong>Enseignements constitutifs</strong>&nbsp;: couleur, codes par année, intitulé, UE de rattachement, semestres et ECTS de chaque EC.</li>
+<li><strong>Blocs et compétences</strong>&nbsp;: numéro et intitulé de chaque bloc, puis code, intitulé et bloc de chaque compétence. Les EC qui portent une compétence s’y lisent sans s’y modifier.</li>
+<li><strong>Planification par semestre</strong>&nbsp;: le tableau compétences × enseignements, où chaque case rattache une compétence à un EC pour un semestre.</li>
+<li><strong>Validation</strong>, décrite ci-dessous.</li>
+</ol>
+<p>Chaque étape ne crée, ne renomme et ne retire que ses propres éléments&nbsp;; ceux des autres étapes y apparaissent en lecture seule. Le nom d’une UE se modifie à l’étape&nbsp;1, pas à l’étape&nbsp;2, où l’on choisit seulement l’UE d’un enseignement. «&nbsp;Retirer&nbsp;» enlève un élément du référentiel de cette mention sans l’effacer&nbsp;: il reste proposé dans la liste d’ajout, parmi les éléments déjà connus. Un nom, un code ou un intitulé est commun aux mentions qui retiennent le même élément&nbsp;: le modifier le modifie dans chacune. Changer le numéro d’un bloc fait suivre ses compétences&nbsp;; un numéro déjà pris par un autre bloc est refusé.</p>
 <h4>Vérifier et valider le référentiel</h4>
-<p>Avant une première évaluation, ouvrez Référentiel → Constituer et relisez les unités, les enseignements et la planification par semestre. À la dernière étape, «&nbsp;Validation&nbsp;», cochez la case «&nbsp;J’ai vérifié ce référentiel et j’en assume le contenu&nbsp;: l’hébergeur et le développeur de DNMAX n’en sont pas responsables&nbsp;», puis cliquez «&nbsp;Valider cette version&nbsp;». Sans la case cochée, rien n’est validé.</p>
+<p>Avant une première évaluation, ouvrez Référentiel → Constituer et relisez les unités, les enseignements, les blocs et compétences et la planification par semestre. À la dernière étape, «&nbsp;Validation&nbsp;», cochez la case «&nbsp;J’ai vérifié ce référentiel et j’en assume le contenu&nbsp;: l’hébergeur et le développeur de DNMAX n’en sont pas responsables&nbsp;», puis cliquez «&nbsp;Valider cette version&nbsp;». Sans la case cochée, rien n’est validé.</p>
 <p>Un référentiel installé depuis l’encart de départ ou reçu d’un collègue arrive <strong>non validé</strong>, même si son auteur l’avait validé chez lui&nbsp;: c’est votre propre vérification qui compte. Dans la liste des versions, chacune indique si vous l’avez validée&nbsp;; une ancienne version encore suivie par une promotion se valide aussi depuis cette liste, avec la même case. L’exemple («&nbsp;Charger un exemple&nbsp;») valide pour sa démonstration le référentiel qu’il installe lui-même, jamais le vôtre.</p>
 </div>
 
@@ -1006,7 +1021,7 @@ npm run dev</code></pre>
             </div>
             <div class="champ">
               <label for="f-version">Version de DNMAX</label>
-              <input type="text" id="f-version" maxlength="20" placeholder="Affichée dans Mon compte">
+              <input type="text" id="f-version" maxlength="20" placeholder="Affichée dans À propos">
             </div>
           </div>
           <div class="champ">

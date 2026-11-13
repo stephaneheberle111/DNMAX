@@ -41,7 +41,7 @@ export const ANNEES_CONSERVATION_ELEVES = 1;
 /**
  * Verrouillage après inactivité, quand le module Élèves est actif : au-delà de
  * ce délai sans action de l'enseignant (souris, clavier), les données quittent
- * la mémoire et le mot de passe est redemandé. Voir DECISIONS.md, décision 25.
+ * la mémoire et le mot de passe est redemandé. Voir DECISIONS.md, décision 27.
  */
 export const DELAI_VERROUILLAGE_INACTIVITE_MS = 15 * 60_000;
 
