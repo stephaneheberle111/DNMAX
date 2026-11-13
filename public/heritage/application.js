@@ -3698,7 +3698,7 @@ delete F.ec;
 {const nt=window.dnmaxPont.nettoyerDiplomesVierges(DATA,promos);
   if(nt&&nt.modifie){DATA=nt.donnees;materialize(DATA);REF=computeREF();persistData()}}
 syncItemEcs();
-let ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"diplome"},ref:{pane:"explorer",chain:"",edq:"",q:"",group:"bloc",annee:"*",sems:[]}};
+let ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"diplome"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
 let dl = window.dnmaxPont.telechargements;
 
 function demo(){
@@ -5244,7 +5244,11 @@ function curve(cx,cy,r,a0,a1,txt,cls,size){
     `<text class="${cls}" font-size="${size}"><textPath href="#${id}" startOffset="50%" text-anchor="middle">${esc(t)}</textPath></text>`;
 }
 let wheelAngle=0, wheelRaf=0;
-const RAD={RARR:505,ZMAX:1.65,S:760,c:380,PAD:100,HUB:84,RB:360,RL:380,DIST:[9,17,25,33]};
+// carte radiale : nouvelle mise à l'échelle quand la colonne ou la fenêtre change de taille
+let radRedim=null, radObs=null;
+window.addEventListener("resize",()=>{if(radRedim)radRedim()});
+// Z0 : zoom de départ (quart bas-droit de la roue) ; ZMAX : grossissement le plus fort permis
+const RAD={RARR:505,Z0:1.65,ZMAX:2.5,S:760,c:380,PAD:100,HUB:84,RB:360,RL:380,DIST:[9,17,25,33]};
 function wrapN(txt,n,max,cut){
   const raw=String(txt==null?"":txt).split(/\s+/),ws=[];
   raw.forEach(w=>{
@@ -5738,6 +5742,7 @@ function radialWire(host){
   const parts=[...svg.querySelectorAll("[data-am]")];
   const segs=parts.filter(x=>x.classList.contains("sg"));
   let cur=null, frozen=null, badges=[], callouts=[], v=0, last=0, relT=0, lastTarget=null, calR=RAD.RL;
+  let vue=null;   // vue affichée (zoom et centre, en unités du dessin), voir domaine/zoom-carte
   const NS="http://www.w3.org/2000/svg";
   const mk=(tag,attrs,txt)=>{const el=document.createElementNS(NS,tag);
     for(const k in attrs)el.setAttribute(k,attrs[k]);if(txt!=null)el.textContent=txt;return el};
@@ -5817,7 +5822,7 @@ function radialWire(host){
       const th=am+wheelAngle*Math.PI/180, sn=Math.abs(Math.sin(th)), cs=Math.abs(Math.cos(th));
       const rows=Math.min(3,n), cols=Math.ceil(n/rows);
       const maxLen=Math.max(...list.map(({c})=>String(c.code).length));
-      const zf=1/(1+0.45*(((ui.radZoom==null?RAD.ZMAX:ui.radZoom))-1));
+      const zf=1/(1+0.45*((vue?vue.zoom:RAD.Z0)-1));
       let sc=zf;
       const dims=()=>{const BW=(maxLen*6.6+12)*sc, BH=19*sc;
         return {BW,BH,PITCH:BW*sn+BH*cs+4*sc,ROWH:BW*cs+BH*sn+3*sc}};
@@ -5922,9 +5927,18 @@ function radialWire(host){
     v=pad&&!reduce?(+pad.dataset.dir)*60:0;
   });
   svg.addEventListener("pointerleave",()=>{v=0;clearTimeout(relT);relT=0;if(!frozen){clear();radInfo(null)}});
-  // zoom à la molette : au départ, le quart bas-droit de la roue remplit la vue (centre de la roue
-  // en haut à gauche) ; en dézoomant, la roue rétrécit et se recentre jusqu'à la vue entière.
-  const ZMAX=RAD.ZMAX, ZM=RAD.HUB+14;   // au zoom maximal, le cercle du diplôme reste entier et les compétences éclatées restent visibles
+  // zoom : au départ, le quart bas-droit de la roue remplit la vue (centre de la roue en haut à gauche) ;
+  // en dézoomant, la roue rétrécit et se recentre jusqu'à la vue entière. Le cadre garde la même taille
+  // à tous les zooms (seul le viewBox change) : rien ne saute ni ne déborde sur les blocs voisins.
+  // Les calculs (bornes, centrage sur le pointeur, animation) sont dans src/domaine/zoom-carte.ts.
+  const ZC=window.dnmaxPont.zoomCarte;
+  const ZM=RAD.HUB+14;   // au zoom de départ, le cercle du diplôme reste entier et les compétences éclatées restent visibles
+  const GEO={cote:VB,origine:-P,centreRoue:C,rayonCoeur:ZM,zoomMin:1,zoomMax:RAD.ZMAX,zoomDepart:RAD.Z0};
+  // tailles de police (unités du dessin) des libellés qui disparaissent quand ils deviennent illisibles
+  const LIBELLES={lue:10,lecn:9,lan:10.5};
+  const cadre=host.querySelector(".radcadre"), barre=host.querySelector(".radzoom");
+  const sortie=barre&&barre.querySelector("output");
+  let rapport=1, hautCadre=0, cible=null, animRaf=0, animT=0;
   const NS2="http://www.w3.org/2000/svg";
   const zn0=svg.querySelector(".zone");if(zn0)zn0.remove();
   // flèches de rotation : deux arcs fléchés qui tournent autour de la roue, au-delà de la zone
@@ -5932,35 +5946,33 @@ function radialWire(host){
   const pads=[-1,1].map(dir=>{const g=document.createElementNS(NS2,"g");g.setAttribute("class","rpad");g.dataset.dir=dir;
     g.innerHTML=`<path class="hit"/><path class="arc"/><path class="ah"/><title>${dir<0?"Tourner la roue dans le sens inverse":"Tourner la roue dans le sens des aiguilles d'une montre"} (survoler)</title>`;
     svg.appendChild(g);return g});
-  const applyZoom=()=>{if(ui.radZoom!=null&&ui.radZoom>ZMAX)ui.radZoom=ZMAX;
-    let z=DEVICE.phone?1:(ui.radZoom==null?ZMAX:ui.radZoom);
-    let zoomed=z>1.01;
-    // zoomée, la carte prend toute la largeur disponible (plus de vide jusqu'à l'encadré) ;
-    // la vue s'étend donc vers la droite, à hauteur constante
-    svg.style.maxWidth=zoomed?"none":"";
-    svg.style.height=zoomed?`min(940px, calc(100vh - 110px))`:"";
-    // la vue zoomée reste toujours plus large que haute (au moins 5:4), y compris sur grand écran où la
-    // colonne est haute : la place à droite accueille les compétences éclatées et la flèche du haut
-    if(zoomed){const cw=svg.getBoundingClientRect().width;
-      if(cw)svg.style.height=`min(940px, calc(100vh - 110px), ${Math.round(cw*0.8)}px)`}
-    svg.style.margin=zoomed?"0":"";
-    svg.style.overflow=zoomed?"hidden":"";
-    let rc=svg.getBoundingClientRect();
-    // zone d'affichage étroite (grands écrans où la colonne est plus haute que large) : la vue entière
-    // est déjà grande à l'écran ; on garde la roue entière pour que flèches et compétences éclatées restent visibles
-    if(zoomed&&rc.width&&rc.width<480){z=1;zoomed=false;
-      svg.style.maxWidth="";svg.style.height="";svg.style.margin="";svg.style.overflow="";rc=svg.getBoundingClientRect()}
-    const t=(z-1)/(ZMAX-1), w=VB/z, o=-P+t*((C-ZM)+P);
-    const asp=zoomed&&rc.height?Math.max(1,rc.width/rc.height):1;
-    const vw=w*asp, vh=w;
-    svg.setAttribute("viewBox",`${o.toFixed(1)} ${o.toFixed(1)} ${vw.toFixed(1)} ${vh.toFixed(1)}`);
-    svg.setAttribute("preserveAspectRatio",zoomed?"xMinYMin meet":"xMidYMid meet");
-    const u=vh/(rc.height||600);
+  // taille du cadre : largeur de la colonne, hauteur tenant dans la fenêtre (sous la barre de zoom)
+  const dimensionner=()=>{
+    const w=cadre?cadre.clientWidth:svg.getBoundingClientRect().width;
+    const reste=window.innerHeight-(barre?barre.getBoundingClientRect().height+6:0);
+    const h=ZC.hauteurCadre(w,reste,window.innerWidth>=2200?1120:940);
+    if(cadre&&h)cadre.style.height=h+"px";
+    hautCadre=h||svg.getBoundingClientRect().height;rapport=hautCadre?w/hautCadre:1;
+  };
+  const zoomDepart=()=>DEVICE.phone||(cadre&&cadre.clientWidth<480)?1:RAD.Z0;
+  const dessiner=vz=>{
+    vue=vz;
+    const {largeur:vw,hauteur:vh}=ZC.tailleVue(vz.zoom,VB,rapport);
+    const ox=vz.centreX-vw/2, oy=vz.centreY-vh/2;
+    svg.setAttribute("viewBox",`${ox.toFixed(2)} ${oy.toFixed(2)} ${vw.toFixed(2)} ${vh.toFixed(2)}`);
+    svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+    const u=vh/(hautCadre||600);
+    // libellés trop petits à l'écran : masqués plutôt que superposés en bouillie
+    const vis=ZC.libellesVisibles(1/u,LIBELLES);
+    for(const k in vis)svg.classList.toggle("sans-"+k,!vis[k]);
+    if(sortie)sortie.textContent=Math.round(vz.zoom*100)+" %";
+    if(barre){barre.querySelector('[data-rz="-1"]').disabled=vz.zoom<=GEO.zoomMin+1e-3;
+      barre.querySelector('[data-rz="1"]').disabled=vz.zoom>=GEO.zoomMax-1e-3}
     // flèches : deux arcs sur un même cercle virtuel autour de la roue (au-delà de la zone d'éclatement),
     // placés là où ce cercle est visible : en haut à droite (un peu plus haut) et en bas à gauche
     const R=RAD.RARR, M=26*u, span=0.24;
-    const vis=ang=>{const x=C+R*Math.cos(ang),y=C+R*Math.sin(ang);return x>=o+M&&x<=o+vw-M&&y>=o+M&&y<=o+vh-M};
-    const fits=c=>{for(let k=-6;k<=6;k++)if(!vis(c+span*k/6))return false;return true};
+    const vis2=ang=>{const x=C+R*Math.cos(ang),y=C+R*Math.sin(ang);return x>=ox+M&&x<=ox+vw-M&&y>=oy+M&&y<=oy+vh-M};
+    const fits=c=>{for(let k=-6;k<=6;k++)if(!vis2(c+span*k/6))return false;return true};
     const near=tgt=>{for(let d=0;d<=Math.PI;d+=0.01){if(fits(tgt+d))return tgt+d;if(fits(tgt-d))return tgt-d}return tgt};
     // flèche du haut : la position la plus haute possible côté droit ; flèche du bas : la plus à gauche côté bas
     const best=(from,to,score,fb)=>{let b=null,bs=Infinity;for(let a=from;a<=to;a+=0.01)if(fits(a)){const sc=score(a);if(sc<bs){bs=sc;b=a}}return b==null?near(fb):b};
@@ -5975,7 +5987,30 @@ function radialWire(host){
       pg.querySelector(".ah").setAttribute("d",`M${-14} ${-8}L2 0L${-14} 8`);
       pg._g={a0,a1,dir,u};pg.style.setProperty("--u",u.toFixed(3));
       placeHead(pg);
-    });};
+    });
+  };
+  // animation douce vers la vue visée ; saut immédiat si les mouvements sont réduits
+  const animer=ts=>{animRaf=0;if(!svg.isConnected||!cible)return;
+    const dt=animT?Math.min(64,ts-animT):16;animT=ts;
+    const suivante=ZC.pasAnimation(vue||cible,cible,dt,reduce?0:60);
+    dessiner(suivante);
+    if(suivante!==cible)animRaf=requestAnimationFrame(animer);else animT=0};
+  // seule une vue choisie par l'enseignant est retenue d'un affichage à l'autre ; sinon, la vue de
+  // départ est recalculée à chaque changement de taille du cadre
+  const viser=(vz,instant,retenir=true)=>{
+    cible=ZC.bornerVue(vz,rapport,GEO);if(retenir)ui.radVue=cible;
+    if(instant||reduce||!vue){if(animRaf){cancelAnimationFrame(animRaf);animRaf=0;animT=0}dessiner(cible);return}
+    if(!animRaf)animRaf=requestAnimationFrame(animer);
+  };
+  // point du dessin sous le pointeur (vue affichée, pas la vue visée)
+  const pointDessin=(cx,cy)=>{const r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal;
+    return [vb.x+(cx-r.left)*(vb.width/(r.width||1)), vb.y+(cy-r.top)*(vb.height/(r.height||1))]};
+  const zoomer=(facteur,cx,cy)=>{const base=cible||vue;if(!base)return;
+    const [px,py]=cx==null?[base.centreX,base.centreY]:pointDessin(cx,cy);
+    viser(ZC.zoomerAutour(base,facteur,px,py,rapport,GEO))};
+  const vueInitiale=()=>ui.radVue||ZC.vueDepart(rapport,GEO,zoomDepart());
+  const ajuster=()=>{ui.radVue=null;viser(ZC.vueDepart(rapport,GEO,zoomDepart()),false,false)};
+  const PAS=1.15;   // un clic sur + ou − : petit pas, sans à-coup
   // la pointe remonte le long du trait, dans le sens de rotation (plus vite au survol)
   // au toucher, pas de survol : la roue tourne tant qu'on appuie sur une flèche
   pads.forEach(pg=>{
@@ -5995,9 +6030,32 @@ function radialWire(host){
   if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))requestAnimationFrame(padRaf);
   else pads.forEach(pg=>pg._ph=0.999);
   svg.addEventListener("wheel",e=>{e.preventDefault();
-    const z=ui.radZoom==null?ZMAX:ui.radZoom, dy=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?100:1);
-    ui.radZoom=Math.max(1,Math.min(ZMAX,z*Math.exp(-dy*0.0015)));applyZoom()},{passive:false});
-  applyZoom();
+    zoomer(ZC.facteurMolette(e.deltaY,e.deltaMode,e.ctrlKey),e.clientX,e.clientY)},{passive:false});
+  // pincement à deux doigts (écran tactile) : le zoom suit l'écart des doigts, autour de leur milieu
+  const doigts=new Map();let pince=null;
+  const ecart=()=>{const [a,b]=[...doigts.values()];return {d:Math.hypot(a.x-b.x,a.y-b.y),x:(a.x+b.x)/2,y:(a.y+b.y)/2}};
+  svg.addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;doigts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(doigts.size===2){const g=ecart();pince={d:g.d||1,vue:cible||vue,pt:pointDessin(g.x,g.y)}}});
+  svg.addEventListener("pointermove",e=>{if(!doigts.has(e.pointerId))return;doigts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pince&&doigts.size===2){const g=ecart();
+      viser(ZC.zoomerAutour(pince.vue,g.d/pince.d,pince.pt[0],pince.pt[1],rapport,GEO),true)}});
+  const lever=e=>{doigts.delete(e.pointerId);if(doigts.size<2)pince=null};
+  ["pointerup","pointercancel","pointerleave"].forEach(t=>svg.addEventListener(t,lever));
+  if(barre)barre.querySelectorAll("[data-rz]").forEach(b=>b.onclick=()=>{const k=+b.dataset.rz;
+    if(k)zoomer(k>0?PAS:1/PAS);else ajuster()});
+  svg.addEventListener("keydown",e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
+    if(e.key==="+"||e.key==="="){e.preventDefault();zoomer(PAS)}
+    else if(e.key==="-"||e.key==="_"){e.preventDefault();zoomer(1/PAS)}
+    else if(e.key==="0"){e.preventDefault();ajuster()}});
+  // mise en place, puis suivi de la taille de la colonne (fenêtre redimensionnée, panneau latéral, écran changé)
+  dimensionner();
+  viser(vueInitiale(),true,false);
+  radRedim=()=>{if(!svg.isConnected)return;const avant=rapport, h0=hautCadre;dimensionner();
+    if(rapport===avant&&hautCadre===h0&&vue)return;
+    viser(vueInitiale(),true,false)};
+  if(radObs)radObs.disconnect();
+  radObs=window.ResizeObserver&&cadre?new ResizeObserver(()=>{if(radRedim)radRedim()}):null;
+  if(radObs)radObs.observe(cadre);
   radInfo(null);
   wheelRaf=requestAnimationFrame(tick);
 }
@@ -6068,12 +6126,19 @@ function paintMap(){
       <button type="button" data-view="tablec" aria-pressed="${view==="tablec"}">Tableau compétences × semestres</button>
       <button type="button" data-view="search" aria-pressed="${view==="search"}">Recherche</button>
       ${help(view==="chain"?"Cinq colonnes, de la compétence au diplôme, le semestre entre la compétence et l'EC. La colonne verrouillée (cadenas fermé) tourne comme une roue ; les autres montrent ce qui est associé à l'élément choisi, avant et après lui. Le cadenas d'une autre colonne, ou un clic sur une case, y déplace le verrou. Survoler une case éclaire son chemin."
-        :view==="table"?"Une ligne par enseignement constitutif, groupée par unité : la case donne le code que porte l'EC à ce semestre — il change d'une année de diplôme à l'autre. Un clic sur une case ouvre l'EC dans le dictionnaire ; un clic sur une unité bascule sur « Recherche »."
-        :view==="tablec"?"Une ligne par compétence, groupée par bloc : chaque case donne les EC qui la portent à ce semestre. Vide = la compétence n'est pas mobilisable ce semestre-là. Un clic sur une pastille d'EC l'ouvre dans le dictionnaire ; un clic sur la compétence bascule sur « Recherche »."
+        :view==="table"?"Une ligne par enseignement constitutif, groupée par unité : la case donne le code que porte l'EC à ce semestre — il change d'une année de diplôme à l'autre. Un clic sur une case ouvre l'EC dans Constituer ; un clic sur une unité bascule sur « Recherche »."
+        :view==="tablec"?"Une ligne par compétence, groupée par bloc : chaque case donne les EC qui la portent à ce semestre. Vide = la compétence n'est pas mobilisable ce semestre-là. Un clic sur une pastille d'EC l'ouvre dans Constituer ; un clic sur la compétence bascule sur « Recherche »."
         :view==="search"?"Recherche par code, UE ou mot-clé, regroupement au choix, filtres d'année et de semestres."
-        :"Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que tu survoles une flèche de rotation. La roue tourne quand tu survoles l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette zoome et dézoome.")}
+        :"Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que tu survoles une flèche de rotation. La roue tourne quand tu survoles l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment autour du point visé ; « Ajuster » revient à la vue de départ.")}
     </div>
-    ${view==="radial"?`<div class="radwrap">${paintRadial()}<div class="radinfo" id="radInfo"></div></div>`:""}
+    ${view==="radial"?`<div class="radwrap"><div class="radcol">
+      <div class="radzoom" role="group" aria-label="Zoom de la carte">
+        <button type="button" class="btn ghost" data-rz="-1" aria-label="Dézoomer" title="Dézoomer (−)">−</button>
+        <output aria-live="polite"></output>
+        <button type="button" class="btn ghost" data-rz="1" aria-label="Zoomer" title="Zoomer (+)">+</button>
+        <button type="button" class="btn ghost" data-rz="0" title="Revenir à la vue de départ (0)">Ajuster</button>
+      </div>
+      <div class="radcadre">${paintRadial()}</div></div><div class="radinfo" id="radInfo"></div></div>`:""}
     ${view==="chain"?paintChain():""}
 ${MOD.dn?`<div class="hint">${(m.niveaux||[]).map(n=>esc(anneeCode(n.annee)+" "+n.label)).join(" · ")}</div>`:""}
     ${view!=="table"?"":`<div class="tw"><table class="mx">
@@ -6145,22 +6210,18 @@ ${MOD.dn?`<div class="hint">${(m.niveaux||[]).map(n=>esc(anneeCode(n.annee)+" "+
   if(host.querySelector(".chainbox"))chainBind(host);
   const toSearch=v=>{ui.ref.q=v;ui.ref.view="search";paintRef();
     const t=document.getElementById("r-search");if(t)t.scrollIntoView({block:"center",behavior:"smooth"})};
-  const toDico=(kind,q)=>{ui.ref.pane="definir";ui.ref.dk=kind==="blocs"?"competences":kind;ui.ref.dq=q;edArm=null;paintRef();
-    const t=document.getElementById("dq");if(t)t.scrollIntoView({block:"center",behavior:"smooth"})};
-  host.querySelectorAll("[data-mapec]").forEach(b=>b.onclick=()=>toDico("ecs",b.dataset.mapec));
+  host.querySelectorAll("[data-mapec]").forEach(b=>b.onclick=()=>allerEtape("ecs",b.dataset.mapec));
   host.querySelectorAll("[data-mapcomp]").forEach(b=>b.onclick=()=>toSearch(b.dataset.mapcomp));
   host.querySelectorAll("[data-mapue]").forEach(b=>b.onclick=()=>{ui.ref.group="ue";toSearch(b.dataset.mapue)});
   const svgHost=host.querySelector(".radwrap");
   if(svgHost)radialWire(svgHost);
 }
 
-const REF_PANES={definir:"Définir",constituer:"Constituer",explorer:"Explorer"};
-/* Définir : les éléments eux-mêmes, communs à tous les diplômes (ex-dictionnaire).
-   Constituer : ce que la mention active retient et comment elle l'associe.
-   Dans les deux, les blocs se définissent avec les compétences qu'ils regroupent. */
-const DEF_PANES={ues:"Unités d'enseignement",ecs:"Enseignements constitutifs",blocs:"Blocs",competences:"Compétences"};
-const CON_PANES={ues:"Unités d'enseignement",ecs:"Enseignements constitutifs",tableau:"Planification par semestre",valider:"Validation"};
-const PANE_MAP={dico:"definir",ues:"constituer",ecs:"constituer",blocs:"constituer",competences:"constituer"};
+const REF_PANES={constituer:"Constituer",explorer:"Explorer"};
+/* Constituer le référentiel de la mention active, une étape par niveau : chaque étape ne crée, ne renomme
+   et ne retire que ses propres éléments ; ceux des autres étapes y sont en lecture seule. Noms, codes et
+   intitulés restent rangés dans le dictionnaire commun à toutes les mentions (DATA.dico). */
+const CON_PANES={ues:"Unités d'enseignement",ecs:"Enseignements constitutifs",blocs:"Blocs et compétences",tableau:"Planification par semestre",valider:"Validation"};
 /* les livrables proposés se règlent dans Mon compte › Préférences */
 const ORG_PANES={etab:"Établissement",diplome:"Diplômes et mentions",enseignants:"Enseignants",promos:"Promotions",affect:"Répartition de service"};
 let edArm=null;
@@ -6314,13 +6375,7 @@ function paintPromosOrg(host){
     savePromos();paintOrg()}));
 }
 function paintRef(){
-  // états retenus d'une version antérieure, où chaque volet était un menu
-  if(PANE_MAP[ui.ref.pane]){
-    if(ui.ref.pane!=="dico")ui.ref.cp=ui.ref.pane==="blocs"?"competences":ui.ref.pane;
-    ui.ref.pane=PANE_MAP[ui.ref.pane];
-  }
   if(!REF_PANES[ui.ref.pane])ui.ref.pane="explorer";
-  if(!KINDS.includes(ui.ref.dk))ui.ref.dk="ues";
   if(!CON_PANES[ui.ref.cp])ui.ref.cp="ues";
   const pane=ui.ref.pane;
   const nav=document.getElementById("refNav");
@@ -6332,12 +6387,12 @@ function paintRef(){
   document.getElementById("refExplore").hidden = pane!=="explorer";
   document.getElementById("refPane").hidden = pane==="explorer";
   if(pane==="explorer")return paintExplore();
-  if(pane==="definir")return paintDico(document.getElementById("refPane"));
   paintConstituer(document.getElementById("refPane"));
 }
-function subNav(attr,cur,n,panes){
-  return `<div class="dkinds">${Object.entries(panes).map(([x,lbl])=>
-    `<button type="button" data-${attr}="${x}" aria-pressed="${x===cur}">${esc(lbl)}${n(x)?`<span class="n">${esc(n(x))}</span>`:""}</button>`).join("")}</div>`;
+/* Ouvre une étape de Constituer, filtrée sur un nom ou un code (depuis Explorer ou la planification). */
+function allerEtape(cp,q){
+  ui.ref.pane="constituer";ui.ref.cp=cp;ui.ref.cq=q||"";edArm=null;paintRef();
+  const t=document.getElementById("cq");if(t)t.scrollIntoView({block:"center",behavior:"smooth"});
 }
 /* ---- versions datées du référentiel d'une mention ---- */
 function versionsOf(dip){const D=DATA;D.versions=D.versions||{};D.versions[dip]=D.versions[dip]||[];return D.versions[dip]}
@@ -6495,19 +6550,7 @@ function paintMatrice(host){
   const compOf=num=>D.competences.filter(c=>String(c.bloc)===String(num)).sort((a,b)=>ecNum(a.code)-ecNum(b.code));
   const sansBloc=D.competences.filter(c=>!blocs.some(b=>String(b.num)===String(c.bloc)));
   const nLien=c=>(c.ecs||[]).filter(l=>cols.some(x=>x.e.id===l.id&&x.sm&&(l.sems||[]).includes(x.sm))).length;
-  // ajouts depuis « Définir »
-  const addSel=(kind,label)=>{
-    const inRef=new Set(D[kind].map(x=>x.id));
-    const cand=D.dico[kind].filter(x=>!inRef.has(x.id));
-    const lbl=x=>kind==="ecs"?(x.nom||"Enseignement"):kind==="blocs"?("Bloc "+x.num+" · "+x.nom)
-      :kind==="competences"?(x.code+" · "+String(x.libelle||"").slice(0,60)):x.nom;
-    return `<select class="addsel" data-add="${kind}" aria-label="${esc(label)}">
-      <option value="">+ ${esc(label)}…</option>
-      ${cand.map(x=>`<option value="${esc(x.id)}">${esc(lbl(x))}</option>`).join("")}
-    </select>`;
-  };
   const bord=x=>(x.alt?" alt":"")+(x.finUe?" ueend":x.fin?" ecend":"");
-  const mxDel=(id,t)=>`<button type="button" class="btn ghost mxdel${edArm==="mx"+id?" danger":""}" data-mxdel="${esc(id)}" title="${esc(t)}" aria-label="${esc(t)}">${edArm==="mx"+id?"Confirmer":"×"}</button>`;
   const cell=(c,x)=>{
     const e=x.e, sm=x.sm;
     if(!sm)return `<td class="hs${bord(x)}"></td>`;
@@ -6516,36 +6559,14 @@ function paintMatrice(host){
       aria-pressed="${on}" title="${esc(c.code+" · "+ecName(e)+" · "+sm+(ecCodeAt(e,sm)?" · "+ecCodeAt(e,sm):""))}">${on?"✓":""}</button></td>`;
   };
   const ligne=(c,i)=>`<tr>
-    <th class="st cmp"><button type="button" class="matbtn" data-mapcomp="${esc(c.code)}"><b>${esc(c.code)}</b> <span>${esc(c.libelle||"")}</span></button>
-      ${mxDel("c:"+c.id,"Retirer "+c.code+" du référentiel")}
-      <select class="blocsel" data-cb2="${D.competences.indexOf(c)}" aria-label="Bloc de ${esc(c.code)}">
-        <option value="">sans bloc</option>
-        ${D.blocs.map(b=>`<option value="${esc(b.num)}" ${String(b.num)===String(c.bloc)?"selected":""}>Bloc ${esc(b.num)}</option>`).join("")}
-      </select></th>
+    <th class="st cmp"><button type="button" class="matbtn" data-mapcomp="${esc(c.code)}" title="Modifier à l'étape 3, Blocs et compétences"><b>${esc(c.code)}</b> <span>${esc(c.libelle||"")}</span></button></th>
     ${cols.map(x=>cell(c,x)).join("")}
     <td class="n">${nLien(c)}</td>
     <td class="n"></td></tr>`;
-  const bande=(num,nom,cs,bid)=>`<tr class="band" style="--c:${esc(BLOC_TINT)}">
+  const bande=(num,nom,cs)=>`<tr class="band" style="--c:${esc(BLOC_TINT)}">
     <th colspan="${cols.length+3}"><span class="bl">${esc("Bloc "+num+(nom?" · "+nom:""))}
       <span class="n">${cs.length} compétence${cs.length>1?"s":""}</span>
-      ${bid?mxDel("b:"+bid,"Retirer le bloc "+num+" du référentiel"):""}
       </span></th></tr>`;
-  // ajout direct dans le tableau : une compétence à la fin de chaque bloc, un bloc à la fin du tableau
-  const inRef=k=>new Set(D[k].map(x=>x.id));
-  const candC=D.dico.competences.filter(x=>!inRef("competences").has(x.id))
-    .sort((a,b)=>ecNum(a.code)-ecNum(b.code));
-  const candB=D.dico.blocs.filter(x=>!inRef("blocs").has(x.id)).sort((a,b)=>(+a.num||0)-(+b.num||0));
-  const addC=num=>{if(!candC.length)return "";
-    const opt=x=>`<option value="${esc(x.id)}">${esc(x.code+" · "+String(x.libelle||"").slice(0,70))}</option>`;
-    const du=candC.filter(x=>num!==""&&String(x.bloc)===String(num)), aut=candC.filter(x=>!du.includes(x));
-    return `<tr class="mxaddrow"><th class="st cmp"><select class="addsel" data-mxaddc="${esc(num)}" aria-label="Ajouter une compétence${num!==""?" au bloc "+esc(num):""}">
-      <option value="">+ Compétence${num!==""?" au bloc "+esc(num):""}…</option>
-      ${du.length&&aut.length?`<optgroup label="Bloc ${esc(num)}">${du.map(opt).join("")}</optgroup><optgroup label="Autres">${aut.map(opt).join("")}</optgroup>`
-        :candC.map(opt).join("")}
-    </select></th><td colspan="${cols.length+2}"></td></tr>`};
-  const addB=()=>candB.length?`<tr class="mxaddrow"><th class="st cmp"><select class="addsel" data-mxaddb aria-label="Ajouter un bloc">
-      <option value="">+ Bloc…</option>${candB.map(x=>`<option value="${esc(x.id)}">${esc("Bloc "+x.num+(x.nom?" · "+x.nom:""))}</option>`).join("")}
-    </select></th><td colspan="${cols.length+2}"></td></tr>`:"";
   host.innerHTML=`<div class="panel">
     <div class="semfilter"><span class="sflab">Semestre</span>
       <div class="seg">${[["","Tous"]].concat(SEMS.map(x=>[x,x])).map(([v,l])=>
@@ -6564,11 +6585,11 @@ function paintMatrice(host){
           <span class="rotbox"><b class="rot">${esc(x.sm?(ecCodeAt(x.e,x.sm)||"—"):"—")}</b></span></th>`).join("")}</tr>
       </thead>
       <tbody>
-        ${blocs.map(b=>{const cs=compOf(b.num);return bande(b.num,b.nom,cs,b.id)+cs.map(ligne).join("")+addC(b.num)}).join("")}
-        ${sansBloc.length?bande("—","compétences sans bloc",sansBloc,null)+sansBloc.map(ligne).join("")+addC(""):""}
-        ${!blocs.length&&!sansBloc.length?addC(""):""}
-        ${addB()}
-      </tbody></table></div>`:`<div class="empty">Aucun enseignement dans ce référentiel : ajoute-en un avec « + Enseignement ».</div>`}
+        ${blocs.map(b=>{const cs=compOf(b.num);return bande(b.num,b.nom,cs)+cs.map(ligne).join("")}).join("")}
+        ${sansBloc.length?bande("—","compétences sans bloc",sansBloc)+sansBloc.map(ligne).join(""):""}
+      </tbody></table></div>
+      ${!D.competences.length?`<div class="empty">Aucune compétence dans ce référentiel : ajoute-les à l'étape 3, Blocs et compétences.</div>`:""}`
+      :`<div class="empty">Aucun enseignement dans ce référentiel : ajoute-en un à l'étape 2, Enseignements constitutifs.</div>`}
   </div>`;
   // l'en-tête reste visible : on mesure ses deux premiers rangs pour les empiler
   const tbl=host.querySelector("table.mtx");
@@ -6576,24 +6597,6 @@ function paintMatrice(host){
     const h1=r[0]?r[0].getBoundingClientRect().height:34, h2=r[1]?r[1].getBoundingClientRect().height:40;
     tbl.style.setProperty("--h1",h1.toFixed(1)+"px");tbl.style.setProperty("--h2",h2.toFixed(1)+"px")}
   host.querySelectorAll("[data-msem]").forEach(b=>b.onclick=()=>{ui.ref.msem=b.dataset.msem;edArm=null;paintRef()});
-  host.querySelectorAll("[data-mxaddc]").forEach(sel=>sel.onchange=()=>{
-    const v=sel.value;if(!v)return;const R=refOf(D,D.activeDiplome);
-    if(!R.competences.some(r=>r.id===v)){const r=assocFor(D.activeDiplome,"competences",v);
-      if(sel.dataset.mxaddc!=="")r.bloc=sel.dataset.mxaddc;R.competences.push(r)}
-    saveData(true,true);toast("Compétence ajoutée au référentiel.")});
-  host.querySelectorAll("[data-mxaddb]").forEach(sel=>sel.onchange=()=>{
-    const v=sel.value;if(!v)return;const R=refOf(D,D.activeDiplome);
-    if(!R.blocs.some(r=>r.id===v))R.blocs.push(assocFor(D.activeDiplome,"blocs",v));
-    saveData(true,true);toast("Bloc ajouté au référentiel.")});
-  host.querySelectorAll("[data-mxdel]").forEach(b=>b.onclick=()=>armDel("mx"+b.dataset.mxdel,()=>{
-    const [t,id]=b.dataset.mxdel.split(/:(.*)/);const R=refOf(D,D.activeDiplome);
-    refRemove(R,t==="b"?"blocs":"competences",id);
-    saveData(true,true);toast(t==="b"?"Bloc retiré du référentiel (ses compétences restent, sans bloc).":"Compétence retirée du référentiel.")}));
-  host.querySelectorAll("[data-add]").forEach(sel=>sel.onchange=()=>{
-    const kind=sel.dataset.add, v=sel.value;if(!v)return;
-    const R=refOf(D,D.activeDiplome);
-    if(!R[kind].some(r=>r.id===v))R[kind].push(assocFor(D.activeDiplome,kind,v));
-    saveData(true,true);toast("Ajouté au référentiel.")});
   host.querySelectorAll("[data-tog]").forEach(b=>b.onclick=()=>{
     const [cid,eid,sm]=b.dataset.tog.split("|");
     const c=D.competences.find(x=>x.id===cid);if(!c)return;
@@ -6608,20 +6611,10 @@ function paintMatrice(host){
     const row=b.closest("tr"), n=row&&row.querySelector("td.n");
     if(n)n.textContent=String(nLien(c));
     saveData(false)});
-  host.querySelectorAll("[data-mapcomp]").forEach(b=>b.onclick=()=>{
-    ui.ref.pane="definir";ui.ref.dk="competences";ui.ref.dq=b.dataset.mapcomp;paintRef();window.scrollTo({top:0,behavior:"smooth"})});
-  host.querySelectorAll("[data-cb2]").forEach(sel=>sel.onchange=()=>{D.competences[+sel.dataset.cb2].bloc=sel.value;saveData()});
-  host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-    const id=b.dataset.eddel, i=+id.slice(2);
-    if(id.startsWith("mc")){const c=D.competences.splice(i,1)[0];}
-    else if(id.startsWith("me")){const e=D.ecs.splice(i,1)[0];
-      D.competences.forEach(c=>{c.ecs=(c.ecs||[]).filter(x=>x.id!==e.id);c.ecIds=c.ecs.map(x=>x.id)})}
-    else if(id.startsWith("mu")){const u=D.ues.splice(i,1)[0];D.ecs.forEach(e=>{if(e.ueId===u.id)e.ueId=""})}
-    else if(id.startsWith("mb"))D.blocs.splice(i,1);
-    saveData()}));
+  host.querySelectorAll("[data-mapcomp]").forEach(b=>b.onclick=()=>allerEtape("blocs",b.dataset.mapcomp));
 }
-/* Constituer le référentiel d'une mention, en 4 étapes comme une évaluation :
-   1. les UE retenues, 2. les EC, 3. la planification par semestre (tableau compétences × EC), 4. la validation datée. */
+/* Constituer le référentiel d'une mention, en 5 étapes comme une évaluation : 1. les UE retenues, 2. les EC,
+   3. les blocs et leurs compétences, 4. la planification par semestre (tableau compétences × EC), 5. la validation datée. */
 function paintConstituer(host){
   const D=DATA, k=ui.ref.cp, keys=Object.keys(CON_PANES), si=keys.indexOf(k);
   const dipNoms=[];D.diplomes.forEach(dp=>{const n=(dp.nom||"").trim();
@@ -6636,6 +6629,7 @@ function paintConstituer(host){
   const plan=D.competences.filter(c=>(c.ecs||[]).some(x=>(x.sems||[]).length)).length;
   const sums={ues:`${D.ues.length} <em>UE retenue${D.ues.length>1?"s":""}</em>`,
     ecs:`${D.ecs.length} <em>EC</em>${D.ecs.filter(e=>!e.ueId).length?` <em>· ${D.ecs.filter(e=>!e.ueId).length} sans UE</em>`:""}`,
+    blocs:`${D.blocs.length} <em>bloc${D.blocs.length>1?"s":""} ·</em> ${D.competences.length} <em>compétence${D.competences.length>1?"s":""}</em>`,
     tableau:`${plan} <em>/ ${D.competences.length} compétences planifiées</em>`,
     valider:!va?`<em>jamais validé</em>`:!va.attestation?`<em>à vérifier et valider</em>`:ajour?`<em>à jour · ${esc(frDate(va.date))}</em>`:`<em>modifié depuis le ${esc(frDate(va.date))}</em>`};
   const steps=`<ol class="steps">${keys.map((x,j)=>`<li><button type="button" data-cp="${x}" ${x===k?'aria-current="true"':""}><span class="hd"><b>${j+1}</b><span class="l">${esc(CON_PANES[x])}</span></span><span class="s">${sums[x]}</span></button></li>`).join("")}</ol>`;
@@ -6647,7 +6641,7 @@ function paintConstituer(host){
         <div class="hint">Valider fige l'état du référentiel de cette mention à une date. À la validation, tu choisis les promotions en cours qui passent à cette version ; les autres gardent la leur, et les évaluations déjà enregistrées restent sur le référentiel sur lequel elles ont été faites.</div>
         <div class="hint">Aucune évaluation ne peut être créée pour une promotion tant que son référentiel n'a pas été vérifié et validé ici. C'est l'enseignant qui est responsable du référentiel, y compris quand il est livré avec DNMAX ou reçu d'un collègue.</div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px"><span><b>${D.ues.length}</b> UE</span><span><b>${D.ecs.length}</b> EC</span><span><b>${D.blocs.length}</b> blocs</span><span><b>${D.competences.length}</b> compétences</span><span><b>${plan}</b> planifiées sur un semestre</span></div>
-        ${D.competences.length-plan?`<div class="hint" style="color:var(--signal)">${D.competences.length-plan} compétence${D.competences.length-plan>1?"s ne sont rattachées":" n'est rattachée"} à aucun semestre (étape 3).</div>`:""}
+        ${D.competences.length-plan?`<div class="hint" style="color:var(--signal)">${D.competences.length-plan} compétence${D.competences.length-plan>1?"s ne sont rattachées":" n'est rattachée"} à aucun semestre (étape 4).</div>`:""}
         <label class="sw" style="align-items:flex-start;font-size:13px"><input type="checkbox" id="cAtteste" aria-describedby="cAttErr">
           <span>J'ai vérifié ce référentiel et j'en assume le contenu : l'hébergeur et le développeur de DNMAX n'en sont pas responsables.</span></label>
         <div class="hint" id="cAttErr" role="alert" style="color:var(--signal)"></div>
@@ -6675,7 +6669,7 @@ function paintConstituer(host){
         <select id="cMen" aria-label="Mention">${ments.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dp.mention||"sans mention")}</option>`).join("")}</select></label>
       ${etat}
     </div>`+steps+`<div id="cpMain"></div>`+nav;
-  host.querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{ui.ref.cp=b.dataset.cp;edArm=null;paintRef();window.scrollTo({top:0,behavior:"smooth"})});
+  host.querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{ui.ref.cp=b.dataset.cp;ui.ref.cq="";edArm=null;paintRef();window.scrollTo({top:0,behavior:"smooth"})});
   host.querySelector("#cDip").onchange=e=>{
     const dp=D.diplomes.find(x=>norm(x.nom||"")===norm(e.target.value));
     if(dp){D.activeDiplome=dp.id;ui.ref.filter={kind:"",value:""};saveData()}};
@@ -6700,58 +6694,157 @@ function paintConstituer(host){
       persistData();paintRef()}));
   }
   else if(k==="tableau")paintMatrice(main);
-  else paintEditor(k,main);
+  else paintEtape(k,main);
 }
-function paintDico(host){
-  const D=DATA, k=ui.ref.dk;
-  host.innerHTML=subNav("dk",k,x=>String(D.dico[x].length),DEF_PANES)+`<div id="dkMain"></div>`;
-  host.querySelectorAll("[data-dk]").forEach(b=>b.onclick=()=>{ui.ref.dk=b.dataset.dk;ui.ref.dq="";edArm=null;paintRef()});
-  dicoTable(k,host.querySelector("#dkMain"),true);
+/* Étapes 1 à 3 de Constituer. Chacune crée, renomme et retire ses propres éléments, et seulement eux :
+   l'UE d'un EC se choisit à l'étape 2 mais ne s'y renomme pas, l'EC d'une compétence se rattache à
+   l'étape 4. Noms, codes et intitulés passent par la vue fusionnée (DATA.ues…) et rejoignent le
+   dictionnaire commun à l'enregistrement (absorb). */
+const ETAPE_NOTE="Noms, codes et intitulés sont communs aux mentions qui retiennent l'élément : les modifier ici les modifie dans chacune. « Retirer » enlève l'élément de ce référentiel seulement ; il reste proposé dans la liste d'ajout, parmi les éléments déjà connus.";
+function etapeLbl(kind,x){
+  return kind==="ues"?((x.code?x.code+" · ":"")+(x.nom||"UE sans nom")):kind==="ecs"?(x.nom||"EC sans intitulé")
+    :kind==="blocs"?("Bloc "+x.num+(x.nom?" · "+x.nom:"")):((x.code||"C")+" · "+String(x.libelle||"").slice(0,70));
 }
-function dicoTable(host0,host1,filtrable){
-  const k=host0, host=host1, D=DATA, q=filtrable?norm((ui.ref.dq||"").trim()):"";
-  const all=D.dico[k];
-  const txt=x=>[x.code,x.num,x.nom,x.libelle].filter(Boolean).join(" ");
-  const list=all.filter(x=>!q||norm(txt(x)).includes(q));
-  const L={
-    ues:{css:"grid-template-columns:66px 92px minmax(0,1fr) 92px",cells:["Couleur","Code","Nom",""],
-      row:(x,i)=>`<input type="color" value="${esc(x.couleur||"#9aa2ae")}" data-df="couleur" data-di="${i}" aria-label="Couleur">
-        <input type="text" value="${esc(x.code||"")}" data-df="code" data-di="${i}" placeholder="UE 1" class="mono" aria-label="Code">
-        <input type="text" value="${esc(x.nom||"")}" data-df="nom" data-di="${i}" aria-label="Nom">`},
-    ecs:{css:"grid-template-columns:66px minmax(0,1fr) 92px",cells:["Couleur","Intitulé",""],
-      row:(x,i)=>`<input type="color" value="${esc(x.couleur||"#9aa2ae")}" data-df="couleur" data-di="${i}" aria-label="Couleur">
-        <input type="text" value="${esc(x.nom||"")}" data-df="nom" data-di="${i}" placeholder="Intitulé de l'enseignement" aria-label="Intitulé">`},
-    blocs:{css:"grid-template-columns:64px minmax(0,1fr) 92px",cells:["N°","Intitulé",""],
-      row:(x,i)=>`<input type="text" value="${esc(x.num||"")}" data-df="num" data-di="${i}" class="mono" aria-label="Numéro">
-        <input type="text" value="${esc(x.nom||"")}" data-df="nom" data-di="${i}" aria-label="Intitulé">`},
-    competences:{css:"grid-template-columns:80px minmax(0,1fr) 92px",cells:["Code","Intitulé",""],
-      row:(x,i)=>`<input type="text" value="${esc(x.code||"")}" data-df="code" data-di="${i}" class="mono" aria-label="Code">
-        <textarea data-df="libelle" data-di="${i}" rows="2" aria-label="Intitulé">${esc(x.libelle||"")}</textarea>`}
-  }[k];
-  host.innerHTML=edPanel("Définir · "+KIND_LBL[k],list.length+(q?" / "+all.length:""),
-      (filtrable?`<input type="text" id="dq" value="${esc(ui.ref.dq||"")}" placeholder="Filtrer…" style="width:auto;flex:0 1 180px">`:"")
-      +`<button class="btn ghost" id="dAdd">+ Nouveau</button>`,
-      {css:L.css,cells:L.cells},
-      list.map(x=>{const i=all.indexOf(x);
-        return `<div class="ed" style="${L.css};align-items:start">${L.row(x,i)}${delBtn("dk"+i,"Effacer")}</div>`}).join(""),
-      filtrable
-        ?"« Définir » rassemble les éléments eux-mêmes, quel que soit le diplôme : un nom ou un intitulé modifié ici change partout où il sert. Quelle mention retient quoi ne se décide pas ici mais dans « Constituer », avec « + Ajouter au référentiel… » et « Retirer ». « Effacer » supprime l'élément de la définition et de tous les référentiels."
-        :"Les blocs regroupent les compétences : on les définit ici, et c'est dans « Constituer » que chaque compétence rejoint le sien.");
-  const dq=host.querySelector("#dq");
-  if(dq)dq.oninput=e=>{ui.ref.dq=e.target.value;paintRef();
-    const f=document.getElementById("dq");if(f){f.focus();f.setSelectionRange(f.value.length,f.value.length)}};
-  host.querySelector("#dAdd").onclick=()=>{
-    const x={id:newId(k[0])};DICO_F[k].forEach(f=>x[f]="");
-    if(x.couleur!==undefined)x.couleur="#9aa2ae";
-    if(k==="ues")x.nom="Nouvelle UE";if(k==="ecs"){x.code="EC ";x.couleur="#9aa2ae"}if(k==="competences")x.code="C";
-    if(k==="blocs")x.num=String(D.dico.blocs.length+1);
-    D.dico[k].push(x);ui.ref.dq="";saveData(true,true);
-    const rows=host.querySelectorAll(".ed");const f=rows.length&&rows[rows.length-1].querySelector('input[type="text"],textarea');if(f)f.focus()};
-  host.querySelectorAll("[data-df]").forEach(inp=>inp.oninput=()=>{
-    D.dico[k][+inp.dataset.di][inp.dataset.df]=inp.value;saveData(false,true)});
+/* liste d'ajout : un élément neuf, ou un élément déjà connu (autre mention, version antérieure) absent de ce référentiel */
+function etapeAddSel(kind,label,neuf){
+  const D=DATA, inRef=new Set(D[kind].map(x=>x.id)), cand=D.dico[kind].filter(x=>!inRef.has(x.id));
+  return `<select class="addsel" data-cadd="${kind}" aria-label="${esc(label)}"><option value="">+ ${esc(label)}…</option>
+    <option value="__new">${esc(neuf)}</option>
+    ${cand.length?`<optgroup label="Déjà connus, d'une autre mention ou d'une version (${cand.length})">${cand.map(x=>`<option value="${esc(x.id)}">${esc(etapeLbl(kind,x))}</option>`).join("")}</optgroup>`:""}</select>`;
+}
+function etapeFresh(kind,bloc){
+  const D=DATA;
+  if(kind==="ues")return {id:newId("u"),code:"UE "+(D.ues.length+1),nom:"Nouvelle UE",couleur:"#9aa2ae",sems:SEMS.slice()};
+  if(kind==="ecs")return {id:newId("e"),nom:"Nouvel enseignement",couleur:"#9aa2ae",ects:"",ueId:(D.ues[0]||{}).id||"",sems:[],codes:{}};
+  if(kind==="blocs"){const n=D.blocs.reduce((m,b)=>Math.max(m,parseInt(b.num,10)||0),0)+1;return {id:newId("b"),num:String(n),nom:""}}
+  const n=D.competences.filter(c=>bloc!==""&&String(c.bloc)===String(bloc)).length+1;
+  return {id:newId("c"),code:bloc!==""?"C"+bloc+"."+n:"C",bloc:bloc||"",libelle:"",ecs:[],ecIds:[]};
+}
+function etapeFocus(id){
+  const r=document.querySelector(`#cpMain [data-row="${CSS.escape(id)}"]`);if(!r)return;
+  const f=r.querySelector('input[type="text"]:not(.mono),textarea')||r.querySelector('input[type="text"]');
+  r.scrollIntoView({block:"center"});if(f){f.focus();if(f.select)f.select()}
+}
+/* doublons de code dans ce référentiel : signalés, pas interdits (un code se corrige en deux temps) */
+function etapeDoublons(list,key){
+  const n=new Map();list.forEach(x=>{const k=norm(String(x[key]||"").trim());if(k)n.set(k,(n.get(k)||0)+1)});
+  return x=>(n.get(norm(String(x[key]||"").trim()))||0)>1;
+}
+function paintEtape(kind,host){
+  const D=DATA, dipL=REF.meta.diplome||"—", q=norm((ui.ref.cq||"").trim());
+  const txt=(k,i,f,v,ph,lbl,extra)=>`<input type="text" value="${esc(v||"")}" data-cf="${k}|${i}|${f}" placeholder="${esc(ph||"")}" aria-label="${esc(lbl)}"${extra||""}>`;
+  const col=(k,i,v)=>`<input type="color" value="${esc(v||"#9aa2ae")}" data-cf="${k}|${i}|couleur" aria-label="Couleur">`;
+  const semChips=(attr,i,cur,ok)=>`<div class="chips sems">${SEMS.map(x=>`<button type="button" data-${attr}="${i}" data-v="${x}" aria-pressed="${(cur||[]).includes(x)}" ${ok&&!ok.includes(x)?'disabled title="Hors des semestres de l\'UE"':""}>${x}</button>`).join("")}</div>`;
+  const filtre=`<input type="text" id="cq" value="${esc(ui.ref.cq||"")}" placeholder="Filtrer…" aria-label="Filtrer" style="width:auto">`;
+  const toggleSem=(o,v)=>{o.sems=(o.sems||[]).includes(v)?o.sems.filter(x=>x!==v):[...(o.sems||[]),v].sort((x,y)=>SEMS.indexOf(x)-SEMS.indexOf(y))};
+  const invalide=t=>` aria-invalid="true" title="${esc(t)}"`;
+  if(kind==="ues"){
+    const css="grid-template-columns:44px 96px minmax(0,1fr) 216px 64px 92px", dbl=etapeDoublons(D.ues,"code");
+    host.innerHTML=edPanel("Étape 1 · Unités d'enseignement · "+dipL,D.ues.length,etapeAddSel("ues","Ajouter une UE","Nouvelle UE"),
+      {css,cells:["","Code","Nom","Semestres","EC",""]},
+      D.ues.map((u,i)=>{const n=D.ecs.filter(e=>e.ueId===u.id).length;
+        return `<div class="ed" style="${css}" data-row="${esc(u.id)}">${col("ues",i,u.couleur)}
+        ${txt("ues",i,"code",u.code,"Code","Code de l'UE",' class="mono"'+(dbl(u)?invalide("Code déjà porté par une autre UE"):""))}
+        ${txt("ues",i,"nom",u.nom,"Nom de l'unité","Nom de l'UE")}
+        ${semChips("us",i,u.sems)}
+        <span class="num" title="Enseignements constitutifs rattachés (étape 2)">${n} EC</span>
+        ${delBtn("cr:ues:"+u.id,"Retirer")}</div>`}).join(""),
+      "À cette étape, seules les UE se créent, se renomment et se retirent. Les semestres ouverts ici bornent ceux de leurs EC. "+ETAPE_NOTE);
+    host.querySelectorAll("[data-us]").forEach(b=>b.onclick=()=>{toggleSem(D.ues[+b.dataset.us],b.dataset.v);saveData()});
+  }
+  else if(kind==="ecs"){
+    const css="grid-template-columns:44px 228px minmax(0,1fr) 190px 216px 54px 92px";
+    const list=D.ecs.slice().sort((a,b)=>ecOrd(a)-ecOrd(b)).filter(e=>!q||norm([ecCodesList(e).join(" "),e.nom].join(" ")).includes(q));
+    host.innerHTML=edPanel("Étape 2 · Enseignements constitutifs · "+dipL,list.length+(q?" / "+D.ecs.length:""),filtre+etapeAddSel("ecs","Ajouter un EC","Nouvel enseignement constitutif"),
+      {css,cells:["","Codes par année","Intitulé","Unité d'enseignement","Semestres","ECTS",""]},
+      (D.ues.length?"":`<div class="empty">Aucune UE dans ce référentiel : les EC restent « sans UE » tant que l'étape 1 n'en a pas.</div>`)
+      +list.map(e=>{const i=D.ecs.indexOf(e), u=D.ues.find(x=>x.id===e.ueId);
+        return `<div class="ed" style="${css}" data-row="${esc(e.id)}">${col("ecs",i,e.couleur)}
+        <div class="codes3">${ANNEES.map(a=>`<label><b>DN${a}</b><input type="text" value="${esc((e.codes||{})[a]||"")}" data-ec3="${i}" data-a="${a}" class="mono" placeholder="EC ${a}.1" aria-label="Code en DN${a}"></label>`).join("")}</div>
+        ${txt("ecs",i,"nom",e.nom,"Intitulé de l'enseignement","Intitulé de l'EC")}
+        <select data-em="${i}" aria-label="Unité d'enseignement" title="L'UE se choisit ici ; son nom se modifie à l'étape 1"><option value="">— sans UE —</option>
+          ${D.ues.map(x=>`<option value="${esc(x.id)}" ${x.id===e.ueId?"selected":""}>${esc((x.code?x.code+" · ":"")+x.nom)}</option>`).join("")}</select>
+        ${semChips("es",i,e.sems,(u&&u.sems)||SEMS)}
+        <input type="text" value="${esc(e.ects||"")}" data-ee="${i}" aria-label="ECTS" class="mono">
+        ${delBtn("cr:ecs:"+e.id,"Retirer")}</div>`}).join(""),
+      "À cette étape, seuls les EC se créent, se renomment et se retirent ; leur UE se choisit dans la liste, mais son nom se modifie à l'étape 1. Le code d'un EC change d'une année de diplôme à l'autre. Les semestres grisés sont hors du calendrier de l'UE. "+ETAPE_NOTE);
+    host.querySelectorAll("[data-ee]").forEach(inp=>inp.oninput=()=>{D.ecs[+inp.dataset.ee].ects=inp.value;saveData(false)});
+    host.querySelectorAll("[data-ec3]").forEach(inp=>inp.onchange=()=>{
+      const e=D.ecs[+inp.dataset.ec3];if(!e.codes||typeof e.codes!=="object")e.codes={};
+      const v=inp.value.trim();if(v)e.codes[inp.dataset.a]=v;else delete e.codes[inp.dataset.a];saveData(false)});
+    host.querySelectorAll("[data-em]").forEach(sel=>sel.onchange=()=>{D.ecs[+sel.dataset.em].ueId=sel.value;saveData()});
+    host.querySelectorAll("[data-es]").forEach(b=>b.onclick=()=>{toggleSem(D.ecs[+b.dataset.es],b.dataset.v);saveData()});
+  }
+  else{
+    // étape 3 : les blocs, chacun avec ses compétences ; les EC rattachés se lisent ici et se règlent à l'étape 4
+    const css="grid-template-columns:90px minmax(0,1.4fr) 104px minmax(0,1fr) 92px";
+    const blocs=D.blocs.slice().sort((a,b)=>(parseInt(a.num,10)||0)-(parseInt(b.num,10)||0));
+    const dblC=etapeDoublons(D.competences,"code");
+    const hit=c=>!q||norm(c.code+" "+c.libelle).includes(q);
+    const compOf=num=>D.competences.filter(c=>String(c.bloc)===String(num)).sort((a,b)=>ecNum(a.code)-ecNum(b.code));
+    const sansBloc=D.competences.filter(c=>!blocs.some(b=>String(b.num)===String(c.bloc)));
+    const ecsLus=c=>{const l=(c.ecs||[]).map(x=>({x,e:D.ecs.find(y=>y.id===x.id)})).filter(o=>o.e&&(o.x.sems||[]).length);
+      if(!l.length)return `<span class="hint" style="font-size:11.5px">aucun EC — étape 4</span>`;
+      const pills=l.slice(0,5).map(({x,e})=>{const codes=[...new Set(x.sems.map(sm=>ecCodeAt(e,sm)).filter(Boolean))];
+        return `<span class="pill c" style="--c:${esc(e.couleur||"#9aa2ae")}" title="${esc(ecName(e)+" · "+x.sems.join(" "))}">${esc(codes.length?codes.map((k,j)=>j?k.replace(/^EC\s*/i,""):k).join(" · "):ecName(e))}</span>`});
+      return `<div class="chips" title="Rattachements réglés à l'étape 4, Planification par semestre">${pills.join("")}${l.length>5?`<span class="pill">+${l.length-5}</span>`:""}</div>`};
+    const ligne=c=>{const i=D.competences.indexOf(c);
+      return `<div class="ed" style="${css};align-items:start" data-row="${esc(c.id)}">
+        <input type="text" value="${esc(c.code||"")}" data-ccode="${i}" class="mono" aria-label="Code de la compétence" placeholder="C1.1"${dblC(c)?invalide("Code déjà porté par une autre compétence"):""}>
+        <textarea data-cf="competences|${i}|libelle" rows="${Math.min(5,Math.max(2,Math.ceil(String(c.libelle||"").length/72)))}" aria-label="Intitulé de ${esc(c.code||"la compétence")}" placeholder="Intitulé de la compétence">${esc(c.libelle||"")}</textarea>
+        <select data-cbloc="${i}" aria-label="Bloc de ${esc(c.code||"la compétence")}"><option value="">sans bloc</option>
+          ${blocs.map(b=>`<option value="${esc(b.num)}" ${String(b.num)===String(c.bloc)?"selected":""}>Bloc ${esc(b.num)}</option>`).join("")}</select>
+        ${ecsLus(c)}
+        ${delBtn("cr:competences:"+c.id,"Retirer")}</div>`};
+    const groupe=(b,cs)=>{const i=b?D.blocs.indexOf(b):-1, blocVu=!!b&&!!q&&norm(b.num+" "+b.nom).includes(q);
+      const vis=blocVu?cs:cs.filter(hit);
+      if(q&&!vis.length&&!blocVu)return "";
+      return `<div class="dgrp cgrp"${b?` data-row="${esc(b.id)}"`:""}><div class="hd">
+        ${b?`<span class="lab">Bloc</span>
+          <input type="text" value="${esc(b.num||"")}" data-bnum="${esc(b.id)}" class="mono" aria-label="Numéro du bloc" style="flex:0 0 58px">
+          ${txt("blocs",i,"nom",b.nom,"Intitulé du bloc","Intitulé du bloc "+b.num)}`
+          :`<span class="lab">Sans bloc</span><span class="hint" style="flex:1">Compétences dont le bloc n'est pas dans ce référentiel</span>`}
+        <span class="count">${cs.length} compétence${cs.length>1?"s":""}</span>
+        <button class="btn ghost" data-cnew="${b?esc(b.num):""}">+ Compétence</button>
+        ${b?delBtn("cr:blocs:"+b.id,"Retirer le bloc"):""}</div>
+        ${vis.map(ligne).join("")}</div>`};
+    const nC=D.competences.filter(hit).length;
+    host.innerHTML=edPanel("Étape 3 · Blocs et compétences · "+dipL,
+      D.blocs.length+" bloc"+(D.blocs.length>1?"s":"")+" · "+(q?nC+" / ":"")+D.competences.length+" compétence"+(D.competences.length>1?"s":""),
+      filtre+etapeAddSel("blocs","Ajouter un bloc","Nouveau bloc")+etapeAddSel("competences","Ajouter une compétence","Nouvelle compétence, sans bloc"),
+      {css,cells:["Code","Intitulé","Bloc","EC rattachés (étape 4)",""]},
+      blocs.map(b=>groupe(b,compOf(b.num))).join("")+(sansBloc.length?groupe(null,sansBloc):""),
+      "À cette étape, seuls les blocs et les compétences se créent, se renomment et se retirent. Une compétence change de bloc avec la liste « Bloc ». Les EC et semestres qui la portent se lisent ici et se règlent à l'étape 4, Planification par semestre. Retirer un bloc garde ses compétences, alors sans bloc. "+ETAPE_NOTE);
+    host.querySelectorAll("[data-ccode]").forEach(inp=>inp.onchange=()=>{D.competences[+inp.dataset.ccode].code=inp.value.trim();saveData()});
+    host.querySelectorAll("[data-cbloc]").forEach(sel=>sel.onchange=()=>{D.competences[+sel.dataset.cbloc].bloc=sel.value;saveData()});
+    host.querySelectorAll("[data-bnum]").forEach(inp=>inp.onchange=()=>{
+      absorb(D);
+      const r=window.dnmaxPont.renumeroterBloc(D,inp.dataset.bnum,inp.value);
+      if(r.modifie){D.dico=r.donnees.dico;D.refs=r.donnees.refs;if(r.donnees.versions)D.versions=r.donnees.versions;
+        saveData(true,true);toast("Bloc renuméroté : ses compétences le suivent.");return}
+      if(r.refus==="doublon")toast("Le bloc "+inp.value.trim()+" existe déjà dans un référentiel qui retient celui-ci : choisis un autre numéro.");
+      else if(r.refus==="vide")toast("Un bloc garde un numéro : ses compétences s'y rattachent par lui.");
+      paintRef()});
+    host.querySelectorAll("[data-cnew]").forEach(b=>b.onclick=()=>{const c=etapeFresh("competences",b.dataset.cnew);
+      D.competences.push(c);saveData();etapeFocus(c.id)});
+  }
+  // commun aux trois étapes
+  host.querySelectorAll("[data-cf]").forEach(inp=>inp.oninput=()=>{const [k,i,f]=inp.dataset.cf.split("|"), o=D[k][+i];
+    if(o){o[f]=inp.value;saveData(false)}});
+  const cq=host.querySelector("#cq");
+  if(cq)cq.oninput=e=>{ui.ref.cq=e.target.value;paintRef();
+    const f=document.getElementById("cq");if(f){f.focus();f.setSelectionRange(f.value.length,f.value.length)}};
+  host.querySelectorAll("[data-cadd]").forEach(sel=>sel.onchange=()=>{
+    const k=sel.dataset.cadd, v=sel.value;if(!v)return;
+    ui.ref.cq="";
+    if(v==="__new"){const x=etapeFresh(k,"");D[k].push(x);saveData();etapeFocus(x.id);return}
+    const R=refOf(D,D.activeDiplome);
+    if(!R[k].some(r=>r.id===v))R[k].push(assocFor(D.activeDiplome,k,v));
+    saveData(true,true);toast("Ajouté au référentiel "+dipL+".");etapeFocus(v)});
   host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-    const x=D.dico[k].splice(+b.dataset.eddel.slice(2),1)[0];
-    Object.values(D.refs).forEach(R=>refRemove(R,k,x.id));saveData(true,true)}));
+    const r=b.dataset.eddel.slice(3), j=r.indexOf(":"), k=r.slice(0,j), id=r.slice(j+1);
+    absorb(D);refRemove(refOf(D,D.activeDiplome),k,id);saveData(true,true);
+    toast(k==="blocs"?"Bloc retiré du référentiel ; ses compétences restent, sans bloc.":"Retiré du référentiel "+dipL+".")}));
 }
 function edPanel(titre,count,actions,head,rowsHtml,note){
   return `<div class="panel">
@@ -6797,7 +6890,7 @@ function paintEditor(pane,host){
           <input type="text" value="${esc(dp.code||"")}" data-dc="${i}" placeholder="${esc(autoDipCode(dp)||"DNO")}" aria-label="Code" class="mono">
           ${dvs.length>1?delBtn("dip"+i,"Supprimer"):`<span class="hint">—</span>`}</div>`).join("")}
       </div>`).join("")||`<div class="empty">Aucun diplôme : installez un référentiel depuis l'encart de départ, ou créez-en un avec « + Nouveau diplôme ».</div>`,
-      "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments du dictionnaire, pour que tu n'aies qu'à ajuster les variations (Référentiel › Dictionnaire, ou les volets du référentiel une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.")
+      "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments, pour que tu n'aies qu'à ajuster les variations (Référentiel › Constituer, une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.")
       +(dvs.length?`<div class="panel" style="max-width:720px;margin-top:18px"><div class="pick-head"><h3>Réglages du référentiel</h3>${dvs.length>1?`<select id="edDipAct" aria-label="Mention dont on règle le référentiel" style="width:auto;margin-left:auto">${dvs.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>`:`<span class="hint" style="margin-left:auto">${esc(dipLabel(dvs[0]))}</span>`}</div>
         <div class="panel-body">
           <div class="field"><label>Années et niveaux</label>
@@ -6842,141 +6935,6 @@ function paintEditor(pane,host){
       if(D.activeDiplome===dp.id)D.activeDiplome=(D.diplomes[0]||{}).id||"";saveData()}));
     return;
   }
-  if(KINDS.includes(pane)){
-    const dipL=REF.meta.diplome||"—";
-    const roName=(t,mono)=>`<span class="ro${mono?" mono":""}">${esc(t||"—")}</span>`;
-    // ajout : depuis le dictionnaire, ou nouvel élément
-    const inRef=new Set(D[pane].map(x=>x.id));
-    const cand=D.dico[pane].filter(x=>!inRef.has(x.id));
-    const dlabel=x=>pane==="ecs"?(x.nom||"Enseignement"):pane==="blocs"?("Bloc "+x.num+" · "+x.nom)
-      :pane==="competences"?(x.code+" · "+String(x.libelle||"").slice(0,70)):x.nom;
-    const addSel=`<select class="addsel" id="edAddSel" aria-label="Ajouter au référentiel">
-        <option value="">+ Ajouter au référentiel…</option>
-        ${cand.length?`<optgroup label="Depuis le dictionnaire (${cand.length})">${cand.map(x=>`<option value="${esc(x.id)}">${esc(dlabel(x))}</option>`).join("")}</optgroup>`:""}
-        <option value="__new">Nouvel élément (créé dans le dictionnaire)</option></select>`;
-    const toDico=`<button class="btn ghost" id="edToDico">Modifier les intitulés</button>`;
-    const note="Ici, les associations propres à "+dipL+". Noms, codes, couleurs et intitulés viennent du dictionnaire, commun à toutes les mentions : « Modifier les intitulés » y mène. « Retirer » enlève l'élément de ce référentiel sans l'effacer du dictionnaire.";
-    const fresh={
-      ues:()=>({id:newId("u"),code:"",nom:"Nouvelle UE",couleur:"#9aa2ae",sems:SEMS.slice()}),
-      ecs:()=>({id:newId("e"),code:"EC ",nom:"Nouvel enseignement",couleur:"#9aa2ae",ects:"",ueId:(D.ues[0]||{}).id||"",sems:[]}),
-      blocs:()=>({id:newId("b"),num:String(D.blocs.length+1),nom:""}),
-      competences:()=>({id:newId("c"),code:"C",bloc:(D.blocs[0]||{}).num||"",libelle:"",ecIds:[]})};
-    const wire=()=>{
-      const sel=host.querySelector("#edAddSel");
-      if(sel)sel.onchange=()=>{
-        const v=sel.value;if(!v)return;
-        if(v==="__new"){D[pane].push(fresh[pane]());saveData();
-          ui.ref.pane="definir";ui.ref.dk=pane==="blocs"?"competences":pane;ui.ref.dq="";paintRef();toast("Élément créé : donne-lui son nom dans « Définir ».");return}
-        const R=refOf(D,D.activeDiplome);
-        if(!R[pane].some(r=>r.id===v))R[pane].push(assocFor(D.activeDiplome,pane,v));
-        saveData(true,true);toast("Ajouté au référentiel "+dipL+".")};
-      const td=host.querySelector("#edToDico");
-      if(td)td.onclick=()=>{ui.ref.pane="definir";ui.ref.dk=pane==="blocs"?"competences":pane;paintRef();window.scrollTo({top:0,behavior:"smooth"})};
-    };
-    if(pane==="blocs"){
-      const css="grid-template-columns:64px minmax(0,1fr) 120px 92px";
-      host.innerHTML=edPanel("Blocs de compétences · "+dipL,D.blocs.length,addSel+toDico,
-        {css,cells:["N°","Intitulé","Compétences",""]},
-        D.blocs.map((b,i)=>{const n=D.competences.filter(c=>String(c.bloc)===String(b.num)).length;
-          return `<div class="ed" style="${css}">${roName(b.num,true)}${roName(b.nom)}
-          <span class="num">${n} comp.</span>${delBtn("bloc"+i,"Retirer")}</div>`}).join(""),note);
-      wire();
-      host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-        D.blocs.splice(+b.dataset.eddel.slice(4),1);saveData()}));
-      return;
-    }
-    if(pane==="ues"){
-      const css="grid-template-columns:34px 86px minmax(0,1fr) 216px 92px";
-      host.innerHTML=edPanel("Unités d'enseignement · "+dipL,D.ues.length,addSel+toDico,
-        {css,cells:["","Code","Nom","Semestres",""]},
-        D.ues.map((u,i)=>`<div class="ed" style="${css}">
-          <span class="sw" style="--c:${esc(u.couleur||"#9aa2ae")}"></span>${roName(u.code,true)}${roName(u.nom)}
-          <div class="chips sems">${SEMS.map(x=>`<button type="button" data-us="${i}" data-v="${x}" aria-pressed="${(u.sems||[]).includes(x)}">${x}</button>`).join("")}</div>
-          ${delBtn("ue"+i,"Retirer")}</div>`).join(""),
-        note+" Un EC n'apparaît dans une évaluation que sur les semestres communs à son UE et à lui-même.");
-      wire();
-      host.querySelectorAll("[data-us]").forEach(b=>b.onclick=()=>{
-        const u=D.ues[+b.dataset.us],v=b.dataset.v;
-        u.sems=(u.sems||[]).includes(v)?u.sems.filter(x=>x!==v):[...(u.sems||[]),v].sort((x,y)=>SEMS.indexOf(x)-SEMS.indexOf(y));
-        saveData()});
-      host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-        const u=D.ues.splice(+b.dataset.eddel.slice(2),1)[0];
-        D.ecs.forEach(e=>{if(e.ueId===u.id)e.ueId=""});saveData()}));
-      return;
-    }
-    if(pane==="ecs"){
-      const css="grid-template-columns:34px 228px minmax(0,1fr) 180px 216px 54px 92px";
-      host.innerHTML=edPanel("Enseignements constitutifs · "+dipL,D.ecs.length,addSel+toDico,
-        {css,cells:["","Codes par année","Intitulé","Unité d'enseignement","Semestres","ECTS",""]},
-        D.ecs.slice().sort((a,b)=>ecOrd(a)-ecOrd(b)).map(e=>{
-          const i=D.ecs.indexOf(e);
-          return `<div class="ed" style="${css}">
-          <span class="sw" style="--c:${esc(e.couleur||"#9aa2ae")}"></span>
-          <div class="codes3">${ANNEES.map(a=>`<label><b>DN${a}</b><input type="text" value="${esc((e.codes||{})[a]||"")}" data-ec3="${i}" data-a="${a}" class="mono" placeholder="EC ${a}.1" aria-label="Code en DN${a}"></label>`).join("")}</div>${roName(ecName(e))}
-          <select data-em="${i}" aria-label="Unité d'enseignement"><option value="">— sans UE —</option>
-            ${D.ues.map(u=>`<option value="${u.id}" ${u.id===e.ueId?"selected":""}>${esc(u.nom)}</option>`).join("")}</select>
-          <div class="chips sems">${(()=>{const u=D.ues.find(x=>x.id===e.ueId);const ok=(u&&u.sems)||SEMS;
-            return SEMS.map(x=>`<button type="button" data-es="${i}" data-v="${x}" aria-pressed="${(e.sems||[]).includes(x)}" ${ok.includes(x)?"":'disabled title="Hors des semestres de l\'UE"'}>${x}</button>`).join("")})()}</div>
-          <input type="text" value="${esc(e.ects||"")}" data-ee="${i}" aria-label="ECTS" class="mono">
-          ${delBtn("ec"+i,"Retirer")}</div>`}).join(""),
-        note+" Les semestres grisés sont hors du calendrier de l'UE : ouvre-les d'abord dans l'onglet UE.");
-      wire();
-      host.querySelectorAll("[data-ee]").forEach(inp=>inp.oninput=()=>{D.ecs[+inp.dataset.ee].ects=inp.value;saveData(false)});
-      host.querySelectorAll("[data-ec3]").forEach(inp=>inp.oninput=()=>{
-        const e=D.ecs[+inp.dataset.ec3];if(!e.codes||typeof e.codes!=="object")e.codes={};
-        const v=inp.value.trim();if(v)e.codes[inp.dataset.a]=v;else delete e.codes[inp.dataset.a];saveData(false)});
-      host.querySelectorAll("[data-em]").forEach(sel=>sel.onchange=()=>{D.ecs[+sel.dataset.em].ueId=sel.value;saveData()});
-      host.querySelectorAll("[data-es]").forEach(b=>b.onclick=()=>{
-        const e=D.ecs[+b.dataset.es],v=b.dataset.v;
-        e.sems=(e.sems||[]).includes(v)?e.sems.filter(x=>x!==v):[...(e.sems||[]),v].sort((x,y)=>SEMS.indexOf(x)-SEMS.indexOf(y));
-        saveData()});
-      host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-        const e=D.ecs.splice(+b.dataset.eddel.slice(2),1)[0];
-        D.competences.forEach(c=>{c.ecs=(c.ecs||[]).filter(x=>x.id!==e.id);c.ecIds=c.ecs.map(x=>x.id)});saveData()}));
-      return;
-    }
-    if(pane==="competences"){
-      const q=norm((ui.ref.edq||"").trim());
-      const css="grid-template-columns:70px 70px minmax(0,1fr) 92px";
-      const list=D.competences.filter(c=>!q||norm(c.code+" "+c.libelle).includes(q));
-      host.innerHTML=edPanel("Compétences · "+dipL,D.competences.length,
-        `<input type="text" id="edq" value="${esc(ui.ref.edq||"")}" placeholder="Filtrer…" style="width:auto;flex:0 1 160px">`+addSel+toDico,
-        {css,cells:["Code","Bloc","Intitulé et EC rattachés",""]},
-        list.map(c=>{
-          const i=D.competences.indexOf(c);
-          return `<div class="ed" style="${css};align-items:start">
-          ${roName(c.code,true)}
-          <select data-cb="${i}" aria-label="Bloc"><option value="">—</option>
-            ${D.blocs.map(b=>`<option value="${esc(b.num)}" ${b.num===String(c.bloc)?"selected":""}>${esc(b.num)}</option>`).join("")}</select>
-          <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
-            ${roName(c.libelle)}
-            <div class="ecpick">${D.ecs.slice().sort((a,b)=>ecOrd(a)-ecOrd(b)).map(e=>{
-              const l=lienEc(c,e.id), on=!!l;
-              return `<div class="ecl${on?" on":""}" style="--c:${esc(e.couleur||"#9aa2ae")}">
-                <button type="button" class="ec" data-ce="${i}" data-v="${e.id}" aria-pressed="${on}" title="${esc(ecName(e))}"><span class="k">${esc(ecCodeLbl(e))}</span><span class="n">${esc(ecName(e))}</span></button>
-                ${on?`<div class="chips sems">${(e.sems||[]).map(sm=>`<button type="button" data-cs="${i}" data-v="${e.id}" data-sm="${sm}" aria-pressed="${(l.sems||[]).includes(sm)}" title="${esc(sm+" · "+(ecCodeAt(e,sm)||"sans code"))}">${sm}</button>`).join("")||'<span class="muted">aucun semestre sur cet EC</span>'}</div>`:""}
-              </div>`}).join("")}</div>
-          </div>
-          ${delBtn("cp"+i,"Retirer")}</div>`}).join(""),
-        note+" Un EC coché peut n'être relié à la compétence que sur certains semestres : le code de l'EC change d'une année à l'autre.");
-      wire();
-      host.querySelector("#edq").oninput=e=>{ui.ref.edq=e.target.value;paintRef();
-        const f=document.getElementById("edq");if(f){f.focus();f.setSelectionRange(f.value.length,f.value.length)}};
-      host.querySelectorAll("[data-cb]").forEach(sel=>sel.onchange=()=>{D.competences[+sel.dataset.cb].bloc=sel.value;saveData()});
-      host.querySelectorAll("[data-ce]").forEach(b=>b.onclick=()=>{
-        const c=D.competences[+b.dataset.ce],v=b.dataset.v,e=D.ecs.find(x=>x.id===v)||{};
-        c.ecs=lienEc(c,v)?(c.ecs||[]).filter(x=>x.id!==v):[...(c.ecs||[]),{id:v,sems:(e.sems||[]).slice()}];
-        c.ecIds=c.ecs.map(x=>x.id);saveData()});
-      host.querySelectorAll("[data-cs]").forEach(b=>b.onclick=()=>{
-        const c=D.competences[+b.dataset.cs],l=lienEc(c,b.dataset.v),sm=b.dataset.sm;if(!l)return;
-        l.sems=(l.sems||[]).includes(sm)?l.sems.filter(x=>x!==sm):[...(l.sems||[]),sm].sort((x,y)=>SEMS.indexOf(x)-SEMS.indexOf(y));
-        if(!l.sems.length){c.ecs=c.ecs.filter(x=>x.id!==b.dataset.v);c.ecIds=c.ecs.map(x=>x.id)}
-        saveData()});
-      host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-        D.competences.splice(+b.dataset.eddel.slice(2),1);saveData()}));
-      return;
-    }
-  }
   if(pane==="enseignants"){
     const css="grid-template-columns:60px minmax(0,1fr) minmax(0,1fr) 92px";
     D.enseignants.forEach(completerPersonne);
@@ -6985,8 +6943,8 @@ function paintEditor(pane,host){
       {css,cells:["C'est moi","Prénom","Nom",""]},
       D.enseignants.map((t,i)=>`<div class="ed" style="${css}">
         <input type="radio" name="moi" data-moi="${esc(t.id)}" ${D.moi===t.id?"checked":""} aria-label="C'est moi : ${esc(t.nom)}" style="justify-self:center;width:18px;height:18px">
-        <input type="text" value="${esc(t.prenom)}" data-tp="${i}" placeholder="Camille" aria-label="Prénom">
-        <input type="text" value="${esc(t.nomFam)}" data-tn="${i}" placeholder="Martin" aria-label="Nom">
+        <input type="text" value="${esc(t.prenom)}" data-tp="${i}" placeholder="Prénom" aria-label="Prénom">
+        <input type="text" value="${esc(t.nomFam)}" data-tn="${i}" placeholder="Nom" aria-label="Nom">
         ${delBtn("ens"+i,"Supprimer")}</div>`).join(""),
       "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur de DNMAX : son prénom et son nom signent ses envois, sa répartition de service cadre la page Progression, et il est coché d'office dans une nouvelle évaluation.");
     host.querySelectorAll("[data-moi]").forEach(r=>r.onchange=()=>{D.moi=r.dataset.moi;persistData();toast("Répartition de service de "+((D.enseignants.find(t=>t.id===D.moi)||{}).nom||"")+" prise en compte.")});
