@@ -4,10 +4,17 @@
 
 ### Modifié
 
+- Site, page Télécharger : tous les boutons de téléchargement ont la même taille ; les textes disent que les installeurs sont hébergés chez OVH et que les référentiels Objet et Espace sont aussi livrés avec l'application.
+- Carte radiale du référentiel : le zoom est progressif et animé en douceur (environ 8 % par cran de molette, pincement sur pavé tactile ou écran tactile, boutons −, + et « Ajuster » au-dessus de la carte, touches +, − et 0), centré sur le point visé, entre la roue entière (100 %) et 250 %. La carte garde la même taille à tous les zooms et reste dans son cadre : plus de saut de mise en page ni de débordement sur les onglets ou l'encadré voisin. Le cadre s'adapte à la colonne et à la fenêtre (de l'écran 1280 × 800 au 2560 × 1440, et au téléphone, où le pincement est désormais possible) et se recalcule quand la fenêtre change de taille. Les libellés trop petits pour être lus sont masqués au lieu de s'entasser. Avec « réduire les animations », le zoom s'applique sans animation.
+- Référentiel : le volet « Définir » disparaît. « Constituer » compte désormais cinq étapes : unités d'enseignement, enseignements constitutifs, blocs et compétences (nouvelle étape), planification par semestre, validation. Chaque étape crée, renomme et retire seulement ses propres éléments ; les autres y sont en lecture seule (le nom d'une UE ne se modifie plus à l'étape des EC, et la planification ne crée plus de blocs ni de compétences). Changer le numéro d'un bloc fait suivre ses compétences, et un numéro déjà pris est refusé. Un clic sur un EC ou une compétence dans Explorer ou dans la planification ouvre l'étape où il se modifie. Aucune donnée n'est transformée. La visite guidée présente les cinq étapes avant la validation ; documentation du site mise à jour.
 - Barre du haut : « Échanger… » et « Mon compte » rejoignent la barre, à droite des onglets, avec la même hauteur et le même fond qu'eux et une icône ; sur téléphone, seules les icônes restent. Sur grand écran (1920 × 1200 et plus), barre, onglets et sous-onglets sont agrandis à l'échelle du texte.
 - « Mon compte » devient un menu à deux entrées : « Mot de passe… » et « Préférences ». Le prénom et le nom ne s'y corrigent plus : ils se corrigent sur votre ligne « C'est moi » de « Mon établissement » › « Enseignants », et le nom qui signe vos envois suit. « À propos » s'ouvre depuis le pied de page.
 - Nouvelle page « Préférences » (menu « Mon compte ») : thème clair, sombre ou comme le système, retenu sur cet ordinateur ; échelles d'évaluation et vocabulaire, qui quittent Paramètres ; livrables proposés, qui quittent « Mon établissement ». Tout changement d'échelle (activer, désactiver, changer celle par défaut) rappelle d'abord que l'échelle officielle des DN MADE est celle des niveaux de maîtrise, à confirmer ou annuler.
 - Paramètres : les panneaux forment une colonne centrée, plus large sur grand écran, au lieu d'une colonne étroite collée à gauche. Les visites guidées s'y relancent, dans un panneau « Visites guidées » ; les boutons « Visite guidée » des modules restent.
+
+### Corrigé
+
+- Les champs vides de Mon établissement et des promotions affichaient en grisé des noms d'exemple (« Camille Martin ») qui pouvaient passer pour des données : ils indiquent désormais « Prénom », « Nom ».
 
 ## 0.4.2 — 2026-11-13
 
