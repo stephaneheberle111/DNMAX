@@ -56,6 +56,8 @@ npm run dev
 | Tests Rust | `cargo test --locked` (dans `src-tauri/`) |
 | Linter Rust | `cargo clippy --all-targets --locked -- -D warnings` (dans `src-tauri/`) |
 
+Ce que les tests automatiques ne peuvent pas constater (échange en direct entre deux ordinateurs, restauration dans l'application installée) se vérifie à la main, avec la fiche `docs/fiche-essai-machines.md`.
+
 ## Construire un installeur
 
 ```bash
