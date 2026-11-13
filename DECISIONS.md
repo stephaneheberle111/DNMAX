@@ -410,3 +410,13 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 - la marque `brouillon` est un champ local (`CHAMPS_LOCAUX`) : elle ne voyage pas dans un échange et sa disparition ne vaut pas « évaluation modifiée » ; pour la visite guidée, une évaluation « créée » est une évaluation sans cette marque (`lireAvancement`).
 
 **Vérification** : `npm run verifier:saisie` déroule ces cas dans un navigateur, sur l'exemple, et regarde ce qui est réellement écrit dans le stockage. Lancé par l'intégration continue.
+
+## 30. Les règles de saisie des résultats sortent de l'interface historique
+
+**Retenu** : première reprise annoncée par la décision 5. Les règles de la saisie des résultats d'un étudiant sont écrites en TypeScript dans `src/domaine/saisie-resultats.ts`, sans accès à l'écran ni au stockage, et testées : seuils des niveaux d'une échelle, niveau correspondant à la position du curseur, statut de rendu, effacement de la saisie d'un non rendu ou d'un dispensé, niveau saisi qui vaut travail rendu, décompte par étudiant et par évaluation, évaluation « commencée ». L'interface historique les appelle par le pont (`window.dnmaxPont.saisie`) ; ses fonctions (`pctBounds`, `estOf`, `setEst`, `setPct`, `evalStats`…) ne font plus que déléguer et redessiner.
+
+**Pourquoi celles-là d'abord** : c'est là qu'une erreur coûte le plus cher (des résultats d'étudiants faux ou perdus), et l'interface historique n'a ni typage ni tests.
+
+**Comportement inchangé** : les règles rendent un nouveau résultat au lieu de modifier celui qu'on leur passe ; l'interface historique le verse dans l'objet existant, que des champs déjà affichés (observations, appréciation) tiennent encore.
+
+**Reste dans l'interface historique** : l'affichage de la grille et de la fiche, la lecture d'anciens résultats à décimales (`resOf`), les observations, l'appréciation et la restitution, ainsi que tout le reste de la composition d'une évaluation.
