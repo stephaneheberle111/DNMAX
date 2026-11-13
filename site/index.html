@@ -319,6 +319,9 @@ svg.dim .dot.off{opacity:.1}
 .sys .badge{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;background:var(--signal);color:var(--signal-ink);padding:2px 8px;border-radius:99px}
 .sys p{margin:0;color:var(--ink-2);font-size:15px}
 .sys .fmt{font-family:var(--mono);font-size:13px;color:var(--ink)}
+/* Tous les boutons de téléchargement de la page ont la même taille. */
+.sys>.btn,.referentiel>.btn{width:280px;justify-content:center;text-align:center}
+@media (max-width:760px){.sys>.btn,.referentiel>.btn{width:100%}}
 @media (max-width:760px){.sys{grid-template-columns:1fr;gap:10px}}
 .referentiel{margin-top:16px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:24px;padding:22px 24px;background:var(--surface);border:1px dashed var(--line);border-radius:12px}
 .referentiel h3{margin:0 0 4px;font-size:17px}
@@ -702,7 +705,7 @@ footer a{color:var(--ink-2)}
   <section class="page">
     <div class="wrap">
       <h1>Télécharger DNMAX</h1>
-      <p class="intro">Dernière version publiée, avec ses nouveautés dans le <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/CHANGELOG.md">journal des modifications</a>. Choisissez l’installeur de votre système&nbsp;; les fichiers sont hébergés sur GitHub.</p>
+      <p class="intro">Dernière version publiée, avec ses nouveautés dans le <a href="https://github.com/stephaneheberle111/DNMAX/blob/main/CHANGELOG.md">journal des modifications</a>. Choisissez l’installeur de votre système&nbsp;; les installeurs sont hébergés en France, chez OVH (l’AppImage Linux reste sur GitHub).</p>
       <div class="systemes" id="systemes">
         <div class="sys" data-os="win">
           <div><h3>Windows</h3></div>
@@ -723,18 +726,18 @@ footer a{color:var(--ink-2)}
       <div class="referentiel">
         <div>
           <h3>Référentiel DN MADE mention Objet</h3>
-          <p>DNMAX est livré vide&nbsp;: importez ce référentiel pour commencer. Dans DNMAX, cliquez «&nbsp;Échanger…&nbsp;», puis «&nbsp;Recevoir&nbsp;», et choisissez ce fichier.</p>
+          <p>Il est aussi livré avec DNMAX&nbsp;: au premier lancement, choisissez «&nbsp;Objet&nbsp;» dans l’encart de départ. Ce fichier sert à le transmettre ou à le réinstaller («&nbsp;Échanger…&nbsp;» puis «&nbsp;Recevoir&nbsp;»).</p>
           <p class="fmt">dn-made-objet.dnmax</p>
         </div>
-        <a class="btn" href="referentiels/dn-made-objet.dnmax" download>Télécharger le référentiel</a>
+        <a class="btn" href="referentiels/dn-made-objet.dnmax" download>Télécharger Objet</a>
       </div>
       <div class="referentiel">
         <div>
           <h3>Référentiel DN MADE mention Espace</h3>
-          <p>Même démarche pour la mention Espace&nbsp;: dans DNMAX, cliquez «&nbsp;Échanger…&nbsp;», puis «&nbsp;Recevoir&nbsp;», et choisissez ce fichier.</p>
+          <p>Même chose pour la mention Espace&nbsp;: livré avec DNMAX («&nbsp;Espace&nbsp;» dans l’encart de départ), ce fichier sert à le transmettre ou à le réinstaller.</p>
           <p class="fmt">dn-made-espace.dnmax</p>
         </div>
-        <a class="btn" href="referentiels/dn-made-espace.dnmax" download>Télécharger le référentiel</a>
+        <a class="btn" href="referentiels/dn-made-espace.dnmax" download>Télécharger Espace</a>
       </div>
       <div class="sources">
         <h3>Toutes les sources de téléchargement</h3>
