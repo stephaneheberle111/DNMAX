@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.5.0 — 2026-11-13
+
 ### Ajouté
 
 - Au premier lancement, avant le choix du mot de passe, une page « Avant de commencer » rappelle les bonnes pratiques : session protégée et non partagée, écran verrouillé, chiffrement du disque conseillé (BitLocker, FileVault, LUKS), sauvegardes hors de l'ordinateur, exports Word et Excel non chiffrés, code de secours gardé hors de l'ordinateur. Rien n'est bloquant : « J'ai compris, continuer ».
@@ -23,6 +25,9 @@
 
 ### Corrigé
 
+- Si l'installation d'une mise à jour échoue, le message ne promet plus qu'elle sera reproposée « au prochain lancement » (DNMAX ne cherche une mise à jour que sur demande) : il renvoie à « Rechercher une mise à jour ».
+- Visite guidée, étape « Déclarer vos collègues » : elle cite le libellé réel « C'est moi » et ne demande plus une discipline que la liste des enseignants ne propose pas.
+- Site : la page Confidentialité précise que l'annonce de l'échange en direct porte aussi un numéro de version technique ; la maquette de l'accueil n'affiche plus un ancien numéro de version.
 - Les champs vides de Mon établissement et des promotions affichaient en grisé des noms d'exemple (« Camille Martin ») qui pouvaient passer pour des données : ils indiquent désormais « Prénom », « Nom ».
 
 ## 0.4.2 — 2026-11-13
