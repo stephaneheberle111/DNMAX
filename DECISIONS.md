@@ -331,3 +331,11 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Conséquence pour les installations existantes** : les versions validées avant cette décision n'ont pas d'attestation ; l'enseignant doit les valider une fois avant d'enregistrer de nouveau une évaluation. Aucune donnée n'est modifiée par la mise à jour.
 
 **Exemple** : « Charger un exemple » atteste, pour sa démonstration, le référentiel qu'il installe lui-même (version notée « Exemple ») et les mentions qu'il en dérive ; il n'atteste jamais un référentiel déjà présent.
+
+## 25. Aucune donnée dans ce qui est livré, vérifié à chaque fusion
+
+**Retenu** : l'intégration continue démarre l'interface telle qu'elle est livrée, dans un navigateur sans données, et échoue si le démarrage contient autre chose qu'une installation vierge (`outils/verifier-installation-vide.ts`, règle testée dans `outils/installation-vide.ts`) : ni référentiel, ni diplôme nommé, ni établissement, ni enseignant, ni promotion, ni élève, ni évaluation. Seuls sont admis le diplôme-cadre vide et la liste des types de livrables proposés.
+
+**Pourquoi** : livrer une donnée d'exemple ou un reste d'essai dans une version mettrait des noms dans les installations des enseignants. Une vérification humaine ne suffit pas à le garantir dans la durée.
+
+**Outil** : Playwright (licence Apache 2.0, statut SILL non vérifié), déjà utilisé pour les essais à l'écran ; retenu pour piloter un vrai navigateur sans serveur ni service extérieur.

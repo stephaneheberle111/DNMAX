@@ -49,6 +49,7 @@ npm run dev
 | Contrôle | Commande |
 | --- | --- |
 | Tests | `npm test` |
+| Vérifier qu'une installation neuve ne contient aucune donnée | `npm run verifier:vide` (navigateur Playwright : `npx playwright install chromium` une fois) |
 | Linter | `npm run lint` |
 | Typage | `npm run typecheck` |
 | Format Rust | `cargo fmt --check` (dans `src-tauri/`) |
