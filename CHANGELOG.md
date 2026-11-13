@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Site, page Télécharger : tous les boutons de téléchargement ont la même taille ; les textes disent que les installeurs sont hébergés chez OVH et que les référentiels Objet et Espace sont aussi livrés avec l'application.
+
 ### Corrigé
 
 - Les champs vides de Mon établissement et des promotions affichaient en grisé des noms d'exemple (« Camille Martin ») qui pouvaient passer pour des données : ils indiquent désormais « Prénom », « Nom ».
