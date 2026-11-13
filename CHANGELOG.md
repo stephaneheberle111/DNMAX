@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Corrigé
+
+- Les champs vides de Mon établissement et des promotions affichaient en grisé des noms d'exemple (« Camille Martin ») qui pouvaient passer pour des données : ils indiquent désormais « Prénom », « Nom ».
+
 ## 0.4.2 — 2026-11-13
 
 ### Ajouté
