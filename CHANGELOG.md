@@ -2,6 +2,18 @@
 
 ## Non publié
 
+### Modifié
+
+- Menu « Actions… » : « Annuler l'évaluation » précise que rien n'est supprimé et qu'elle peut être rétablie.
+- Paramètres : la description de l'exemple dit ce qu'il charge réellement (un établissement complet, résultats compris) et qu'il active le module Étudiants.
+
+### Corrigé
+
+- Grille de la promo : les lignes des étudiants sans niveau saisi ont la même hauteur que les autres.
+- Progression : les dates des évaluations s'écrivent « 23/10 », comme dans « Mes évaluations ».
+- Mon établissement > Diplômes et mentions : la consigne des identifiants d'année est passée au vouvoiement.
+- Le niveau d'année 3 proposé par défaut s'appelle « Autonome », comme partout ailleurs (les établissements déjà saisis ne sont pas modifiés).
+
 ## 0.5.1 — 2026-11-13
 
 ### Ajouté
