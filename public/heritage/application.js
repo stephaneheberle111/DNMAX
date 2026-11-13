@@ -3278,10 +3278,10 @@ const PRESETS = {
   note:{nom:"Note chiffrée",niveaux:["Note / 20"]},
   libre:{nom:"Personnalisé",niveaux:["À compléter"]}
 };
-/* échelles : actives et par défaut se règlent dans Paramètres ; chaque évaluation garde la sienne */
+/* échelles : actives et par défaut se règlent dans Mon compte › Préférences ; chaque évaluation garde la sienne */
 const ECH=(()=>{let e=null;try{e=JSON.parse(STOCKAGE.getItem("dnmade.echelles")||"null")}catch(_){}
   e=e||{};if(Array.isArray(e.actifs))e.actifs=e.actifs.filter(k=>k!=="dn");   // les niveaux DN MADE ne sont plus une échelle
-  if(!Array.isArray(e.actifs)||!e.actifs.length)e.actifs=["maitrise"];   // « Degrés d'acquisition » se coche dans Paramètres
+  if(!Array.isArray(e.actifs)||!e.actifs.length)e.actifs=["maitrise"];   // « Degrés d'acquisition » se coche dans Préférences
   if(!e.def||!e.actifs.includes(e.def))e.def=e.actifs.includes("maitrise")?"maitrise":e.actifs[0];
   if(Array.isArray(e.libre)&&e.libre.length)PRESETS.libre.niveaux=e.libre.slice();return e})();
 function saveEch(){try{STOCKAGE.setItem("dnmade.echelles",JSON.stringify(ECH))}catch(_){}}
@@ -3664,7 +3664,7 @@ function saveData(repaint,fromDico){
   REF=computeREF();
   F.items=F.items.filter(it=>REF.competences.some(c=>c.code===it.code));
   cleanOps();syncItemEcs();save();
-  if(repaint!==false){paintForm();paintPick();paintLignes();paintRef();if(ui.tab==="org")paintOrg()}
+  if(repaint!==false){paintForm();paintPick();paintLignes();paintRef();if(ui.tab==="org")paintOrg();if(ui.tab==="pref")paintPrefs()}
 }
 let fiches = LS.get("dnmade.fiches",[]);
 let PREFS = Object.assign({critLabel:"Compétence opérationnelle"}, LS.get("dnmade.prefs",{}));
@@ -3935,7 +3935,7 @@ function paintActions(){
 }
 function paintTabs(){
   // « Mes évaluations » porte les deux vues : la liste, et la composition d'une évaluation
-  const avail={ref:!!MOD.referentiel,org:true,set:true,prog:true};
+  const avail={ref:!!MOD.referentiel,org:true,set:true,prog:true,pref:true};
   if(ui.tab==="saved"&&!MOD.fiches)ui.tab="new";
   if(ui.tab!=="new"&&ui.tab!=="saved"&&!avail[ui.tab])ui.tab=MOD.fiches?"saved":"new";
   const bs=document.getElementById("t-saved");
@@ -3949,6 +3949,9 @@ function paintTabs(){
     b.setAttribute("aria-selected",String(ui.tab===v));
     document.getElementById("v"+id.slice(1)).hidden = ui.tab!==v;
   }
+  // Préférences : ouvertes depuis le menu « Mon compte », sans onglet propre
+  document.getElementById("v-pref").hidden = ui.tab!=="pref";
+  {const bc=document.getElementById("bouton-compte");if(bc)bc.classList.toggle("actif",ui.tab==="pref")}
   const bb=document.getElementById("bBack");if(bb)bb.hidden=!MOD.fiches;
   const nw=document.getElementById("newWhat");
   if(nw){const v=versionPourF();nw.textContent=(fiches.some(x=>x.id===F.id)?"Évaluation enregistrée — les modifications sont à ré-enregistrer":"Nouvelle évaluation")
@@ -3996,7 +3999,7 @@ function paintForm(){
   g("f-eleves").value=F.eleves;
   paintSems();
   const hE=g("helpEch");
-  if(hE&&!hE.innerHTML)hE.innerHTML=help("L'échelle donne les niveaux de la jauge d'évaluation, à l'écran comme dans le Word et l'Excel. Une nouvelle évaluation prend l'échelle par défaut ; la liste propose toutes les échelles activées dans Paramètres › Échelles d'évaluation.");
+  if(hE&&!hE.innerHTML)hE.innerHTML=help("L'échelle donne les niveaux de la jauge d'évaluation, à l'écran comme dans le Word et l'Excel. Une nouvelle évaluation prend l'échelle par défaut ; la liste propose toutes les échelles activées dans Mon compte › Préférences › Échelles d'évaluation.");
   g("row-ec").hidden=!MOD.ec;
   g("fgroup-ref").hidden=!MOD.ec;
   paintContexte();
@@ -4004,7 +4007,7 @@ function paintForm(){
   g("panel-eleves").hidden=true;
   g("step1cols").style.gridTemplateColumns="minmax(0,1fr)";
   const ps=g("f-preset");
-  // l'échelle se choisit parmi celles activées dans Paramètres (par défaut : celle marquée « par défaut ») ;
+  // l'échelle se choisit parmi celles activées dans Préférences (par défaut : celle marquée « par défaut ») ;
   // on ne la change plus une fois des niveaux saisis pour des élèves
   if(!F.niveaux||!F.niveaux.length){F.preset=DEF_PRESET_GET();F.niveaux=PRESETS[F.preset].niveaux.slice()}
   g("fld-preset").hidden=false;
@@ -4019,7 +4022,7 @@ function paintForm(){
   ps.value=F.preset;
   {const saisi=Object.values(F.res||{}).some(r=>hasSaisie(r)), h=g("f-presetHint");
    ps.disabled=saisi;
-   if(h)h.textContent=saisi?"Des niveaux sont déjà saisis pour des élèves : l'échelle ne peut plus changer.":"Échelles activées dans Paramètres › Échelles d'évaluation."}
+   if(h)h.textContent=saisi?"Des niveaux sont déjà saisis pour des élèves : l'échelle ne peut plus changer.":"Échelles activées dans Mon compte › Préférences › Échelles d'évaluation."}
   ps.onchange=()=>{if(Object.values(F.res||{}).some(r=>hasSaisie(r)))return;F.preset=ps.value;F.niveaux=PRESETS[ps.value].niveaux.slice();save();paintForm();paintLignes()};
   g("f-levels").innerHTML=F.niveaux.map((n,i)=>
     `<div class="lv"><input type="text" value="${esc(n)}" data-i="${i}" aria-label="Degré ${i+1}"><button class="btn ghost" data-rm="${i}" aria-label="Supprimer">×</button></div>`).join("");
@@ -6219,10 +6222,11 @@ const REF_PANES={constituer:"Constituer",explorer:"Explorer"};
    et ne retire que ses propres éléments ; ceux des autres étapes y sont en lecture seule. Noms, codes et
    intitulés restent rangés dans le dictionnaire commun à toutes les mentions (DATA.dico). */
 const CON_PANES={ues:"Unités d'enseignement",ecs:"Enseignements constitutifs",blocs:"Blocs et compétences",tableau:"Planification par semestre",valider:"Validation"};
-const ORG_PANES={etab:"Établissement",diplome:"Diplômes et mentions",enseignants:"Enseignants",promos:"Promotions",affect:"Répartition de service",livrables:"Livrables"};
+/* les livrables proposés se règlent dans Mon compte › Préférences */
+const ORG_PANES={etab:"Établissement",diplome:"Diplômes et mentions",enseignants:"Enseignants",promos:"Promotions",affect:"Répartition de service"};
 let edArm=null;
 function paintOrg(){
-  const pane=ui.org.pane||"diplome";
+  const pane=ORG_PANES[ui.org.pane]?ui.org.pane:"diplome";
   const nav=document.getElementById("orgNav");
   nav.innerHTML=Object.entries(ORG_PANES).map(([k,v])=>
     `<button type="button" data-opane="${k}" aria-pressed="${pane===k}">${esc(v)}</button>`).join("");
@@ -6854,7 +6858,7 @@ function delBtn(id,label){
   return `<button class="btn ghost ${edArm===id?"danger":""}" data-eddel="${esc(id)}">${edArm===id?"Confirmer":(label||"×")}</button>`;
 }
 function armDel(id,fn){
-  if(edArm!==id){edArm=id;(ui.tab==="org"?paintOrg:paintRef)();return}
+  if(edArm!==id){edArm=id;(ui.tab==="org"?paintOrg:ui.tab==="pref"?paintPrefs:paintRef)();return}
   edArm=null;fn();
 }
 function paintEditor(pane,host){
@@ -6942,14 +6946,16 @@ function paintEditor(pane,host){
         <input type="text" value="${esc(t.prenom)}" data-tp="${i}" placeholder="Prénom" aria-label="Prénom">
         <input type="text" value="${esc(t.nomFam)}" data-tn="${i}" placeholder="Nom" aria-label="Nom">
         ${delBtn("ens"+i,"Supprimer")}</div>`).join(""),
-      "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur de DNMAX : sa répartition de service cadre la page Progression, et il est coché d'office dans une nouvelle évaluation.");
+      "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur de DNMAX : son prénom et son nom signent ses envois, sa répartition de service cadre la page Progression, et il est coché d'office dans une nouvelle évaluation.");
     host.querySelectorAll("[data-moi]").forEach(r=>r.onchange=()=>{D.moi=r.dataset.moi;persistData();toast("Répartition de service de "+((D.enseignants.find(t=>t.id===D.moi)||{}).nom||"")+" prise en compte.")});
     host.querySelector("#edAdd").onclick=()=>{D.enseignants.push({id:"t"+Date.now().toString(36),nom:"",prenom:"",nomFam:"",discipline:""});saveData();
       const l=host.querySelectorAll("[data-tp]");if(l.length)l[l.length-1].focus()};
     host.querySelectorAll("[data-tp],[data-tn]").forEach(inp=>inp.oninput=()=>{
       const t=D.enseignants[+(inp.dataset.tp??inp.dataset.tn)];
       if(inp.dataset.tp!==undefined)t.prenom=inp.value;else t.nomFam=inp.value;
-      t.nom=composerNom(t.prenom,t.nomFam);saveData(false)});
+      t.nom=composerNom(t.prenom,t.nomFam);saveData(false);
+      // Le nom de « C'est moi » est aussi celui qui signe les envois : l'application le reprend.
+      if(t.id===D.moi&&window.dnmaxPont.renommerMoi)window.dnmaxPont.renommerMoi(t.prenom,t.nomFam)});
     host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
       D.enseignants.splice(+b.dataset.eddel.slice(3),1);saveData()}));
     return;
@@ -6967,7 +6973,7 @@ function paintEditor(pane,host){
         +`<datalist id="livtypes"><option>Écrit</option><option>Oral</option><option>Plastique</option><option>Numérique</option><option>Maquette</option><option>Dossier</option></datalist>`,
       "Proposés à l'étape 1 de l'évaluation ; un livrable hors liste s'ajoute ici automatiquement.");
     host.querySelector("#edAdd").onclick=()=>{D.livrables.push({nom:"",type:""});saveData();
-      const l=document.querySelectorAll("#refPane [data-lv]");if(l.length)l[l.length-1].focus()};
+      const l=host.querySelectorAll("[data-lv]");if(l.length)l[l.length-1].focus()};
     host.querySelector("#edDefault").onclick=()=>{D.livrables=SUPPORTS_DEF.map(x=>({nom:x,type:""}));saveData();toast("Liste d'origine rétablie.")};
     host.querySelectorAll("[data-lv]").forEach(inp=>inp.oninput=()=>{D.livrables[+inp.dataset.lv].nom=inp.value;saveData(false)});
     host.querySelectorAll("[data-lt]").forEach(inp=>inp.oninput=()=>{D.livrables[+inp.dataset.lt].type=inp.value;saveData(false)});
@@ -7228,16 +7234,22 @@ function paintEch(){
         <label class="rstl"><input type="radio" name="echdef" data-echdef="${k}" ${d?"checked":""} ${on?"":"disabled"}> par défaut</label></div>
         ${k==="libre"?`<input type="text" data-echlib value="${esc(v.niveaux.join(" / "))}" placeholder="Niveau 1 / Niveau 2 / …" style="margin-top:6px" aria-label="Niveaux de l'échelle personnalisée, séparés par /">`
           :`<div class="d">${v.niveaux.map((n,i)=>`<span class="pill">${i+1}. ${esc(n)}</span>`).join(" ")}</div>`}</div></div>`}).join("");
-  host.querySelectorAll("[data-ech]").forEach(cb=>cb.onchange=()=>{const k=cb.dataset.ech;
-    ECH.actifs=cb.checked?[...new Set([...ECH.actifs,k])]:ECH.actifs.filter(x=>x!==k);saveEch();paintEch()});
-  host.querySelectorAll("[data-echdef]").forEach(r=>r.onchange=()=>{ECH.def=r.dataset.echdef;saveEch();paintEch();
-    toast("Échelle par défaut : "+PRESETS[ECH.def].nom)});
+  // Tout changement d'échelle rappelle d'abord l'échelle officielle : la case reprend son état tant qu'il n'est pas confirmé.
+  const confirmer=fn=>{paintEch();window.dnmaxPont.confirmerChangementEchelle().then(ok=>{if(ok){fn();saveEch()}paintEch()})};
+  host.querySelectorAll("[data-ech]").forEach(cb=>cb.onchange=()=>{const k=cb.dataset.ech,on=cb.checked;
+    confirmer(()=>{ECH.actifs=on?[...new Set([...ECH.actifs,k])]:ECH.actifs.filter(x=>x!==k)})});
+  host.querySelectorAll("[data-echdef]").forEach(r=>r.onchange=()=>{const k=r.dataset.echdef;
+    confirmer(()=>{ECH.def=k;toast("Échelle par défaut : "+PRESETS[k].nom)})});
   const li=host.querySelector("[data-echlib]");
   if(li)li.onchange=()=>{const l=li.value.split("/").map(x=>x.trim()).filter(Boolean);if(!l.length)return;
     PRESETS.libre.niveaux=l;ECH.libre=l;saveEch()};
 }
+/* Préférences (menu « Mon compte ») : échelles, vocabulaire et livrables proposés ; le thème est tenu par l'application. */
+function paintPrefs(){
+  paintEch();paintVocab();
+  paintEditor("livrables",document.getElementById("prefLivr"));
+}
 function paintSet(){
-  paintEch();
   {const sel=document.getElementById("p-device");if(sel){sel.value=DEVICE.force==="phone"||DEVICE.force==="desktop"?DEVICE.force:"auto";
     const nm={phone:"téléphone",tablet:"tablette (mise en page ordinateur)",desktop:"ordinateur"};
     document.getElementById("p-deviceHint").textContent="Détecté automatiquement : "+nm[DEVICE.auto]+". Le choix s'applique au rechargement de la page.";
@@ -7841,7 +7853,7 @@ const bind=(id,ev,fn)=>{const el=document.getElementById(id);if(el)el.addEventLi
   ui.tab=id==="t-saved"?(MOD.fiches?"saved":"new"):id.slice(2);paintTabs();
   if(ui.tab==="new"){paintForm();paintPick();paintLignes()}
   if(ui.tab==="saved")paintSaved();if(ui.tab==="prog")paintProg();if(ui.tab==="ref")paintRef();if(ui.tab==="org")paintOrg();
-  if(ui.tab==="set"){paintSet();paintVocab()}}));
+  if(ui.tab==="set")paintSet()}));
 bind("bDemo","click",loadDemo);
 bind("bBack","click",()=>{ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"})});
 bind("bNew","click",nouvelleFiche);
@@ -7937,7 +7949,12 @@ bind("r-group","change",e=>{ui.ref.group=e.target.value;paintRef()});
 bind("r-annee","change",e=>{ui.ref.annee=e.target.value;paintRef()});
 bind("rClear","click",()=>{Object.assign(ui.ref,{q:"",group:"bloc",annee:"*",sems:[]});paintRef()});
 
-paintTabs();paintForm();paintPick();paintSaved();paintRef();paintSet();
+paintTabs();paintForm();paintPick();paintSaved();paintRef();paintSet();paintPrefs();
+
+/* Pont vers l'application : le menu « Mon compte » ouvre les Préférences. */
+window.dnmaxPont.ouvrirPreferences=()=>{
+  ui.tab="pref";edArm=null;paintTabs();paintPrefs();window.scrollTo({top:0,behavior:"smooth"});
+};
 
 /* Pont vers l'application : contenu lisible (sans identifiants internes) du référentiel d'un diplôme,
    pour l'une de ses versions validées ou, si `versionId` est vide ou inconnu, pour son référentiel de travail.

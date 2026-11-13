@@ -85,27 +85,3 @@ export function provisionnerEnseignantMoi(donnees: EnseignantsEtMoi, identite: I
   };
   return { enseignants: [...donnees.enseignants, nouveau], moi: identite.id };
 }
-
-/**
- * Reporte un changement de nom de l'identité sur l'enseignant « c'est moi »,
- * à condition que ce soit celui créé pour cette installation (même identifiant).
- * Un enseignant choisi à la main garde le nom saisi dans « Mon établissement ».
- *
- * @returns les données à enregistrer, ou `null` s'il n'y a rien à changer
- */
-export function renommerEnseignantMoi(donnees: EnseignantsEtMoi, identite: Identite): EnseignantsEtMoi | null {
-  if (donnees.moi !== identite.id || identite.prenom === "" || identite.nomFamille === "") {
-    return null;
-  }
-  const rang = donnees.enseignants.findIndex((enseignant) => identifiantDe(enseignant) === identite.id);
-  const actuel = donnees.enseignants[rang];
-  if (rang < 0 || !estObjet(actuel)) {
-    return null;
-  }
-  if (actuel.prenom === identite.prenom && actuel.nomFam === identite.nomFamille && actuel.nom === identite.nom) {
-    return null;
-  }
-  const enseignants = [...donnees.enseignants];
-  enseignants[rang] = { ...actuel, prenom: identite.prenom, nomFam: identite.nomFamille, nom: identite.nom };
-  return { enseignants, moi: donnees.moi };
-}

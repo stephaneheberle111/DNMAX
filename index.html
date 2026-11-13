@@ -19,9 +19,14 @@
       <button role="tab" id="t-org" aria-selected="false">Mon établissement</button>
       <button role="tab" id="t-set" aria-selected="false">Paramètres</button>
     </nav>
-    <!-- Ajout à l'interface historique : l'échange entre enseignants est géré par src/ecran-echange.ts -->
-    <button type="button" class="btn ghost" id="bouton-echange" hidden>Échanger…</button>
-    <button type="button" class="btn ghost" id="bouton-compte" hidden>Mon compte…</button>
+    <!-- Ajout à l'interface historique : l'échange entre enseignants est géré par src/ecran-echange.ts,
+         le menu « Mon compte » par src/ecran-compte.ts -->
+    <div class="bar-outils">
+      <button type="button" class="bar-outil" id="bouton-echange" hidden>
+        <svg class="bar-icone" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7h11m0 0-3-3m3 3-3 3M16 13H5m0 0 3-3m-3 3 3 3"/></svg>Échanger…</button>
+      <button type="button" class="bar-outil" id="bouton-compte" hidden>
+        <svg class="bar-icone" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="7" r="3.2"/><path d="M3.8 16.5c.9-3 3.3-4.6 6.2-4.6s5.3 1.6 6.2 4.6"/></svg>Mon compte<svg class="bar-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m6 8 4 4 4-4"/></svg></button>
+    </div>
   </div>
 </header>
 
@@ -219,14 +224,27 @@
   </section>
 
   <section id="v-set" hidden>
-    <div class="panel" style="max-width:720px">
+    <div class="vue-reglages">
+    <div class="panel">
       <div class="pick-head"><h3>Modules de l'application</h3><span class="count" id="mCount">0</span>
         <div style="margin-left:auto"><button class="btn ghost" id="bModReset">Valeurs par défaut</button></div>
       </div>
       <div id="modList"></div>
     </div>
+    <!-- Ajout à l'interface historique : visites guidées, lancées par src/ecran-parcours.ts, qui rend ce panneau visible -->
+    <div class="panel" id="panneau-visites" hidden>
+      <div class="pick-head"><h3>Visites guidées</h3></div>
+      <div class="panel-body">
+        <div class="hint">Relancez une visite pas à pas : elle éclaire là où cliquer et repère ce que vous avez déjà fait.</div>
+        <div class="visites-liste">
+          <button type="button" class="btn" data-parcours="prise-en-main">Prise en main</button>
+          <button type="button" class="btn" data-parcours="eleves">Module Élèves</button>
+          <button type="button" class="btn" data-parcours="niveaux">Module Niveaux DN MADE</button>
+        </div>
+      </div>
+    </div>
     <!-- Ajout à l'interface historique : données des élèves, géré par src/ecran-droits-eleves.ts -->
-    <div class="panel" style="max-width:720px;margin-top:18px" id="panneau-donnees-eleves" hidden>
+    <div class="panel" id="panneau-donnees-eleves" hidden>
       <div class="pick-head"><h3>Données des élèves</h3></div>
       <div class="panel-body">
         <div class="hint">Avec le module Élèves, DNMAX garde des noms et des résultats d'élèves. Un élève ou sa famille peut demander à consulter ses données ou à les faire effacer ; une promotion se conserve un temps limité après sa sortie, puis s'anonymise ou s'efface.</div>
@@ -237,7 +255,7 @@
       </div>
     </div>
     <!-- Ajout à l'interface historique : sauvegardes du coffre, géré par src/ecran-sauvegardes.ts -->
-    <div class="panel" style="max-width:720px;margin-top:18px" id="panneau-sauvegardes" hidden>
+    <div class="panel" id="panneau-sauvegardes" hidden>
       <div class="pick-head"><h3>Sauvegardes</h3><span class="count" id="nombre-sauvegardes">0</span></div>
       <div class="panel-body">
         <div class="hint">DNMAX garde une copie chiffrée de vos données par jour d'utilisation, dix au plus, faite à la première ouverture de la journée. Vous pouvez revenir à l'une d'elles : l'état actuel est d'abord mis de côté.</div>
@@ -245,16 +263,35 @@
         <p class="sauvegardes-message" id="message-sauvegardes" role="status" hidden></p>
       </div>
     </div>
-    <div class="panel" style="max-width:720px;margin-top:18px">
-      <div class="pick-head"><h3>Échelles d'évaluation<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Les échelles cochées sont actives ; celle marquée « par défaut » s'applique à toute nouvelle évaluation et ne se change pas depuis l'évaluation. Une évaluation déjà enregistrée garde son échelle.</span></span></h3></div>
-      <div id="echList"></div>
-    </div>
-    <div class="panel" style="max-width:720px;margin-top:18px">
+    <div class="panel">
       <div class="pick-head"><h3>Exemple<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Remplit une évaluation complète (semestre, livrables, compétences, regroupements, deux promotions et leurs élèves, résultats déjà saisis) pour voir l'application en situation, et ajoute trois évaluations dans « Mes évaluations ». L'évaluation en cours est remplacée.</span></span></h3>
         <div style="margin-left:auto"><button class="btn" id="bDemo">Charger un exemple</button></div></div>
       <div class="panel-body"><div class="hint">Données fictives : un rendu intermédiaire de projet en DN MADE 2 Objet, et une fiche de lecture en DN MADE 1.</div></div>
     </div>
-    <div class="panel" style="max-width:720px;margin-top:18px">
+    </div>
+  </section>
+
+  <!-- Préférences : ouvertes depuis le menu « Mon compte » (src/ecran-compte.ts), sans onglet propre -->
+  <section id="v-pref" hidden>
+    <div class="vue-reglages">
+    <h2 class="vue-titre">Préférences</h2>
+    <!-- Ajout à l'interface historique : thème, géré par src/ecran-preferences.ts -->
+    <div class="panel">
+      <div class="pick-head"><h3>Apparence</h3></div>
+      <div class="panel-body">
+        <div class="choix-theme" id="choix-theme" role="radiogroup" aria-label="Thème">
+          <label><input type="radio" name="theme" value="clair"> Clair</label>
+          <label><input type="radio" name="theme" value="sombre"> Sombre</label>
+          <label><input type="radio" name="theme" value="systeme"> Comme le système</label>
+        </div>
+        <div class="hint">« Comme le système » suit le réglage clair ou sombre de l'ordinateur. Le choix vaut pour cet ordinateur.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="pick-head"><h3>Échelles d'évaluation<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Les échelles cochées sont actives ; celle marquée « par défaut » s'applique à toute nouvelle évaluation et ne se change pas depuis l'évaluation. Une évaluation déjà enregistrée garde son échelle.</span></span></h3></div>
+      <div id="echList"></div>
+    </div>
+    <div class="panel">
       <div class="pick-head"><h3>Vocabulaire<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Le nom du champ d'évaluation rempli pour chaque ligne de l'évaluation à l'étape 3, repris en tête de colonne dans le Word et l'Excel.</span></span></h3></div>
       <div class="panel-body">
         <div class="field"><label for="p-critsel">Nom du champ d'évaluation</label>
@@ -262,6 +299,8 @@
         <div class="field" id="p-critwrap" hidden><label for="p-critlab">Nom personnalisé</label>
           <input type="text" id="p-critlab" placeholder="Attendu, indicateur…"></div>
       </div>
+    </div>
+    <div id="prefLivr"></div>
     </div>
   </section>
 </main>

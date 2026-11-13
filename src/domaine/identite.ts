@@ -42,12 +42,33 @@ export function creerIdentite(prenomSaisi: string, nomSaisi: string, identifiant
 /**
  * Sépare un nom enregistré en un seul champ, avant que prénom et nom soient
  * saisis à part : le premier mot est pris pour le prénom, le reste pour le nom.
- * L'enseignant peut corriger dans « Mon compte » (prénoms composés…).
+ * L'enseignant peut corriger sur sa ligne « C'est moi » de « Mon établissement »
+ * (prénoms composés…).
  */
 export function separerNom(nom: string): { prenom: string; nomFamille: string } {
   const propre = nettoyerNom(nom);
   const espace = propre.indexOf(" ");
   return espace < 0 ? { prenom: "", nomFamille: propre } : { prenom: propre.slice(0, espace), nomFamille: propre.slice(espace + 1) };
+}
+
+/**
+ * Identité de l'enseignant après correction de son prénom et de son nom,
+ * saisis sur sa ligne « C'est moi » de « Mon établissement ». L'identifiant de
+ * l'installation ne change pas. Les valeurs ne sont pas typées : elles
+ * viennent de l'interface historique.
+ *
+ * @returns la nouvelle identité, ou `null` si le prénom ou le nom est vide ou
+ *   n'est pas du texte, ou si rien ne change.
+ */
+export function identiteRenommee(identite: Identite, prenomSaisi: unknown, nomSaisi: unknown): Identite | null {
+  if (typeof prenomSaisi !== "string" || typeof nomSaisi !== "string") {
+    return null;
+  }
+  const renommee = creerIdentite(prenomSaisi, nomSaisi, identite.id);
+  if (renommee === null || (renommee.prenom === identite.prenom && renommee.nomFamille === identite.nomFamille)) {
+    return null;
+  }
+  return renommee;
 }
 
 /** Lit l'identité enregistrée ; rend `null` si elle est absente ou inutilisable. */
