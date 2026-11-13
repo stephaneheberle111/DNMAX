@@ -3679,6 +3679,9 @@ let F = LS.get("dnmade.draft",null) || {id:uid(),promoId:"",titre:"",livrables:[
   date:new Date().toISOString().slice(0,10),prof:"",ues:[],ecCodes:[],compCode:"",consignes:"",
   ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),opts:{crit:true,obs:true,coef:false},
   eleves:"",items:[],res:{}};
+/* Une évaluation de la liste est sa propre référence : un brouillon qui s'en écartait (modifications
+   laissées sans « Enregistrer » avant l'enregistrement automatique) ne doit pas l'écraser à la première retouche. */
+{const enregistree=fiches.find(f=>f&&f.id===F.id);if(enregistree)F=structuredClone(enregistree)}
 if(F.preset && !PRESETS[F.preset]){F.preset=DEF_PRESET_GET();F.niveaux=PRESETS[DEF_PRESET_GET()].niveaux.slice()}
 if(F.promoId===undefined)F.promoId="";
 ["compCode"].forEach(k=>{if(F[k]===undefined)F[k]=""});
@@ -3923,7 +3926,37 @@ function askModal(html,onYes,onNo){
   el.querySelector("[data-yes]").focus();
 }
 function toast(m){const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
-function save(){LS.set("dnmade.draft",F)}
+/* Chaque modification rejoint aussitôt « Mes évaluations » : l'enseignant n'a rien à enregistrer lui-même. */
+function save(){enregistrerDansListe();LS.set("dnmade.draft",F);paintEnregistrement()}
+/* Une nouvelle évaluation n'entre dans la liste qu'une fois commencée, pour qu'un clic sur
+   « + Nouvelle évaluation » sans suite n'y laisse pas une ligne vide. */
+function evaluationCommencee(f){return !!(String(f.titre||"").trim()||(f.livrables||[]).length||(f.items||[]).length)}
+/* Rend "liste" si l'évaluation en cours est dans « Mes évaluations », "bloquee" si son référentiel
+   non validé l'empêche d'y entrer, "vide" si elle n'est pas encore commencée. */
+function etatEnregistrement(){
+  if(fiches.some(f=>f.id===F.id))return dipBloquant(F)?"bloquee":"liste";
+  return evaluationCommencee(F)&&dipBloquant(F)?"bloquee":"vide";
+}
+function enregistrerDansListe(){
+  if(dipBloquant(F))return;
+  const i=fiches.findIndex(f=>f.id===F.id);
+  if(i<0&&!evaluationCommencee(F))return;
+  suiviOf(F);
+  if(!F.refV){const v=versionPourF();if(v)F.refV=v.id}
+  const copy=structuredClone(F);
+  if(i>=0)fiches[i]=copy;else fiches.unshift(copy);
+  LS.set("dnmade.fiches",fiches);
+}
+function paintEnregistrement(){
+  const nw=document.getElementById("newWhat");if(!nw)return;
+  const v=versionPourF(), etat=etatEnregistrement();
+  nw.textContent=(etat==="liste"?"Enregistrée automatiquement à chaque modification"
+      :etat==="bloquee"?"Non enregistrée : le référentiel doit d'abord être validé"
+      :"Nouvelle évaluation — enregistrée d'elle-même dès que vous la commencez")
+    +(v?" · référentiel "+(REF.meta.diplome||"")+", version du "+frDate(v.date):"");
+  const n3s=document.getElementById("n3save");
+  if(n3s)n3s.textContent=etat==="liste"?"Déjà dans « Mes évaluations » : c'est de là que sortent le Word et l'Excel.":"";
+}
 
 /* ---------- rendu ---------- */
 function paintActions(){
@@ -3953,9 +3986,7 @@ function paintTabs(){
   document.getElementById("v-pref").hidden = ui.tab!=="pref";
   {const bc=document.getElementById("bouton-compte");if(bc)bc.classList.toggle("actif",ui.tab==="pref")}
   const bb=document.getElementById("bBack");if(bb)bb.hidden=!MOD.fiches;
-  const nw=document.getElementById("newWhat");
-  if(nw){const v=versionPourF();nw.textContent=(fiches.some(x=>x.id===F.id)?"Évaluation enregistrée — les modifications sont à ré-enregistrer":"Nouvelle évaluation")
-    +(v?" · référentiel "+(REF.meta.diplome||"")+", version du "+frDate(v.date):"")}
+  paintEnregistrement();
   paintActions();
 }
 /* une évaluation vierge, prête à composer */
@@ -4199,10 +4230,7 @@ function paintSteps(){
     s4.innerHTML=!st.els?`<em>aucun étudiant</em>`
       :st.faits>=st.els?`${st.els} évalué${st.els>1?"s":""}<em> — complet</em>`
       :`${st.faits} / ${st.els}<em> évalué${st.els>1?"s":""}${st.partiels?" · "+st.partiels+" en cours":""}</em>`;}
-  const n3s=document.getElementById("n3save");
-  if(n3s){const saved=fiches.some(f=>f.id===F.id);
-    n3s.textContent=saved?"Déjà dans « Mes évaluations » — enregistre pour la mettre à jour, le Word et l'Excel se génèrent de là-bas."
-      :"Enregistre-la pour la retrouver dans « Mes évaluations » : c'est de là que sortent le Word et l'Excel.";}
+  paintEnregistrement();
 }
 function paintContexte(){
   const g=id=>document.getElementById(id), sem=F.semestre;
@@ -4474,7 +4502,7 @@ function paintEprog(){
   const h=document.getElementById("n4hint");
   if(h)h.textContent=!els.length?""
     :(st.faits===els.length?"Tout le monde est évalué — le Word par étudiant et l'Excel de la promo se génèrent depuis « Mes évaluations »."
-      :"Les résultats sont enregistrés avec l'évaluation ; les documents se génèrent depuis « Mes évaluations ».");
+      :"Chaque saisie est enregistrée aussitôt ; les documents se génèrent depuis « Mes évaluations ».");
 }
 /* Niveau d'acquisition en pourcentage continu (0 à 100, sans crans visibles).
    Règle quel que soit le nombre N de niveaux : les deux niveaux extrêmes occupent chacun 60/N %
@@ -5057,7 +5085,10 @@ function paintSaved(){
   if(ui.stOpen!=null)openSt(ui.stOpen);
   if(!document._stClose){document._stClose=true;document.addEventListener("click",()=>{if(ui.stOpen!=null){ui.stOpen=null;document.querySelectorAll("#savedList .sd.open").forEach(x=>x.classList.remove("open"))}})}
   if(!document._xmClose){document._xmClose=true;document.addEventListener("click",()=>document.querySelectorAll(".xpop").forEach(p=>{if(!p.hidden){p.hidden=true;p.previousElementSibling.setAttribute("aria-expanded","false")}}))}
-  const openF=i=>{F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));save();ui.tab="new";paintTabs();paintForm();paintPick()};
+  /* La saisie des étudiants ne s'ouvre que par « Évaluer les étudiants » : restée affichée, elle montrerait
+     sous cette évaluation la grille de la précédente. On revient donc à la composition, redessinée en entier. */
+  const openF=i=>{F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));save();ui.tab="new";ui.sel=[];ui.eleve="";
+    paintTabs();paintForm();paintPick();paintLignes();goStep(ui.step===4?1:ui.step)};
   h.querySelectorAll("tr[data-open]").forEach(tr=>{
     tr.onclick=e=>{if(e.target.closest(".sact"))return;openF(+tr.dataset.open)};
     tr.onkeydown=e=>{if(e.target===tr&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openF(+tr.dataset.open)}}});
@@ -5066,7 +5097,10 @@ function paintSaved(){
     if(n){toast("Suppression impossible : supprimez d'abord les "+n+" évaluation"+(n>1?"s":"")+" individuelle"+(n>1?"s":"")+" (bouton « Actions… »).");return}
     const k="f:"+f.id;
     if(ui.delArm!==k){toast("Suppression définitive : cliquez sur « Confirmer la suppression ».");armList(k);return}
-    ui.delArm=null;fiches.splice(+b.dataset.del,1);LS.set("dnmade.fiches",fiches);paintSaved();toast("Évaluation supprimée.")});
+    ui.delArm=null;fiches.splice(+b.dataset.del,1);LS.set("dnmade.fiches",fiches);
+    /* le brouillon ne doit pas garder l'évaluation supprimée : la prochaine modification la remettrait dans la liste */
+    if(F.id===f.id){F=vierge();LS.set("dnmade.draft",F)}
+    paintSaved();toast("Évaluation supprimée.")});
   /* liste redessinée pendant que la fenêtre est ouverte (fin du délai de confirmation) : on la remet à jour */
   if(XA)XA.refresh(bindActs);
   else if(XA_RETOUR!=null){const b=h.querySelector(`[data-xm="${XA_RETOUR}"]`);XA_RETOUR=null;
@@ -7921,26 +7955,15 @@ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>goStep(b.dataset
 document.querySelectorAll(".steps [data-step]").forEach(b=>b.onclick=()=>goStep(b.dataset.step));
 bind("bLink","click",linkSelection);
 bind("bLinkNone","click",()=>{ui.sel=[];paintLignes()});
-/* Rend null, sans rien enregistrer, si le référentiel de l'évaluation n'est pas validé. */
-function saveFiche(){
-  if(refBloque(F,"Impossible d'enregistrer cette évaluation"))return null;
-  suiviOf(F);
-  if(!F.refV){const v=versionPourF();if(v)F.refV=v.id;save()}
-  const i=fiches.findIndex(f=>f.id===F.id);
-  const copy=structuredClone(F);
-  if(i>=0)fiches[i]=copy;else fiches.unshift(copy);
-  LS.set("dnmade.fiches",fiches);paintSaved();paintSteps();
-  return i>=0;
-}
+/* L'évaluation est déjà enregistrée, modification après modification : le bouton ne fait que ramener à la liste,
+   sauf si le référentiel non validé l'a tenue hors de la liste, ce qu'il explique alors. */
 bind("bSave3","click",()=>{
-  const maj=saveFiche();if(maj===null)return;
-  if(MOD.fiches){ui.tab="saved";paintTabs();window.scrollTo({top:0,behavior:"smooth"});
-    toast((maj?"Évaluation mise à jour":"Évaluation enregistrée")+" — le Word et l'Excel se génèrent d'ici, quand vous voulez.")}
-  else toast(maj?"Évaluation mise à jour.":"Évaluation enregistrée.");
+  if(refBloque(F,"Impossible d'enregistrer cette évaluation"))return;
+  save();
+  if(!MOD.fiches){toast("Évaluation enregistrée.");return}
+  ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"});
+  if(fiches.some(f=>f.id===F.id))toast("Le Word et l'Excel se génèrent d'ici, quand vous voulez.");
 });
-["bSave1","bSave2"].forEach(id=>bind(id,"click",()=>{
-  const maj=saveFiche();if(maj===null)return;toast(maj?"Évaluation mise à jour.":"Évaluation enregistrée dans « Mes évaluations ».")}));
-bind("bSave4","click",()=>{const maj=saveFiche();if(maj===null)return;toast(maj?"Évaluation et résultats mis à jour.":"Évaluation enregistrée.")});
 document.querySelectorAll("#eMode [data-emode]").forEach(b=>b.onclick=()=>{ui.emode=b.dataset.emode;paintEleves()});
 bind("bExpJson","click",()=>offer("fiches-dnmade.json",JSON.stringify({ref:REF.meta,fiches},null,1),true));
 bind("r-search","input",e=>{ui.ref.q=e.target.value;paintRef()});

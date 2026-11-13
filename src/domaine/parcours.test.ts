@@ -24,7 +24,7 @@ const DONNEES_COMPLETES = {
     { id: "p1", liste: [{ id: "s1" }, { id: "s2" }] },
     { id: "p2", eleves: "Léa Martin\n\nNoé Petit\n" },
   ]),
-  "dnmade.fiches": JSON.stringify([{ id: "f1" }]),
+  "dnmade.fiches": JSON.stringify([{ id: "f1", items: [{ code: "C1.1" }] }, { id: "f2", titre: "Intitulé seul", items: [] }, { id: "f3" }]),
   "dnmade.modules": JSON.stringify({ eleves: true, dn: false }),
 };
 
@@ -62,6 +62,21 @@ describe("lireAvancement", () => {
     expect(avancement.referentiel).toBe(false);
     expect(avancement.promotions).toBe(0);
     expect(avancement.moduleEleves).toBe(false);
+  });
+
+  it("compte une évaluation dès qu'elle retient une compétence", () => {
+    const evaluations = JSON.stringify([{ id: "f1", items: [{ code: "C1.1" }] }]);
+    expect(lireAvancement({ "dnmade.fiches": evaluations }).evaluations).toBe(1);
+  });
+
+  it("ne compte pas une évaluation qui n'a encore que son intitulé", () => {
+    const evaluations = JSON.stringify([{ id: "f1", titre: "Fiche de lecture", items: [] }]);
+    expect(lireAvancement({ "dnmade.fiches": evaluations }).evaluations).toBe(0);
+  });
+
+  it("ne compte pas une évaluation dont les compétences sont absentes ou illisibles", () => {
+    const evaluations = JSON.stringify([{ id: "f1" }, { id: "f2", items: "C1.1" }]);
+    expect(lireAvancement({ "dnmade.fiches": evaluations }).evaluations).toBe(0);
   });
 
   it("ne compte pas une répartition dont toutes les listes sont vides", () => {
