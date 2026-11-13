@@ -2,6 +2,13 @@
 
 ## Non publié
 
+### Modifié
+
+- Barre du haut : « Échanger… » et « Mon compte » rejoignent la barre, à droite des onglets, avec la même hauteur et le même fond qu'eux et une icône ; sur téléphone, seules les icônes restent. Sur grand écran (1920 × 1200 et plus), barre, onglets et sous-onglets sont agrandis à l'échelle du texte.
+- « Mon compte » devient un menu à deux entrées : « Mot de passe… » et « Préférences ». Le prénom et le nom ne s'y corrigent plus : ils se corrigent sur votre ligne « C'est moi » de « Mon établissement » › « Enseignants », et le nom qui signe vos envois suit. « À propos » s'ouvre depuis le pied de page.
+- Nouvelle page « Préférences » (menu « Mon compte ») : thème clair, sombre ou comme le système, retenu sur cet ordinateur ; échelles d'évaluation et vocabulaire, qui quittent Paramètres ; livrables proposés, qui quittent « Mon établissement ». Tout changement d'échelle (activer, désactiver, changer celle par défaut) rappelle d'abord que l'échelle officielle des DN MADE est celle des niveaux de maîtrise, à confirmer ou annuler.
+- Paramètres : les panneaux forment une colonne centrée, plus large sur grand écran, au lieu d'une colonne étroite collée à gauche. Les visites guidées s'y relancent, dans un panneau « Visites guidées » ; les boutons « Visite guidée » des modules restent.
+
 ## 0.4.2 — 2026-11-13
 
 ### Ajouté

@@ -141,7 +141,7 @@ flowchart LR
 - `src/domaine/` : ce qui calcule. Aucune dépendance au navigateur ni à Tauri, donc testable directement.
 - `src/enveloppe.ts` : ce qui parle à l'extérieur.
 - `src/ecran-coffre.ts` : l'écran de mot de passe.
-- `src/ecran-compte.ts` : « Mon compte » (nom, mot de passe, à propos). `src/ecran-exemple.ts` : le retrait de l'exemple.
+- `src/ecran-compte.ts` : le menu « Mon compte » (mot de passe, préférences). `src/ecran-preferences.ts` : thème et avertissement de changement d'échelle de la page Préférences. `src/ecran-exemple.ts` : le retrait de l'exemple.
 - `src/ecran-accueil.ts` : l'encart des premiers pas sur une installation vide. `src/configuration.ts` : les adresses publiques du projet.
 - `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ».
 - `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans. `src/canal-direct.ts` et `src/ecran-echange-direct.ts` : l'échange en direct (bêta), d'ordinateur à ordinateur par WebRTC, sur un même réseau local et sans aucun serveur (décision 21).
