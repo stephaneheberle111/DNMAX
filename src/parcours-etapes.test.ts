@@ -31,3 +31,18 @@ describe("chapitreDe", () => {
     });
   });
 });
+
+describe("prise en main, grande étape Référentiel", () => {
+  it("ne mène plus au volet « Définir », abandonné", () => {
+    const cibles = PARCOURS_DEFINIS["prise-en-main"].etapes.flatMap((etape) => etape.cibles ?? []);
+    expect(cibles.some((cible) => cible.includes("definir"))).toBe(false);
+  });
+
+  it("présente les étapes de « Constituer » avant d'ouvrir la validation", () => {
+    const etapes = PARCOURS_DEFINIS["prise-en-main"].etapes;
+    const rang = (selecteur: string): number => etapes.findIndex((etape) => etape.cibles?.includes(selecteur) === true);
+    const presentation = rang("#refPane .steps");
+    expect(presentation).toBeGreaterThan(rang('#refNav [data-pane="constituer"]'));
+    expect(presentation).toBeLessThan(rang('#refPane .steps [data-cp="valider"]'));
+  });
+});
