@@ -16,7 +16,7 @@ Le compte rendu (points relevés, corrections faites, points laissés) est joint
 | Documents produits : information aux étudiants, note au chef d'établissement, exports Word/Excel/OpenDocument | `src/domaine/documents-rgpd.ts`, exports de l'interface historique |
 | Échange (fichier, en direct) et réception (« Ce que ce fichier changerait ») | `src/ecran-echange*.ts` |
 | Site : accueil et présentation, Télécharger, documentation, Confidentialité, fiches RGPD | `site/index.html` |
-| Journal des modifications, README, décisions | `CHANGELOG.md`, `README.md`, `DECISIONS.md` |
+| Journal des modifications (montré tel quel aux enseignants après une mise à jour : phrases pour eux, rubriques Ajouté / Modifié / Corrigé / Sécurité), README, décisions | `CHANGELOG.md`, `README.md`, `DECISIONS.md` |
 | Réglages publics (adresses, durées, tailles, serveurs) | `src/configuration.ts`, `src-tauri/capabilities/` |
 
 ## 2. Questions à se poser

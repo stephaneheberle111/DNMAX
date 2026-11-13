@@ -59,6 +59,11 @@ jobs:
             echo "::error::Une version se publie depuis main, pas depuis $REFERENCE."
             exit 1
           fi
+          # Les notes de la version, montrées dans l'application, viennent de sa section du journal.
+          if ! grep -q "^## $version " CHANGELOG.md; then
+            echo "::error::CHANGELOG.md n'a pas de section « ## $version — date »."
+            exit 1
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "etiquette=v$version" >> "$GITHUB_OUTPUT"
       - name: Cette version n'a pas déjà été publiée
@@ -188,8 +193,11 @@ jobs:
           VERSION: ${{ needs.verifier.outputs.version }}
           ETIQUETTE: ${{ needs.verifier.outputs.etiquette }}
           SYSTEMES: ${{ inputs.avec_macos && 'windows,linux,macos' || 'windows,linux' }}
-          NOTES_VERSION: "Voir le journal des modifications : https://github.com/${{ github.repository }}/blob/${{ needs.verifier.outputs.etiquette }}/CHANGELOG.md"
         run: |
+          # Les notes sont la section du journal pour cette version : l'application
+          # les montre classées par type (nouvelles fonctions, corrections…).
+          NOTES_VERSION="$(node outils/notes-version.ts "$VERSION")"
+          export NOTES_VERSION
           # Les fichiers peuvent arriver rangés par sous-dossier : on les met à plat.
           find publication -mindepth 2 -type f -exec mv -t publication {} +
           find publication -mindepth 1 -type d -empty -delete
@@ -215,4 +223,4 @@ jobs:
             --draft \
             --target "$GITHUB_SHA" \
             --title "DNMAX $VERSION" \
-            --notes "Voir le journal des modifications : https://github.com/${GITHUB_REPOSITORY}/blob/${ETIQUETTE}/CHANGELOG.md"
+            --notes "$(node outils/notes-version.ts "$VERSION")"
