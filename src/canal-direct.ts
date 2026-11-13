@@ -1,474 +1,140 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { decoderCode, encoderCode, type ContenuCode, type ErreurCode } from "./domaine/echange/code-direct";
-import { Reassembleur, preparerMessages, type ErreurReassemblage } from "./domaine/echange/morceaux";
+import { Channel, invoke, isTauri } from "@tauri-apps/api/core";
 
 /**
- * Transport de l'échange en direct : une connexion WebRTC d'ordinateur à
- * ordinateur, dont l'offre et la réponse passent par des codes texte que les
- * enseignants se transmettent eux-mêmes. Aucun serveur, ni relais ni
- * découverte d'adresse : les deux ordinateurs doivent être sur le même réseau
- * local ; sinon, l'échange échoue.
+ * Transport de l'échange en direct : l'enveloppe de bureau trouve l'autre
+ * ordinateur sur le réseau local, s'authentifie par le code de 8 chiffres et
+ * transmet le contenu chiffré (commandes `envoyer_direct`, `recevoir_direct`
+ * et `annuler_echange_direct`). Aucun serveur : les deux ordinateurs doivent
+ * être sur le même réseau. Voir DECISIONS.md, décision 21.
  *
- * Ce module parle à l'extérieur (réseau, horloge) ; les règles qu'il applique
- * (forme des codes, découpage) sont dans `domaine/echange/`.
+ * Ce module parle à l'enveloppe ; il vérifie la forme de tout ce qu'elle rend.
  */
 
-export interface DelaisDirect {
-  rassemblement: number;
-  attenteCorrespondant: number;
-  connexion: number;
-  inactivite: number;
-}
+/** Codes d'erreur rendus par l'enveloppe (voir `ErreurDirect` côté Rust). */
+const CODES_ERREUR_DIRECT = [
+  "code-invalide",
+  "trop-volumineux",
+  "reseau-indisponible",
+  "expediteur-introuvable",
+  "plusieurs-expediteurs",
+  "connexion-impossible",
+  "code-errone",
+  "delai-depasse",
+  "transfert-interrompu",
+  "donnees-alterees",
+  "version-incompatible",
+  "annule",
+  "interne",
+] as const;
 
-export interface ParametresDirect {
-  delais: DelaisDirect;
-  /** Longueur maximale admise du texte reçu, en unités UTF-16. */
-  tailleMaximale: number;
-}
-
-export type CodeErreurDirect =
-  /** Le navigateur intégré ne connaît pas WebRTC. */
-  | "indisponible"
-  /** Le code collé est refusé ; le détail dit pourquoi. */
-  | "code-invalide"
-  /** La réponse collée ne correspond pas à cette invitation. */
-  | "autre-seance"
-  /** L'autre enseignant ne s'est pas manifesté à temps. */
-  | "delai-depasse"
-  /** Pas de chemin entre les deux ordinateurs (réseaux différents, postes isolés les uns des autres…). */
-  | "connexion-impossible"
-  /** La connexion s'est rompue ou s'est tue pendant le transfert. */
-  | "transfert-interrompu"
-  /** Ce qui est arrivé n'a pas la forme attendue, ou est trop volumineux. */
-  | "contenu-refuse"
-  /** L'enseignant a annulé. */
-  | "annule";
+export type CodeErreurDirect = (typeof CODES_ERREUR_DIRECT)[number];
 
 export class ErreurDirect extends Error {
   readonly code: CodeErreurDirect;
-  readonly detail: ErreurCode | ErreurReassemblage | null;
 
-  constructor(code: CodeErreurDirect, detail: ErreurCode | ErreurReassemblage | null = null) {
-    super(`échange en direct : ${code}${detail === null ? "" : ` (${detail})`}`);
+  constructor(code: CodeErreurDirect) {
+    super(`échange en direct : ${code}`);
     this.code = code;
-    this.detail = detail;
   }
 }
 
-/** Avancement d'un transfert, en morceaux. */
-export interface Progression {
-  faits: number;
-  total: number;
+/** Ramène une erreur rendue par l'enveloppe à une `ErreurDirect`. */
+export function lireErreurDirect(valeur: unknown): ErreurDirect {
+  const code = CODES_ERREUR_DIRECT.find((connu) => connu === valeur);
+  return new ErreurDirect(code ?? "interne");
 }
 
-/** Message d'accusé de réception envoyé par le destinataire en fin de transfert. */
-const ACCUSE_RECEPTION = JSON.stringify({ t: "recu" });
-const REFUS = JSON.stringify({ t: "refus" });
+/** Étape franchie, signalée par l'enveloppe pendant l'échange. */
+export type EtapeDirect =
+  /** Le code à dicter, et sa durée de validité. */
+  | { etape: "code"; code: string; validiteSecondes: number }
+  /** Le destinataire cherche l'expéditeur sur le réseau. */
+  | { etape: "recherche" }
+  /** Les deux ordinateurs se sont reconnus. */
+  | { etape: "connexion" }
+  /** Avancement du transfert, en octets. */
+  | { etape: "progression"; faits: number; total: number };
 
-/** Au-delà de ce volume en attente dans le canal, l'envoi attend qu'il se vide. */
-const TAMPON_MAXIMAL = 1024 * 1024;
-const TAMPON_BAS = 64 * 1024;
+function estEntierPositif(valeur: unknown): valeur is number {
+  return typeof valeur === "number" && Number.isSafeInteger(valeur) && valeur >= 0;
+}
 
-/** Indique si le navigateur intégré permet l'échange en direct. */
+/** Vérifie la forme d'une étape reçue de l'enveloppe ; `null` si elle n'est pas reconnue. */
+export function lireEtape(valeur: unknown): EtapeDirect | null {
+  if (typeof valeur !== "object" || valeur === null) {
+    return null;
+  }
+  const champs = valeur as Record<string, unknown>;
+  switch (champs.etape) {
+    case "code":
+      return typeof champs.code === "string" && /^\d{4} \d{4}$/.test(champs.code) && estEntierPositif(champs.validiteSecondes)
+        ? { etape: "code", code: champs.code, validiteSecondes: champs.validiteSecondes }
+        : null;
+    case "recherche":
+    case "connexion":
+      return { etape: champs.etape };
+    case "progression":
+      return estEntierPositif(champs.faits) && estEntierPositif(champs.total) && champs.faits <= champs.total
+        ? { etape: "progression", faits: champs.faits, total: champs.total }
+        : null;
+    default:
+      return null;
+  }
+}
+
+/** Indique si l'échange en direct est possible : seulement dans l'enveloppe de bureau. */
 export function echangeDirectDisponible(): boolean {
-  return typeof globalThis.RTCPeerConnection === "function";
+  return isTauri();
 }
 
-/**
- * Réglages de toute connexion de l'échange en direct : aucun serveur. Sans
- * serveur de découverte d'adresse (STUN) ni relais (TURN), seuls les candidats
- * locaux sont rassemblés : la connexion ne s'établit qu'entre deux ordinateurs
- * d'un même réseau, et aucun tiers n'est contacté. Voir DECISIONS.md, décision 21.
- */
-export function configurationConnexion(): RTCConfiguration {
-  return { iceServers: [], iceTransportPolicy: "all" };
-}
-
-function creerConnexion(): RTCPeerConnection {
-  if (!echangeDirectDisponible()) {
-    throw new ErreurDirect("indisponible");
-  }
-  return new RTCPeerConnection(configurationConnexion());
-}
-
-/**
- * Attend un évènement, ou rejette à l'expiration du délai ou à l'annulation.
- * `verifier` est rappelé à chaque évènement de `cible` listé dans `evenements`
- * et rend `true` (fini), une erreur (échec) ou `false` (attendre encore).
- */
-function attendre(
-  cible: EventTarget,
-  evenements: readonly string[],
-  verifier: () => boolean | ErreurDirect,
-  delai: number,
-  erreurDelai: ErreurDirect,
-  annulation: AbortSignal,
-): Promise<void> {
-  return new Promise((resoudre, rejeter) => {
-    const terminer = (erreur: ErreurDirect | null): void => {
-      clearTimeout(minuterie);
-      for (const evenement of evenements) {
-        cible.removeEventListener(evenement, surEvenement);
-      }
-      annulation.removeEventListener("abort", surAnnulation);
-      if (erreur === null) {
-        resoudre();
-      } else {
-        rejeter(erreur);
-      }
-    };
-    const surEvenement = (): void => {
-      const resultat = verifier();
-      if (resultat instanceof ErreurDirect) {
-        terminer(resultat);
-      } else if (resultat) {
-        terminer(null);
-      }
-    };
-    const surAnnulation = (): void => {
-      terminer(new ErreurDirect("annule"));
-    };
-    const minuterie = setTimeout(() => {
-      terminer(erreurDelai);
-    }, delai);
-    for (const evenement of evenements) {
-      cible.addEventListener(evenement, surEvenement);
-    }
-    annulation.addEventListener("abort", surAnnulation);
-    if (annulation.aborted) {
-      surAnnulation();
-    } else {
-      surEvenement();
+/** Canal par lequel l'enveloppe signale les étapes ; toute étape mal formée est ignorée. */
+function creerCanal(suivi: (etape: EtapeDirect) => void): Channel {
+  return new Channel((message: unknown) => {
+    const etape = lireEtape(message);
+    if (etape !== null) {
+      suivi(etape);
     }
   });
 }
 
-/**
- * Pose la description locale et attend que les candidats de connexion soient
- * rassemblés, pour qu'ils partent dans le code (pas d'échange au fil de l'eau
- * sans serveur de signalisation). Au-delà du délai, le code part avec ce qui a
- * été trouvé.
- */
-async function decrireAvecCandidats(
-  connexion: RTCPeerConnection,
-  description: RTCSessionDescriptionInit,
-  delai: number,
-  annulation: AbortSignal,
-): Promise<string> {
-  await connexion.setLocalDescription(description);
+async function appeler<T>(commande: string, parametres: Record<string, unknown>): Promise<T> {
   try {
-    await attendre(
-      connexion,
-      ["icegatheringstatechange"],
-      () => connexion.iceGatheringState === "complete",
-      delai,
-      new ErreurDirect("delai-depasse"),
-      annulation,
-    );
+    return await invoke<T>(commande, parametres);
   } catch (erreur: unknown) {
-    if (!(erreur instanceof ErreurDirect) || erreur.code !== "delai-depasse") {
-      throw erreur;
-    }
-  }
-  const sdp = connexion.localDescription?.sdp ?? "";
-  if (sdp === "") {
-    throw new ErreurDirect("connexion-impossible");
-  }
-  return sdp;
-}
-
-/** Échec définitif de la connexion, à guetter une fois les deux descriptions posées. */
-function connexionEchouee(connexion: RTCPeerConnection): boolean {
-  return connexion.connectionState === "failed" || connexion.connectionState === "closed";
-}
-
-/** Attend que le canal soit ouvert ; `echecFatal` fait échouer dès que la connexion est perdue. */
-function attendreOuverture(
-  connexion: RTCPeerConnection,
-  canal: RTCDataChannel,
-  delai: number,
-  erreurDelai: ErreurDirect,
-  echecFatal: boolean,
-  annulation: AbortSignal,
-): Promise<void> {
-  const cible = new EventTarget();
-  const relayer = (): void => {
-    cible.dispatchEvent(new Event("changement"));
-  };
-  canal.addEventListener("open", relayer);
-  connexion.addEventListener("connectionstatechange", relayer);
-  return attendre(
-    cible,
-    ["changement"],
-    () => {
-      if (canal.readyState === "open") {
-        return true;
-      }
-      if (echecFatal && connexionEchouee(connexion)) {
-        return new ErreurDirect("connexion-impossible");
-      }
-      return false;
-    },
-    delai,
-    erreurDelai,
-    annulation,
-  ).finally(() => {
-    canal.removeEventListener("open", relayer);
-    connexion.removeEventListener("connectionstatechange", relayer);
-  });
-}
-
-function lireCode(texte: string, role: ContenuCode["role"]): ContenuCode {
-  const contenu = decoderCode(texte, role);
-  if (typeof contenu === "string") {
-    throw new ErreurDirect("code-invalide", contenu);
-  }
-  return contenu;
-}
-
-/** Ce que l'expéditeur prépare avant que le destinataire ne se manifeste. */
-export class Expediteur {
-  private readonly annulation = new AbortController();
-
-  private constructor(
-    private readonly connexion: RTCPeerConnection,
-    private readonly canal: RTCDataChannel,
-    private readonly seance: string,
-    private readonly parametres: ParametresDirect,
-    /** Code à transmettre au destinataire. */
-    readonly codeInvitation: string,
-  ) {}
-
-  /** Ouvre une connexion et écrit le code d'invitation. */
-  static async preparer(parametres: ParametresDirect): Promise<Expediteur> {
-    const connexion = creerConnexion();
-    try {
-      const canal = connexion.createDataChannel("dnmax-echange", { ordered: true });
-      const seance = crypto.randomUUID();
-      const offre = await connexion.createOffer();
-      const description = await decrireAvecCandidats(
-        connexion,
-        offre,
-        parametres.delais.rassemblement,
-        new AbortController().signal,
-      );
-      const code = encoderCode({ role: "invitation", seance, description });
-      return new Expediteur(connexion, canal, seance, parametres, code);
-    } catch (erreur: unknown) {
-      connexion.close();
-      throw erreur;
-    }
-  }
-
-  /**
-   * Lit la réponse du destinataire, établit la connexion et envoie `texte`.
-   * Se termine quand le destinataire a confirmé la réception complète.
-   */
-  async envoyer(codeReponse: string, texte: string, suivi: (progression: Progression) => void): Promise<void> {
-    const reponse = lireCode(codeReponse, "reponse");
-    if (reponse.seance !== this.seance) {
-      throw new ErreurDirect("autre-seance");
-    }
-    const signal = this.annulation.signal;
-    const { delais } = this.parametres;
-    try {
-      await this.connexion.setRemoteDescription({ type: "answer", sdp: reponse.description });
-    } catch {
-      throw new ErreurDirect("code-invalide", "illisible");
-    }
-    await attendreOuverture(this.connexion, this.canal, delais.connexion, new ErreurDirect("connexion-impossible"), true, signal);
-
-    let accuse: "recu" | "refus" | null = null;
-    const surMessage = (evenement: MessageEvent): void => {
-      if (evenement.data === ACCUSE_RECEPTION) {
-        accuse = "recu";
-      } else if (evenement.data === REFUS) {
-        accuse = "refus";
-      }
-    };
-    this.canal.addEventListener("message", surMessage);
-    this.canal.bufferedAmountLowThreshold = TAMPON_BAS;
-    const messages = preparerMessages(texte);
-    // L'en-tête et la fin ne comptent pas comme des morceaux.
-    const total = messages.length - 2;
-    for (const [rang, message] of messages.entries()) {
-      if (this.canal.bufferedAmount > TAMPON_MAXIMAL) {
-        await attendre(
-          this.canal,
-          ["bufferedamountlow", "close"],
-          () => (this.canal.readyState !== "open" ? new ErreurDirect("transfert-interrompu") : this.canal.bufferedAmount <= TAMPON_BAS),
-          delais.inactivite,
-          new ErreurDirect("transfert-interrompu"),
-          signal,
-        );
-      }
-      if (this.canal.readyState !== "open") {
-        throw new ErreurDirect("transfert-interrompu");
-      }
-      this.canal.send(message);
-      suivi({ faits: Math.min(Math.max(rang, 0), total), total });
-    }
-    await attendre(
-      this.canal,
-      ["message", "close"],
-      () => {
-        if (accuse === "recu") {
-          return true;
-        }
-        if (accuse === "refus") {
-          return new ErreurDirect("contenu-refuse");
-        }
-        return this.canal.readyState !== "open" ? new ErreurDirect("transfert-interrompu") : false;
-      },
-      delais.inactivite,
-      new ErreurDirect("transfert-interrompu"),
-      signal,
-    ).finally(() => {
-      this.canal.removeEventListener("message", surMessage);
-    });
-  }
-
-  /** Ferme la connexion ; une attente en cours se termine par « annule ». */
-  fermer(): void {
-    this.annulation.abort();
-    this.canal.close();
-    this.connexion.close();
+    throw lireErreurDirect(erreur);
   }
 }
 
-/** Ce que le destinataire ouvre à partir du code d'invitation. */
-export class Destinataire {
-  private readonly annulation = new AbortController();
-  private canal: RTCDataChannel | null = null;
-  private readonly canalArrive = new EventTarget();
+/**
+ * Prépare l'envoi de `texte` et attend le collègue. Le code à lui dicter
+ * arrive par `suivi` ; la promesse se résout quand il a tout reçu.
+ *
+ * @throws ErreurDirect si l'envoi échoue, expire ou est annulé.
+ */
+export async function envoyerEnDirect(texte: string, suivi: (etape: EtapeDirect) => void): Promise<void> {
+  await appeler<unknown>("envoyer_direct", { texte, etapes: creerCanal(suivi) });
+}
 
-  private constructor(
-    private readonly connexion: RTCPeerConnection,
-    private readonly parametres: ParametresDirect,
-  ) {
-    connexion.addEventListener("datachannel", (evenement: RTCDataChannelEvent) => {
-      // Seul le premier canal compte : un pair n'en ouvre qu'un.
-      if (this.canal === null) {
-        this.canal = evenement.channel;
-        this.canalArrive.dispatchEvent(new Event("arrive"));
-      }
-    });
+/**
+ * Cherche l'envoi désigné par `code` sur le réseau local et rend le texte reçu,
+ * encore à faire passer par le circuit de réception.
+ *
+ * @throws ErreurDirect si l'envoi est introuvable, le code erroné, le transfert interrompu…
+ */
+export async function recevoirEnDirect(code: string, suivi: (etape: EtapeDirect) => void): Promise<string> {
+  const texte = await appeler<unknown>("recevoir_direct", { code, etapes: creerCanal(suivi) });
+  if (typeof texte !== "string") {
+    throw new ErreurDirect("interne");
   }
+  return texte;
+}
 
-  /** Code à renvoyer à l'expéditeur. */
-  codeReponse = "";
-
-  /** Lit le code d'invitation et écrit le code de réponse. */
-  static async rejoindre(codeInvitation: string, parametres: ParametresDirect): Promise<Destinataire> {
-    const invitation = lireCode(codeInvitation, "invitation");
-    const connexion = creerConnexion();
-    const destinataire = new Destinataire(connexion, parametres);
-    try {
-      try {
-        await connexion.setRemoteDescription({ type: "offer", sdp: invitation.description });
-      } catch {
-        throw new ErreurDirect("code-invalide", "illisible");
-      }
-      const reponse = await connexion.createAnswer();
-      const description = await decrireAvecCandidats(
-        connexion,
-        reponse,
-        parametres.delais.rassemblement,
-        destinataire.annulation.signal,
-      );
-      destinataire.codeReponse = encoderCode({ role: "reponse", seance: invitation.seance, description });
-      return destinataire;
-    } catch (erreur: unknown) {
-      connexion.close();
-      throw erreur;
-    }
-  }
-
-  /**
-   * Attend la connexion de l'expéditeur puis le texte complet, vérifié.
-   * L'expéditeur reçoit un accusé de réception, ou un refus si le texte est rejeté.
-   */
-  async recevoir(suivi: (progression: Progression) => void): Promise<string> {
-    const signal = this.annulation.signal;
-    const { delais } = this.parametres;
-    // L'expéditeur doit encore coller la réponse : tant qu'il ne l'a pas fait, la
-    // connexion peut sembler échouer, sans que ce soit définitif.
-    await attendre(
-      this.canalArrive,
-      ["arrive"],
-      () => this.canal !== null,
-      delais.attenteCorrespondant,
-      new ErreurDirect("delai-depasse"),
-      signal,
-    );
-    const canal = this.canal;
-    if (canal === null) {
-      throw new ErreurDirect("connexion-impossible");
-    }
-    await attendreOuverture(this.connexion, canal, delais.connexion, new ErreurDirect("connexion-impossible"), true, signal);
-
-    const reassembleur = new Reassembleur(this.parametres.tailleMaximale);
-    return await new Promise<string>((resoudre, rejeter) => {
-      let minuterie = setTimeout(() => {
-        terminer(new ErreurDirect("transfert-interrompu"));
-      }, delais.inactivite);
-      const terminer = (resultat: string | ErreurDirect): void => {
-        clearTimeout(minuterie);
-        canal.removeEventListener("message", surMessage);
-        canal.removeEventListener("close", surFermeture);
-        signal.removeEventListener("abort", surAnnulation);
-        if (resultat instanceof ErreurDirect) {
-          rejeter(resultat);
-        } else {
-          resoudre(resultat);
-        }
-      };
-      const surMessage = (evenement: MessageEvent): void => {
-        clearTimeout(minuterie);
-        minuterie = setTimeout(() => {
-          terminer(new ErreurDirect("transfert-interrompu"));
-        }, delais.inactivite);
-        const etat = reassembleur.recevoir(evenement.data);
-        if (etat.etat === "en-cours") {
-          suivi({ faits: etat.recus, total: etat.total });
-        } else if (etat.etat === "complet") {
-          canal.send(ACCUSE_RECEPTION);
-          terminer(etat.texte);
-        } else {
-          canal.send(REFUS);
-          terminer(new ErreurDirect("contenu-refuse", etat.erreur));
-        }
-      };
-      const surFermeture = (): void => {
-        terminer(new ErreurDirect("transfert-interrompu"));
-      };
-      const surAnnulation = (): void => {
-        terminer(new ErreurDirect("annule"));
-      };
-      canal.addEventListener("message", surMessage);
-      canal.addEventListener("close", surFermeture);
-      signal.addEventListener("abort", surAnnulation);
-    });
-  }
-
-  /**
-   * Ferme la connexion ; une attente en cours se termine par « annule ».
-   * Laisse d'abord partir l'accusé de réception éventuellement en attente.
-   */
-  fermer(): void {
-    this.annulation.abort();
-    const canal = this.canal;
-    if (canal !== null && canal.readyState === "open" && canal.bufferedAmount > 0) {
-      canal.bufferedAmountLowThreshold = 0;
-      const fermerTout = (): void => {
-        canal.close();
-        this.connexion.close();
-      };
-      canal.addEventListener("bufferedamountlow", fermerTout, { once: true });
-      setTimeout(fermerTout, 2000);
-      return;
-    }
-    canal?.close();
-    this.connexion.close();
+/** Annule l'échange en cours ; sans effet s'il n'y en a pas. Ne lève jamais d'erreur. */
+export async function annulerEchangeDirect(): Promise<void> {
+  try {
+    await invoke("annuler_echange_direct");
+  } catch {
+    // Rien à annuler, ou enveloppe absente : il n'y a rien de plus à faire.
   }
 }

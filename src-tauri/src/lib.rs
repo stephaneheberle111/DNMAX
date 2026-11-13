@@ -2,16 +2,20 @@
 
 mod coffre;
 mod depot;
+mod direct;
 mod export;
 mod import;
+mod voisinage;
 
 use std::borrow::Cow;
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::path::PathBuf;
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 
+use chacha20poly1305::aead::rand_core::RngCore;
 use chacha20poly1305::aead::OsRng;
 use serde::Serialize;
-use tauri::ipc::{InvokeBody, Request};
+use tauri::ipc::{Channel, InvokeBody, Request};
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
@@ -528,6 +532,126 @@ fn dechiffrer_fichier_echange(
     )?)
 }
 
+/// Échange en direct en cours sur ce poste : un seul à la fois.
+#[derive(Default)]
+struct EchangeDirect(Mutex<Option<Arc<direct::Annulation>>>);
+
+impl EchangeDirect {
+    fn verrou(&self) -> MutexGuard<'_, Option<Arc<direct::Annulation>>> {
+        self.0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    /// Commence un échange ; celui qui serait encore en cours est annulé.
+    fn commencer(&self) -> Arc<direct::Annulation> {
+        let annulation = Arc::new(direct::Annulation::default());
+        if let Some(precedente) = self.verrou().replace(Arc::clone(&annulation)) {
+            precedente.annuler();
+        }
+        annulation
+    }
+
+    /// Oublie l'échange terminé, sauf si un autre l'a déjà remplacé.
+    fn terminer(&self, annulation: &Arc<direct::Annulation>) {
+        let mut courant = self.verrou();
+        if courant
+            .as_ref()
+            .is_some_and(|actuel| Arc::ptr_eq(actuel, annulation))
+        {
+            *courant = None;
+        }
+    }
+}
+
+/// Suffixe aléatoire du nom annoncé sur le réseau : distingue deux envois sans rien dire de l'ordinateur.
+fn suffixe_annonce() -> String {
+    format!("{:08x}", OsRng.next_u32())
+}
+
+/// Envoie `texte` (le texte d'un paquet d'échange, chiffré s'il contient des
+/// élèves) au premier collègue du réseau local qui saisit le code.
+///
+/// Le code est d'abord transmis par `etapes`, puis l'avancement. La commande
+/// se termine quand le destinataire a confirmé la réception, ou en erreur.
+#[tauri::command(async)]
+fn envoyer_direct(
+    echange: State<'_, EchangeDirect>,
+    texte: String,
+    etapes: Channel<direct::EtapeDirect>,
+) -> Result<(), direct::ErreurDirect> {
+    let annulation = echange.commencer();
+    let resultat = (|| {
+        let parametres = direct::PARAMETRES_DIRECT;
+        let ecoute = SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0));
+        let envoi = direct::Envoi::preparer(texte, ecoute, &parametres, &mut OsRng)?;
+        let _annonce =
+            voisinage::Annonce::publier(envoi.code().canal(), envoi.port()?, &suffixe_annonce())?;
+        let mut signaler = |etape: direct::EtapeDirect| {
+            // Une page fermée entre-temps n'empêche pas l'envoi de se terminer proprement.
+            let _ = etapes.send(etape);
+        };
+        signaler(direct::EtapeDirect::Code {
+            code: envoi.code().affichage(),
+            validite_secondes: parametres.validite.as_secs(),
+        });
+        let reseaux = voisinage::reseaux_locaux();
+        envoi.servir(
+            &parametres,
+            &mut OsRng,
+            |adresse| voisinage::est_voisine(adresse, &reseaux),
+            &annulation,
+            &mut signaler,
+        )
+    })();
+    echange.terminer(&annulation);
+    resultat
+}
+
+/// Cherche sur le réseau local l'envoi désigné par `code`, s'y connecte et
+/// rend le texte reçu, que l'interface fait ensuite passer par le circuit
+/// habituel de réception.
+#[tauri::command(async)]
+fn recevoir_direct(
+    echange: State<'_, EchangeDirect>,
+    code: String,
+    etapes: Channel<direct::EtapeDirect>,
+) -> Result<String, direct::ErreurDirect> {
+    let code = direct::Code::lire(&code)?;
+    let annulation = echange.commencer();
+    let resultat = (|| {
+        let parametres = direct::PARAMETRES_DIRECT;
+        let mut signaler = |etape: direct::EtapeDirect| {
+            let _ = etapes.send(etape);
+        };
+        signaler(direct::EtapeDirect::Recherche);
+        let trouves = voisinage::chercher(code.canal(), parametres.decouverte, &annulation)?;
+        let reseaux = voisinage::reseaux_locaux();
+        let adresses = voisinage::choisir_expediteur(&trouves, code.canal(), |adresse| {
+            voisinage::est_voisine(adresse, &reseaux)
+        })?;
+        direct::recevoir(
+            &adresses,
+            &code,
+            &parametres,
+            &mut OsRng,
+            &annulation,
+            &mut signaler,
+        )
+    })();
+    echange.terminer(&annulation);
+    resultat
+}
+
+/// Annule l'échange en direct en cours, s'il y en a un : l'écoute et
+/// l'annonce de l'expéditeur cessent, la connexion est coupée.
+#[tauri::command(async)]
+fn annuler_echange_direct(echange: State<'_, EchangeDirect>) {
+    if let Some(annulation) = echange.verrou().take() {
+        annulation.annuler();
+    }
+}
+
 /// Rend les octets transmis par l'interface.
 ///
 /// Selon le système, Tauri livre un même envoi binaire soit tel quel, soit
@@ -579,6 +703,7 @@ pub fn lancer() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(Session::default())
         .manage(DernierExport::default())
+        .manage(EchangeDirect::default())
         .invoke_handler(tauri::generate_handler![
             enregistrer_fichier,
             ouvrir_dernier_export,
@@ -598,7 +723,10 @@ pub fn lancer() {
             lister_sauvegardes,
             restaurer_sauvegarde,
             verifier_mot_de_passe,
-            verrouiller_coffre
+            verrouiller_coffre,
+            envoyer_direct,
+            recevoir_direct,
+            annuler_echange_direct
         ])
         .setup(|application| {
             // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.
