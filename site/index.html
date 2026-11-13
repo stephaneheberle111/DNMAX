@@ -273,6 +273,33 @@ svg.dim .dot.off{opacity:.1}
 .lg .chip{margin:0;font-size:.76em}
 .lg .bt{font-size:.75em;padding:.2em .6em;margin-left:auto}
 
+/* Lier et associer : l’aimant de l’étape 3, rejoué */
+.lier{display:grid;grid-template-columns:12.5em minmax(0,1fr);gap:1em;align-items:start}
+.lier .pal h4{font-size:.95em;margin-bottom:.5em}
+.lier .pal .chip{display:table;margin:0 0 .4em;font-size:.76em}
+.chip.drg{cursor:grab;border:1px dashed var(--a-accent)}
+.lier .pan{padding:.7em .8em}
+.lier .tete{margin-bottom:.5em}
+.lier .lignes{gap:.35em}
+.lier .lg{padding:.35em .7em;transition:outline-color .3s,max-height .5s,opacity .4s,padding .5s,margin .5s;outline:2px dashed transparent;outline-offset:2px;max-height:9em;overflow:hidden}
+.lier .lg.cible{outline-color:var(--a-accent)}
+.lier .lg.partie{max-height:0;opacity:0;padding-block:0;border-width:0;margin-top:-.35em}
+.lier .lg.op2{border-left:.3em solid var(--a-accent)}
+.lier .ro{grid-template-columns:auto 1fr}
+.lier .ro.liv{display:flex;gap:.4em;align-items:center}
+.lier .saisie{font-size:.8em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lier .lg{row-gap:.25em}
+.lier .cd .grip{font-style:normal;color:var(--a-muted);letter-spacing:-.1em}
+.lier .cd.leve{opacity:.3}
+.lier .arrive{display:none}
+.lier .lg.op2 .haut .arrive,.lier .liv.associe .arrive{display:inline-flex}
+.lier .liv.associe .indice{display:none}
+.indice{font-size:.72em;color:var(--a-muted);font-style:italic}
+.fantome{position:absolute;left:0;top:0;z-index:5;display:none;pointer-events:none;border-radius:.35em;padding:.15em .5em;font-size:.76em;font-weight:600;background:var(--a-surface);color:var(--a-ink);border:1px solid var(--a-accent);box-shadow:0 .6em 1.2em -.4em rgba(0,0,0,.35);transition:transform .9s cubic-bezier(.3,.7,.2,1);white-space:nowrap}
+.fantome.on{display:block}
+.bulle{position:absolute;left:0;top:0;z-index:6;max-width:24em;font-size:.72em;line-height:1.35;background:#15181E;color:#fff;border-radius:.4em;padding:.4em .6em;opacity:0;transition:opacity .3s;pointer-events:none}
+.bulle.on{opacity:1}
+
 /* Exporter */
 .choix{display:grid;grid-template-columns:.95fr 1.05fr;gap:1.4em;height:100%;align-items:center}
 .xa h4{font-size:1em}
@@ -348,7 +375,14 @@ svg.dim .dot.off{opacity:.1}
 /* Échanger */
 .voile{position:absolute;inset:0;background:rgba(10,15,25,.35)}
 .modale{position:absolute;left:50%;top:50%;width:80%;transform:translate(-50%,-46%);opacity:0;transition:transform .5s cubic-bezier(.2,.7,.2,1) .2s,opacity .4s .2s;background:var(--a-surface);border:1px solid var(--a-line);border-radius:.8em;padding:1em 1.2em;box-shadow:0 2em 4em -2em rgba(0,0,0,.5);font-size:.88em}
-.scr.on .modale{transform:translate(-50%,-50%);opacity:1}
+.scr.on .modale.vis{transform:translate(-50%,-50%);opacity:1}
+.modale .poste{position:absolute;top:-1.9em;left:0;font-size:.78em;font-weight:700;color:var(--a-on-accent);background:var(--a-accent);border-radius:99em;padding:.2em .7em}
+.etat-d{font-weight:600}
+.code-d{font:700 1.8em/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.12em;text-align:center;padding:.45em;border:1px solid var(--a-line);border-radius:.4em;background:var(--a-paper);margin:.3em 0 .6em;transition:opacity .4s}
+.code-d.saisie-d{text-align:left;font-size:1.4em;border-color:var(--a-accent)}
+.code-d .attente{color:var(--a-muted);opacity:.5}
+.cache{opacity:0}
+.bt.presse{box-shadow:0 0 0 .2em var(--a-soft);filter:brightness(1.1)}
 .modale .croix{margin-left:auto;color:var(--a-muted);font-size:1.2em;line-height:1}
 .modale>p{margin:.15em 0 .45em;font-size:.88em}
 .eliste{display:grid;border:1px solid var(--a-line);border-radius:.5em;margin:.6em 0 .8em;overflow:hidden}
@@ -562,7 +596,7 @@ footer a{color:var(--ink-2)}
         <article class="etape" data-scr="saved" data-tab="0">
           <p class="quand">Vos évaluations</p>
           <h2>Tout votre semestre sur une seule page.</h2>
-          <p>Chaque évaluation garde sa promotion, son semestre, son échelle et l’avancement de la saisie.</p>
+          <p>Chaque évaluation garde sa promotion, son semestre, son échelle et l’avancement de la saisie. Vous voyez qui l’a modifiée en dernier, et quand.</p>
         </article>
         <article class="etape" data-scr="eval" data-tab="0">
           <p class="quand">Étape 1, l’évaluation</p>
@@ -582,7 +616,12 @@ footer a{color:var(--ink-2)}
         <article class="etape" data-scr="form" data-tab="0">
           <p class="quand">Étape 3, la formulation</p>
           <h2>Écrivez-la avec vos mots.</h2>
-          <p>Reformulez chaque ligne en critère observable, regroupez plusieurs compétences sous une même attente et associez chaque ligne au livrable qui la montre.</p>
+          <p>Reformulez chaque ligne en critère observable. Sans reformulation, l’intitulé du référentiel est repris tel quel.</p>
+        </article>
+        <article class="etape" data-scr="lier" data-tab="0">
+          <p class="quand">Étape 3, lier et associer</p>
+          <h2>Réunissez, puis associez.</h2>
+          <p>Glissez une compétence sur une autre ligne pour les réunir sous une même attente, ou à l’écart pour la détacher. Glissez ensuite un livrable choisi à l’étape 1 sur la ligne qu’il permet d’évaluer.</p>
         </article>
         <article class="etape" data-scr="export" data-tab="0">
           <p class="quand">Ensuite, vous choisissez</p>
@@ -603,7 +642,7 @@ footer a{color:var(--ink-2)}
         <article class="etape" data-scr="echange" data-tab="0">
           <p class="quand">Entre enseignants</p>
           <h2>Partagez sans tout recopier.</h2>
-          <p>Envoyez une évaluation ou un référentiel par simple fichier. À la réception, un plan indique ce qui est nouveau, modifié ou identique, et DNMAX vérifie que vous travaillez sur le même référentiel. Avec les résultats des étudiants, le fichier est chiffré.</p>
+          <p>Sur le même wifi, envoyez une évaluation ou un référentiel en direct&nbsp;: DNMAX affiche un code de 8 chiffres, votre collègue le saisit et voit ce que l’envoi changerait avant d’appliquer. Sinon, un simple fichier fait le même trajet. Avec les résultats des étudiants, le contenu est chiffré.</p>
         </article>
         <article class="etape" data-scr="coffre" data-tab="-1">
           <p class="quand">Vos données</p>
@@ -701,6 +740,36 @@ footer a{color:var(--ink-2)}
                   <div class="lignes" id="lignes-form"></div>
                 </div>
 
+                <div class="scr" data-scr="lier">
+                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="fait"><b>2</b>Compétences</span><span class="on"><b>3</b>Formulation</span><span><b>4</b>Étudiants</span></div>
+                  <div class="lier">
+                    <div class="pan pal a" style="--d:100">
+                      <h4>À glisser</h4>
+                      <p class="lab">Livrables</p>
+                      <span class="chip drg">Carnet de projet</span><span class="chip drg" id="liv-glisse">Maquettes de recherches</span><span class="chip drg">Planches de projet</span>
+                    </div>
+                    <div class="pan a" style="--d:200">
+                      <div class="tete"><h4>Lignes de l’évaluation</h4><span class="nb" id="nb-lier">4</span></div>
+                      <div class="lignes" id="lignes-lier">
+                        <div class="lg op"><i class="cbx"></i><div class="haut"><span class="num">OP 1</span><span class="cd"><i class="grip">⠿</i><b>C4.1</b></span><span class="cd"><i class="grip">⠿</i><b>C4.3</b></span></div>
+                          <div class="ro"><span class="mini">Critère observable</span><span class="saisie">Constituer un corpus de références et en tirer des principes formels réutilisables</span></div>
+                          <div class="ro liv"><span class="chip">Carnet de projet</span></div></div>
+                        <div class="lg" id="ligne-cible"><i class="cbx"></i><div class="haut"><span class="num arrive">OP 2</span><span class="cd"><i class="grip">⠿</i><b>C10.3</b></span><span class="cd arrive" id="cd-arrive"><i class="grip">⠿</i><b>C11.2</b></span></div>
+                          <div class="ro"><span class="mini">Critère observable</span><span class="saisie">Éprouver les assemblages par la maquette et en dégager un principe technique viable</span></div>
+                          <div class="ro liv" id="liv-cible"><span class="indice">aucun livrable — glisse-en un ici</span><span class="chip arrive">Maquettes de recherches</span></div></div>
+                        <div class="lg" id="ligne-partie"><i class="cbx"></i><div class="haut"><span class="cd" id="cd-depart"><i class="grip">⠿</i><b>C11.2</b></span></div>
+                          <div class="ro"><span class="mini">Critère observable</span><span class="saisie attente">Formuler ce qui est attendu (sinon l’intitulé du référentiel)…</span></div>
+                          <div class="ro liv"><span class="indice">aucun livrable — glisse-en un ici</span></div></div>
+                        <div class="lg"><i class="cbx"></i><div class="haut"><span class="cd"><i class="grip">⠿</i><b>C10.6</b></span></div>
+                          <div class="ro"><span class="mini">Critère observable</span><span class="saisie">Présenter le principe d’assemblage sur deux planches lisibles à un mètre</span></div>
+                          <div class="ro liv"><span class="chip">Planches de projet</span></div></div>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="fantome" id="fantome"></span>
+                  <span class="bulle" id="bulle"></span>
+                </div>
+
                 <div class="scr" data-scr="export">
                   <div class="choix">
                     <div>
@@ -757,16 +826,33 @@ footer a{color:var(--ink-2)}
                 <div class="scr" data-scr="echange">
                   <div class="pan"><div class="tete"><span class="bt">+ Nouvelle évaluation</span><h4>Évaluations enregistrées</h4><span class="nb">4</span></div></div>
                   <div class="voile"></div>
-                  <div class="modale">
+                  <div class="modale" id="m-envoi">
+                    <span class="poste">Ordinateur de Marc Lenoir</span>
+                    <div class="tete" style="margin-bottom:.4em"><h4>Envoyer en direct</h4><span class="croix">×</span></div>
+                    <p class="etat-d" id="etat-envoi">Préparation du code…</p>
+                    <div id="code-envoi" class="code-d cache">4718 3052</div>
+                    <p id="consigne-envoi" class="cache">Il le saisit dans «&nbsp;Échanger…&nbsp;» &gt; «&nbsp;Échange en direct&nbsp;» &gt; «&nbsp;Recevoir en direct&nbsp;», sur le même réseau (même wifi). Le code est valable 5 minutes, pour un seul essai. Gardez cette fenêtre ouverte.</p>
+                    <div class="actions-m"><span class="bt ghost">Annuler</span></div>
+                  </div>
+                  <div class="modale" id="m-recoit">
+                    <span class="poste">Votre ordinateur</span>
+                    <div class="tete" style="margin-bottom:.4em"><h4>Recevoir en direct</h4><span class="croix">×</span></div>
+                    <p class="etat-d" id="etat-recoit">Saisissez le code de 8 chiffres que votre collègue vous dicte.</p>
+                    <div class="code-d saisie-d"><span id="code-saisi"></span><span class="attente" id="code-vide">0000 0000</span></div>
+                    <p class="mut">Les deux ordinateurs doivent être sur le même réseau (même wifi ou même réseau local).</p>
+                    <div class="actions-m"><span class="bt ghost">Annuler</span><span class="bt" id="bt-recevoir">Recevoir</span></div>
+                  </div>
+                  <div class="modale" id="m-plan">
+                    <span class="poste">Votre ordinateur</span>
                     <div class="tete" style="margin-bottom:.4em"><h4>Ce que ce fichier changerait</h4><span class="croix">×</span></div>
                     <p>Fichier créé par Marc Lenoir le 12/11/2026 17:42.</p>
                     <p>1 nouvelle(s) · 1 modifiée(s) · 1 identique(s). Rien n’est changé tant que vous n’avez pas validé. Vos évaluations absentes de ce fichier ne sont pas touchées.</p>
                     <div class="eliste">
-                      <div class="eligne a" style="--d:700"><i class="cbx on"></i><div><div class="et"><span class="past creer">Nouvelle</span><span>Oral de présentation de projet</span></div><div class="ed">Dans le fichier&nbsp;: 12/11/2026 17:30, par Marc Lenoir</div><div class="ed">Même référentiel que le vôtre.</div></div></div>
-                      <div class="eligne a" style="--d:950"><i class="cbx on"></i><div><div class="et"><span class="past modifier">Modifiée</span><span>Fiche de lecture — Objets du quotidien</span></div><div class="ed">Chez vous&nbsp;: 03/11/2026 09:12, par Sophie Hébert · Dans le fichier&nbsp;: 10/11/2026 16:05, par Marc Lenoir</div><div class="ed">Ce qui change&nbsp;: Compétences et critères, Consignes.</div><div class="ed">Vos étudiants, leurs résultats et votre suivi sont conservés.</div><div class="ed">Même référentiel que le vôtre.</div></div></div>
-                      <div class="eligne inactive a" style="--d:1200"><i class="cbx"></i><div><div class="et"><span class="past">Identique</span><span>Carnet d’exposition</span></div><div class="ed">Chez vous&nbsp;: 28/10/2026 11:20, par Sophie Hébert · Dans le fichier&nbsp;: 28/10/2026 11:20, par Sophie Hébert</div></div></div>
+                      <div class="eligne"><i class="cbx on"></i><div><div class="et"><span class="past creer">Nouvelle</span><span>Oral de présentation de projet</span></div><div class="ed">Dans le fichier&nbsp;: 12/11/2026 17:30, par Marc Lenoir</div><div class="ed">Même référentiel que le vôtre.</div></div></div>
+                      <div class="eligne"><i class="cbx on"></i><div><div class="et"><span class="past modifier">Modifiée</span><span>Fiche de lecture — Objets du quotidien</span></div><div class="ed">Chez vous&nbsp;: 03/11/2026 09:12, par Sophie Hébert · Dans le fichier&nbsp;: 10/11/2026 16:05, par Marc Lenoir</div><div class="ed">Ce qui change&nbsp;: Compétences et critères, Consignes.</div><div class="ed">Vos étudiants, leurs résultats et votre suivi sont conservés.</div><div class="ed">Même référentiel que le vôtre.</div></div></div>
+                      <div class="eligne inactive"><i class="cbx"></i><div><div class="et"><span class="past">Identique</span><span>Carnet d’exposition</span></div><div class="ed">Chez vous&nbsp;: 28/10/2026 11:20, par Sophie Hébert · Dans le fichier&nbsp;: 28/10/2026 11:20, par Sophie Hébert</div></div></div>
                     </div>
-                    <div class="actions-m a" style="--d:1450"><span class="bt ghost">Annuler</span><span class="bt">Appliquer (2)</span></div>
+                    <div class="actions-m"><span class="bt ghost">Annuler</span><span class="bt" id="bt-appliquer">Appliquer (2)</span></div>
                   </div>
                 </div>
 
@@ -1460,10 +1546,60 @@ npm run dev</code></pre>
         ecrire("Compétence "+code, `Travaillée dans ${nb} enseignements. ${REF.comps[code][0]}`);
       },t);
     }
+    if (id==="lier") rejouerLier(t);
+    if (id==="echange") rejouerDirect(t);
     if (id==="coffre"){
       const m=document.getElementById("mdp"); m.textContent="";
       for (let i=0;i<10;i++) plus(600+i*110,()=>{ m.textContent+="•"; },t);
     }
+  }
+  /* Étape 3 rejouée : C11.2 glissée sur la ligne de C10.3 (les deux se réunissent en OP 2),
+     puis « Maquettes de recherches » glissé de la palette sur cette ligne. Libellés et bulles : ceux de l’application. */
+  function rejouerLier(t){
+    const scr=document.querySelector('.scr[data-scr="lier"]'), g=id=>document.getElementById(id);
+    const fantome=g("fantome"), bulle=g("bulle"), cible=g("ligne-cible"), partie=g("ligne-partie"), livCible=g("liv-cible"), depart=g("cd-depart");
+    const final=()=>{ cible.classList.add("op2"); partie.classList.add("partie"); livCible.classList.add("associe"); g("nb-lier").textContent="3"; };
+    [cible,partie,livCible,depart,fantome,bulle].forEach(e=>e.classList.remove("op2","partie","associe","leve","on","cible"));
+    g("nb-lier").textContent="4";
+    if (reduit){ final(); return; }
+    const pos=e=>{ const r=e.getBoundingClientRect(), s=scr.getBoundingClientRect(); return {x:r.left-s.left, y:r.top-s.top, h:r.height}; };
+    const montrerBulle=(source,texte)=>{ const p=pos(source); bulle.textContent=texte; bulle.style.transform=`translate(${p.x}px,${p.y+p.h+6}px)`; bulle.classList.add("on"); };
+    const glisser=(source,texte,arrivee,ligne,apres)=>{
+      const a=pos(source), b=pos(arrivee);
+      // pastille de compétence : elle vient se poser juste après la dernière de la ligne
+      if (apres) b.x+=arrivee.getBoundingClientRect().width+4;
+      fantome.textContent=texte; fantome.style.transition="none"; fantome.style.transform=`translate(${a.x}px,${a.y}px)`; fantome.classList.add("on");
+      source.classList.add("leve");
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ fantome.style.transition=""; fantome.style.transform=`translate(${b.x}px,${b.y}px)`; ligne.classList.add("cible"); }));
+    };
+    plus(900,()=>montrerBulle(depart,"C11.2 · "+REF.comps["C11.2"][0]+" — glisser vers une autre ligne pour réunir, ou à l’écart pour détacher"),t);
+    plus(2600,()=>glisser(depart,"⠿ C11.2",cible.querySelector(".haut .cd:not(.arrive)"),cible,true),t);
+    plus(3700,()=>{ fantome.classList.remove("on"); bulle.classList.remove("on"); cible.classList.remove("cible"); cible.classList.add("op2"); partie.classList.add("partie"); g("nb-lier").textContent="3"; },t);
+    plus(4700,()=>montrerBulle(g("liv-glisse"),"Glisser sur une ligne pour l’associer"),t);
+    plus(6200,()=>glisser(g("liv-glisse"),"Maquettes de recherches",livCible,cible),t);
+    plus(7300,()=>{ fantome.classList.remove("on"); bulle.classList.remove("on"); g("liv-glisse").classList.remove("leve"); cible.classList.remove("cible"); livCible.classList.add("associe"); },t);
+  }
+  /* Échange en direct : l’expéditeur obtient un code, le collègue le saisit, le contenu arrive et s’applique.
+     Libellés : ceux de « Envoyer en direct », « Recevoir en direct » et du plan de réception. */
+  function rejouerDirect(t){
+    const g=id=>document.getElementById(id), CODE="4718 3052";
+    const fenetres=["m-envoi","m-recoit","m-plan"].map(g);
+    const montrer=n=>fenetres.forEach((f,i)=>f.classList.toggle("vis",i===n));
+    const etatEnvoi=g("etat-envoi"), etatRecoit=g("etat-recoit"), saisi=g("code-saisi"), vide=g("code-vide");
+    etatEnvoi.textContent="Préparation du code…"; g("code-envoi").classList.add("cache"); g("consigne-envoi").classList.add("cache");
+    etatRecoit.textContent="Saisissez le code de 8 chiffres que votre collègue vous dicte.";
+    saisi.textContent=""; vide.hidden=false; g("bt-recevoir").classList.remove("presse"); g("bt-appliquer").classList.remove("presse");
+    if (reduit){ montrer(2); return; }
+    montrer(0);
+    plus(900,()=>{ etatEnvoi.textContent="Dictez ce code à votre collègue :"; g("code-envoi").classList.remove("cache"); g("consigne-envoi").classList.remove("cache"); },t);
+    plus(3300,()=>montrer(1),t);
+    for (let i=1;i<=CODE.length;i++) plus(3900+i*140,()=>{ vide.hidden=true; saisi.textContent=CODE.slice(0,i); },t);
+    plus(5400,()=>g("bt-recevoir").classList.add("presse"),t);
+    plus(5700,()=>{ etatRecoit.textContent="Recherche de l’ordinateur de votre collègue sur le réseau…"; },t);
+    plus(6500,()=>{ etatRecoit.textContent="Connecté : réception en cours…"; },t);
+    plus(7200,()=>{ etatRecoit.textContent="Réception : 100 %"; },t);
+    plus(7800,()=>montrer(2),t);
+    plus(9300,()=>g("bt-appliquer").classList.add("presse"),t);
   }
   function activer(id){
     if (id===actif) return;
