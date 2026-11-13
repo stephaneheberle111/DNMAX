@@ -4,7 +4,7 @@
 
 ### Modifié
 
-- Une évaluation s'enregistre d'elle-même : chaque modification (intitulé, compétences, formulation, résultats des étudiants) rejoint aussitôt « Mes évaluations ». Les boutons « Enregistrer » disparaissent ; à l'étape Formulation, « Retour à « Mes évaluations » » les remplace. Une nouvelle évaluation entre dans la liste dès qu'elle a un intitulé, un livrable ou une compétence. La visite guidée suit.
+- Plus rien ne se perd dans une évaluation : chaque modification (intitulé, compétences, formulation, résultats des étudiants) est gardée aussitôt. Une évaluation commencée apparaît dans « Mes évaluations » comme **brouillon** : elle ne compte pas dans Progression, ne peut être ni évaluée, ni exportée, ni envoyée à un collègue, et n'avance pas dans le suivi. « Enregistrer l'évaluation », à l'étape Formulation, la sort des brouillons ; il lui faut un intitulé et au moins une compétence. Une fois enregistrée, ses modifications et les résultats saisis sont pris en compte sans autre clic. Les boutons « Enregistrer » des étapes 1 et 2 et de la saisie des étudiants disparaissent. Un brouillon se supprime depuis la liste.
 - Menu « Actions… » : « Annuler l'évaluation » précise que rien n'est supprimé et qu'elle peut être rétablie.
 - Paramètres : la description de l'exemple dit ce qu'il charge réellement (un établissement complet, résultats compris) et qu'il active le module Étudiants.
 
