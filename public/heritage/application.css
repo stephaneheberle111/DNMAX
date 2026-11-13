@@ -430,6 +430,7 @@ table.mx td.n{font-family:var(--fm);color:var(--muted);text-align:right;font-var
 .ed .ments{display:flex;gap:4px;flex-wrap:wrap}
 .addsel{width:auto;flex:0 1 260px}
 .pick-head .addsel[data-add]{flex:0 1 158px;min-width:0;font-size:12px;padding:5px 8px}
+.pick-head .addsel[data-cadd],.pick-head #cq{flex:0 1 190px;min-width:0;font-size:12px;padding:5px 8px}
 .dkinds{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 12px}
 .dkinds button{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:5px 11px;cursor:pointer;color:var(--muted);font-size:12.5px}
 .dkinds button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:600}
@@ -663,11 +664,6 @@ table.mx.mtx thead tr:nth-child(3) th{top:calc(var(--h1,34px) + var(--h2,40px))}
 table.mx.mtx thead th.st{left:0;z-index:5;background:var(--surface-2)}
 table.mx.mtx thead th.n,table.mx.mtx thead th:last-child{background:var(--surface-2)}
 table.mx.mtx tr.band th .bl{position:sticky;left:14px;display:inline-flex;align-items:center;gap:10px;max-width:calc(100vw - 260px)}
-table.mx.mtx .mxdel{float:right;margin:0 0 0 6px;color:var(--muted)}
-table.mx.mtx tr.band .mxdel{float:none}
-table.mx.mtx tr.mxaddrow th,table.mx.mtx tr.mxaddrow td{padding:4px 8px;background:var(--surface)}
-table.mx.mtx tr.mxaddrow .addsel{font-size:12px;padding:3px 6px;color:var(--muted);max-width:320px}
-table.mx.mtx .blocsel{width:auto;margin-top:4px;padding:2px 6px;font-size:11px;color:var(--muted)}
 .cbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin:0 0 10px;
   background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .cbar .cf{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
@@ -690,17 +686,8 @@ table.mx.mtx .blocsel{width:auto;margin-top:4px;padding:2px 6px;font-size:11px;c
 .ed .codes3 label{display:flex;align-items:center;gap:6px;min-width:0}
 .ed .codes3 b{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.04em;width:28px;flex:none}
 .ed .codes3 input{padding:3px 6px;font-size:12.5px}
-.ed .ecpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(216px,1fr));gap:5px}
-.ecl{border:1px solid var(--line);border-radius:8px;padding:4px 5px;display:grid;gap:4px;background:var(--surface-2);min-width:0}
-.ecl.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,var(--surface))}
-.ecl>.ec{display:flex;align-items:center;gap:6px;min-width:0;width:100%;background:none;border:0;padding:1px 2px;cursor:pointer;text-align:left;color:inherit}
-.ecl>.ec .k{font-family:var(--fm);font-size:11px;font-weight:700;color:var(--c);white-space:nowrap}
-.ecl>.ec .n{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.ecl.on>.ec .n{color:var(--text)}
-.ecl .muted{font-size:11px;color:var(--muted)}
 .ecpick:empty::after{content:"Aucun EC pour ce semestre";font-size:12px;color:var(--muted)}
 .semfilter{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
-.mxadd select{width:auto!important}
 .sflab{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .semfilter .seg{flex:1 1 auto}
 .semfilter .seg button{flex:0 1 auto;padding:5px 11px;background:var(--surface)}
@@ -837,3 +824,6 @@ html[data-device="phone"] .toast{bottom:calc(76px + env(safe-area-inset-bottom,0
 }
 
 .mod .modvisite{margin-top:8px;padding:4px 10px;font-size:12.5px}
+/* Constituer › Blocs et compétences : un bloc par groupe, son numéro et son intitulé dans l'en-tête */
+.cgrp>.hd input.mono{flex:0 0 58px;font-weight:600}
+.ed input[aria-invalid=true]{border-color:var(--signal)}
