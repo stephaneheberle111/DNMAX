@@ -141,7 +141,9 @@ jobs:
     name: macOS
     needs: verifier
     if: ${{ inputs.avec_macos }}
-    runs-on: macos-latest
+    # Machines Intel : les machines ARM de GitHub manquent souvent de capacité et le job
+    # n'est alors jamais pris en charge. Le paquet reste universel (Intel et Apple Silicon).
+    runs-on: macos-15-intel
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
