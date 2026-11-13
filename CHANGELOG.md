@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Carte radiale du référentiel : le zoom est progressif et animé en douceur (environ 8 % par cran de molette, pincement sur pavé tactile ou écran tactile, boutons −, + et « Ajuster » au-dessus de la carte, touches +, − et 0), centré sur le point visé, entre la roue entière (100 %) et 250 %. La carte garde la même taille à tous les zooms et reste dans son cadre : plus de saut de mise en page ni de débordement sur les onglets ou l'encadré voisin. Le cadre s'adapte à la colonne et à la fenêtre (de l'écran 1280 × 800 au 2560 × 1440, et au téléphone, où le pincement est désormais possible) et se recalcule quand la fenêtre change de taille. Les libellés trop petits pour être lus sont masqués au lieu de s'entasser. Avec « réduire les animations », le zoom s'applique sans animation.
+
 ## 0.4.2 — 2026-11-13
 
 ### Ajouté
