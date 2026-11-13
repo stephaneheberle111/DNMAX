@@ -9,6 +9,7 @@ import { CLE_IDENTITE, lireIdentite } from "../domaine/identite";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
 import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
+import { confirmerChangementEchelle } from "../ecran-preferences";
 import { enregistrerFichier } from "../enveloppe";
 
 /** Adresse du script de l'interface historique, servi depuis `public/`. */
@@ -42,6 +43,19 @@ interface Pont {
    * si la règle rend autre chose que `null`.
    */
   ajusterEnseignants?: (regle: RegleEnseignants) => void;
+  /** Posée par l'interface historique à son chargement : affiche la page Préférences. */
+  ouvrirPreferences?: () => void;
+  /**
+   * Posée par l'application (voir `suivreRenommageMoi`) : appelée quand
+   * l'enseignant corrige le prénom ou le nom de sa ligne « C'est moi ».
+   * Les valeurs ne sont pas typées.
+   */
+  renommerMoi?: (prenom: unknown, nomFamille: unknown) => void;
+  /**
+   * Appelée avant tout changement d'échelle d'évaluation dans Préférences.
+   * Rend `true` si l'enseignant confirme.
+   */
+  readonly confirmerChangementEchelle: () => Promise<boolean>;
   /**
    * Appelée quand l'enseignant coche le module Élèves : avertissement RGPD et
    * documents à remettre. Rend `true` s'il confirme l'activation.
@@ -118,6 +132,7 @@ export async function chargerInterfaceHistorique(
     telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport) },
     estCadreVierge,
     nettoyerDiplomesVierges,
+    confirmerChangementEchelle,
     // L'interface historique n'est pas typée : le nom reçu est vérifié.
     confirmerModuleEleves: (etablissement) =>
       confirmerActivationEleves({
@@ -152,4 +167,15 @@ export async function chargerInterfaceHistorique(
  */
 export function ajusterEnseignants(regle: RegleEnseignants): void {
   window.dnmaxPont?.ajusterEnseignants?.(regle);
+}
+
+/**
+ * Fait appeler `rappel` à chaque correction du prénom ou du nom de la ligne
+ * « C'est moi » de « Mon établissement », avec les valeurs saisies, non vérifiées.
+ * Sans interface chargée, ne fait rien.
+ */
+export function suivreRenommageMoi(rappel: (prenom: unknown, nomFamille: unknown) => void): void {
+  if (window.dnmaxPont !== undefined) {
+    window.dnmaxPont.renommerMoi = rappel;
+  }
 }

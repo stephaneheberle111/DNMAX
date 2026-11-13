@@ -16,13 +16,14 @@ import {
   lireDatesModification,
   mettreAJourDates,
 } from "./domaine/echange/suivi-modifications";
-import { provisionnerEnseignantMoi, renommerEnseignantMoi } from "./domaine/enseignant-moi";
-import { CLE_IDENTITE, creerIdentite, lireIdentite } from "./domaine/identite";
+import { provisionnerEnseignantMoi } from "./domaine/enseignant-moi";
+import { CLE_IDENTITE, identiteRenommee, lireIdentite } from "./domaine/identite";
 import { proposerPremiersPas } from "./ecran-accueil";
 import { installerCompte } from "./ecran-compte";
 import { suivreHauteurBarre } from "./ecran-entetes";
 import { installerParcours } from "./ecran-parcours";
 import { installerPiedDePage } from "./ecran-pied";
+import { appliquerThemeEnregistre, installerChoixTheme } from "./ecran-preferences";
 import { installerDonneesEleves, rappelerConservation } from "./ecran-droits-eleves";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
@@ -36,7 +37,7 @@ import {
   lireCoffre,
   lireEtatCoffre,
 } from "./enveloppe";
-import { ajusterEnseignants, chargerInterfaceHistorique } from "./heritage/pont";
+import { ajusterEnseignants, chargerInterfaceHistorique, suivreRenommageMoi } from "./heritage/pont";
 import { dresserCatalogue } from "./heritage/referentiels";
 
 const NOM_APPLICATION = "DNMAX";
@@ -63,7 +64,12 @@ async function ouvrirDonnees(): Promise<Entrees> {
 }
 
 /** Application ouverte dans son enveloppe : magasin enregistré dans le coffre, et de quoi échanger. */
-async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: AccesDonnees }> {
+async function creerMagasinProtege(): Promise<{
+  magasin: MagasinMemoire;
+  acces: AccesDonnees;
+  /** Reprend dans l'identité le prénom et le nom saisis, non vérifiés ; ignore un nom incomplet. */
+  reprendreNom: (prenom: unknown, nomFamille: unknown) => void;
+}> {
   const entrees = await ouvrirDonnees();
   const enregistreur = new EnregistreurDiffere(
     enregistrerCoffre,
@@ -105,16 +111,6 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
     get identite() {
       return identite;
     },
-    renommer: (prenom, nomFamille) => {
-      const renommee = creerIdentite(prenom, nomFamille, identite.id);
-      if (renommee === null) {
-        return false;
-      }
-      identite = renommee;
-      magasin.setItem(CLE_IDENTITE, JSON.stringify(identite));
-      ajusterEnseignants((donnees) => renommerEnseignantMoi(donnees, renommee));
-      return true;
-    },
     dresserCatalogue,
     enregistrerMaintenant: () => enregistreur.vider(),
     ecrireEntree: (cle, valeur) => {
@@ -143,10 +139,20 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
       window.location.reload();
     },
   };
-  return { magasin, acces };
+  // Le nom se corrige sur la ligne « C'est moi » de « Mon établissement » : l'identité, qui signe les envois, le reprend.
+  const reprendreNom = (prenom: unknown, nomFamille: unknown): void => {
+    const renommee = identiteRenommee(identite, prenom, nomFamille);
+    if (renommee !== null) {
+      identite = renommee;
+      magasin.setItem(CLE_IDENTITE, JSON.stringify(identite));
+    }
+  };
+  return { magasin, acces, reprendreNom };
 }
 
 async function demarrer(): Promise<void> {
+  // Dès l'écran du mot de passe, qui précède tout le reste.
+  appliquerThemeEnregistre();
   suivreHauteurBarre();
   // Hors de l'enveloppe (page ouverte dans un navigateur pendant le développement),
   // il n'y a ni coffre ni boîtes de dialogue du système : les données ne vivent
@@ -154,13 +160,17 @@ async function demarrer(): Promise<void> {
   if (!estDansEnveloppe()) {
     document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
     await chargerInterfaceHistorique(new MagasinMemoire({}, () => undefined));
+    installerChoixTheme();
+    installerCompte(null);
     return;
   }
-  const { magasin, acces } = await creerMagasinProtege();
+  const { magasin, acces, reprendreNom } = await creerMagasinProtege();
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
   await chargerInterfaceHistorique(magasin, proposerOuvertureExport);
   // L'enseignant qui a donné son nom figure d'office parmi les enseignants de l'établissement, marqué « moi ».
   ajusterEnseignants((donnees) => provisionnerEnseignantMoi(donnees, acces.identite));
+  suivreRenommageMoi(reprendreNom);
+  installerChoixTheme();
   installerEchange(acces);
   suivreExemple(acces);
   installerDonneesEleves(acces);
