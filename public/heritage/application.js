@@ -3278,7 +3278,7 @@ const PRESETS = {
   note:{nom:"Note chiffrée",niveaux:["Note / 20"]},
   libre:{nom:"Personnalisé",niveaux:["À compléter"]}
 };
-/* échelles : actives et par défaut se règlent dans Mon compte › Préférences ; chaque évaluation garde la sienne */
+/* échelles : actives et par défaut se règlent dans Mon compte > Préférences ; chaque évaluation garde la sienne */
 const ECH=(()=>{let e=null;try{e=JSON.parse(STOCKAGE.getItem("dnmade.echelles")||"null")}catch(_){}
   e=e||{};if(Array.isArray(e.actifs))e.actifs=e.actifs.filter(k=>k!=="dn");   // les niveaux DN MADE ne sont plus une échelle
   if(!Array.isArray(e.actifs)||!e.actifs.length)e.actifs=["maitrise"];   // « Degrés d'acquisition » se coche dans Préférences
@@ -3289,10 +3289,10 @@ const DEF_PRESET_GET=()=>PRESETS[ECH.def]?ECH.def:"maitrise";
 const MODULES = {
   base:{nom:"Base",def:true,locked:true,
     d:"Toujours actif. Composer une évaluation (livrables, compétences, regroupements, consignes et attendus, rattachement aux UE et EC), l'enregistrer dans Mes évaluations avec son suivi, l'exporter en Word, Excel ou OpenDocument ; explorer et importer le référentiel ; décrire l'établissement (mentions, enseignants, promotions, répartition de service) et suivre la progression des promotions."},
-  eleves:{nom:"Élèves",def:false,
-    d:"Gestion nominative des évaluations directement dans l'application, élève par élève : promotions nominatives, saisie de chaque élève ligne par ligne (grille de la promo ou fiche individuelle, observations, appréciation), non-rendus, restitution par élève, un document Word par élève, et la page « Progression élève » pour savoir où en est chacun dans le semestre et dans l'acquisition des compétences."},
+  eleves:{nom:"Étudiants",def:false,
+    d:"Gestion nominative des évaluations directement dans l'application, étudiant par étudiant : promotions nominatives, saisie de chaque étudiant ligne par ligne (grille de la promo ou fiche individuelle, observations, appréciation), non-rendus, restitution par étudiant, un document Word par étudiant, et la page « Progression étudiant » pour savoir où en est chacun dans le semestre et dans l'acquisition des compétences."},
   dn:{nom:"Niveaux DN MADE",def:false,req:"eleves",
-    d:"Attribue à chaque élève le niveau DN MADE atteint sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec un niveau de maîtrise suffisant. Affiché dans « Progression élève », dans les intitulés d'année et dans les exports."}
+    d:"Attribue à chaque étudiant le niveau DN MADE atteint sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec un niveau de maîtrise suffisant. Affiché dans « Progression étudiant », dans les intitulés d'année et dans les exports."}
 };
 /* visite guidée de chaque module (voir src/parcours-etapes.ts) */
 const VISITE_MODULE={eleves:"eleves",dn:"niveaux"};
@@ -3307,7 +3307,7 @@ const LS = {
   set(k,v){try{STOCKAGE.setItem(k,JSON.stringify(v))}catch(e){}}
 };
 let MOD = Object.assign(modDefaults(), LS.get("dnmade.modules",{}));
-// un module qui en requiert un autre ne reste pas actif sans lui (Niveaux DN MADE → Élèves)
+// un module qui en requiert un autre ne reste pas actif sans lui (Niveaux DN MADE → Étudiants)
 function modDeps(){Object.entries(MODULES).forEach(([k,v])=>{if(v.req&&!MOD[v.req])MOD[k]=false})}
 modDeps();
 BASE_KEYS.forEach(k=>MOD[k]=true);
@@ -3744,8 +3744,8 @@ function migPromo(pr){
   pr.eleves=pr.liste.map(e=>e.nom).join("\n");
   return pr;
 }
-/* élèves de l'évaluation : ceux des promotions choisies (ou de l'ancienne promotion liée),
-   réduits à un seul si l'évaluation vise un élève */
+/* étudiants de l'évaluation : ceux des promotions choisies (ou de l'ancienne promotion liée),
+   réduits à un seul si l'évaluation vise un étudiant */
 function promoElevesOf(ff){
   let prs=(ff.classes||[]).map(n=>promos.find(p=>p.nom===n)).filter(Boolean);
   if(!prs.length){const pr=promos.find(p=>p.id===ff.promoId);if(pr)prs=[pr]}
@@ -3774,7 +3774,7 @@ function paintEleveField(){
     +(F.eleveIds.length?`<button type="button" class="liv add" id="elvAll">Toute la promotion</button>`:"")
     :`<span class="hint">Choisissez d'abord une promotion.</span>`;
   const n=F.eleveIds.length;
-  document.getElementById("eleveHint").textContent=!all.length?"":n?(n+" élève"+(n>1?"s":"")+" sur "+all.length+" : seuls "+(n>1?"eux sont notés":"lui est noté")+" à l'étape 4 et exporté"+(n>1?"s":"")+"."):"Toute la promotion — "+all.length+" élève"+(all.length>1?"s":"")+".";
+  document.getElementById("eleveHint").textContent=!all.length?"":n?(n+" étudiant"+(n>1?"s":"")+" sur "+all.length+" : seuls "+(n>1?"eux sont notés":"lui est noté")+" à l'étape 4 et exporté"+(n>1?"s":"")+"."):"Toute la promotion — "+all.length+" étudiant"+(all.length>1?"s":"")+".";
   host.querySelectorAll("[data-elv]").forEach(b=>b.onclick=()=>{const id=b.dataset.elv;
     F.eleveIds=F.eleveIds.includes(id)?F.eleveIds.filter(x=>x!==id):[...F.eleveIds,id];
     save();paintEleveField();paintSteps();if(ui.step===4)paintEleves()});
@@ -3999,7 +3999,7 @@ function paintForm(){
   g("f-eleves").value=F.eleves;
   paintSems();
   const hE=g("helpEch");
-  if(hE&&!hE.innerHTML)hE.innerHTML=help("L'échelle donne les niveaux de la jauge d'évaluation, à l'écran comme dans le Word et l'Excel. Une nouvelle évaluation prend l'échelle par défaut ; la liste propose toutes les échelles activées dans Mon compte › Préférences › Échelles d'évaluation.");
+  if(hE&&!hE.innerHTML)hE.innerHTML=help("L'échelle donne les niveaux de la jauge d'évaluation, à l'écran comme dans le Word et l'Excel. Une nouvelle évaluation prend l'échelle par défaut ; la liste propose toutes les échelles activées dans Mon compte > Préférences > Échelles d'évaluation.");
   g("row-ec").hidden=!MOD.ec;
   g("fgroup-ref").hidden=!MOD.ec;
   paintContexte();
@@ -4008,7 +4008,7 @@ function paintForm(){
   g("step1cols").style.gridTemplateColumns="minmax(0,1fr)";
   const ps=g("f-preset");
   // l'échelle se choisit parmi celles activées dans Préférences (par défaut : celle marquée « par défaut ») ;
-  // on ne la change plus une fois des niveaux saisis pour des élèves
+  // on ne la change plus une fois des niveaux saisis pour des étudiants
   if(!F.niveaux||!F.niveaux.length){F.preset=DEF_PRESET_GET();F.niveaux=PRESETS[F.preset].niveaux.slice()}
   g("fld-preset").hidden=false;
   g("f-levels").hidden=true;
@@ -4022,7 +4022,7 @@ function paintForm(){
   ps.value=F.preset;
   {const saisi=Object.values(F.res||{}).some(r=>hasSaisie(r)), h=g("f-presetHint");
    ps.disabled=saisi;
-   if(h)h.textContent=saisi?"Des niveaux sont déjà saisis pour des élèves : l'échelle ne peut plus changer.":"Échelles activées dans Mon compte › Préférences › Échelles d'évaluation."}
+   if(h)h.textContent=saisi?"Des niveaux sont déjà saisis pour des étudiants : l'échelle ne peut plus changer.":"Échelles activées dans Mon compte > Préférences > Échelles d'évaluation."}
   ps.onchange=()=>{if(Object.values(F.res||{}).some(r=>hasSaisie(r)))return;F.preset=ps.value;F.niveaux=PRESETS[ps.value].niveaux.slice();save();paintForm();paintLignes()};
   g("f-levels").innerHTML=F.niveaux.map((n,i)=>
     `<div class="lv"><input type="text" value="${esc(n)}" data-i="${i}" aria-label="Degré ${i+1}"><button class="btn ghost" data-rm="${i}" aria-label="Supprimer">×</button></div>`).join("");
@@ -4085,7 +4085,7 @@ function paintClasse(){
     const pr=ps.find(p=>p.nom===x), on=F.classes.includes(x), off=!on&&pr&&lockY!=null&&yr(pr)!==lockY;
     return `<button type="button" class="liv" data-classe="${esc(x)}" aria-pressed="${on}" ${off?"disabled":""}
       title="${esc(x)}${off?" — autre année de formation que la promotion déjà choisie":""}${pr&&!promoRefValide(pr)?" — référentiel non validé":""}">${esc(promoDisp(x))}${promoDisp(x)===x?tag(x):""}${pr&&!promoRefValide(pr)?`<span class="n">référentiel à valider</span>`:""}</button>`}).join("")
-    +(live.length?"":`<span class="hint">Aucune promotion en cours en ${esc(AS)} : crée-la dans Mon établissement › Promotions.</span>`)
+    +(live.length?"":`<span class="hint">Aucune promotion en cours en ${esc(AS)} : crée-la dans Mon établissement > Promotions.</span>`)
     +(dipBloquant(F)?`<span class="hint" id="f-refnv" style="color:var(--signal);flex-basis:100%">Le référentiel de cette évaluation n'est pas validé : elle ne pourra pas être enregistrée. <button type="button" class="btn ghost" data-allerval>Valider le référentiel</button></span>`:"");
   {const b=host.querySelector("[data-allerval]");if(b)b.onclick=()=>allerValidation(dipBloquant(F))}
   host.querySelectorAll("[data-classe]").forEach(b=>b.onclick=()=>toggleClasse(b.dataset.classe));
@@ -4095,7 +4095,7 @@ function paintProf(){
   if(!Array.isArray(F.profs))F.profs=F.prof?String(F.prof).split(/,\s*/).filter(Boolean):[];
   const all=[...new Set([...DATA.enseignants.map(t=>t.nom).filter(Boolean),...F.profs])];
   host.innerHTML=all.map(n=>`<button type="button" class="liv" data-prof="${esc(n)}" aria-pressed="${F.profs.includes(n)}">${esc(n)}</button>`).join("")
-    ||`<span class="hint">Ajoutez les enseignants dans Mon établissement › Enseignants.</span>`;
+    ||`<span class="hint">Ajoutez les enseignants dans Mon établissement > Enseignants.</span>`;
   host.querySelectorAll("[data-prof]").forEach(b=>b.onclick=()=>{const n=b.dataset.prof;
     F.profs=F.profs.includes(n)?F.profs.filter(x=>x!==n):[...F.profs,n];F.prof=F.profs.join(", ");
     save();paintProf();paintContexte();paintSteps()});
@@ -4170,7 +4170,7 @@ function goStep(n){
 }
 function paintSteps(){
   const li4=document.getElementById("li-step4");
-  // l'évaluation des élèves s'ouvre depuis Mes évaluations (« Évaluer ») : pas d'étape 4 dans le parcours
+  // l'évaluation des étudiants s'ouvre depuis Mes évaluations (« Évaluer ») : pas d'étape 4 dans le parcours
   if(li4)li4.hidden=true;
   if(!MOD.eleves&&ui.step===4)ui.step=3;
   for(const n of [1,2,3,4]){
@@ -4196,7 +4196,7 @@ function paintSteps(){
   document.getElementById("n2hint").textContent=F.items.length?"":"Cochez les compétences évaluées sur ce travail.";
   const s4=document.getElementById("s4sum");
   if(s4){const st=evalStats(F);
-    s4.innerHTML=!st.els?`<em>aucun élève</em>`
+    s4.innerHTML=!st.els?`<em>aucun étudiant</em>`
       :st.faits>=st.els?`${st.els} évalué${st.els>1?"s":""}<em> — complet</em>`
       :`${st.faits} / ${st.els}<em> évalué${st.els>1?"s":""}${st.partiels?" · "+st.partiels+" en cours":""}</em>`;}
   const n3s=document.getElementById("n3save");
@@ -4232,7 +4232,7 @@ function paintContexte(){
 function paintPromos(){
   const g=id=>document.getElementById(id);
   const hp=g("helpPromo");
-  if(hp&&!hp.innerHTML)hp.innerHTML=help("Choisir une promotion renseigne la classe de l'évaluation et cale le semestre sur son année de formation. Ses élèves apparaissent à l'étape 4, où vous notez chacun ; à l'export, le Word sort un document par élève, degrés cochés, et l'Excel ajoute un onglet « Grille classe » rempli. Renommer un élève lui donne une nouvelle ligne : ses résultats déjà saisis ne le suivent pas.");
+  if(hp&&!hp.innerHTML)hp.innerHTML=help("Choisir une promotion renseigne la classe de l'évaluation et cale le semestre sur son année de formation. Ses étudiants apparaissent à l'étape 4, où vous notez chacun ; à l'export, le Word sort un document par étudiant, degrés cochés, et l'Excel ajoute un onglet « Grille classe » rempli. Renommer un étudiant lui donne une nouvelle ligne : ses résultats déjà saisis ne le suivent pas.");
   const sel=g("f-promo");
   sel.innerHTML=`<option value="">— Aucune promotion —</option>`+promos.filter(pr=>migPromoCohorte(pr).diplomeId===DATA.activeDiplome||pr.id===F.promoId).map(pr=>
     `<option value="${pr.id}">${esc(promoLabel(pr))}</option>`).join("");
@@ -4453,7 +4453,7 @@ function paintLignes(){
     });
   });
 }
-/* ---------- étape 4 : évaluation des élèves ---------- */
+/* ---------- étape 4 : évaluation des étudiants ---------- */
 function curEleve(){
   const els=studentsOf(F);if(!els.length)return null;
   return els.find(e=>e.id===ui.eleve)||els[0];
@@ -4468,12 +4468,12 @@ function paintEprog(){
   const c=document.getElementById("eCount");if(c)c.textContent=els.length;
   const prog=document.getElementById("eProg");
   if(prog)prog.textContent=!els.length?""
-    :`${st.faits} / ${els.length} élève${els.length>1?"s":""} évalué${els.length>1?"s":""}`
+    :`${st.faits} / ${els.length} étudiant${els.length>1?"s":""} évalué${els.length>1?"s":""}`
      +(st.partiels?` · ${st.partiels} commencé${st.partiels>1?"s":""}`:"")
      +` · ${L.length} ligne${L.length>1?"s":""}`;
   const h=document.getElementById("n4hint");
   if(h)h.textContent=!els.length?""
-    :(st.faits===els.length?"Tout le monde est évalué — le Word par élève et l'Excel de la promo se génèrent depuis « Mes évaluations »."
+    :(st.faits===els.length?"Tout le monde est évalué — le Word par étudiant et l'Excel de la promo se génèrent depuis « Mes évaluations »."
       :"Les résultats sont enregistrés avec l'évaluation ; les documents se génèrent depuis « Mes évaluations ».");
 }
 /* Niveau d'acquisition en pourcentage continu (0 à 100, sans crans visibles).
@@ -4556,7 +4556,7 @@ function setPct(eid,key,p){
     document.querySelectorAll(`[data-est="${CSS.escape(eid)}"],#eEst`).forEach(sl=>{sl.value="rendu";sl.classList.remove("vide","on")})}
   save();paintEprog();paintSteps();
 }
-/* Rendu de chaque élève (module Élèves) : vide au départ, « Rendu » dès qu'un niveau est saisi,
+/* Rendu de chaque étudiant (module Étudiants) : vide au départ, « Rendu » dès qu'un niveau est saisi,
    « Non rendu » ou « Dispensé » vident ce qui avait été saisi pour lui. */
 const hasSaisie=r=>Object.values((r||{}).n||{}).some(v=>v!=null&&v!=="");
 function estOf(r){r=r||{};return r.nr?"nr":r.disp?"disp":(r.rendu||hasSaisie(r))?"rendu":""}
@@ -4566,8 +4566,8 @@ function rendusManquants(f){if(!MOD.eleves)return 0;return studentsOf(f).filter(
 function setEst(eid,v){const r=resOf(F,eid), had=hasSaisie(r)||Object.values(r.obs||{}).some(Boolean)||!!r.appr, t=new Date().toISOString().slice(0,10);
   delete r.nr;delete r.disp;delete r.rendu;
   if(v==="rendu")r.rendu=t;
-  if(v==="nr"||v==="disp"){r[v]=t;r.n={};r.c={};r.p={};r.obs={};r.appr="";if(had)toast("Niveaux, observations et appréciation de l'élève effacés.")}
-  if(v===""&&hasSaisie(r)){r.rendu=t;toast("Des niveaux sont saisis pour cet élève : il reste « Rendu ».")}
+  if(v==="nr"||v==="disp"){r[v]=t;r.n={};r.c={};r.p={};r.obs={};r.appr="";if(had)toast("Niveaux, observations et appréciation de l'étudiant effacés.")}
+  if(v===""&&hasSaisie(r)){r.rendu=t;toast("Des niveaux sont saisis pour cet étudiant : il reste « Rendu ».")}
   save();paintEleves();paintSteps()}
 function paintEleves(){
   const host=document.getElementById("elevesPane");if(!host)return;
@@ -4576,7 +4576,7 @@ function paintEleves(){
   document.querySelectorAll("#eMode [data-emode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.emode===mode)));
   paintEprog();
   if(!els.length){
-    host.innerHTML=`<div class="empty">Aucun élève. Choisissez une promotion à l'étape 1, ou saisissez une liste de noms,
+    host.innerHTML=`<div class="empty">Aucun étudiant. Choisissez une promotion à l'étape 1, ou saisissez une liste de noms,
       puis revenez ici pour évaluer chacun.</div>`;return;
   }
   if(!L.length){host.innerHTML=`<div class="empty">Aucune ligne à évaluer : revenez à l'étape 2 pour choisir des compétences.</div>`;return}
@@ -4586,10 +4586,10 @@ function paintEleves(){
     const estSel=(e,r)=>estSelect(r,`data-est="${esc(e.id)}"`,"Rendu de "+e.nom);
     host.innerHTML=`<div class="tw"><div class="egrid">
       <div class="eh" style="${css}">
-        <span>Élève</span><span title="Rendu, non rendu ou dispensé — à renseigner pour chaque élève avant de terminer l'évaluation. Un niveau saisi le passe en « Rendu »">Rendu</span>
+        <span>Étudiant</span><span title="Rendu, non rendu ou dispensé — à renseigner pour chaque étudiant avant de terminer l'évaluation. Un niveau saisi le passe en « Rendu »">Rendu</span>
         ${L.map(l=>{const t=ligTitre(l);
           return `<span title="${esc(t.lib)}"><b>${esc(t.code)}</b></span>`}).join("")}
-        <span style="text-align:center" title="Résultat rendu à l'élève">Restitué</span>
+        <span style="text-align:center" title="Résultat rendu à l'étudiant">Restitué</span>
         <span style="text-align:right">Fait</span>
       </div>
       ${els.map(e=>{const d=eleveDone(e.id), r=resOf(F,e.id);
@@ -4601,7 +4601,7 @@ function paintEleves(){
           <span style="text-align:center"><input type="checkbox" class="cbox" data-rest="${esc(e.id)}" ${r.rest?"checked":""} title="${r.rest?"Restitué le "+esc(r.rest):"Pas encore restitué"}" aria-label="Restitué à ${esc(e.nom)}"></span>
           <span class="n">${d.n}/${d.tot}</span></div>`}).join("")}
     </div></div>
-    <div class="hint" style="padding:10px 14px 2px">Une ligne par élève, une colonne par compétence évaluée. Un clic sur un nom ouvre sa fiche.</div>`;
+    <div class="hint" style="padding:10px 14px 2px">Une ligne par étudiant, une colonne par compétence évaluée. Un clic sur un nom ouvre sa fiche.</div>`;
     wireNtk(host,eid=>{
       const row=host.querySelector(`[data-row="${CSS.escape(eid)}"]`), d=eleveDone(eid);
       if(row){row.classList.toggle("ok",d.n>=d.tot);row.classList.toggle("part",d.n>0&&d.n<d.tot);
@@ -4620,7 +4620,7 @@ function paintEleves(){
   host.innerHTML=`<div class="efiche">
     <div class="ehead">
       <button class="btn ghost" id="ePrev" ${idx<=0?"disabled":""}>←</button>
-      <select id="eSel" aria-label="Élève">${els.map(x=>{const dd=eleveDone(x.id);
+      <select id="eSel" aria-label="Étudiant">${els.map(x=>{const dd=eleveDone(x.id);
         return `<option value="${esc(x.id)}" ${x.id===el.id?"selected":""}>${esc(x.nom)} — ${dd.n}/${dd.tot}</option>`}).join("")}</select>
       <button class="btn ghost" id="eNext" ${idx>=els.length-1?"disabled":""}>→</button>
       <span class="hint mono">${idx+1} / ${els.length}</span>
@@ -4741,24 +4741,24 @@ function paintPick(){
   document.getElementById("cCount").textContent=F.items.length+" / "+all.length;
   paintSteps();
 }
-/* restitution : par promotion (module de base) et, avec le module Élèves, par élève */
-/* Suivi d'une évaluation : saisie dans DNMAX → distribuée aux élèves (avec date de rendu) →
+/* restitution : par promotion (module de base) et, avec le module Étudiants, par étudiant */
+/* Suivi d'une évaluation : saisie dans DNMAX → distribuée aux étudiants (avec date de rendu) →
    évaluée (fiche remplie à la main hors DNMAX, ou saisie dans DNMAX) → restituée (par promotion,
-   et par élève avec le module Élèves). f.suivi = {saisie, distrib, butoir, evalue, mode:"main"|"dnmax"} */
+   et par étudiant avec le module Étudiants). f.suivi = {saisie, distrib, butoir, evalue, mode:"main"|"dnmax"} */
 const ST_RANK={annulee:-1,prep:0,distrib:1,rendu:1,evalcours:2,eval:3,restpart:4,restit:5};
 const ST_LBL={prep:"Préparée",distrib:"Distribuée",rendu:"Rendus à évaluer",evalcours:"Évaluation en cours",eval:"Évaluée",restpart:"Restituée en partie",restit:"Restituée",annulee:"Annulée"};
 function suiviOf(f){f.suivi=f.suivi||{};if(!f.suivi.saisie)f.suivi.saisie=f.date||new Date().toISOString().slice(0,10);return f.suivi}
 function saisieDnmax(f){
   const els=studentsOf(f);
   let any=0,full=0;const n=(f.items||[]).length?[...new Set((f.items||[]).map(it=>it.op?"op:"+it.op:"one:"+it.code))]:[];
-  els.forEach(e=>{const r=(f.res||{})[e.id]||{};if(r.nr||r.disp){any++;full++;return}   // non rendu ou dispensé : rien à saisir pour cet élève
+  els.forEach(e=>{const r=(f.res||{})[e.id]||{};if(r.nr||r.disp){any++;full++;return}   // non rendu ou dispensé : rien à saisir pour cet étudiant
     const k=n.filter(x=>((r.n||{})[x]!=null&&(r.n||{})[x]!==""));if(k.length)any++;if(n.length&&k.length>=n.length)full++});
   return {any,full,tot:els.length};
 }
 /* Le statut n'est jamais saisi : il découle de ce qui a été fait sur l'évaluation.
-   - Restituée (en partie) : restitution marquée pour la ou les promotions, ou, avec le module Élèves, pour chaque élève ;
-   - Évaluée : tous les élèves saisis dans DNMAX, ou évaluation marquée terminée (évaluation à la main) ;
-   - Évaluation en cours : au moins un élève saisi dans DNMAX, ou grille d'évaluation exportée (sans module Élèves) ;
+   - Restituée (en partie) : restitution marquée pour la ou les promotions, ou, avec le module Étudiants, pour chaque étudiant ;
+   - Évaluée : tous les étudiants saisis dans DNMAX, ou évaluation marquée terminée (évaluation à la main) ;
+   - Évaluation en cours : au moins un étudiant saisi dans DNMAX, ou grille d'évaluation exportée (sans module Étudiants) ;
    - Distribuée / Rendus à évaluer : les dates prévues de distribution / de rendu sont passées ;
    - Préparée : sinon. */
 const isoToday=()=>new Date().toISOString().slice(0,10);
@@ -4794,8 +4794,8 @@ function stepEditor(f,i,k){
   if(k===1){body=di("data-svp","distribPrev",f.distribPrev,"Prévue le")+di("data-sv","distrib",s.distrib,"Faite le");if(!s.distrib)act=btn("distrib","Distribuée aujourd'hui")}
   if(k===2){body=di("data-svp","renduPrev",f.renduPrev||s.butoir,"Prévu le")+di("data-sv","rendu",s.rendu,"Rendu le");if(!s.rendu)act=btn("rendu","Rendue aujourd'hui")}
   const manq=rendusManquants(f);
-  if(k===3){body=di("data-sv","evalDebut",s.evalDebut,"Commencée le")+(manq&&!s.evalue?`<label class="sted"><span>Terminée le</span><input type="date" disabled></label><span class="hint" style="flex-basis:100%;color:var(--signal)">${manq} élève${manq>1?"s":""} sans « Rendu », « Non rendu » ou « Dispensé » : à renseigner dans l'évaluation avant de la terminer.</span>`:di("data-sv","evalue",s.evalue,"Terminée le"))
-      +(d&&d.any?`<span class="hint" style="flex-basis:100%">Saisie dans DNMAX : ${d.full}/${d.tot} élèves</span>`:(!MOD.eleves&&s.exporte?`<span class="hint" style="flex-basis:100%">Grille exportée le ${fr(s.exporte)}</span>`:""));
+  if(k===3){body=di("data-sv","evalDebut",s.evalDebut,"Commencée le")+(manq&&!s.evalue?`<label class="sted"><span>Terminée le</span><input type="date" disabled></label><span class="hint" style="flex-basis:100%;color:var(--signal)">${manq} étudiant${manq>1?"s":""} sans « Rendu », « Non rendu » ou « Dispensé » : à renseigner dans l'évaluation avant de la terminer.</span>`:di("data-sv","evalue",s.evalue,"Terminée le"))
+      +(d&&d.any?`<span class="hint" style="flex-basis:100%">Saisie dans DNMAX : ${d.full}/${d.tot} étudiants</span>`:(!MOD.eleves&&s.exporte?`<span class="hint" style="flex-basis:100%">Grille exportée le ${fr(s.exporte)}</span>`:""));
     if(!s.evalue&&!manq)act=btn("evalue","Terminée aujourd'hui")}
   if(k===4){body=di("data-sv","restitue",s.restitue,"Restituée le");if(!s.restitue)act=btn("restitue","Restituée aujourd'hui")}
   return `<div class="sth"><b>${esc(ST_STEPS[k])}</b><span class="hint">${k<idx||(k===idx&&!(ST_POS[st]||[])[1])?"étape franchie":k===idx?"étape commencée":"à venir"}</span></div>
@@ -4814,9 +4814,9 @@ function suiviCell(f,i){
     :st==="prep"?(dist?"→ distribution prévue le "+fmtD(dist):"→ à distribuer (date non fixée)")
     :st==="distrib"?(rend?"→ rendu attendu le "+fmtD(rend):"→ rendu attendu (date non fixée)")
     :st==="rendu"?(MOD.eleves?"→ saisir les évaluations":"→ exporter la grille et évaluer")
-    :st==="evalcours"?(MOD.eleves?(()=>{const d=saisieDnmax(f), n=d.tot-d.full;return "→ "+n+" élève"+(n>1?"s":"")+" à saisir ("+d.full+"/"+d.tot+")"})():"→ marquer terminée une fois évaluée")
-    :st==="eval"?"→ à restituer aux élèves"
-    :st==="restpart"?(re.tot&&re.n?(()=>{const n=re.tot-re.n;return "→ à restituer à "+n+" élève"+(n>1?"s":"")})():"→ promotion restante à restituer")
+    :st==="evalcours"?(MOD.eleves?(()=>{const d=saisieDnmax(f), n=d.tot-d.full;return "→ "+n+" étudiant"+(n>1?"s":"")+" à saisir ("+d.full+"/"+d.tot+")"})():"→ marquer terminée une fois évaluée")
+    :st==="eval"?"→ à restituer aux étudiants"
+    :st==="restpart"?(re.tot&&re.n?(()=>{const n=re.tot-re.n;return "→ à restituer à "+n+" étudiant"+(n>1?"s":"")})():"→ promotion restante à restituer")
     :"✓ terminée"+(lastRest?" le "+fmtD(lastRest):"");
   const dots=ST_STEPS.map((l,k)=>{
     const c=idx<0?"":k<idx?"done":k===idx?(half?"half cur":"done cur"):"";
@@ -4834,7 +4834,7 @@ function suiviEditor(f,i){
     +row("3. Évaluée",`<input type="date" data-sv="evalue" value="${esc(s.evalue||"")}">
         <label class="rstl"><input type="radio" name="md${i}" data-svm="main" ${s.mode==="main"?"checked":""}> à la main, hors DNMAX</label>
         <label class="rstl"><input type="radio" name="md${i}" data-svm="dnmax" ${s.mode!=="main"?"checked":""}> dans DNMAX</label>
-        ${MOD.eleves&&d.tot?`<span class="hint">${d.full}/${d.tot} élèves saisis dans DNMAX</span>`:""}`)
+        ${MOD.eleves&&d.tot?`<span class="hint">${d.full}/${d.tot} étudiants saisis dans DNMAX</span>`:""}`)
     +row("4. Restituée",ps.map(n=>`<label class="rstl">${esc(promoDisp(n))} <input type="date" data-svr="${esc(n)}" value="${esc((f.restit||{})[n]||"")}"></label>`).join(""))
     +`<div class="hint" style="padding:6px 2px 2px">Une date vide = étape pas encore faite. Le statut affiché est l'étape la plus avancée.</div>`;
 }
@@ -4845,7 +4845,7 @@ function restitCell(f,i){
     return `<button type="button" class="rst${d?" on":""}" data-rst="${i}" data-rp="${esc(n)}" title="${d?"Restituée le "+esc(d)+" — cliquer pour annuler":"Formulée, pas encore rendue — cliquer pour marquer comme restituée"}">${d?"✓ ":""}${esc(ps.length>1?promoDisp(n):(d?"Restituée":"À restituer"))}</button>`}).join("");
   let el="";
   if(MOD.eleves){const ids=studentsOf(f).map(e=>e.id);const n=ids.filter(id=>((f.res||{})[id]||{}).rest).length;
-    if(n)el=`<div class="hint mono">${n}/${ids.length} élève${ids.length>1?"s":""}</div>`}
+    if(n)el=`<div class="hint mono">${n}/${ids.length} étudiant${ids.length>1?"s":""}</div>`}
   return `<div class="rstw">${chips}</div>${el}`;
 }
 /* actions de suivi proposées dans le menu Évaluer / Exporter de la liste */
@@ -4858,12 +4858,12 @@ function actsMenu(f,i){
   let h=`<span class="xsep"></span>`;
   if(!MOD.eleves)h+=`<button type="button" data-act="fin" data-xi="${i}">${s.evalue?"Rouvrir l'évaluation":"Marquer l'évaluation terminée"}</button>`;
   else if(s.evalue)h+=`<button type="button" data-act="fin" data-xi="${i}">Rouvrir l'évaluation</button>`;
-  else if(d&&d.any&&d.full<d.tot){const m=rendusManquants(f);h+=m?`<button type="button" disabled title="${m} élève${m>1?"s":""} sans statut de rendu : à renseigner dans l'évaluation" style="opacity:.5;cursor:not-allowed">Terminer l'évaluation <span class="hint">${m} sans rendu</span></button>`:`<button type="button" data-act="fin" data-xi="${i}">Terminer l'évaluation <span class="hint">${d.full}/${d.tot}</span></button>`}
+  else if(d&&d.any&&d.full<d.tot){const m=rendusManquants(f);h+=m?`<button type="button" disabled title="${m} étudiant${m>1?"s":""} sans statut de rendu : à renseigner dans l'évaluation" style="opacity:.5;cursor:not-allowed">Terminer l'évaluation <span class="hint">${m} sans rendu</span></button>`:`<button type="button" data-act="fin" data-xi="${i}">Terminer l'évaluation <span class="hint">${d.full}/${d.tot}</span></button>`}
   if(ps.length)h+=ps.map(n=>`<button type="button" data-act="rest" data-rp="${esc(n)}" data-xi="${i}">${R[n]?"Annuler la restitution":"Marquer restituée"}${ps.length>1?` <span class="hint">${esc(promoDisp(n))}</span>`:""}</button>`).join("");
   h+=`<span class="xsep"></span><button type="button" class="danger" data-act="annul" data-xi="${i}">Annuler l'évaluation</button>`;
   return h;
 }
-/* nombre d'élèves ayant une évaluation individuelle enregistrée (niveaux, observations, appréciation ou restitution) */
+/* nombre d'étudiants ayant une évaluation individuelle enregistrée (niveaux, observations, appréciation ou restitution) */
 function nbIndiv(f){return Object.values(f.res||{}).filter(r=>r&&(Object.values(r.n||{}).some(v=>v!=null&&v!=="")||Object.values(r.obs||{}).some(Boolean)||r.appr||r.rest)).length}
 function armList(key){ui.delArm=key;paintSaved();setTimeout(()=>{if(ui.delArm===key){ui.delArm=null;paintSaved()}},6000)}
 /* Fenêtre des actions d'une évaluation. Elle remplace un petit menu déroulant que l'on remarquait mal :
@@ -4872,7 +4872,7 @@ let XA=null, XA_RETOUR=null;
 function actionsHtml(f,i){
   const sec=(titre,corps)=>`<section class="xasec"><h3>${titre}</h3>${corps}</section>`;
   if(f.annulee)return sec("Autres actions",`<div class="xalist">${actsMenu(f,i)}</div>`);
-  return (MOD.eleves?sec("Évaluer",`<button type="button" class="btn primary xabig" data-sai="${i}">Évaluer les élèves</button>`):"")
+  return (MOD.eleves?sec("Évaluer",`<button type="button" class="btn primary xabig" data-sai="${i}">Évaluer les étudiants</button>`):"")
     +sec("Exporter",exportItems(i))
     +sec("Autres actions",`<div class="xalist"><button type="button" data-dup="${i}">Dupliquer</button>${actsMenu(f,i)}</div>`);
 }
@@ -4914,7 +4914,7 @@ function ouvrirActions(i,bind){
   const premier=body.querySelector("button:not([disabled])")||el.querySelector(".xaclose");premier.focus();
 }
 /* filtres de la liste des évaluations : par défaut, promotions en cours et évaluations dont je suis l'enseignant·e */
-/* Visibilité : un enseignant ne voit que les promotions de sa répartition de service (et leurs élèves).
+/* Visibilité : un enseignant ne voit que les promotions de sa répartition de service (et leurs étudiants).
    Si « C'est moi » n'est pas défini, ou s'il n'a encore aucune affectation, tout reste visible. */
 function mesPromoIds(){const me=DATA.moi;if(!me)return null;
   const ids=promos.filter(pr=>teachesPromo(pr.id,me)).map(p=>p.id);
@@ -5026,7 +5026,7 @@ function paintSaved(){
       exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()});
     root.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const f=fiches[+b.dataset.xi];if(!f)return;
       const s=suiviOf(f);
-      if(b.dataset.act==="fin"){if(s.evalue){delete s.evalue;delete s.mode}else{if(rendusManquants(f)){toast("Renseignez d'abord le rendu de chaque élève.");return}s.evalue=isoToday();s.mode=MOD.eleves?"dnmax":"main"}}
+      if(b.dataset.act==="fin"){if(s.evalue){delete s.evalue;delete s.mode}else{if(rendusManquants(f)){toast("Renseignez d'abord le rendu de chaque étudiant.");return}s.evalue=isoToday();s.mode=MOD.eleves?"dnmax":"main"}}
       if(b.dataset.act==="rest"){f.restit=f.restit||{};const k=b.dataset.rp;if(f.restit[k])delete f.restit[k];else f.restit[k]=isoToday()}
       if(b.dataset.act==="annul"){f.annulee=isoToday();toast("Évaluation annulée. Elle peut être rétablie depuis le bouton « Actions… ».")}
       if(b.dataset.act==="retab"){delete f.annulee;ui.delArm=null}
@@ -6220,7 +6220,7 @@ const REF_PANES={constituer:"Constituer",explorer:"Explorer"};
    et ne retire que ses propres éléments ; ceux des autres étapes y sont en lecture seule. Noms, codes et
    intitulés restent rangés dans le dictionnaire commun à toutes les mentions (DATA.dico). */
 const CON_PANES={ues:"Unités d'enseignement",ecs:"Enseignements constitutifs",blocs:"Blocs et compétences",tableau:"Planification par semestre",valider:"Validation"};
-/* les livrables proposés se règlent dans Mon compte › Préférences */
+/* les livrables proposés se règlent dans Mon compte > Préférences */
 const ORG_PANES={etab:"Établissement",diplome:"Diplômes et mentions",enseignants:"Enseignants",promos:"Promotions",affect:"Répartition de service"};
 let edArm=null;
 function paintOrg(){
@@ -6240,7 +6240,7 @@ function paintEtab(host){
   const D=DATA;D.etab=D.etab||{nom:"",uai:"",ville:"",academie:"",contactDpo:""};
   const E=D.etab, f=(k,l,ph,cls,style)=>`<div class="field"${style?` style="${style}"`:""}><label for="et-${k}">${l}</label>
     <input type="text" id="et-${k}" data-et="${k}" value="${esc(E[k]||"")}" placeholder="${esc(ph)}" ${cls?`class="${cls}"`:""}></div>`;
-  host.innerHTML=`<div class="panel"><div class="pick-head"><h3>Établissement${help("Le nom de l'établissement figure en tête des documents Word et Excel exportés. Avec le contact du délégué à la protection des données, il est repris dans les documents RGPD proposés à l'activation du module Élèves.")}</h3></div>
+  host.innerHTML=`<div class="panel"><div class="pick-head"><h3>Établissement${help("Le nom de l'établissement figure en tête des documents Word et Excel exportés. Avec le contact du délégué à la protection des données, il est repris dans les documents RGPD proposés à l'activation du module Étudiants.")}</h3></div>
     <div style="padding:14px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:13px">
       ${f("nom","Nom de l'établissement","Lycée …")}${f("uai","Code UAI (RNE)","0000000A","mono")}
       ${f("ville","Ville","")}${f("academie","Académie","")}
@@ -6265,7 +6265,7 @@ function affH(){DATA.affectH=DATA.affectH||{};
   return DATA.affectH}
 function affectOf(prId,as){const H=affH(), y=as||anneeScolaire(new Date());H[y]=H[y]||{};return H[y][prId]||(H[y][prId]={})}
 function affGet(prId,as){return ((affH()[as||anneeScolaire(new Date())])||{})[prId]||{}}
-/* l'enseignant a-t-il eu cette promotion, une année ou une autre ? (mes élèves et mes anciens élèves) */
+/* l'enseignant a-t-il eu cette promotion, une année ou une autre ? (mes étudiants et mes anciens étudiants) */
 function teachesPromo(prId,tid){return !!tid&&Object.values(affH()).some(Y=>Object.values((Y||{})[prId]||{}).some(l=>(l||[]).includes(tid)))}
 function paintAffect(host){
   const D=DATA, ASnow=anneeScolaire(new Date()), y0=asStart(ASnow);
@@ -6325,26 +6325,26 @@ function paintPromosOrg(host){
       <input type="number" min="2000" max="2100" value="${pr.debut}" data-py="${pr.id}" class="mono" aria-label="Année de début">
       <span class="ro mono" title="Code du diplôme · début · fin (${promoDuree(pr)} ans)">${esc(pr.nom)}</span>
       <span class="num">${esc(etat(pr))}</span>
-      ${MOD.eleves?`<button class="btn ghost" data-po="${pr.id}" aria-expanded="${open}">${n} élève${n>1?"s":""} ${open?"▴":"▾"}</button>`:""}
+      ${MOD.eleves?`<button class="btn ghost" data-po="${pr.id}" aria-expanded="${open}">${n} étudiant${n>1?"s":""} ${open?"▴":"▾"}</button>`:""}
       ${delBtn("pr"+pr.id,"Supprimer")}</div>`;
     if(open){
       const scss="grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px 92px";
       h+=`<div class="pdet">
         ${(pr.liste||[]).map(e=>`<div class="ed" style="${scss}">
-          <input type="text" value="${esc(completerPersonne(e).prenom)}" data-sp="${pr.id}|${e.id}" placeholder="Prénom" aria-label="Prénom de l'élève">
-          <input type="text" value="${esc(e.nomFam)}" data-sn="${pr.id}|${e.id}" placeholder="Nom" aria-label="Nom de l'élève">
-          <select data-sm="${pr.id}|${e.id}" aria-label="Promotion de l'élève" title="Changer de promotion, ou de mention">${moveOpts(pr.id)}</select>
-          ${delBtn("st"+pr.id+"|"+e.id,"Retirer")}</div>`).join("")||`<div class="empty">Aucun élève dans cette promotion.</div>`}
-        <div class="padd"><textarea data-sa="${pr.id}" rows="2" placeholder="Ajouter des élèves — un par ligne : prénom puis nom, ou deux colonnes Prénom / Nom collées d'un tableur"></textarea>
+          <input type="text" value="${esc(completerPersonne(e).prenom)}" data-sp="${pr.id}|${e.id}" placeholder="Prénom" aria-label="Prénom de l'étudiant">
+          <input type="text" value="${esc(e.nomFam)}" data-sn="${pr.id}|${e.id}" placeholder="Nom" aria-label="Nom de l'étudiant">
+          <select data-sm="${pr.id}|${e.id}" aria-label="Promotion de l'étudiant" title="Changer de promotion, ou de mention">${moveOpts(pr.id)}</select>
+          ${delBtn("st"+pr.id+"|"+e.id,"Retirer")}</div>`).join("")||`<div class="empty">Aucun étudiant dans cette promotion.</div>`}
+        <div class="padd"><textarea data-sa="${pr.id}" rows="2" placeholder="Ajouter des étudiants — un par ligne : prénom puis nom, ou deux colonnes Prénom / Nom collées d'un tableur"></textarea>
           <button class="btn ghost" data-sab="${pr.id}">Ajouter</button></div>
       </div>`;
     }
     return h;
   }).join("");
   host.innerHTML=edPanel("Promotions",promos.length,`<button class="btn ghost" id="prAdd">+ Promotion</button>`,
-    {css,cells:["Diplôme · mention","Début","Promotion","En "+AS,...(MOD.eleves?["Élèves"]:[]),""]},rows,
+    {css,cells:["Diplôme · mention","Début","Promotion","En "+AS,...(MOD.eleves?["Étudiants"]:[]),""]},rows,
     "Une promotion suit un groupe d'un diplôme et d'une mention de son entrée à sa sortie. Choisissez d'abord le diplôme et la mention, puis l'année de début : le nom se compose seul avec le code du diplôme, l'année de début et l'année de fin, qui dépend de la durée du diplôme (Diplômes et mentions) — DNO-2025-2028 pour un DN MADE mention Objet en trois ans commencé en 2025. L'année de formation se déduit de l'année scolaire, et l'étape 1 de l'évaluation propose les promotions de la mention active."
-    +(MOD.eleves?" Ouvrez « élèves » pour gérer la liste : renommer, retirer, ajouter plusieurs noms d'un coup, ou faire passer un élève dans une autre promotion, y compris d'une autre mention. Ses résultats déjà saisis restent attachés aux évaluations de son ancienne promotion.":" Le module « Élèves et promotions » (Paramètres) permet en plus de gérer la liste des élèves de chaque promotion."));
+    +(MOD.eleves?" Ouvrez « étudiants » pour gérer la liste : renommer, retirer, ajouter plusieurs noms d'un coup, ou faire passer un étudiant dans une autre promotion, y compris d'une autre mention. Ses résultats déjà saisis restent attachés aux évaluations de son ancienne promotion.":" Le module « Étudiants et promotions » (Paramètres) permet en plus de gérer la liste des étudiants de chaque promotion."));
   const save2=()=>{savePromos();if(ui.tab!=="org")return;};
   const P=id=>promos.find(x=>x.id===id);
   const rename=(pr,fn)=>{fn();pr.nom=promoNomAuto(pr)};
@@ -6426,7 +6426,7 @@ function alerteRefNonValide(dip,action){
   const dp=DATA.diplomes.find(x=>x.id===dip);
   el.innerHTML=`<div class="card" role="alertdialog" aria-modal="true" aria-labelledby="rnvT" aria-describedby="rnvD" style="max-width:500px;width:100%">
     <p id="rnvT"><b>${esc(action)} : le référentiel${dp?" "+esc(dipLabel(dp)):""} n'est pas validé.</b></p>
-    <p id="rnvD">Avant une première évaluation, le référentiel doit être vérifié et validé par l'enseignant, dans Référentiel › Constituer › Validation. C'est vous qui en êtes responsable, pas l'hébergeur ni le développeur de DNMAX.</p>
+    <p id="rnvD">Avant une première évaluation, le référentiel doit être vérifié et validé par l'enseignant, dans Référentiel > Constituer > Validation. C'est vous qui en êtes responsable, pas l'hébergeur ni le développeur de DNMAX.</p>
     <p class="hint">Les évaluations déjà enregistrées ne sont pas touchées : elles restent consultables et exportables.</p>
     <div class="row"><button class="btn ghost" data-no>Fermer</button><button class="btn primary" data-yes>Aller à la validation</button></div></div>`;
   const close=()=>{el.remove();document.removeEventListener("keydown",key);if(prev&&prev.focus&&document.contains(prev))prev.focus()};
@@ -6889,7 +6889,7 @@ function paintEditor(pane,host){
           <input type="text" value="${esc(dp.code||"")}" data-dc="${i}" placeholder="${esc(autoDipCode(dp)||"DNO")}" aria-label="Code" class="mono">
           ${dvs.length>1?delBtn("dip"+i,"Supprimer"):`<span class="hint">—</span>`}</div>`).join("")}
       </div>`).join("")||`<div class="empty">Aucun diplôme : installez un référentiel depuis l'encart de départ, ou créez-en un avec « + Nouveau diplôme ».</div>`,
-      "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments, pour que vous n'ayez qu'à ajuster les variations (Référentiel › Constituer, une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.")
+      "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments, pour que vous n'ayez qu'à ajuster les variations (Référentiel > Constituer, une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.")
       +(dvs.length?`<div class="panel" style="max-width:720px;margin-top:18px"><div class="pick-head"><h3>Réglages du référentiel</h3>${dvs.length>1?`<select id="edDipAct" aria-label="Mention dont on règle le référentiel" style="width:auto;margin-left:auto">${dvs.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>`:`<span class="hint" style="margin-left:auto">${esc(dipLabel(dvs[0]))}</span>`}</div>
         <div class="panel-body">
           <div class="field"><label>Années et niveaux</label>
@@ -6996,7 +6996,7 @@ const DEMO_APPR=[
   "Quelques fragilités dans la mise en œuvre, mais le projet a trouvé sa cohérence au fil des séances."];
 function demoRng(seed){let x=seed||7;return()=>{x=(x*1103515245+12345)%2147483648;return x/2147483648}}
 function fillRes(f,seed,part){
-  // part : nombre d'élèves laissés inachevés en fin de liste
+  // part : nombre d'étudiants laissés inachevés en fin de liste
   const els=studentsOf(f), keys=lignesOf(f).map(ligKey), nv=(f.niveaux||[]).length||4;
   const r=demoRng(seed);
   f.res={};
@@ -7108,7 +7108,7 @@ function demoMass(){
       if(!(pr.liste||[]).length||pr.liste.every(e=>isDemoNom(e.nom))){
         const had=(pr.liste||[]).length, n=had||12+Math.floor(rnd()*5),used=new Set(),noms=[];
         while(noms.length<n){const x=pick(PRE)+" "+pick(NOM);if(!used.has(x)){used.add(x);noms.push(x)}}
-        // promotion d'exemple déjà là : on garde les élèves (et leurs résultats), seuls les noms changent
+        // promotion d'exemple déjà là : on garde les étudiants (et leurs résultats), seuls les noms changent
         if(had){pr.liste.forEach((e,j)=>e.nom=noms[j]);pr.eleves=noms.join("\n")}
         else syncListe(pr,noms.join("\n"));
       }
@@ -7204,7 +7204,7 @@ function loadDemo(){
   LS.set("dnmade.fiches",fiches);
   F=migF(f1);save();
   let on="";
-  if(!MOD.eleves){MOD.eleves=true;LS.set("dnmade.modules",MOD);on=" · module Élèves activé"}
+  if(!MOD.eleves){MOD.eleves=true;LS.set("dnmade.modules",MOD);on=" · module Étudiants activé"}
   ui.step=4;ui.sel=[];ui.tab="new";ui.emode=DEVICE.phone?"fiche":"grille";ui.eleve="";
   ui.tab=MOD.fiches?"saved":"new";
   paintTabs();paintForm();paintPick();paintLignes();paintSaved();paintSteps();paintEleves();
@@ -7262,7 +7262,7 @@ function paintSet(){
     ${v.locked?`<div class="off" style="color:var(--accent)">toujours actif</div>`:v.req&&!MOD[v.req]?`<div class="off">activez d'abord le module ${esc(MODULES[v.req].nom)}</div>`:v.def===false?`<div class="off">désactivé par défaut</div>`:""}${VISITE_MODULE[k]?`<button type="button" class="btn ghost modvisite" data-parcours="${VISITE_MODULE[k]}">Visite guidée</button>`:""}</div></div>`).join("");
   host.querySelectorAll("[data-mod]").forEach(cb=>cb.onchange=()=>{
     if((MODULES[cb.dataset.mod]||{}).locked){cb.checked=true;return}
-    // Activer le module Élèves passe par un avertissement RGPD : la case ne reste cochée que si l'enseignant confirme.
+    // Activer le module Étudiants passe par un avertissement RGPD : la case ne reste cochée que si l'enseignant confirme.
     if(cb.dataset.mod==="eleves"&&cb.checked&&!MOD.eleves){
       cb.checked=false;
       window.dnmaxPont.confirmerModuleEleves(DATA.etab||{}).then(ok=>{if(ok&&!MOD.eleves){cb.checked=true;appliquerModule(cb)}});
@@ -7323,7 +7323,7 @@ function rows(){
   });
   return out.sort((a,b)=>{for(let i=0;i<3;i++){const x=(a.ord[i]||0)-(b.ord[i]||0);if(x)return x}return 0});
 }
-/* EXPORT_VIDE : export de « l'évaluation » (grille vierge) plutôt que des restitutions remplies par élève */
+/* EXPORT_VIDE : export de « l'évaluation » (grille vierge) plutôt que des restitutions remplies par étudiant */
 let EXPORT_VIDE=false;
 function eleveList(){return MOD.eleves&&!EXPORT_VIDE?studentsOf(F):[]}
 function fname(ext,who){
@@ -7335,7 +7335,7 @@ function ligneContexte(){
   return [classesDisp(F),F.livrables.join(" · "),F.semestre+(MOD.dn?" · "+dnLabel(F.semestre):"")].filter(Boolean).join(" — ");
 }
 function ligneEnseignant(who){
-  return [F.prof?"Enseignant·e : "+F.prof:"",who?"Élève : "+who:""].filter(Boolean).join(" · ");
+  return [F.prof?"Enseignant·e : "+F.prof:"",who?"Étudiant : "+who:""].filter(Boolean).join(" · ");
 }
 
 /* ---------- export Excel ---------- */
@@ -7361,7 +7361,7 @@ function buildXlsx(fmt){
   const els=eleveList();
   if(els.length){
     const g=[["Grille classe — "+(F.titre||""),""],["Semestre",F.semestre],[(F.classes||[]).length>1?"Promotions":"Promotion",classesDisp(F)],["Livrables",F.livrables.join(" ; ")],[]];
-    g.push(["Élève",...rs.map(r=>String(r.comp||"").replace(/\n/g," / ").slice(0,90))]);
+    g.push(["Étudiant",...rs.map(r=>String(r.comp||"").replace(/\n/g," / ").slice(0,90))]);
     g.push(["",...rs.map(r=>String(r.lib||"").slice(0,70))]);
     els.forEach(e=>{const r=(F.res||{})[e.id]||{n:{}};
       g.push([e.nom,...rs.map(x=>{const v=(r.n||{})[x.key];return pctTxt(pctOf(r,x.key))})])});
@@ -7398,7 +7398,7 @@ function wtable(rowsXml,widths){
   `<w:tblGrid>${widths.map(w=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>${rowsXml}</w:tbl>`;
 }
 /* Jauge de l'export Word : image (piste arrondie, remplie jusqu'au niveau atteint, sans traits
-   intermédiaires), comme la saisie du module Élèves. Une image par valeur, partagée entre lignes. */
+   intermédiaires), comme la saisie du module Étudiants. Une image par valeur, partagée entre lignes. */
 let WIMG=null;
 function gaugePng(p,wpx,hpx){
   const N=(F.niveaux||[]).length, sc=3, c=document.createElement("canvas");
@@ -7410,7 +7410,7 @@ function gaugePng(p,wpx,hpx){
     g.save();rr(0.75,0.75,wpx-1.5,hpx-1.5,r-0.75);g.clip();
     rr(0.75,0.75,fw,hpx-1.5,r-0.75);g.fillStyle=nivColor(pctLvl(p,N),N);g.fill();g.restore();
   }
-  // séparateurs discrets entre niveaux, pour situer l'élève d'une jauge à l'autre
+  // séparateurs discrets entre niveaux, pour situer l'étudiant d'une jauge à l'autre
   pctBounds(N).slice(1,-1).forEach(tp=>{const x=0.75+(wpx-1.5)*tp/100;
     g.beginPath();g.moveTo(x,2.5);g.lineTo(x,hpx-2.5);g.lineWidth=0.8;
     g.strokeStyle=p!=null&&p>tp?"rgba(255,255,255,.85)":"#C6CCD5";g.stroke()});
@@ -7609,7 +7609,7 @@ function paintProg(){
   ui.prog=ui.prog||{};
   const AS=anneeScolaire(new Date());
   // si « c'est moi » est défini : seulement les promotions de ma répartition de service, en cours ou terminées
-  // (mes élèves et mes anciens élèves) ; sinon, les promotions en cours
+  // (mes étudiants et mes anciens étudiants) ; sinon, les promotions en cours
   const me=DATA.enseignants.find(t=>t.id===DATA.moi);
   const live=promos.map(migPromoCohorte).filter(pr=>DATA.diplomes.some(d=>d.id===pr.diplomeId))
     .filter(pr=>promoAnneeAt(pr,AS)>=1);
@@ -7618,7 +7618,7 @@ function paintProg(){
   const dIdx=id=>DATA.diplomes.findIndex(d=>d.id===id);
   const ps=live.filter(pr=>onlyMine?mine(pr):promoAnneeAt(pr,AS)<=promoDuree(pr)).sort((a,b)=>(dIdx(a.diplomeId)-dIdx(b.diplomeId))||(b.debut-a.debut));
   if(!ps.length){host.innerHTML=`<div class="panel"><div class="empty">Aucune promotion en cours pour ${esc(REF.meta.diplome||"cette mention")} en ${esc(AS)}.
-    Crée-la dans Mon établissement › Promotions.</div></div>`;return}
+    Crée-la dans Mon établissement > Promotions.</div></div>`;return}
   const pr=ps.find(x=>x.id===ui.prog.promo)||ps.find(x=>x.diplomeId===DATA.activeDiplome)||ps[0];ui.prog.promo=pr.id;
   // la progression lit le référentiel de la mention de la promotion affichée
   if(pr.diplomeId!==DATA.activeDiplome){DATA.activeDiplome=pr.diplomeId;saveData(false)}
@@ -7630,7 +7630,7 @@ function paintProg(){
   const filt=ui.prog.f||"tout";
   const els=migPromo(pr).liste;
   const fs=fiches.filter(f=>(f.classes||[]).includes(pr.nom)||f.promoId===pr.id);
-  const viewSeg=MOD.eleves?`<div class="seg" id="pgView"><button type="button" data-pv="promo" aria-pressed="${ui.prog.view!=="eleve"}">Promotion</button><button type="button" data-pv="eleve" aria-pressed="${ui.prog.view==="eleve"}">Élève</button></div>`:"";
+  const viewSeg=MOD.eleves?`<div class="seg" id="pgView"><button type="button" data-pv="promo" aria-pressed="${ui.prog.view!=="eleve"}">Promotion</button><button type="button" data-pv="eleve" aria-pressed="${ui.prog.view==="eleve"}">Étudiant</button></div>`:"";
   if(MOD.eleves&&ui.prog.view==="eleve"){paintProgEleve(host,{ps,pr,sem,semsAll,semCur,els,fs,me,nMine,onlyMine,viewSeg});return}
   // avec « c'est moi » : uniquement mes enseignements (pas de choix d'un autre enseignant)
   const aSem=Math.floor(SEMS.indexOf(sem)/2)+1, asSem=asOf(pr.debut+aSem-1);
@@ -7647,7 +7647,7 @@ function paintProg(){
   const rowsP=expected.map(c=>{
     const cover=fs.filter(f=>(f.items||[]).some(it=>it.code===c.code));
     const inSem=cover.filter(f=>f.semestre===sem);
-    // dernier niveau connu par élève, sur les évaluations du semestre (les plus récentes l'emportent)
+    // dernier niveau connu par étudiant, sur les évaluations du semestre (les plus récentes l'emportent)
     const last={};
     inSem.slice().sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))).forEach(f=>{
       const N=(f.niveaux||[]).length||NL;
@@ -7670,7 +7670,7 @@ function paintProg(){
   const stTxt={ok:"Évaluée",part:"En cours",prevue:"Prévue, pas encore évaluée",autre:"Vue à un autre semestre",todo:"À évaluer"};
   const pct=rowsP.length?Math.round(nOk/rowsP.length*100):0;
   host.innerHTML=`<div class="panel">
-    <div class="pick-head"><h3>Progression${help("Pour une promotion en cours et un semestre : les compétences que le référentiel rattache à ce semestre, et ce que vos évaluations enregistrées en couvrent déjà. Une compétence est « évaluée » dès qu'une évaluation du semestre la contient, « en cours » tant que tous les élèves n'ont pas de niveau saisi. La répartition donne le dernier niveau de chaque élève.")}</h3>
+    <div class="pick-head"><h3>Progression${help("Pour une promotion en cours et un semestre : les compétences que le référentiel rattache à ce semestre, et ce que vos évaluations enregistrées en couvrent déjà. Une compétence est « évaluée » dès qu'une évaluation du semestre la contient, « en cours » tant que tous les étudiants n'ont pas de niveau saisi. La répartition donne le dernier niveau de chaque étudiant.")}</h3>
       <div style="margin-left:auto">${viewSeg}</div></div>
     ${progFiltres(ps,pr,sem,semsAll,semCur,
       (tAvail.length?`<label><span class="sfl2">Enseignant</span><select data-pgsel="t" aria-label="Enseignant"><option value="">Tous</option>${tAvail.map(t=>`<option value="${t.id}" ${tSel.includes(t.id)?"selected":""}>${esc(t.nom)}</option>`).join("")}</select></label>`:"")
@@ -7678,7 +7678,7 @@ function paintProg(){
     <div class="pgsum">
       <div><b class="big">${nOk}</b> / ${rowsP.length} compétences du ${esc(sem)} évaluées${tSel.length?` <span class="hint">— dans les EC de ${esc(tSel.map(id=>(DATA.enseignants.find(t=>t.id===id)||{}).nom).join(", "))}</span>`:""}</div>
       <div class="pgbar"><i style="width:${pct}%"></i></div>
-      <div class="hint">${esc(pr.nom)}${MOD.eleves?` · ${els.length} élève${els.length>1?"s":""}`:""} · ${evSem.length} évaluation${evSem.length>1?"s":""} au ${esc(sem)}${nTodo?` · <b>${nTodo} à évaluer</b>`:" · tout est couvert"}</div>
+      <div class="hint">${esc(pr.nom)}${MOD.eleves?` · ${els.length} étudiant${els.length>1?"s":""}`:""} · ${evSem.length} évaluation${evSem.length>1?"s":""} au ${esc(sem)}${nTodo?` · <b>${nTodo} à évaluer</b>`:" · tout est couvert"}</div>
     </div>
     ${blocs.map(b=>`<div class="pgbloc"><div class="pgbh">${esc(b)} - ${esc(blocNom(b))}</div>
       ${shown.filter(r=>String(r.c.bloc)===b).sort((x,y)=>(x.inSem.length?1:0)-(y.inSem.length?1:0)).map(r=>`<div class="pgrow ${r.state}">
@@ -7687,7 +7687,7 @@ function paintProg(){
         <div class="pgev">${r.inSem.length?r.inSem.map(f=>`<div>${esc(f.titre||"Sans titre")} <span class="hint">${esc(f.date||"")}</span></div>`).join(""):
           r.cover.length?`<span class="hint">${r.cover.map(f=>esc((f.semestre||"")+" · "+(f.titre||""))).join("<br>")}</span>`:`<span class="hint">—</span>`}</div>
         <div class="pgst">${MOD.eleves&&r.inSem.length&&els.length?`<div class="pgdist" title="${LV.map((l,i)=>l+" : "+r.dist[i]).join(" · ")}">${r.dist.map((n,i)=>n?`<i style="flex:${n};background:${nivColor(i,NL)}"></i>`:"").join("")}${els.length-r.done?`<i style="flex:${els.length-r.done}" class="none"></i>`:""}</div>
-          <span class="hint">${r.done}/${els.length} élèves</span>`:""}</div>
+          <span class="hint">${r.done}/${els.length} étudiants</span>`:""}</div>
       </div>`).join("")}</div>`).join("")||`<div class="empty">Rien à afficher pour ce filtre.</div>`}
   </div>`;
   bindProgFiltres(host);
@@ -7698,8 +7698,8 @@ function paintProg(){
     ui.prog.t=l.includes(id)?l.filter(x=>x!==id):[...l,id];paintProg()});
   host.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>{ui.prog.view=b.dataset.pv;paintProg()});
 }
-/* ---------- Progression élève (module Élèves) ----------
-   Pour un élève d'une promotion en cours : où il en est dans les évaluations du semestre, comparé aux autres
+/* ---------- Progression étudiant (module Étudiants) ----------
+   Pour un étudiant d'une promotion en cours : où il en est dans les évaluations du semestre, comparé aux autres
    (évalué, partiel, non rendu, oublié alors que les autres l'ont été), et ce qu'il a acquis sur les compétences
    jusqu'à ce semestre (dernier niveau connu ; palier DN MADE atteint avec le module Niveaux DN MADE). */
 function dnPalier(a){const n=(REF.meta.niveaux||[]).find(x=>+x.annee===+a);return (n&&n.label)||["Initié","Guidé","Autonome"][a-1]||("Année "+a)}
@@ -7718,7 +7718,7 @@ function paintProgEleve(host,c){
     const s=r.disp?"disp":r.nr?"nr":(keys.length&&n>=keys.length)?"ok":n?"part":(autres>0?"miss":"wait");
     return {f,fi:fiches.indexOf(f),keys,n,s,st,r}});
   const cnt=k=>rowsA.filter(x=>x.s===k).length;
-  /* rendus, non-rendus et dispenses de l'élève au semestre, comparés à la moyenne de la promo */
+  /* rendus, non-rendus et dispenses de l'étudiant au semestre, comparés à la moyenne de la promo */
   const evSem=fs.filter(f=>!f.annulee&&f.semestre===sem);
   const estCount=e=>{const o={tot:0,rendu:0,nr:0,disp:0};
     evSem.forEach(f=>{if(!studentsOf(f).some(x=>x.id===e.id))return;o.tot++;const st=estOf((f.res||{})[e.id]);if(o[st]!=null)o[st]++});return o};
@@ -7742,7 +7742,7 @@ function paintProgEleve(host,c){
   const blocs=[...new Set(rowsB.map(r=>String(r.c.bloc)))].sort((a,b)=>+a-+b);
   const blocNom=n=>((REF.blocs||[]).find(b=>String(b.num)===n)||{}).nom||"";
   const nAcq=rowsB.filter(r=>r.last.lv>=thr).length;
-  /* niveau de la classe sur chaque compétence : dernier niveau de chaque élève, jusqu'au semestre affiché */
+  /* niveau de la classe sur chaque compétence : dernier niveau de chaque étudiant, jusqu'au semestre affiché */
   const lastOf=e=>{const m={};
     fs.filter(f=>!f.annulee&&SEMS.indexOf(f.semestre)<=SEMS.indexOf(sem)&&studentsOf(f).some(x=>x.id===e.id))
       .sort((a,b)=>dateOf(a).localeCompare(dateOf(b))).forEach(f=>{const r=(f.res||{})[e.id];if(!r||!r.n||r.nr||r.disp)return;
@@ -7752,25 +7752,25 @@ function paintProgEleve(host,c){
   const classe=els.map(lastOf);
   const posCl=r=>{const vs=classe.map(m=>m[r.c.code]).filter(v=>v!=null);if(vs.length<2)return "";
     const moyLv=Math.round(vs.reduce((a,b)=>a+b,0)/vs.length), d=r.last.lv-moyLv;
-    return `<div class="pgpos" style="margin-top:4px"><span class="hint">Classe : en moyenne « ${esc(LV[moyLv]||"")} » (${vs.length} élèves)</span>
+    return `<div class="pgpos" style="margin-top:4px"><span class="hint">Classe : en moyenne « ${esc(LV[moyLv]||"")} » (${vs.length} étudiants)</span>
       <span class="pp ${d>0?"up":d<0?"dn":"eq"}">${d>0?"▲ au-dessus":d<0?"▼ en dessous":"= dans la moyenne"}</span></div>`};
   const palCount=[1,2,3].map(a=>rowsB.filter(r=>r.pal===a).length);
   const i0=els.findIndex(e=>el&&e.id===el.id), anCur=anneeOf(sem);
   host.innerHTML=`<div class="panel">
-    <div class="pick-head"><h3>Progression élève${help("Pour un élève : les évaluations du semestre et ce qu'il y a obtenu, comparé au reste de la promotion — « Non évalué » signale une évaluation où les autres élèves ont déjà été saisis mais pas lui. « Non rendu » et « Dispensé » se renseignent dans l'évaluation elle-même (étape Élèves) et comptent comme traités. En dessous, toutes les compétences sur lesquelles il a été évalué jusqu'à ce semestre, avec l'évolution de son niveau de maîtrise d'une évaluation à l'autre"+(MOD.dn?" et sa progression dans les niveaux DN MADE : Initié (année 1) → Guidé (année 2) → Autonome (année 3), chaque niveau étant atteint dès qu'il est évalué avec une maîtrise suffisante dans l'année correspondante.":"."))}</h3>
+    <div class="pick-head"><h3>Progression étudiant${help("Pour un étudiant : les évaluations du semestre et ce qu'il y a obtenu, comparé au reste de la promotion — « Non évalué » signale une évaluation où les autres étudiants ont déjà été saisis mais pas lui. « Non rendu » et « Dispensé » se renseignent dans l'évaluation elle-même (étape Étudiants) et comptent comme traités. En dessous, toutes les compétences sur lesquelles il a été évalué jusqu'à ce semestre, avec l'évolution de son niveau de maîtrise d'une évaluation à l'autre"+(MOD.dn?" et sa progression dans les niveaux DN MADE : Initié (année 1) → Guidé (année 2) → Autonome (année 3), chaque niveau étant atteint dès qu'il est évalué avec une maîtrise suffisante dans l'année correspondante.":"."))}</h3>
       <div style="margin-left:auto">${viewSeg}</div></div>
-    ${progFiltres(ps,pr,sem,semsAll,semCur,el?`<label><span class="sfl2">Élève</span>
-        <button type="button" class="btn ghost" id="pgElPrev" ${i0<=0?"disabled":""} aria-label="Élève précédent">‹</button>
-        <select id="pgEl" aria-label="Élève">${els.map(e=>`<option value="${esc(e.id)}" ${e.id===el.id?"selected":""}>${esc(e.nom)}</option>`).join("")}</select>
-        <button type="button" class="btn ghost" id="pgElNext" ${i0>=els.length-1?"disabled":""} aria-label="Élève suivant">›</button>
+    ${progFiltres(ps,pr,sem,semsAll,semCur,el?`<label><span class="sfl2">Étudiant</span>
+        <button type="button" class="btn ghost" id="pgElPrev" ${i0<=0?"disabled":""} aria-label="Étudiant précédent">‹</button>
+        <select id="pgEl" aria-label="Étudiant">${els.map(e=>`<option value="${esc(e.id)}" ${e.id===el.id?"selected":""}>${esc(e.nom)}</option>`).join("")}</select>
+        <button type="button" class="btn ghost" id="pgElNext" ${i0>=els.length-1?"disabled":""} aria-label="Étudiant suivant">›</button>
         <span class="hint">${i0+1} / ${els.length}</span></label>`:"")}
-    ${!el?`<div class="empty">Aucun élève dans ${esc(pr.nom)}. Ajoutez-les dans Mon établissement › Promotions.</div>`:`
+    ${!el?`<div class="empty">Aucun étudiant dans ${esc(pr.nom)}. Ajoutez-les dans Mon établissement > Promotions.</div>`:`
     <div class="pgsum">
       <div style="font-family:var(--fd);font-weight:700;font-size:15px">${esc(el.nom)} <span class="hint" style="font-weight:400">· ${esc(promoShort(pr)||pr.nom)}</span></div>
-      <div><b class="big">${cnt("ok")}</b> / ${rowsA.length} évaluation${rowsA.length>1?"s":""} du ${esc(sem)} complète${cnt("ok")>1?"s":""} pour cet élève</div>
+      <div><b class="big">${cnt("ok")}</b> / ${rowsA.length} évaluation${rowsA.length>1?"s":""} du ${esc(sem)} complète${cnt("ok")>1?"s":""} pour cet étudiant</div>
       <div class="pgbar"><i style="width:${rowsA.length?Math.round(cnt("ok")/rowsA.length*100):0}%"></i></div>
       ${moi.tot?`<div class="pgkpis">${kpi("rendu","Rendus",false)}${kpi("nr","Non rendus",true)}${kpi("disp","Dispensé"+(moi.disp>1?"s":""),true)}</div>`:""}
-      <div class="hint">${[cnt("part")&&cnt("part")+" partielle"+(cnt("part")>1?"s":""),cnt("nr")&&"<b>"+cnt("nr")+" non rendu"+(cnt("nr")>1?"s":"")+"</b>",cnt("disp")&&cnt("disp")+" dispensé"+(cnt("disp")>1?"es":"e"),cnt("miss")&&"<b>"+cnt("miss")+" non évaluée"+(cnt("miss")>1?"s":"")+" alors que d'autres élèves l'ont été</b>",cnt("wait")&&cnt("wait")+" pas encore évaluée"+(cnt("wait")>1?"s":"")+" (pour personne)"].filter(Boolean).join(" · ")||(rowsA.length?"Rien en retard.":"Aucune évaluation au "+esc(sem)+" pour cet élève.")}</div>
+      <div class="hint">${[cnt("part")&&cnt("part")+" partielle"+(cnt("part")>1?"s":""),cnt("nr")&&"<b>"+cnt("nr")+" non rendu"+(cnt("nr")>1?"s":"")+"</b>",cnt("disp")&&cnt("disp")+" dispensé"+(cnt("disp")>1?"es":"e"),cnt("miss")&&"<b>"+cnt("miss")+" non évaluée"+(cnt("miss")>1?"s":"")+" alors que d'autres étudiants l'ont été</b>",cnt("wait")&&cnt("wait")+" pas encore évaluée"+(cnt("wait")>1?"s":"")+" (pour personne)"].filter(Boolean).join(" · ")||(rowsA.length?"Rien en retard.":"Aucune évaluation au "+esc(sem)+" pour cet étudiant.")}</div>
     </div>
     <div class="pgbloc"><div class="pgbh">Avancement du ${esc(sem)}</div>
       ${rowsA.map(x=>`<div class="pgrow"><span class="pill pst ${LBL[x.s][0]}">${LBL[x.s][1]}</span>
@@ -7786,7 +7786,7 @@ function paintProgEleve(host,c){
           <div class="pgev"><div class="trj">${r.L.map((x,j)=>`${j?`<span class="trj-ar">${x.lv>r.L[j-1].lv?"↗":x.lv<r.L[j-1].lv?"↘":"→"}</span>`:""}<span class="trj-s" title="${esc((x.f.titre||"")+" — "+(LV[x.lv]||""))}"><i style="background:${nivColor(x.lv,NL)}"></i>${esc(x.f.semestre||"")} · ${esc(LV[x.lv]||"")}</span>`).join("")}</div>
             <span class="hint">${r.L.length>1?(r.last.lv>r.L[0].lv?"en progrès":r.last.lv<r.L[0].lv?"en recul":"stable")+" sur "+r.L.length+" évaluations":"1 évaluation"}</span></div>
           <div class="pgst">${MOD.dn?`<div class="dntrk">${[1,2,3].map(a=>{const ok=r.L.some(x=>x.a===a&&x.lv>=thr), seen=r.L.some(x=>x.a===a), fut=a>anCur;
-              return `<span class="dnst${ok?" ok":seen?" seen":""}${fut?" fut":""}" title="${esc(dnPalier(a))} (année ${a}) : ${ok?"atteint":seen?"évalué, maîtrise pas encore suffisante":fut?"année à venir":"pas encore évalué cette année"}"><i></i>${esc(dnPalier(a))}</span>`}).join("")}</div>`:""}</div></div>`).join("")}`).join("")||`<div class="empty">Pas encore de niveau saisi pour cet élève.</div>`}
+              return `<span class="dnst${ok?" ok":seen?" seen":""}${fut?" fut":""}" title="${esc(dnPalier(a))} (année ${a}) : ${ok?"atteint":seen?"évalué, maîtrise pas encore suffisante":fut?"année à venir":"pas encore évalué cette année"}"><i></i>${esc(dnPalier(a))}</span>`}).join("")}</div>`:""}</div></div>`).join("")}`).join("")||`<div class="empty">Pas encore de niveau saisi pour cet étudiant.</div>`}
     </div>`}
   </div>`;
   host.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>{ui.prog.view=b.dataset.pv;paintProg()});
@@ -7809,7 +7809,7 @@ async function exportFiche(i,kind,mode){
     await offer(nom,data,rest);
   }catch(e){F=keep;EXPORT_VIDE=false;vueMention(vue);REF=computeREF();toast(({docx:"Word",odt:"OpenDocument texte",ods:"OpenDocument tableur"}[kind]||"Excel")+" : "+(e&&e.message||e))}
 }
-/* élèves pas encore entièrement évalués (non rendu et dispensé comptent comme terminés) */
+/* étudiants pas encore entièrement évalués (non rendu et dispensé comptent comme terminés) */
 function elevesNonFinis(f){const keys=lignesOf(f).map(ligKey);
   return studentsOf(f).filter(e=>{const r=(f.res||{})[e.id]||{};if(r.nr||r.disp)return false;
     return !(keys.length&&keys.every(k=>(r.n||{})[k]!=null&&(r.n||{})[k]!==""))})}
@@ -7817,9 +7817,9 @@ function askRestitWarn(f,onGo){
   const L=elevesNonFinis(f);if(!L.length)return onGo();
   const prev=document.activeElement, el=document.createElement("div");el.className="modal";
   el.innerHTML=`<div class="card" role="dialog" aria-modal="true" aria-labelledby="rwT" style="max-width:440px">
-    <p id="rwT"><b>Évaluation pas terminée</b> — ${L.length} élève${L.length>1?"s ne sont":" n'est"} pas entièrement évalué${L.length>1?"s":""} :
+    <p id="rwT"><b>Évaluation pas terminée</b> — ${L.length} étudiant${L.length>1?"s ne sont":" n'est"} pas entièrement évalué${L.length>1?"s":""} :
       ${esc(L.slice(0,8).map(e=>e.nom).join(", "))}${L.length>8?"…":""}.</p>
-    <p class="hint" style="font-size:12.5px">Les non rendus et les dispensés comptent comme terminés. Les restitutions de ces élèves seront incomplètes.</p>
+    <p class="hint" style="font-size:12.5px">Les non rendus et les dispensés comptent comme terminés. Les restitutions de ces étudiants seront incomplètes.</p>
     <div class="row"><button class="btn ghost" data-no>Annuler</button><button class="btn primary" data-yes>Exporter quand même</button></div></div>`;
   const close=()=>{el.remove();document.removeEventListener("keydown",key);if(prev&&prev.focus)prev.focus()};
   const key=e=>{if(e.key==="Escape")close()};
@@ -7827,11 +7827,11 @@ function askRestitWarn(f,onGo){
   el.querySelector("[data-yes]").onclick=()=>{close();onGo()};
   document.addEventListener("keydown",key);document.body.appendChild(el);el.querySelector("[data-yes]").focus();
 }
-/* exports d'une ligne (fenêtre des actions) : l'évaluation (grille vierge) et, avec le module Élèves, les restitutions par élève */
+/* exports d'une ligne (fenêtre des actions) : l'évaluation (grille vierge) et, avec le module Étudiants, les restitutions par étudiant */
 function exportItems(i){
   const fm=m=>`<div class="xfmt">${[["docx","Word"],["xlsx","Excel"],["odt","OpenDocument texte"],["ods","OpenDocument tableur"]]
     .map(([k,l])=>`<button type="button" data-xk="${k}" data-xmode="${m}" data-xi="${i}"><b>${l}</b><span class="hint">.${k}</span></button>`).join("")}</div>`;
-  return MOD.eleves?`<p class="xh">L'évaluation · grille vierge</p>${fm("eval")}<p class="xh">Les restitutions · résultats par élève</p>${fm("rest")}`
+  return MOD.eleves?`<p class="xh">L'évaluation · grille vierge</p>${fm("eval")}<p class="xh">Les restitutions · résultats par étudiant</p>${fm("rest")}`
     :`<p class="xh">Grille à remplir à la main</p>${fm("eval")}`;
 }
 async function offer(filename,data,eleves=false){
@@ -7973,7 +7973,7 @@ window.dnmaxPont.ajusterEnseignants=regle=>{
   if(ui.tab==="org")paintOrg();
 };
 
-/* Pont vers l'application : les documents RGPD du module Élèves demandent le nom de l'établissement et le contact
+/* Pont vers l'application : les documents RGPD du module Étudiants demandent le nom de l'établissement et le contact
    du délégué à la protection des données. Mène à leur saisie, curseur sur le premier des deux qui est vide. */
 window.dnmaxPont.ouvrirEtablissement=()=>{
   ui.tab="org";ui.org.pane="etab";paintTabs();paintOrg();window.scrollTo({top:0,behavior:"smooth"});

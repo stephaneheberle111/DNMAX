@@ -210,7 +210,7 @@ function listerDiplomes(catalogue: readonly ReferentielLocal[]): ReferentielLoca
 export type DestinationEnvoi = "fichier" | "direct";
 
 /**
- * Écrit le contenu choisi, chiffré sous `motDePasse` s'il comprend des élèves, et
+ * Écrit le contenu choisi, chiffré sous `motDePasse` s'il comprend des étudiants, et
  * le fait partir vers sa destination. Le texte est le même pour les deux
  * destinations : celui d'un fichier `.dnmax`.
  *
@@ -250,7 +250,7 @@ export function montrerExport(
     creer(
       "p",
       "",
-      `Cochez ce que vous envoyez. ${contenant} sera signé de votre nom (${acces.identite.nom}) et ne contient ni noms d'élèves, ni résultats, ni votre suivi, sauf si vous cochez l'option en bas de cette fenêtre. ` +
+      `Cochez ce que vous envoyez. ${contenant} sera signé de votre nom (${acces.identite.nom}) et ne contient ni noms d'étudiants, ni résultats, ni votre suivi, sauf si vous cochez l'option en bas de cette fenêtre. ` +
         "Chaque évaluation emporte l'empreinte de son référentiel, que vous envoyiez le référentiel ou non.",
     ),
   );
@@ -306,8 +306,8 @@ export function montrerExport(
       "span",
       "",
       destination === "direct"
-        ? "Inclure les élèves et leurs résultats. L'envoi est alors en plus chiffré par un mot de passe, que votre collègue saisira à la réception."
-        : "Inclure les élèves et leurs résultats. Le fichier est alors chiffré : communiquez son mot de passe par un autre moyen que le fichier.",
+        ? "Inclure les étudiants et leurs résultats. L'envoi est alors en plus chiffré par un mot de passe, que votre collègue saisira à la réception."
+        : "Inclure les étudiants et leurs résultats. Le fichier est alors chiffré : communiquez son mot de passe par un autre moyen que le fichier.",
     ),
   );
   const zoneMotDePasse = creer("div", "echange-outils");
@@ -415,7 +415,7 @@ function compterParAction(plan: readonly LignePlan[], action: Action): number {
   return plan.filter((ligne) => ligne.action === action).length;
 }
 
-/** Choix de l'enseignant sur les résultats d'élèves du fichier. */
+/** Choix de l'enseignant sur les résultats d'étudiants du fichier. */
 interface ChoixResultats {
   lignes: ReadonlyMap<string, LigneResultats>;
   /** Évaluations dont les résultats du fichier sont acceptés. */
@@ -436,14 +436,14 @@ function creerCase(texte: string, cochee: boolean, surChangement: (cochee: boole
   return option;
 }
 
-/** Ajoute à une ligne d'évaluation ce qui concerne les résultats de ses élèves. */
+/** Ajoute à une ligne d'évaluation ce qui concerne les résultats de ses étudiants. */
 function ajouterResultats(texte: HTMLElement, resultats: LigneResultats, choix: ChoixResultats, actualiser: () => void): void {
   if (!resultats.possible) {
     texte.append(
       creer(
         "div",
         "echange-detail alerte",
-        "Résultats d'élèves non importables : la promotion concernée relève d'un diplôme absent de votre établissement.",
+        "Résultats d'étudiants non importables : la promotion concernée relève d'un diplôme absent de votre établissement.",
       ),
     );
     return;
@@ -452,13 +452,13 @@ function ajouterResultats(texte: HTMLElement, resultats: LigneResultats, choix: 
   const complements = [
     resultats.promotionCreee ? "la promotion sera créée" : "",
     !resultats.promotionCreee && resultats.elevesAjoutes > 0
-      ? `${String(resultats.elevesAjoutes)} élève(s) ajouté(s) à votre promotion`
+      ? `${String(resultats.elevesAjoutes)} étudiant(s) ajouté(s) à votre promotion`
       : "",
   ].filter((complement) => complement !== "");
-  const bilan = `${String(nouveaux)} élève(s) sans résultat chez vous, ${String(differents)} aux résultats différents des vôtres, ${String(identiques)} identiques`;
+  const bilan = `${String(nouveaux)} étudiant(s) sans résultat chez vous, ${String(differents)} aux résultats différents des vôtres, ${String(identiques)} identiques`;
   texte.append(
     creerCase(
-      `Recevoir les résultats des élèves : ${bilan}${complements.length > 0 ? ` · ${complements.join(" · ")}` : ""}.`,
+      `Recevoir les résultats des étudiants : ${bilan}${complements.length > 0 ? ` · ${complements.join(" · ")}` : ""}.`,
       choix.acceptes.has(resultats.identifiant),
       (cochee) => {
         if (cochee) {
@@ -515,7 +515,7 @@ function creerLignePlan(
     texte.append(creer("div", "echange-detail", `Ce qui change : ${ligne.rubriquesModifiees.join(", ")}.`));
   }
   if (ligne.action === "modifier") {
-    texte.append(creer("div", "echange-detail", "Vos élèves, leurs résultats et votre suivi sont conservés."));
+    texte.append(creer("div", "echange-detail", "Vos étudiants, leurs résultats et votre suivi sont conservés."));
   }
   if (ligne.versionLocalePlusRecente) {
     texte.append(
@@ -724,7 +724,7 @@ function demanderMotDePasseFichier(fichier: string): Promise<string | null> {
       creer(
         "p",
         "",
-        "Ce fichier contient des élèves et leurs résultats. Saisissez le mot de passe que son expéditeur vous a communiqué.",
+        "Ce fichier contient des étudiants et leurs résultats. Saisissez le mot de passe que son expéditeur vous a communiqué.",
       ),
     );
     const formulaire = creer("form", "echange-outils");
@@ -855,7 +855,7 @@ function montrerChoix(acces: AccesDonnees): void {
   });
   envoyer.append(
     creer("b", "", "Envoyer"),
-    creer("span", "", "Créer un fichier d'évaluations et de référentiels à transmettre par courriel, clé USB ou l'ENT. Élèves et résultats sur option, dans un fichier chiffré."),
+    creer("span", "", "Créer un fichier d'évaluations et de référentiels à transmettre par courriel, clé USB ou l'ENT. Étudiants et résultats sur option, dans un fichier chiffré."),
   );
   const recevoir = creerBouton("", "", () => {
     fermer();
@@ -871,7 +871,7 @@ function montrerChoix(acces: AccesDonnees): void {
   });
   transferer.append(
     creer("b", "", "Changer d'ordinateur"),
-    creer("span", "", "Emporter toutes vos données, élèves et résultats compris, vers une nouvelle installation de DNMAX."),
+    creer("span", "", "Emporter toutes vos données, étudiants et résultats compris, vers une nouvelle installation de DNMAX."),
   );
   const direct = creerBouton("", "", () => {
     fermer();

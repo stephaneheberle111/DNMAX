@@ -56,21 +56,21 @@ const GABARIT_BONNES_PRATIQUES = `
     <li><b>L'écran verrouillé dès que vous vous éloignez</b>&nbsp;: Windows + L, Ctrl + Cmd + Q sur Mac, Super + L sous Linux.</li>
     <li><b>Le disque de l'ordinateur chiffré (conseillé).</b> En cas de vol ou de perte, rien n'est lisible.
       <ul>
-        <li>Windows&nbsp;: BitLocker, ou «&nbsp;Chiffrement de l'appareil&nbsp;», s'active dans Paramètres › Confidentialité et sécurité.</li>
-        <li>macOS&nbsp;: FileVault s'active dans Réglages Système › Confidentialité et sécurité.</li>
+        <li>Windows&nbsp;: BitLocker, ou «&nbsp;Chiffrement de l'appareil&nbsp;», s'active dans Paramètres &gt; Confidentialité et sécurité.</li>
+        <li>macOS&nbsp;: FileVault s'active dans Réglages Système &gt; Confidentialité et sécurité.</li>
         <li>Linux&nbsp;: LUKS se choisit à l'installation du système («&nbsp;chiffrer le disque&nbsp;»).</li>
       </ul></li>
     <li><b>Des sauvegardes.</b> DNMAX garde chaque jour une copie chiffrée sur cet ordinateur ; de temps en temps,
-        emportez-en une sur une clé ou un disque externe avec «&nbsp;Échanger… › Changer d'ordinateur&nbsp;».</li>
+        emportez-en une sur une clé ou un disque externe avec «&nbsp;Échanger… &gt; Changer d'ordinateur&nbsp;».</li>
     <li><b>Les exports Word et Excel ne sont pas chiffrés.</b> Rangez-les à l'abri et supprimez ceux qui
-        contiennent des élèves dès qu'ils ne servent plus.</li>
+        contiennent des étudiants dès qu'ils ne servent plus.</li>
     <li><b>Le code de secours</b>, affiché à l'étape suivante, se garde sur papier, hors de l'ordinateur.</li>
   </ul>
   <div class="coffre-actions"><span></span><button type="submit" class="btn primary">J'ai compris, continuer</button></div>`;
 
 const GABARIT_CREATION = `
   <h1>Protégez vos données</h1>
-  <p>DNMAX chiffre tout ce que vous saisissez — évaluations, élèves, résultats — avant de l'écrire sur cet ordinateur.
+  <p>DNMAX chiffre tout ce que vous saisissez — évaluations, étudiants, résultats — avant de l'écrire sur cet ordinateur.
      Choisissez un mot de passe : il vous sera demandé à chaque ouverture.</p>
   <label>Mot de passe (${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères au moins)
     <input type="password" name="motDePasse" autocomplete="new-password" required></label>
@@ -117,7 +117,7 @@ const GABARIT_SECOURS = `
 
 const GABARIT_RENFORCEMENT = `
   <h1>Un mot de passe plus long</h1>
-  <p>Le module Élèves est actif : vos données contiennent les noms et les résultats de vos élèves.
+  <p>Le module Étudiants est actif : vos données contiennent les noms et les résultats de vos étudiants.
      Il faut désormais un mot de passe de ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères au moins.
      Une courte phrase facile à retenir convient très bien.</p>
   <label>Nouveau mot de passe (${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères au moins)
@@ -213,7 +213,7 @@ function montrerBonnesPratiques(ecran: HTMLElement, continuer: () => void): void
 }
 
 /**
- * Termine l'ouverture des données. Si le module Élèves est actif et que le mot
+ * Termine l'ouverture des données. Si le module Étudiants est actif et que le mot
  * de passe qui vient de servir est trop court, en fait d'abord choisir un plus
  * long : c'est le seul moment où l'interface connaît ce mot de passe, qu'elle
  * ne conserve pas.

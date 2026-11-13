@@ -29,20 +29,20 @@ describe("verifierNouveauMotDePasse", () => {
   });
 });
 
-describe("longueur exigée selon le module Élèves", () => {
-  it("exige 12 caractères quand le module Élèves est actif", () => {
+describe("longueur exigée selon le module Étudiants", () => {
+  it("exige 12 caractères quand le module Étudiants est actif", () => {
     expect(longueurMinimaleExigee(true)).toBe(12);
   });
 
-  it("garde 8 caractères sans le module Élèves", () => {
+  it("garde 8 caractères sans le module Étudiants", () => {
     expect(longueurMinimaleExigee(false)).toBe(8);
   });
 
-  it("refuse onze caractères quand le module Élèves est actif", () => {
+  it("refuse onze caractères quand le module Étudiants est actif", () => {
     expect(verifierNouveauMotDePasse("12345678901", "12345678901", longueurMinimaleExigee(true))).toBe("trop-court");
   });
 
-  it("accepte douze caractères quand le module Élèves est actif", () => {
+  it("accepte douze caractères quand le module Étudiants est actif", () => {
     expect(verifierNouveauMotDePasse("123456789012", "123456789012", longueurMinimaleExigee(true))).toBeNull();
   });
 

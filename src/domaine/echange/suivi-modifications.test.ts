@@ -26,7 +26,7 @@ describe("mettreAJourDates", () => {
     });
   });
 
-  it("ne change rien quand seuls des résultats d'élèves sont saisis", () => {
+  it("ne change rien quand seuls des résultats d'étudiants sont saisis", () => {
     const apres = liste(creerEvaluation({ res: { eleve2: {} } }));
     expect(mettreAJourDates(liste(creerEvaluation()), apres, { eval1: ANCIENNE }, MAINTENANT, AUTEUR)).toBeNull();
   });

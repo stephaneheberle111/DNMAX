@@ -25,7 +25,7 @@ function aujourdHui(): string {
   return `${String(maintenant.getFullYear())}-${deuxChiffres(maintenant.getMonth() + 1)}-${deuxChiffres(maintenant.getDate())}`;
 }
 
-/** Nom de fichier proposé : le nom de l'élève, sans caractère refusé par les systèmes de fichiers. */
+/** Nom de fichier proposé : le nom de l'étudiant, sans caractère refusé par les systèmes de fichiers. */
 function nomFichier(eleve: EleveRepere, date: string): string {
   const nom =
     eleve.nom
@@ -69,28 +69,28 @@ function confirmerEffacement(acces: AccesDonnees, eleve: EleveRepere): void {
 }
 
 /**
- * Ouvre la boîte « Données d'un élève » : exporter tout ce qui le concerne
+ * Ouvre la boîte « Données d'un étudiant » : exporter tout ce qui le concerne
  * (droit d'accès) ou l'effacer partout (droit à l'effacement).
  */
 export function ouvrirDroitsEleves(acces: AccesDonnees): void {
-  const { boite, fermer } = ouvrirBoite("Données d'un élève");
+  const { boite, fermer } = ouvrirBoite("Données d'un étudiant");
   const eleves = listerEleves(acces.lireEntrees());
   boite.append(
     creer(
       "p",
       "",
-      "Un élève ou sa famille peut demander à consulter ses données ou à les faire effacer. Choisissez l'élève, puis exportez ses données pour les lui remettre, ou effacez-le de DNMAX.",
+      "Un étudiant ou sa famille peut demander à consulter ses données ou à les faire effacer. Choisissez l'étudiant, puis exportez ses données pour les lui remettre, ou effacez-le de DNMAX.",
     ),
   );
   const actions = creer("div", "echange-actions");
   if (eleves.length === 0) {
-    boite.append(creer("p", "", "Aucun élève n'est enregistré dans DNMAX."));
+    boite.append(creer("p", "", "Aucun étudiant n'est enregistré dans DNMAX."));
     actions.append(creerBouton("Fermer", "btn ghost", fermer));
     boite.append(actions);
     return;
   }
   const choix = creer("select");
-  choix.setAttribute("aria-label", "Élève");
+  choix.setAttribute("aria-label", "Étudiant");
   eleves.forEach((eleve, position) => {
     const option = creer("option", "", decrireEleve(eleve));
     option.value = String(position);
@@ -114,7 +114,7 @@ export function ouvrirDroitsEleves(acces: AccesDonnees): void {
       .then((ecrit) => {
         if (ecrit) {
           dire(
-            `Données de ${eleve.nom} enregistrées (${String(extrait.evaluations.length)} évaluation(s)). Ce fichier n'est pas protégé : remettez-le directement à l'élève ou à sa famille.`,
+            `Données de ${eleve.nom} enregistrées (${String(extrait.evaluations.length)} évaluation(s)). Ce fichier n'est pas protégé : remettez-le directement à l'étudiant ou à sa famille.`,
             false,
           );
         }
@@ -123,7 +123,7 @@ export function ouvrirDroitsEleves(acces: AccesDonnees): void {
         dire(messagePourErreur(erreurExport), true);
       });
   });
-  const effacer = creerBouton("Effacer cet élève…", "btn ghost", () => {
+  const effacer = creerBouton("Effacer cet étudiant…", "btn ghost", () => {
     confirmerEffacement(acces, eleveChoisi());
   });
   const boutons = creer("div", "compte-liens");
@@ -133,7 +133,7 @@ export function ouvrirDroitsEleves(acces: AccesDonnees): void {
     choix,
     boutons,
     message,
-    creer("p", "", "Pour corriger le nom d'un élève, utilisez l'écran Promotions : la correction s'applique à toutes ses évaluations."),
+    creer("p", "", "Pour corriger le nom d'un étudiant, utilisez l'écran Promotions : la correction s'applique à toutes ses évaluations."),
     actions,
   );
 }
@@ -144,7 +144,7 @@ function ecrireJour(jourIso: string): string {
 }
 
 function decrirePromotion(promotion: EtatPromotion): string {
-  const eleves = `${String(promotion.eleves)} élève(s)`;
+  const eleves = `${String(promotion.eleves)} étudiant(s)`;
   if (promotion.sortie === "") {
     return `${promotion.nom} : ${eleves}, année d'entrée inconnue`;
   }
@@ -155,10 +155,10 @@ function decrirePromotion(promotion: EtatPromotion): string {
 
 /**
  * Ouvre la boîte « Anonymiser ou effacer des promotions ». Toutes les
- * promotions qui comptent des élèves identifiables y figurent ; celles dont
+ * promotions qui comptent des étudiants identifiables y figurent ; celles dont
  * la durée de conservation est dépassée sont cochées d'office. Les
  * redoublants probables sont proposés à garder, et les résultats restés sans
- * élève peuvent être traités de même. Traiter une promotion encore dans sa
+ * étudiant peuvent être traités de même. Traiter une promotion encore dans sa
  * durée de conservation demande une seconde confirmation.
  */
 export function ouvrirConservation(acces: AccesDonnees): void {
@@ -170,12 +170,12 @@ export function ouvrirConservation(acces: AccesDonnees): void {
     creer(
       "p",
       "",
-      `Les données d'élèves sont gardées ${String(ANNEES_CONSERVATION_ELEVES)} an(s) après la sortie de leur promotion ; DNMAX le rappelle ensuite. Vous pouvez aussi anonymiser ou effacer une promotion plus tôt. Les évaluations elles-mêmes (grilles, consignes) sont conservées.`,
+      `Les données d'étudiants sont gardées ${String(ANNEES_CONSERVATION_ELEVES)} an(s) après la sortie de leur promotion ; DNMAX le rappelle ensuite. Vous pouvez aussi anonymiser ou effacer une promotion plus tôt. Les évaluations elles-mêmes (grilles, consignes) sont conservées.`,
     ),
   );
   const actions = creer("div", "echange-actions");
   if (promotions.length === 0 && orphelins.length === 0) {
-    boite.append(creer("p", "", "Aucune promotion ne compte d'élève identifiable."));
+    boite.append(creer("p", "", "Aucune promotion ne compte d'étudiant identifiable."));
     actions.append(creerBouton("Fermer", "btn ghost", fermer));
     boite.append(actions);
     return;
@@ -210,7 +210,7 @@ export function ouvrirConservation(acces: AccesDonnees): void {
   }
   const caseOrphelins =
     orphelins.length > 0
-      ? creerCase(`Résultats de ${String(orphelins.length)} élève(s) retiré(s) de toute promotion, restés dans des évaluations`, true)
+      ? creerCase(`Résultats de ${String(orphelins.length)} étudiant(s) retiré(s) de toute promotion, restés dans des évaluations`, true)
       : null;
   const erreur = creer("p", "echange-erreur");
   erreur.hidden = true;
@@ -221,7 +221,7 @@ export function ouvrirConservation(acces: AccesDonnees): void {
     const choisies = cochees.map((element) => element.id);
     const avecOrphelins = caseOrphelins?.checked === true;
     if (choisies.length === 0 && !avecOrphelins) {
-      erreur.textContent = "Cochez au moins une promotion ou les résultats sans élève.";
+      erreur.textContent = "Cochez au moins une promotion ou les résultats sans étudiant.";
       erreur.hidden = false;
       return;
     }
@@ -250,7 +250,7 @@ export function ouvrirConservation(acces: AccesDonnees): void {
     creer(
       "p",
       "",
-      "Anonymiser : chaque élève devient « Élève anonyme 1, 2… » ; ses niveaux et ses dates restent, ses observations et son appréciation sont retirées. Effacer : tout disparaît. Dans les deux cas c'est définitif : exportez auparavant ce que vous devez remettre. Les sauvegardes automatiques en gardent une trace jusqu'à leur remplacement.",
+      "Anonymiser : chaque étudiant devient « Étudiant anonyme 1, 2… » ; ses niveaux et ses dates restent, ses observations et son appréciation sont retirées. Effacer : tout disparaît. Dans les deux cas c'est définitif : exportez auparavant ce que vous devez remettre. Les sauvegardes automatiques en gardent une trace jusqu'à leur remplacement.",
     ),
     erreur,
   );
@@ -265,7 +265,7 @@ export function ouvrirConservation(acces: AccesDonnees): void {
 }
 
 /**
- * Au lancement, signale discrètement des données d'élèves échues. Ne fait
+ * Au lancement, signale discrètement des données d'étudiants échues. Ne fait
  * rien d'autre : l'effacement reste une décision de l'enseignant.
  */
 export function rappelerConservation(acces: AccesDonnees): void {
@@ -291,7 +291,7 @@ export function rappelerConservation(acces: AccesDonnees): void {
     creer(
       "p",
       "",
-      `${String(echues.length)} promotion(s) sont sorties depuis plus de ${String(ANNEES_CONSERVATION_ELEVES)} an(s) : leurs données d'élèves sont à effacer ou à anonymiser.`,
+      `${String(echues.length)} promotion(s) sont sorties depuis plus de ${String(ANNEES_CONSERVATION_ELEVES)} an(s) : leurs données d'étudiants sont à effacer ou à anonymiser.`,
     ),
     boutons,
   );
@@ -299,10 +299,10 @@ export function rappelerConservation(acces: AccesDonnees): void {
 }
 
 const IDENTIFIANT_PANNEAU = "panneau-donnees-eleves";
-/** Clé des modules de l'interface historique ; `eleves` vaut vrai quand le module Élèves est actif. */
+/** Clé des modules de l'interface historique ; `eleves` vaut vrai quand le module Étudiants est actif. */
 const CLE_MODULES = "dnmade.modules";
 
-/** Vrai si le module Élèves est actif, ou si des élèves sont encore enregistrés. */
+/** Vrai si le module Étudiants est actif, ou si des étudiants sont encore enregistrés. */
 function moduleElevesActif(texte: string | undefined): boolean {
   try {
     const modules: unknown = JSON.parse(texte ?? "{}");
@@ -318,9 +318,9 @@ function donneesElevesConcernees(acces: AccesDonnees): boolean {
 }
 
 /**
- * Branche le panneau « Données des élèves » de l'onglet Paramètres. Il ne
- * s'affiche que si le module Élèves est actif ou si des élèves sont encore
- * enregistrés : sans élève, il n'y a pas de donnée personnelle à gérer.
+ * Branche le panneau « Données des étudiants » de l'onglet Paramètres. Il ne
+ * s'affiche que si le module Étudiants est actif ou si des étudiants sont encore
+ * enregistrés : sans étudiant, il n'y a pas de donnée personnelle à gérer.
  */
 export function installerDonneesEleves(acces: AccesDonnees): void {
   const panneau = document.getElementById(IDENTIFIANT_PANNEAU);
@@ -336,7 +336,7 @@ export function installerDonneesEleves(acces: AccesDonnees): void {
   document.getElementById("bouton-donnees-promotions")?.addEventListener("click", () => {
     ouvrirConservation(acces);
   });
-  // L'interface historique active ou coupe le module Élèves dans Paramètres, et peut charger l'exemple.
+  // L'interface historique active ou coupe le module Étudiants dans Paramètres, et peut charger l'exemple.
   document.addEventListener("change", () => {
     window.setTimeout(actualiser, 0);
   });

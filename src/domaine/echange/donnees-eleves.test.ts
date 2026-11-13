@@ -17,8 +17,8 @@ const RECUE: PromotionEchangee = {
   mention: "Objet",
   debut: 2025,
   eleves: [
-    { id: "s1", nom: "Élève Un" },
-    { id: "s2", nom: "Élève Deux" },
+    { id: "s1", nom: "Étudiant Un" },
+    { id: "s2", nom: "Étudiant Deux" },
   ],
 };
 
@@ -35,7 +35,7 @@ describe("rapprocherPromotion", () => {
     const rapprochement = rapprocherPromotion([], RECUE, "d0", generateur());
     expect(rapprochement).toMatchObject({ promotionId: "p1", elevesAjoutes: 2, promotionCreee: true });
     expect(rapprochement?.promotions).toEqual([
-      { id: "p1", nom: "DNO-2025-2028", diplomeId: "d0", debut: 2025, liste: RECUE.eleves, eleves: "Élève Un\nÉlève Deux" },
+      { id: "p1", nom: "DNO-2025-2028", diplomeId: "d0", debut: 2025, liste: RECUE.eleves, eleves: "Étudiant Un\nÉtudiant Deux" },
     ]);
   });
 
@@ -43,16 +43,16 @@ describe("rapprocherPromotion", () => {
     expect(rapprocherPromotion([], RECUE, null, generateur())).toBeNull();
   });
 
-  it("retrouve la promotion et ses élèves par identifiant sans rien changer", () => {
+  it("retrouve la promotion et ses étudiants par identifiant sans rien changer", () => {
     const locales = [{ id: "p1", nom: "Autre nom", diplomeId: "d0", liste: RECUE.eleves }];
     const rapprochement = rapprocherPromotion(locales, RECUE, "d0", generateur());
     expect(rapprochement).toMatchObject({ promotionId: "p1", elevesAjoutes: 0, promotionCreee: false });
     expect(rapprochement?.promotions).toEqual(locales);
   });
 
-  it("retrouve par leur nom une promotion et des élèves saisis séparément", () => {
+  it("retrouve par leur nom une promotion et des étudiants saisis séparément", () => {
     const locales = [
-      { id: "pLocal", nom: "dno-2025-2028", diplomeId: "d0", liste: [{ id: "a", nom: "eleve  un" }, { id: "b", nom: "ÉLÈVE DEUX" }] },
+      { id: "pLocal", nom: "dno-2025-2028", diplomeId: "d0", liste: [{ id: "a", nom: "etudiant  un" }, { id: "b", nom: "ÉTUDIANT DEUX" }] },
     ];
     const rapprochement = rapprocherPromotion(locales, RECUE, "d0", generateur());
     expect(rapprochement?.promotionId).toBe("pLocal");
@@ -68,8 +68,8 @@ describe("rapprocherPromotion", () => {
     expect(rapprocherPromotion(locales, RECUE, "d0", generateur())).toMatchObject({ promotionCreee: true });
   });
 
-  it("ajoute un élève inconnu sans retirer ni renommer ceux d'ici", () => {
-    const locales = [{ id: "p1", nom: "DNO-2025-2028", diplomeId: "d0", liste: [{ id: "s1", nom: "Élève Un (nom local)" }, { id: "s9", nom: "Élève d'ici" }] }];
+  it("ajoute un étudiant inconnu sans retirer ni renommer ceux d'ici", () => {
+    const locales = [{ id: "p1", nom: "DNO-2025-2028", diplomeId: "d0", liste: [{ id: "s1", nom: "Étudiant Un (nom local)" }, { id: "s9", nom: "Étudiant d'ici" }] }];
     const rapprochement = rapprocherPromotion(locales, RECUE, "d0", generateur());
     expect(rapprochement?.elevesAjoutes).toBe(1);
     expect(rapprochement?.promotions).toEqual([
@@ -77,23 +77,23 @@ describe("rapprocherPromotion", () => {
         id: "p1",
         nom: "DNO-2025-2028",
         diplomeId: "d0",
-        liste: [{ id: "s1", nom: "Élève Un (nom local)" }, { id: "s9", nom: "Élève d'ici" }, { id: "neuf1", nom: "Élève Deux" }],
-        eleves: "Élève Un (nom local)\nÉlève d'ici\nÉlève Deux",
+        liste: [{ id: "s1", nom: "Étudiant Un (nom local)" }, { id: "s9", nom: "Étudiant d'ici" }, { id: "neuf1", nom: "Étudiant Deux" }],
+        eleves: "Étudiant Un (nom local)\nÉtudiant d'ici\nÉtudiant Deux",
       },
     ]);
     expect(rapprochement?.correspondances.get("s2")).toBe("neuf1");
     expect(locales[0]?.liste).toHaveLength(2);
   });
 
-  it("accepte une promotion reçue sans élèves", () => {
+  it("accepte une promotion reçue sans étudiants", () => {
     expect(rapprocherPromotion([], { ...RECUE, eleves: [] }, "d0", generateur())).toMatchObject({ elevesAjoutes: 0 });
   });
 });
 
 describe("rapprocherListeLibre", () => {
   it("fait correspondre les rangs par les noms et ajoute les inconnus à la fin", () => {
-    const { texte, correspondances, elevesAjoutes } = rapprocherListeLibre("Élève Deux\nÉlève Trois", "Élève Un\néleve deux");
-    expect(texte).toBe("Élève Deux\nÉlève Trois\nÉlève Un");
+    const { texte, correspondances, elevesAjoutes } = rapprocherListeLibre("Étudiant Deux\nÉtudiant Trois", "Étudiant Un\netudiant deux");
+    expect(texte).toBe("Étudiant Deux\nÉtudiant Trois\nÉtudiant Un");
     expect([...correspondances]).toEqual([
       ["libre0", "libre2"],
       ["libre1", "libre0"],
@@ -102,8 +102,8 @@ describe("rapprocherListeLibre", () => {
   });
 
   it("traite une liste absente comme vide", () => {
-    expect(rapprocherListeLibre(undefined, "Élève Un")).toMatchObject({ texte: "Élève Un", elevesAjoutes: 1 });
-    expect(rapprocherListeLibre("Élève Un", null)).toMatchObject({ texte: "Élève Un", elevesAjoutes: 0 });
+    expect(rapprocherListeLibre(undefined, "Étudiant Un")).toMatchObject({ texte: "Étudiant Un", elevesAjoutes: 1 });
+    expect(rapprocherListeLibre("Étudiant Un", null)).toMatchObject({ texte: "Étudiant Un", elevesAjoutes: 0 });
   });
 });
 
@@ -113,7 +113,7 @@ describe("fusionnerResultats", () => {
     ["s2", "s2"],
   ]);
 
-  it("ajoute les résultats d'un élève qui n'en avait pas", () => {
+  it("ajoute les résultats d'un étudiant qui n'en avait pas", () => {
     const { resultats, bilan } = fusionnerResultats({ s1: { n: { a: 3 } } }, { s2: { n: { a: 2 } } }, identite, false);
     expect(resultats).toEqual({ s1: { n: { a: 3 } }, s2: { n: { a: 2 } } });
     expect(bilan).toEqual({ nouveaux: 1, differents: 0, identiques: 0 });
@@ -134,20 +134,20 @@ describe("fusionnerResultats", () => {
     expect(bilan).toEqual({ nouveaux: 0, differents: 0, identiques: 1 });
   });
 
-  it("suit les correspondances d'identifiants et ignore un élève sans correspondance", () => {
+  it("suit les correspondances d'identifiants et ignore un étudiant sans correspondance", () => {
     const { resultats, bilan } = fusionnerResultats({}, { s1: { n: {} }, inconnu: { n: {} } }, new Map([["s1", "local7"]]), false);
     expect(resultats).toEqual({ local7: { n: {} } });
     expect(bilan.nouveaux).toBe(1);
   });
 
-  it("ne touche pas aux élèves d'ici absents du fichier et tolère des résultats absents", () => {
+  it("ne touche pas aux étudiants d'ici absents du fichier et tolère des résultats absents", () => {
     expect(fusionnerResultats({ s9: { n: {} } }, undefined, identite, true).resultats).toEqual({ s9: { n: {} } });
     expect(fusionnerResultats(null, { s1: { n: {} } }, identite, false).resultats).toEqual({ s1: { n: {} } });
   });
 });
 
-describe("lecture des données d'élèves reçues", () => {
-  it("ne garde que les champs d'élèves connus", () => {
+describe("lecture des données d'étudiants reçues", () => {
+  it("ne garde que les champs d'étudiants connus", () => {
     const lues = lireDonneesEleves({ promotionId: "p1", champs: { res: {}, titre: "intrus", refV: "v" } });
     expect(lues).toEqual({ promotionId: "p1", champs: { res: {} } });
   });
@@ -159,13 +159,13 @@ describe("lecture des données d'élèves reçues", () => {
     expect(lirePromotionEchangee({ id: "p", nom: "x" })).toBeNull();
   });
 
-  it("écarte les élèves mal formés d'une promotion reçue", () => {
-    const promotion = lirePromotionEchangee({ ...RECUE, eleves: [{ id: "s1", nom: "Élève Un" }, { nom: "sans identifiant" }, 3] });
-    expect(promotion?.eleves).toEqual([{ id: "s1", nom: "Élève Un" }]);
+  it("écarte les étudiants mal formés d'une promotion reçue", () => {
+    const promotion = lirePromotionEchangee({ ...RECUE, eleves: [{ id: "s1", nom: "Étudiant Un" }, { nom: "sans identifiant" }, 3] });
+    expect(promotion?.eleves).toEqual([{ id: "s1", nom: "Étudiant Un" }]);
   });
 
-  it("extrait d'une évaluation ses seuls champs d'élèves", () => {
-    const evaluation = { id: "e", titre: "T", res: { s1: {} }, eleves: "Élève Un", suivi: {} };
-    expect(extraireDonneesEleves(evaluation, "p1")).toEqual({ promotionId: "p1", champs: { res: { s1: {} }, eleves: "Élève Un" } });
+  it("extrait d'une évaluation ses seuls champs d'étudiants", () => {
+    const evaluation = { id: "e", titre: "T", res: { s1: {} }, eleves: "Étudiant Un", suivi: {} };
+    expect(extraireDonneesEleves(evaluation, "p1")).toEqual({ promotionId: "p1", champs: { res: { s1: {} }, eleves: "Étudiant Un" } });
   });
 });

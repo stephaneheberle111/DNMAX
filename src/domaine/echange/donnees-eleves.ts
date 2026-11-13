@@ -4,7 +4,7 @@ import { analyserJson, estObjet, type Evaluation, type ObjetJson } from "./model
 import { normaliserNom } from "./referentiel";
 
 /**
- * Champs d'une évaluation qui portent des données d'élèves. Ils ne voyagent
+ * Champs d'une évaluation qui portent des données d'étudiants. Ils ne voyagent
  * que dans un fichier protégé par mot de passe.
  */
 export const CHAMPS_ELEVES = ["res", "eleves", "eleveIds", "eleveId", "restit"] as const;
@@ -25,14 +25,14 @@ export interface PromotionEchangee {
   eleves: Eleve[];
 }
 
-/** Les données d'élèves d'une évaluation, avec la promotion à laquelle elles se rapportent. */
+/** Les données d'étudiants d'une évaluation, avec la promotion à laquelle elles se rapportent. */
 export interface DonneesEleves {
-  /** Promotion de l'expéditeur ; texte vide pour une liste d'élèves saisie à la main. */
+  /** Promotion de l'expéditeur ; texte vide pour une liste d'étudiants saisie à la main. */
   promotionId: string;
   champs: ObjetJson;
 }
 
-/** Préfixe des identifiants que l'interface historique donne aux élèves d'une liste saisie à la main. */
+/** Préfixe des identifiants que l'interface historique donne aux étudiants d'une liste saisie à la main. */
 const PREFIXE_ELEVE_LIBRE = "libre";
 
 function lireEleves(liste: unknown): Eleve[] {
@@ -79,7 +79,7 @@ export function lireDonneesEleves(valeur: unknown): DonneesEleves | null {
   return { promotionId: valeur.promotionId, champs };
 }
 
-/** Extrait d'une évaluation ses données d'élèves, pour un envoi protégé. */
+/** Extrait d'une évaluation ses données d'étudiants, pour un envoi protégé. */
 export function extraireDonneesEleves(evaluation: Evaluation, promotionId: string): DonneesEleves {
   const champs: ObjetJson = {};
   for (const champ of CHAMPS_ELEVES) {
@@ -105,7 +105,7 @@ export function decrirePromotion(brute: unknown, diplome: string, mention: strin
   };
 }
 
-/** Correspondance entre l'identifiant d'un élève chez l'expéditeur et son identifiant ici. */
+/** Correspondance entre l'identifiant d'un étudiant chez l'expéditeur et son identifiant ici. */
 export type Correspondances = ReadonlyMap<string, string>;
 
 export interface Rapprochement {
@@ -114,7 +114,7 @@ export interface Rapprochement {
   /** Identifiant, ici, de la promotion rapprochée. */
   promotionId: string;
   correspondances: Correspondances;
-  /** Nombre d'élèves de l'expéditeur absents d'ici, qui seraient ajoutés à la promotion. */
+  /** Nombre d'étudiants de l'expéditeur absents d'ici, qui seraient ajoutés à la promotion. */
   elevesAjoutes: number;
   /** Vrai si la promotion n'existait pas ici et serait créée. */
   promotionCreee: boolean;
@@ -124,10 +124,10 @@ export interface Rapprochement {
  * Rapproche une promotion reçue des promotions d'ici, sans rien modifier en place.
  *
  * La promotion est retrouvée par son identifiant, sinon par son nom au sein
- * du même diplôme ; à défaut elle est créée. Chaque élève est retrouvé par son
+ * du même diplôme ; à défaut elle est créée. Chaque étudiant est retrouvé par son
  * identifiant, sinon par son nom (casse, accents et espaces ignorés) : deux
  * enseignants qui ont saisi la même classe chacun de leur côté se retrouvent
- * ainsi. Un élève inconnu est ajouté à la promotion ; aucun élève d'ici n'est
+ * ainsi. Un étudiant inconnu est ajouté à la promotion ; aucun étudiant d'ici n'est
  * retiré ni renommé.
  *
  * @param diplomeIdLocal diplôme d'ici correspondant à celui de la promotion, ou `null` s'il n'existe pas
@@ -213,8 +213,8 @@ function lireNoms(texte: unknown): string[] {
 }
 
 /**
- * Rapproche deux listes d'élèves saisies à la main (un nom par ligne), où
- * l'interface historique identifie chaque élève par son rang : « libre0 »,
+ * Rapproche deux listes d'étudiants saisies à la main (un nom par ligne), où
+ * l'interface historique identifie chaque étudiant par son rang : « libre0 »,
  * « libre1 »… Les noms inconnus d'ici sont ajoutés en fin de liste.
  */
 export function rapprocherListeLibre(
@@ -236,19 +236,19 @@ export function rapprocherListeLibre(
 }
 
 export interface BilanResultats {
-  /** Élèves du fichier sans résultat ici. */
+  /** Étudiants du fichier sans résultat ici. */
   nouveaux: number;
-  /** Élèves dont les résultats du fichier diffèrent de ceux d'ici. */
+  /** Étudiants dont les résultats du fichier diffèrent de ceux d'ici. */
   differents: number;
   identiques: number;
 }
 
 /**
- * Fusionne les résultats reçus dans ceux d'ici, élève par élève.
+ * Fusionne les résultats reçus dans ceux d'ici, étudiant par étudiant.
  *
- * Un élève sans résultat ici reçoit ceux du fichier. Un élève dont les
+ * Un étudiant sans résultat ici reçoit ceux du fichier. Un étudiant dont les
  * résultats diffèrent garde les siens, sauf si `remplacerDifferents` est
- * demandé. Un élève d'ici absent du fichier n'est jamais touché, et un élève
+ * demandé. Un étudiant d'ici absent du fichier n'est jamais touché, et un étudiant
  * du fichier sans correspondance ici est ignoré.
  */
 export function fusionnerResultats(

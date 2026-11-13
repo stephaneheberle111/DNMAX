@@ -5,14 +5,14 @@ import { ouvrirDernierExport } from "./enveloppe";
 /** Durée d'affichage de la proposition d'ouverture avant qu'elle ne s'efface d'elle-même. */
 const DUREE_AFFICHAGE_MS = 20_000;
 const CLASSE_ANNONCE = "annonce-export";
-/** Hors de DNMAX, les données d'élèves ne sont plus chiffrées : l'enseignant doit le savoir. */
+/** Hors de DNMAX, les données d'étudiants ne sont plus chiffrées : l'enseignant doit le savoir. */
 const AVERTISSEMENT_ELEVES =
-  "Ce document contient des noms et des résultats d'élèves et n'est pas protégé par mot de passe : " +
+  "Ce document contient des noms et des résultats d'étudiants et n'est pas protégé par mot de passe : " +
   "rangez-le, partagez-le et supprimez-le avec le même soin qu'un relevé de notes.";
 
 /**
  * Après l'enregistrement d'un document exporté, propose de l'ouvrir et,
- * s'il contient des données d'élèves, rappelle qu'il n'est pas protégé.
+ * s'il contient des données d'étudiants, rappelle qu'il n'est pas protégé.
  * Une proposition précédente encore affichée est remplacée.
  */
 export function proposerOuvertureExport(nomFichier: string, contientEleves: boolean): void {
@@ -37,7 +37,7 @@ export function proposerOuvertureExport(nomFichier: string, contientEleves: bool
   avertissement.textContent = AVERTISSEMENT_ELEVES;
   avertissement.hidden = !contientEleves;
 
-  // Un rappel sur les données d'élèves reste affiché jusqu'à ce qu'il soit fermé.
+  // Un rappel sur les données d'étudiants reste affiché jusqu'à ce qu'il soit fermé.
   const minuterie = contientEleves
     ? undefined
     : window.setTimeout(() => {

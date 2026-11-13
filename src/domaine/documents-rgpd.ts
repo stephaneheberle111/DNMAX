@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /*
- * Documents à remettre quand l'enseignant active le module Élèves : la note
+ * Documents à remettre quand l'enseignant active le module Étudiants : la note
  * d'information aux étudiants (avec un accusé de réception à signer) et la
  * note au chef d'établissement et au délégué à la protection des données.
  *
@@ -9,7 +9,7 @@
  * Aucun nom de personne n'y figure : ils engagent l'établissement, pas un
  * enseignant ni un chef d'établissement nommé. L'accusé de réception atteste
  * que l'information a été remise ; ce n'est pas un consentement (voir
- * DECISIONS.md, « Durée de conservation des données d'élèves »).
+ * DECISIONS.md, « Durée de conservation des données d'étudiants »).
  */
 import { ecrireDateLongue } from "./date-longue";
 import { gras, lien, texte, type Bloc, type DocumentImprimable } from "./document-imprimable";
@@ -35,7 +35,7 @@ export interface ChampsDocumentsRgpd extends SaisieEtablissement {
   date: Date;
   /** Adresse du code source de DNMAX, citée dans la note au chef d'établissement. */
   adresseCodeSource: string;
-  /** Minutes sans activité après lesquelles DNMAX se verrouille, avec le module Élèves. */
+  /** Minutes sans activité après lesquelles DNMAX se verrouille, avec le module Étudiants. */
   minutesVerrouillage: number;
 }
 
@@ -188,7 +188,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
       type: "paragraphe",
       contenu: [
         texte(
-          "Cette note s'adresse au chef d'établissement et au délégué à la protection des données. Un enseignant de l'établissement active le module Élèves de DNMAX pour évaluer ses étudiants ; sans ce module, DNMAX ne contient que des grilles d'évaluation et des référentiels, sans aucune donnée personnelle d'élève. Elle peut servir à compléter le registre des activités de traitement de l'établissement. Les étudiants en sont informés par une note remise en classe, dont ils signent l'accusé de réception.",
+          "Cette note s'adresse au chef d'établissement et au délégué à la protection des données. Un enseignant de l'établissement active le module Étudiants de DNMAX pour évaluer ses étudiants ; sans ce module, DNMAX ne contient que des grilles d'évaluation et des référentiels, sans aucune donnée personnelle d'étudiant. Elle peut servir à compléter le registre des activités de traitement de l'établissement. Les étudiants en sont informés par une note remise en classe, dont ils signent l'accusé de réception.",
         ),
       ],
     },
@@ -255,7 +255,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Lieu de stockage",
           contenu: [
             texte(
-              "Uniquement l'ordinateur de l'enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l'Union européenne des données d'élèves.",
+              "Uniquement l'ordinateur de l'enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l'Union européenne des données d'étudiants.",
             ),
           ],
         },
@@ -271,7 +271,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Droits des étudiants",
           contenu: [
             texte(
-              "Accès, rectification, effacement et limitation, à exercer auprès de l'enseignant ou du délégué à la protection des données. Dans DNMAX, Paramètres > Données des élèves permet d'exporter toutes les données d'un étudiant, de l'effacer partout, et d'anonymiser ou d'effacer une promotion.",
+              "Accès, rectification, effacement et limitation, à exercer auprès de l'enseignant ou du délégué à la protection des données. Dans DNMAX, Paramètres > Données des étudiants permet d'exporter toutes les données d'un étudiant, de l'effacer partout, et d'anonymiser ou d'effacer une promotion.",
             ),
           ],
         },
@@ -279,7 +279,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Sécurité",
           contenu: [
             texte(
-              `Chiffrement de toutes les données saisies ; mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères, demandé à chaque ouverture ; verrouillage après ${String(champs.minutesVerrouillage)} minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.`,
+              `Chiffrement de toutes les données saisies ; mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères, demandé à chaque ouverture ; verrouillage après ${String(champs.minutesVerrouillage)} minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des étudiants.`,
             ),
           ],
         },

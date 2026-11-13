@@ -4,7 +4,7 @@ DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs �
 
 C'est une application de bureau autonome pour Windows, Linux et macOS : pas de serveur central, pas de compte, les données restent sur l'ordinateur de l'enseignant.
 
-> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs élèves. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Les mises à jour leur sont proposées quand ils cliquent « Rechercher une mise à jour », en bas de la fenêtre (voir « Publier une version »).
+> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs étudiants. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Les mises à jour leur sont proposées quand ils cliquent « Rechercher une mise à jour », en bas de la fenêtre (voir « Publier une version »).
 
 ## Où sont les données
 
@@ -69,7 +69,7 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 ### Installer une version d'essai (non signée)
 
 - **Windows** : à l'avertissement « Windows a protégé votre ordinateur », cliquer « Informations complémentaires » puis « Exécuter quand même ».
-- **macOS** : au premier lancement refusé, ouvrir Réglages Système → Confidentialité et sécurité, puis « Ouvrir quand même ».
+- **macOS** : au premier lancement refusé, ouvrir Réglages Système > Confidentialité et sécurité, puis « Ouvrir quand même ».
 - **Linux** : installer le `.deb`, ou rendre le fichier `.AppImage` exécutable et le lancer.
 
 ## Publier une version
@@ -83,14 +83,14 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
    ```
 
    La commande demande un mot de passe et crée deux fichiers : `dnmax.key` (clé privée, **à ne jamais copier dans le dépôt ni dans une conversation**) et `dnmax.key.pub` (clé publique).
-2. Sur GitHub, dans Settings → Secrets and variables → Actions, créer deux secrets : `TAURI_SIGNING_PRIVATE_KEY` (contenu de `dnmax.key`) et `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (le mot de passe).
+2. Sur GitHub, dans Settings > Secrets and variables > Actions, créer deux secrets : `TAURI_SIGNING_PRIVATE_KEY` (contenu de `dnmax.key`) et `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (le mot de passe).
 3. Copier le contenu de `dnmax.key.pub` dans `plugins.updater.pubkey` de `src-tauri/tauri.conf.json`, par une branche comme tout changement.
 4. Conserver `dnmax.key` et son mot de passe en lieu sûr : sans eux, plus aucune mise à jour ne sera acceptée par les postes déjà installés.
 
 ### À chaque version
 
 1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
-2. Sur GitHub, onglet Actions → atelier « Publication » → « Run workflow » sur la branche `main`.
+2. Sur GitHub, onglet Actions > atelier « Publication » > « Run workflow » sur la branche `main`.
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
 4. Publier le brouillon : GitHub pose l'étiquette `v…` et les postes déjà installés la trouveront en cliquant « Rechercher une mise à jour » en bas de la fenêtre.
 
@@ -105,9 +105,9 @@ Sous Linux, seule l'AppImage se met à jour depuis DNMAX (« Rechercher une mise
 
 Le dossier `site/` contient le site public de DNMAX (<https://dnmax.fr>) : une page unique, sans étape de construction, et les référentiels proposés au téléchargement (`site/referentiels/`). Il est hébergé chez OVH ; `site/.htaccess` règle le serveur (HTTPS, téléchargement des référentiels).
 
-L'atelier « Site » (`.github/workflows/site.yml`) envoie `site/` par **SFTP** à chaque fusion dans `main` qui touche `site/`, ou à la demande (onglet Actions → « Site » → « Run workflow »). Les fichiers distants absents du dépôt sont supprimés : le dossier `www` doit être réservé au site.
+L'atelier « Site » (`.github/workflows/site.yml`) envoie `site/` par **SFTP** à chaque fusion dans `main` qui touche `site/`, ou à la demande (onglet Actions > « Site » > « Run workflow »). Les fichiers distants absents du dépôt sont supprimés : le dossier `www` doit être réservé au site.
 
-Mise en place, une seule fois (Settings → Secrets and variables → Actions) :
+Mise en place, une seule fois (Settings > Secrets and variables > Actions) :
 
 | Nom | Type | Valeur |
 | --- | --- | --- |

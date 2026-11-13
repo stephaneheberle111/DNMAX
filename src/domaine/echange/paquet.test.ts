@@ -24,10 +24,10 @@ describe("construirePaquet", () => {
     expect(paquet.creeLe).toBe(MAINTENANT.toISOString());
   });
 
-  it("n'écrit aucune donnée d'élève dans le fichier", () => {
+  it("n'écrit aucune donnée d'étudiant dans le fichier", () => {
     const paquet = construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand", CATALOGUE);
     const texte = JSON.stringify(paquet);
-    expect(texte).not.toContain("Élève Fictif");
+    expect(texte).not.toContain("Étudiant Fictif");
     expect(texte).not.toContain("eleve1");
     expect(texte).not.toContain("suivi");
   });
@@ -63,7 +63,7 @@ describe("lirePaquet", () => {
     expect(lirePaquet('{"format":"dnmax-echange","version":1}')).toBe("illisible");
   });
 
-  it("retire les données d'élèves qu'un fichier trafiqué contiendrait", () => {
+  it("retire les données d'étudiants qu'un fichier trafiqué contiendrait", () => {
     const trafique = {
       format: "dnmax-echange",
       version: 1,
@@ -71,7 +71,7 @@ describe("lirePaquet", () => {
     };
     const paquet = lirePaquet(JSON.stringify(trafique));
     expect(typeof paquet).toBe("object");
-    expect(JSON.stringify(paquet)).not.toContain("Élève Fictif");
+    expect(JSON.stringify(paquet)).not.toContain("Étudiant Fictif");
     expect(JSON.stringify(paquet)).not.toContain("vX");
   });
 

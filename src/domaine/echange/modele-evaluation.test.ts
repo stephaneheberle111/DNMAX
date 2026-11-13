@@ -4,7 +4,7 @@ import { creerEvaluation } from "./jeu-essai";
 import { extraireModele, listerRubriquesModifiees, ontMemeModele, remplacerModele } from "./modele-evaluation";
 
 describe("extraireModele", () => {
-  it("retire élèves, résultats, suivi et identifiants locaux", () => {
+  it("retire étudiants, résultats, suivi et identifiants locaux", () => {
     const modele = extraireModele(creerEvaluation({ refV: "v1", eleveIds: ["eleve1"], restit: {}, date: "2026-01-10" }));
     expect(Object.keys(modele).sort()).toEqual(["classes", "consignes", "id", "items", "titre"]);
   });
@@ -21,7 +21,7 @@ describe("extraireModele", () => {
 });
 
 describe("ontMemeModele", () => {
-  it("ignore une différence de résultats d'élèves", () => {
+  it("ignore une différence de résultats d'étudiants", () => {
     expect(ontMemeModele(creerEvaluation(), creerEvaluation({ res: {} }))).toBe(true);
   });
 
@@ -35,7 +35,7 @@ describe("ontMemeModele", () => {
 });
 
 describe("remplacerModele", () => {
-  it("prend le modèle reçu et garde élèves, résultats et suivi d'ici", () => {
+  it("prend le modèle reçu et garde étudiants, résultats et suivi d'ici", () => {
     const locale = creerEvaluation({ refV: "v1" });
     const fusion = remplacerModele(locale, creerEvaluation({ titre: "Nouveau titre", res: { intrus: 1 }, refV: "vX" }));
     expect(fusion.titre).toBe("Nouveau titre");
