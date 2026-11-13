@@ -7046,8 +7046,8 @@ function paintEditor(pane,host){
       {css,cells:["C'est moi","Prénom","Nom",""]},
       D.enseignants.map((t,i)=>`<div class="ed" style="${css}">
         <input type="radio" name="moi" data-moi="${esc(t.id)}" ${D.moi===t.id?"checked":""} aria-label="C'est moi : ${esc(t.nom)}" style="justify-self:center;width:18px;height:18px">
-        <input type="text" value="${esc(t.prenom)}" data-tp="${i}" placeholder="Camille" aria-label="Prénom">
-        <input type="text" value="${esc(t.nomFam)}" data-tn="${i}" placeholder="Martin" aria-label="Nom">
+        <input type="text" value="${esc(t.prenom)}" data-tp="${i}" placeholder="Prénom" aria-label="Prénom">
+        <input type="text" value="${esc(t.nomFam)}" data-tn="${i}" placeholder="Nom" aria-label="Nom">
         ${delBtn("ens"+i,"Supprimer")}</div>`).join(""),
       "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur de DNMAX : sa répartition de service cadre la page Progression, et il est coché d'office dans une nouvelle évaluation.");
     host.querySelectorAll("[data-moi]").forEach(r=>r.onchange=()=>{D.moi=r.dataset.moi;persistData();toast("Répartition de service de "+((D.enseignants.find(t=>t.id===D.moi)||{}).nom||"")+" prise en compte.")});
