@@ -5,9 +5,9 @@ import { convertirEnOctets, type ContenuFichier } from "../domaine/contenu-fichi
 import { estObjet, lireDonneesEtablissementDe, lirePromotion } from "../domaine/echange/modele";
 import { estCadreVierge, nettoyerDiplomesVierges } from "../domaine/diplome-vierge";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
-import { CLE_IDENTITE, lireIdentite } from "../domaine/identite";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
+import { lireSaisieEtablissement } from "../domaine/documents-rgpd";
 import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
 import { enregistrerFichier } from "../enveloppe";
 
@@ -43,10 +43,15 @@ interface Pont {
    */
   ajusterEnseignants?: (regle: RegleEnseignants) => void;
   /**
+   * Posée par l'interface historique à son chargement : ouvre Mon établissement > Établissement
+   * et place le curseur sur le premier champ utile aux documents RGPD qui est vide.
+   */
+  ouvrirEtablissement?: () => void;
+  /**
    * Appelée quand l'enseignant coche le module Élèves : avertissement RGPD et
    * documents à remettre. Rend `true` s'il confirme l'activation.
    *
-   * @param etablissement nom de l'établissement saisi dans « Mon établissement », vide s'il ne l'est pas
+   * @param etablissement l'objet `DATA.etab` de « Mon établissement » (champs `nom` et `contactDpo` lus)
    */
   readonly confirmerModuleEleves: (etablissement: unknown) => Promise<boolean>;
   /**
@@ -118,11 +123,14 @@ export async function chargerInterfaceHistorique(
     telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport) },
     estCadreVierge,
     nettoyerDiplomesVierges,
-    // L'interface historique n'est pas typée : le nom reçu est vérifié.
+    // L'interface historique n'est pas typée : les champs reçus sont vérifiés.
     confirmerModuleEleves: (etablissement) =>
       confirmerActivationEleves({
-        etablissement: typeof etablissement === "string" ? etablissement : "",
-        enseignant: lireIdentite(magasin.getItem(CLE_IDENTITE))?.nom ?? "",
+        etablissement: lireSaisieEtablissement(etablissement),
+        allerSaisirEtablissement: () => {
+          window.dnmaxPont?.ouvrirEtablissement?.();
+        },
+        date: new Date(),
       }),
     // Données non typées : elles sont relues prudemment, et tout ce qui est illisible vaut « non validé ».
     referentielValide: {

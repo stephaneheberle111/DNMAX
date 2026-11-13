@@ -815,7 +815,7 @@ footer a{color:var(--ink-2)}
 <li>produire un document Word par élève&nbsp;;</li>
 <li>suivre chacun dans la page «&nbsp;Progression élève&nbsp;».</li>
 </ul>
-<p>À l’activation, DNMAX rappelle ce que le module conserve et vos obligations au titre du RGPD&nbsp;: informer les élèves, prévenir le chef d’établissement ou le délégué à la protection des données, ne garder les données qu’un an après la sortie de la promotion. La même fenêtre imprime, ou enregistre en PDF, deux documents préremplis avec le nom de l’établissement et le vôtre&nbsp;: la fiche d’information des élèves, suivie d’un accusé de réception à leur faire signer, et la note pour le chef d’établissement (rubriques <a href="#documentation" data-doc-lien="rgpd-eleves">RGPD&nbsp;: information des élèves</a> et <a href="#documentation" data-doc-lien="rgpd-etablissement">RGPD&nbsp;: fiche pour l’établissement</a>). L’accusé de réception atteste que l’information a été remise&nbsp;; ce n’est pas un consentement. Vous confirmez ensuite l’activation, ou vous l’annulez.</p>
+<p>À l’activation, DNMAX rappelle ce que le module conserve et vos obligations au titre du RGPD&nbsp;: informer les élèves, prévenir le chef d’établissement ou le délégué à la protection des données, ne garder les données qu’un an après la sortie de la promotion. La même fenêtre propose deux documents, préremplis avec le nom de l’établissement et le contact de son délégué à la protection des données (à saisir d’abord dans Mon établissement &gt; Établissement), sans aucun nom de personne&nbsp;: l’information aux étudiants, suivie d’un accusé de réception à leur faire signer, et la note au chef d’établissement (rubriques <a href="#documentation" data-doc-lien="rgpd-eleves">RGPD&nbsp;: information des élèves</a> et <a href="#documentation" data-doc-lien="rgpd-etablissement">RGPD&nbsp;: fiche pour l’établissement</a>). Chacun s’ouvre d’abord en aperçu, pour l’enregistrer en PDF ou l’imprimer. L’accusé de réception atteste que l’information a été remise&nbsp;; ce n’est pas un consentement. Vous confirmez ensuite l’activation, ou vous l’annulez.</p>
 <p>Le module <strong>Niveaux DN MADE</strong>, qui nécessite le module Élèves, attribue à chaque élève le niveau atteint sur chaque compétence&nbsp;: Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu’il y est évalué avec un niveau de maîtrise suffisant.</p>
 </div>
 
@@ -833,7 +833,7 @@ footer a{color:var(--ink-2)}
 <tr><th>Destinataires</th><td>L’enseignant ; les collègues de l’équipe pédagogique à qui il transmet volontairement une évaluation (fichier chiffré par mot de passe, ou échange direct d’ordinateur à ordinateur) ; l’étudiant pour ses propres résultats. L’éditeur de DNMAX et l’hébergeur du site n’y ont jamais accès.</td></tr>
 <tr><th>Lieu de stockage</th><td>Uniquement l’ordinateur de l’enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l’Union européenne des données d’élèves.</td></tr>
 <tr><th>Durée de conservation</th><td>Un an après la sortie de la promotion (fin de l’année scolaire où s’achève le diplôme). DNMAX le rappelle ensuite et propose d’anonymiser ou d’effacer les données ; une promotion peut aussi l’être plus tôt. La durée est réglable avec l’établissement.</td></tr>
-<tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l’établissement. Dans DNMAX, Paramètres → «&nbsp;Données des élèves&nbsp;» permet d’exporter toutes les données d’un étudiant, de l’effacer partout, et d’anonymiser ou d’effacer une promotion.</td></tr>
+<tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l’enseignant ou du délégué à la protection des données de l’établissement. Dans DNMAX, Paramètres &gt; Données des élèves permet d’exporter toutes les données d’un étudiant, de l’effacer partout, et d’anonymiser ou d’effacer une promotion.</td></tr>
 <tr><th>Sécurité</th><td>Chiffrement de toutes les données saisies ; mot de passe demandé à chaque ouverture ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.</td></tr>
 </table></div>
 <h4>Bonnes pratiques à demander aux enseignants</h4>
@@ -843,20 +843,21 @@ footer a{color:var(--ink-2)}
 <li>ranger et supprimer les documents exportés avec le même soin qu’un relevé de notes&nbsp;;</li>
 <li>ne jamais écrire le nom d’un étudiant dans un signalement de bug ou une suggestion.</li>
 </ul>
+<p>DNMAX est un logiciel libre (licence AGPL-3.0-or-later)&nbsp;: son code source est public et peut être vérifié par l’établissement ou par toute personne qu’il mandate&nbsp;: <a href="https://github.com/stephaneheberle111/DNMAX">github.com/stephaneheberle111/DNMAX</a>.</p>
 <p>Contact de l’éditeur&nbsp;: <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a>. Détails techniques&nbsp;: page <a href="#confidentialite">Confidentialité</a>.</p>
 </div>
 
 <div data-doc="rgpd-eleves" data-titre="RGPD : information des élèves">
 <h3>Modèle de note d’information des étudiants</h3>
 <p class="imprimer"><button type="button" class="btn" data-imprimer>Imprimer ce modèle</button></p>
-<p>Ce modèle est à adapter, puis à remettre aux étudiants ou à intégrer au livret de la formation, si vous utilisez le module Élèves. Il s’agit d’une <strong>information</strong>, pas d’une demande de consentement&nbsp;: l’évaluation relève de la mission de l’établissement, et un étudiant ne peut pas refuser d’être évalué. Remplacez les passages entre crochets. DNMAX imprime aussi cette note à l’activation du module Élèves, préremplie et suivie d’un accusé de réception à faire signer.</p>
+<p>Ce modèle est à adapter, puis à remettre aux étudiants ou à intégrer au livret de la formation, si vous utilisez le module Élèves. Il s’agit d’une <strong>information</strong>, pas d’une demande de consentement&nbsp;: l’évaluation relève de la mission de l’établissement, et un étudiant ne peut pas refuser d’être évalué. Remplacez les passages entre crochets. DNMAX propose aussi cette note à l’activation du module Élèves, préremplie, en aperçu puis en PDF ou à imprimer, suivie d’un accusé de réception à faire signer.</p>
 <div class="modele">
-<p><strong>Vos données dans le suivi de vos évaluations</strong></p>
+<p><strong>Information aux étudiants&nbsp;: vos données dans le suivi de vos évaluations</strong></p>
 <p>Pour évaluer vos compétences tout au long du DN MADE, vos enseignants peuvent utiliser l’application DNMAX. Elle enregistre votre prénom, votre nom, votre promotion, vos niveaux par compétence, leurs observations et leurs appréciations, et les dates de rendu de vos travaux.</p>
 <p>Ces données servent uniquement à votre évaluation et au suivi de votre progression. Le responsable de ce traitement est [nom de l’établissement], représenté par son chef d’établissement, dans le cadre de sa mission d’enseignement.</p>
 <p>Elles restent sur l’ordinateur de votre enseignant, chiffrées et protégées par un mot de passe. Elles ne sont ni envoyées sur Internet ni confiées à une entreprise. Votre enseignant peut les transmettre à un collègue de l’équipe pédagogique, dans un fichier protégé par un mot de passe.</p>
 <p>Elles sont conservées jusqu’à un an après la fin de votre diplôme, puis anonymisées ou effacées.</p>
-<p>Vous pouvez demander à consulter vos données, à les faire corriger ou, dans les cas prévus par la loi, à les faire effacer, auprès de [service ou personne à contacter] ou du délégué à la protection des données de l’établissement&nbsp;: [contact du DPD]. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (cnil.fr).</p>
+<p>Vous pouvez demander à consulter vos données, à les faire corriger ou, dans les cas prévus par la loi, à les faire effacer, auprès de votre enseignant ou du délégué à la protection des données de l’établissement&nbsp;: [contact du DPD]. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (cnil.fr).</p>
 </div>
 </div>
 
