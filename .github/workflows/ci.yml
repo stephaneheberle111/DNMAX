@@ -26,6 +26,10 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - name: L'installation livrée ne contient aucune donnée
+        run: |
+          npx playwright install --with-deps chromium
+          npm run verifier:vide
 
   enveloppe:
     name: Enveloppe de bureau (format, clippy, tests)
