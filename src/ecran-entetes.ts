@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import "./ecran-entetes.css";
 
 /**
  * Tient à jour la variable CSS --hauteur-barre avec la hauteur réelle de la

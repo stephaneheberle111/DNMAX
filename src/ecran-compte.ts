@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-compte.css";
-import { ADRESSE_CODE_SOURCE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./configuration";
-import { construireAdresseRetours, deduireSysteme } from "./domaine/adresse-retours";
-import { LONGUEUR_MAXIMALE_NOM } from "./domaine/identite";
 import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
-import { changerMotDePasse, lireVersion, ouvrirDansNavigateur } from "./enveloppe";
-import { lancerParcours } from "./ecran-parcours";
+import { changerMotDePasse } from "./enveloppe";
 
 const IDENTIFIANT_BOUTON = "bouton-compte";
+const IDENTIFIANT_MENU = "menu-compte";
 
 function creerChamp(type: "text" | "password", libelle: string, completion: AutoFill): { ligne: HTMLElement; champ: HTMLInputElement } {
   const ligne = creer("label", "compte-champ", libelle);
@@ -20,7 +17,7 @@ function creerChamp(type: "text" | "password", libelle: string, completion: Auto
   return { ligne, champ };
 }
 
-/** Zone de message d'une rubrique : succès ou erreur, vidée à chaque nouvelle tentative. */
+/** Zone de message : succès ou erreur, vidée à chaque nouvelle tentative. */
 function creerMessage(): { zone: HTMLElement; dire: (texte: string, erreur: boolean) => void } {
   const zone = creer("p", "compte-message");
   zone.setAttribute("role", "status");
@@ -35,35 +32,9 @@ function creerMessage(): { zone: HTMLElement; dire: (texte: string, erreur: bool
   };
 }
 
-function creerRubriqueNom(acces: AccesDonnees): HTMLElement {
-  const rubrique = creer("section", "compte-rubrique");
-  const prenom = creerChamp("text", "Votre prénom", "given-name");
-  const nom = creerChamp("text", "Votre nom", "family-name");
-  prenom.champ.value = acces.identite.prenom;
-  nom.champ.value = acces.identite.nomFamille;
-  prenom.champ.maxLength = LONGUEUR_MAXIMALE_NOM;
-  nom.champ.maxLength = LONGUEUR_MAXIMALE_NOM;
-  const { zone, dire } = creerMessage();
-  const formulaire = creer("form", "compte-formulaire");
-  formulaire.addEventListener("submit", (evenement) => {
-    evenement.preventDefault();
-    if (acces.renommer(prenom.champ.value, nom.champ.value)) {
-      prenom.champ.value = acces.identite.prenom;
-      nom.champ.value = acces.identite.nomFamille;
-      dire(`Enregistré : ${acces.identite.nom}. Ce nom accompagnera vos prochaines modifications et vos prochains envois.`, false);
-    } else {
-      dire("Indiquez votre prénom et votre nom.", true);
-    }
-  });
-  const enregistrer = creer("button", "btn", "Enregistrer le nom");
-  enregistrer.type = "submit";
-  formulaire.append(prenom.ligne, nom.ligne, enregistrer);
-  rubrique.append(creer("h3", "", "Votre nom"), formulaire, zone);
-  return rubrique;
-}
-
-function creerRubriqueMotDePasse(acces: AccesDonnees): HTMLElement {
-  const rubrique = creer("section", "compte-rubrique");
+function montrerMotDePasse(acces: AccesDonnees): void {
+  const { boite, fermer } = ouvrirBoite("Mot de passe");
+  boite.classList.add("boite-etroite");
   const ancien = creerChamp("password", "Mot de passe actuel", "current-password");
   const nouveau = creerChamp(
     "password",
@@ -72,7 +43,7 @@ function creerRubriqueMotDePasse(acces: AccesDonnees): HTMLElement {
   );
   const confirmation = creerChamp("password", "Nouveau mot de passe, une seconde fois", "new-password");
   const { zone, dire } = creerMessage();
-  const changer = creer("button", "btn", "Changer le mot de passe");
+  const changer = creer("button", "btn primary", "Changer le mot de passe");
   changer.type = "submit";
   const formulaire = creer("form", "compte-formulaire");
   formulaire.addEventListener("submit", (evenement) => {
@@ -105,102 +76,117 @@ function creerRubriqueMotDePasse(acces: AccesDonnees): HTMLElement {
         changer.disabled = false;
       });
   });
-  formulaire.append(ancien.ligne, nouveau.ligne, confirmation.ligne, changer);
-  rubrique.append(creer("h3", "", "Mot de passe"), formulaire, zone);
-  return rubrique;
-}
-
-/** L'adresse peut n'être connue qu'après coup (version lue auprès de l'enveloppe). */
-function creerLien(
-  texte: string,
-  adresse: string | Promise<string>,
-  dire: (texte: string, erreur: boolean) => void,
-): HTMLButtonElement {
-  return creerBouton(texte, "lnk", () => {
-    void Promise.resolve(adresse).then((adresseConnue) =>
-      ouvrirDansNavigateur(adresseConnue).catch(() => {
-        dire(`Le navigateur n'a pas pu être ouvert. Adresse : ${adresseConnue}`, true);
-      }),
-    );
-  });
-}
-
-function creerRubriqueAPropos(): HTMLElement {
-  const rubrique = creer("section", "compte-rubrique");
-  const version = creer("p", "", "DNMAX");
-  const versionInstallee = lireVersion();
-  void versionInstallee.then((numero) => {
-    version.textContent = numero === "" ? "DNMAX" : `DNMAX, version ${numero}`;
-  });
-  const { zone, dire } = creerMessage();
-  const liens = creer("div", "compte-liens");
-  liens.append(
-    creerLien(
-      "Proposer une idée ou signaler un bug",
-      versionInstallee.then((numero) =>
-        construireAdresseRetours(ADRESSE_RETOURS, numero, deduireSysteme(navigator.userAgent)),
-      ),
-      dire,
-    ),
-    creerLien("Site et documentation", ADRESSE_SITE, dire),
-    creerLien("Code source", ADRESSE_CODE_SOURCE, dire),
-  );
-  rubrique.append(
-    creer("h3", "", "À propos"),
-    version,
-    creer(
-      "p",
-      "",
-      `Logiciel libre sous licence ${LICENCE} : vous pouvez l'utiliser, l'étudier, le modifier et le redistribuer aux mêmes conditions. ` +
-        "Vos données restent sur cet ordinateur ; ces liens s'ouvrent dans votre navigateur.",
-    ),
-    liens,
-    zone,
-  );
-  return rubrique;
-}
-
-function creerRubriqueVisites(fermer: () => void): HTMLElement {
-  const rubrique = creer("section", "compte-rubrique");
-  const liens = creer("div", "compte-liens");
-  const visites = [
-    ["prise-en-main", "Prise en main"],
-    ["eleves", "Module Élèves"],
-    ["niveaux", "Module Niveaux DN MADE"],
-  ] as const;
-  for (const [identifiant, libelle] of visites) {
-    liens.append(
-      creerBouton(libelle, "btn ghost", () => {
-        fermer();
-        lancerParcours(identifiant);
-      }),
-    );
-  }
-  rubrique.append(
-    creer("h3", "", "Visites guidées"),
-    creer("p", "", "Relancez une visite pas à pas : elle éclaire là où cliquer et repère ce que vous avez déjà fait."),
-    liens,
-  );
-  return rubrique;
-}
-
-function montrerCompte(acces: AccesDonnees): void {
-  const { boite, fermer } = ouvrirBoite("Mon compte");
-  const contenu = creer("div", "compte-contenu");
-  contenu.append(creerRubriqueNom(acces), creerRubriqueVisites(fermer), creerRubriqueMotDePasse(acces), creerRubriqueAPropos());
   const actions = creer("div", "echange-actions");
-  actions.append(creerBouton("Fermer", "btn ghost", fermer));
-  boite.append(contenu, actions);
+  actions.append(creerBouton("Fermer", "btn ghost", fermer), changer);
+  formulaire.append(ancien.ligne, nouveau.ligne, confirmation.ligne, zone, actions);
+  boite.append(
+    creer("p", "", "Le mot de passe protège les données enregistrées sur cet ordinateur. Votre code de secours ne change pas."),
+    formulaire,
+  );
+  ancien.champ.focus();
 }
 
-/** Rend visible le bouton « Mon compte… » de l'en-tête et le branche. */
-export function installerCompte(acces: AccesDonnees): void {
+/** Ouvre la page Préférences, tenue par l'interface historique. */
+function ouvrirPreferences(): void {
+  window.dnmaxPont?.ouvrirPreferences?.();
+}
+
+/**
+ * Rend visible le menu « Mon compte » de la barre du haut et le branche :
+ * « Mot de passe… » (seulement dans l'enveloppe de bureau, qui tient le coffre)
+ * et « Préférences ». Le menu se ferme par Échap, un clic ailleurs ou le choix
+ * d'une entrée ; les flèches passent d'une entrée à l'autre.
+ *
+ * @param acces `null` hors de l'enveloppe : le menu ne propose alors que les préférences.
+ */
+export function installerCompte(acces: AccesDonnees | null): void {
   const bouton = document.getElementById(IDENTIFIANT_BOUTON);
-  if (bouton === null) {
+  if (bouton === null || bouton.parentElement === null) {
     return;
   }
-  bouton.hidden = false;
+  // Type non nul déclaré : la fonction `fermer`, plus bas, ne profite pas de la vérification ci-dessus.
+  const declencheur: HTMLElement = bouton;
+  const menu = creer("div", "menu-compte");
+  menu.id = IDENTIFIANT_MENU;
+  menu.setAttribute("role", "menu");
+  menu.setAttribute("aria-labelledby", IDENTIFIANT_BOUTON);
+  menu.hidden = true;
+  const nom = creer("div", "menu-compte-nom");
+  nom.setAttribute("role", "presentation");
+  const entrees: HTMLButtonElement[] = [];
+  const ajouterEntree = (libelle: string, detail: string, action: () => void): void => {
+    const entree = creerBouton("", "menu-compte-entree", () => {
+      fermer(false);
+      action();
+    });
+    entree.setAttribute("role", "menuitem");
+    entree.tabIndex = -1;
+    entree.append(creer("b", "", libelle), creer("span", "", detail));
+    entrees.push(entree);
+  };
+  if (acces !== null) {
+    ajouterEntree("Mot de passe…", "Changer le mot de passe de vos données", () => {
+      montrerMotDePasse(acces);
+    });
+  }
+  ajouterEntree("Préférences", "Échelles, vocabulaire, livrables, thème", ouvrirPreferences);
+  menu.append(nom, ...entrees);
+  bouton.parentElement.append(menu);
+  bouton.setAttribute("aria-haspopup", "menu");
+  bouton.setAttribute("aria-controls", IDENTIFIANT_MENU);
+  bouton.setAttribute("aria-expanded", "false");
+
+  const surClicAilleurs = (evenement: MouseEvent): void => {
+    if (evenement.target instanceof Node && !menu.contains(evenement.target) && !bouton.contains(evenement.target)) {
+      fermer(false);
+    }
+  };
+  function fermer(rendreFocus: boolean): void {
+    if (menu.hidden) {
+      return;
+    }
+    menu.hidden = true;
+    declencheur.setAttribute("aria-expanded", "false");
+    document.removeEventListener("mousedown", surClicAilleurs);
+    if (rendreFocus) {
+      declencheur.focus();
+    }
+  }
+  const ouvrir = (): void => {
+    nom.textContent = acces === null ? "" : acces.identite.nom;
+    nom.hidden = acces === null;
+    menu.hidden = false;
+    bouton.setAttribute("aria-expanded", "true");
+    document.addEventListener("mousedown", surClicAilleurs);
+    entrees[0]?.focus();
+  };
   bouton.addEventListener("click", () => {
-    montrerCompte(acces);
+    if (menu.hidden) {
+      ouvrir();
+    } else {
+      fermer(true);
+    }
   });
+  bouton.addEventListener("keydown", (evenement) => {
+    if (evenement.key === "ArrowDown" && menu.hidden) {
+      evenement.preventDefault();
+      ouvrir();
+    }
+  });
+  menu.addEventListener("keydown", (evenement) => {
+    const rang = entrees.findIndex((entree) => entree === document.activeElement);
+    if (evenement.key === "Escape") {
+      evenement.preventDefault();
+      // Les boîtes ouvertes écoutent aussi Échap : le menu se ferme seul.
+      evenement.stopPropagation();
+      fermer(true);
+    } else if (evenement.key === "ArrowDown" || evenement.key === "ArrowUp") {
+      evenement.preventDefault();
+      const pas = evenement.key === "ArrowDown" ? 1 : -1;
+      entrees[(rang + pas + entrees.length) % entrees.length]?.focus();
+    } else if (evenement.key === "Tab") {
+      fermer(false);
+    }
+  });
+  bouton.hidden = false;
 }
