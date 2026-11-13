@@ -5992,7 +5992,9 @@ function radialWire(host){
   // animation douce vers la vue visée ; saut immédiat si les mouvements sont réduits
   const animer=ts=>{animRaf=0;if(!svg.isConnected||!cible)return;
     const dt=animT?Math.min(64,ts-animT):16;animT=ts;
-    const suivante=ZC.pasAnimation(vue||cible,cible,dt,reduce?0:60);
+    // seul le zoom s'anime : la vue suit le trajet de départ, la roue ne glisse que sur la diagonale
+    const pas=ZC.pasAnimation(vue||cible,cible,dt,reduce?0:60);
+    const suivante=pas===cible?cible:ZC.vueDepart(rapport,GEO,pas.zoom);
     dessiner(suivante);
     if(suivante!==cible)animRaf=requestAnimationFrame(animer);else animT=0};
   // seule une vue choisie par l'enseignant est retenue d'un affichage à l'autre ; sinon, la vue de
@@ -6002,12 +6004,8 @@ function radialWire(host){
     if(instant||reduce||!vue){if(animRaf){cancelAnimationFrame(animRaf);animRaf=0;animT=0}dessiner(cible);return}
     if(!animRaf)animRaf=requestAnimationFrame(animer);
   };
-  // point du dessin sous le pointeur (vue affichée, pas la vue visée)
-  const pointDessin=(cx,cy)=>{const r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal;
-    return [vb.x+(cx-r.left)*(vb.width/(r.width||1)), vb.y+(cy-r.top)*(vb.height/(r.height||1))]};
-  const zoomer=(facteur,cx,cy)=>{const base=cible||vue;if(!base)return;
-    const [px,py]=cx==null?[base.centreX,base.centreY]:pointDessin(cx,cy);
-    viser(ZC.zoomerAutour(base,facteur,px,py,rapport,GEO))};
+  const zoomer=facteur=>{const base=cible||vue;if(!base)return;
+    viser(ZC.zoomerSurDiagonale(base,facteur,rapport,GEO))};
   const vueInitiale=()=>ui.radVue||ZC.vueDepart(rapport,GEO,zoomDepart());
   const ajuster=()=>{ui.radVue=null;viser(ZC.vueDepart(rapport,GEO,zoomDepart()),false,false)};
   const PAS=1.15;   // un clic sur + ou − : petit pas, sans à-coup
@@ -6030,15 +6028,15 @@ function radialWire(host){
   if(!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))requestAnimationFrame(padRaf);
   else pads.forEach(pg=>pg._ph=0.999);
   svg.addEventListener("wheel",e=>{e.preventDefault();
-    zoomer(ZC.facteurMolette(e.deltaY,e.deltaMode,e.ctrlKey),e.clientX,e.clientY)},{passive:false});
-  // pincement à deux doigts (écran tactile) : le zoom suit l'écart des doigts, autour de leur milieu
+    zoomer(ZC.facteurMolette(e.deltaY,e.deltaMode,e.ctrlKey))},{passive:false});
+  // pincement à deux doigts (écran tactile) : le zoom suit l'écart des doigts
   const doigts=new Map();let pince=null;
   const ecart=()=>{const [a,b]=[...doigts.values()];return {d:Math.hypot(a.x-b.x,a.y-b.y),x:(a.x+b.x)/2,y:(a.y+b.y)/2}};
   svg.addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;doigts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(doigts.size===2){const g=ecart();pince={d:g.d||1,vue:cible||vue,pt:pointDessin(g.x,g.y)}}});
+    if(doigts.size===2){const g=ecart();pince={d:g.d||1,vue:cible||vue}}});
   svg.addEventListener("pointermove",e=>{if(!doigts.has(e.pointerId))return;doigts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pince&&doigts.size===2){const g=ecart();
-      viser(ZC.zoomerAutour(pince.vue,g.d/pince.d,pince.pt[0],pince.pt[1],rapport,GEO),true)}});
+      viser(ZC.zoomerSurDiagonale(pince.vue,g.d/pince.d,rapport,GEO),true)}});
   const lever=e=>{doigts.delete(e.pointerId);if(doigts.size<2)pince=null};
   ["pointerup","pointercancel","pointerleave"].forEach(t=>svg.addEventListener(t,lever));
   if(barre)barre.querySelectorAll("[data-rz]").forEach(b=>b.onclick=()=>{const k=+b.dataset.rz;
@@ -6129,7 +6127,7 @@ function paintMap(){
         :view==="table"?"Une ligne par enseignement constitutif, groupée par unité : la case donne le code que porte l'EC à ce semestre — il change d'une année de diplôme à l'autre. Un clic sur une case ouvre l'EC dans Constituer ; un clic sur une unité bascule sur « Recherche »."
         :view==="tablec"?"Une ligne par compétence, groupée par bloc : chaque case donne les EC qui la portent à ce semestre. Vide = la compétence n'est pas mobilisable ce semestre-là. Un clic sur une pastille d'EC l'ouvre dans Constituer ; un clic sur la compétence bascule sur « Recherche »."
         :view==="search"?"Recherche par code, UE ou mot-clé, regroupement au choix, filtres d'année et de semestres."
-        :"Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que vous survoliez une flèche de rotation. La roue tourne quand vous survolez l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment autour du point visé ; « Ajuster » revient à la vue de départ.","rt")}
+        :"Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que vous survoliez une flèche de rotation. La roue tourne quand vous survolez l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment en douceur, la roue glissant toujours le long de la même diagonale ; « Ajuster » revient à la vue de départ.","rt")}
     </div>
     ${view==="radial"?`<div class="radwrap"><div class="radcol">
       <div class="radzoom" role="group" aria-label="Zoom de la carte">

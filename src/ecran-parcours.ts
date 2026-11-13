@@ -148,6 +148,7 @@ function noterVu(identifiant: IdentifiantParcours): void {
 }
 
 function construire(): void {
+  retenirClics();
   if (elements.bulle !== null) {
     return;
   }
@@ -290,6 +291,36 @@ function avancerDepuis(index: number): void {
 /** Couleurs des éclats : les bleus de l'application. */
 const COULEURS_ECLATS = ["#2f5bd3", "#4f7fe0", "#8fb4ee", "#1f3f9e", "#c9dbff"];
 
+/** Au-delà de ce délai, un clic n'est plus considéré comme la cause d'une réussite. */
+const DELAI_CLIC_RECENT_MS = 4000;
+
+/** Dernier clic de l'enseignant pendant la visite : les éclats partent de là. */
+let dernierClic: { x: number; y: number; instant: number } | null = null;
+let ecouteClicsPosee = false;
+
+function retenirClics(): void {
+  if (ecouteClicsPosee) {
+    return;
+  }
+  ecouteClicsPosee = true;
+  // En capture : un écran qui arrête la propagation du clic n'empêche pas de le retenir.
+  document.addEventListener(
+    "pointerdown",
+    (evenement) => {
+      dernierClic = { x: evenement.clientX, y: evenement.clientY, instant: performance.now() };
+    },
+    true,
+  );
+}
+
+/** Point de départ des éclats : le clic qui vient de réussir l'étape, sinon le point donné. */
+function departEclats(x: number, y: number): [number, number] {
+  if (dernierClic !== null && performance.now() - dernierClic.instant < DELAI_CLIC_RECENT_MS) {
+    return [dernierClic.x, dernierClic.y];
+  }
+  return [x, y];
+}
+
 /** Petite gerbe d'éclats colorés en (x, y), pour saluer une étape réussie. */
 function eclater(x: number, y: number, nombre: number): void {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -416,7 +447,7 @@ function afficherBulle(): void {
   });
   if (derniere && parcours.chapitres !== undefined) {
     const centre = bulle.getBoundingClientRect();
-    eclater(centre.left + centre.width / 2, centre.top + 40, 28);
+    eclater(...departEclats(centre.left + centre.width / 2, centre.top + 40), 28);
   }
   if (!(etape.cibles?.length ?? 0)) {
     continuer.focus({ preventScroll: true });
@@ -721,7 +752,7 @@ function suivre(): void {
     afficherBulle();
     const zone = cibleCourante?.getBoundingClientRect() ?? elements.bulle?.getBoundingClientRect();
     if (zone !== undefined) {
-      eclater(zone.left + zone.width / 2, zone.top + Math.min(zone.height / 2, 60), 16);
+      eclater(...departEclats(zone.left + zone.width / 2, zone.top + Math.min(zone.height / 2, 60)), 16);
     }
     return;
   }
