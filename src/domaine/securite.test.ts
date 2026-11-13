@@ -21,7 +21,7 @@ function creerSurveillance(exige = () => true) {
 }
 
 describe("moduleElevesActif", () => {
-  it("reconnaît le module Élèves coché", () => {
+  it("reconnaît le module Étudiants coché", () => {
     expect(moduleElevesActif({ "dnmade.modules": JSON.stringify({ eleves: true }) })).toBe(true);
   });
 

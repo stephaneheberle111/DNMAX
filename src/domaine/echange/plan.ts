@@ -102,7 +102,7 @@ export function calculerPlan(
  *
  * - une évaluation créée arrive en tête de liste, rattachée à la version
  *   locale du référentiel quand son contenu est identique ;
- * - une évaluation modifiée garde les élèves, résultats et suivi d'ici ;
+ * - une évaluation modifiée garde les étudiants, résultats et suivi d'ici ;
  * - les évaluations non choisies, et tout le reste des données, sont intacts.
  *
  * La date et l'auteur de modification retenus sont ceux du fichier : c'est

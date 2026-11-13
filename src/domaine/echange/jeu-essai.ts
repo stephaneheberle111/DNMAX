@@ -50,7 +50,7 @@ export function creerEvaluation(surcharge: Record<string, unknown> = {}): Evalua
     classes: ["DNO-2025-2028"],
     promoId: "p1",
     res: { eleve1: { n: { "C1.1": 3 } } },
-    eleves: "Élève Fictif",
+    eleves: "Étudiant Fictif",
     suivi: { saisie: "2026-01-10" },
     ...surcharge,
   };

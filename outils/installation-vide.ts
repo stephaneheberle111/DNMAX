@@ -3,7 +3,7 @@
 /**
  * Règle : ce qu'une installation neuve a le droit de contenir au démarrage.
  * DNMAX ne livre aucune donnée : ni référentiel, ni établissement, ni
- * enseignant, ni promotion, ni élève, ni évaluation. Seuls sont admis le
+ * enseignant, ni promotion, ni étudiant, ni évaluation. Seuls sont admis le
  * diplôme-cadre vide (caché à l'enseignant) et la liste des types de livrables
  * proposés par défaut, qui est du vocabulaire et non des données.
  *

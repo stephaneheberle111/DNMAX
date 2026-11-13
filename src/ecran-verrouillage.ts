@@ -16,7 +16,7 @@ const EVENEMENTS_ACTIVITE = ["pointerdown", "pointermove", "keydown", "wheel", "
 
 /** Ce que la surveillance demande à l'application. */
 export interface OptionsVerrouillage {
-  /** Vrai si le verrouillage s'applique en ce moment (module Élèves actif). */
+  /** Vrai si le verrouillage s'applique en ce moment (module Étudiants actif). */
   verrouillageExige: () => boolean;
   /**
    * Écrit tout ce qui est en attente ; rend `false` si une écriture a échoué,

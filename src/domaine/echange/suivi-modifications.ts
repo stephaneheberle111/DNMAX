@@ -50,7 +50,7 @@ export function lireDatesModification(texte: string | null | undefined): DatesMo
  * liste des évaluations.
  *
  * Une évaluation nouvelle, ou dont le modèle a changé, reçoit `maintenant` et `auteur`.
- * Saisir des résultats d'élèves ou faire avancer le suivi ne change pas la
+ * Saisir des résultats d'étudiants ou faire avancer le suivi ne change pas la
  * date : elle décrit le modèle, c'est-à-dire ce qui s'échange. Les dates des
  * évaluations supprimées sont retirées.
  *

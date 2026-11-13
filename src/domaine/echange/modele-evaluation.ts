@@ -3,10 +3,10 @@ import { ecrireJsonCanonique } from "../empreinte";
 import type { Evaluation, ObjetJson } from "./modele";
 
 /**
- * Champs propres à l'enseignant et à ses élèves : ils ne quittent jamais
+ * Champs propres à l'enseignant et à ses étudiants : ils ne quittent jamais
  * l'ordinateur et ne comptent pas comme une modification de l'évaluation.
  *
- * - `res`, `eleves`, `eleveIds`, `eleveId`, `restit` : élèves et résultats ;
+ * - `res`, `eleves`, `eleveIds`, `eleveId`, `restit` : étudiants et résultats ;
  * - `suivi`, `date` : avancement et date de saisie chez cet enseignant ;
  * - `promoId`, `refV` : identifiants locaux, sans valeur sur un autre poste.
  */
@@ -33,14 +33,14 @@ export function extraireModele(evaluation: Evaluation): Evaluation {
   return { ...modele, id: evaluation.id };
 }
 
-/** Indique si deux évaluations ont le même modèle, élèves et suivi mis à part. */
+/** Indique si deux évaluations ont le même modèle, étudiants et suivi mis à part. */
 export function ontMemeModele(premiere: Evaluation, seconde: Evaluation): boolean {
   return ecrireJsonCanonique(extraireModele(premiere)) === ecrireJsonCanonique(extraireModele(seconde));
 }
 
 /**
  * Applique un modèle reçu à une évaluation déjà présente : le modèle est
- * remplacé, les élèves, résultats et suivi de l'enseignant sont conservés.
+ * remplacé, les étudiants, résultats et suivi de l'enseignant sont conservés.
  */
 export function remplacerModele(locale: Evaluation, modeleRecu: Evaluation): Evaluation {
   const fusion: ObjetJson = { ...extraireModele(modeleRecu) };

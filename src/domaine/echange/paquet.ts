@@ -45,14 +45,14 @@ const FORMAT_COFFRE = "dnmax-coffre";
 export const EXTENSION_FICHIER = ".dnmax";
 
 export interface EvaluationEchangee {
-  /** Modèle de l'évaluation, sans élèves ni résultats. */
+  /** Modèle de l'évaluation, sans étudiants ni résultats. */
   modele: Evaluation;
   /** Date de dernière modification chez l'expéditeur, ou texte vide si elle est inconnue. */
   modifieLe: string;
   /** Nom de l'enseignant qui a fait cette modification, ou texte vide s'il est inconnu. */
   modifiePar: string;
   base: BaseReferentiel | null;
-  /** Élèves et résultats ; `null` dans un fichier non protégé, qui n'en transporte jamais. */
+  /** Étudiants et résultats ; `null` dans un fichier non protégé, qui n'en transporte jamais. */
   donneesEleves: DonneesEleves | null;
 }
 
@@ -64,7 +64,7 @@ export interface Paquet {
   expediteur: string;
   evaluations: EvaluationEchangee[];
   referentiels: ReferentielEchange[];
-  /** Promotions des évaluations envoyées avec leurs élèves ; vide dans un fichier non protégé. */
+  /** Promotions des évaluations envoyées avec leurs étudiants ; vide dans un fichier non protégé. */
   promotions: PromotionEchangee[];
 }
 
@@ -80,7 +80,7 @@ export function estFichierProtege(texte: string): boolean {
 export type ErreurPaquet = "illisible" | "format-inconnu" | "version-trop-recente";
 
 /**
- * Construit le fichier d'échange des évaluations choisies, sans aucune donnée d'élève.
+ * Construit le fichier d'échange des évaluations choisies, sans aucune donnée d'étudiant.
  *
  * Chaque évaluation emporte l'empreinte de son référentiel, lue dans
  * `catalogue`, que le référentiel lui-même soit envoyé ou non : c'est ce qui
@@ -207,10 +207,10 @@ function lireBase(valeur: unknown): BaseReferentiel | null {
  *
  * Le fichier vient de l'extérieur : sa forme est vérifiée, et tout modèle
  * reçu repasse par `extraireModele` pour qu'un fichier trafiqué ne puisse pas
- * injecter des résultats d'élèves ni des identifiants locaux.
+ * injecter des résultats d'étudiants ni des identifiants locaux.
  *
  * @param protege vrai si le texte vient d'un fichier protégé par mot de passe ;
- *   les données d'élèves ne sont lues que dans ce cas, pour qu'un fichier en
+ *   les données d'étudiants ne sont lues que dans ce cas, pour qu'un fichier en
  *   clair ne puisse jamais en faire entrer.
  */
 export function lirePaquet(texte: string, protege = false): Paquet | ErreurPaquet {

@@ -381,3 +381,11 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 - **un rappel du chiffrement du disque** dans l'avertissement RGPD du module.
 
 **Limite** : une attente sans clavier ni souris (un échange en direct qui attend l'autre enseignant, par exemple) compte comme de l'inactivité ; l'échange est alors interrompu par le verrouillage et se relance.
+
+## 28. « Étudiant » plutôt qu'« élève », et « > » dans les chemins de menu
+
+**Retenu** : tout texte lu par l'enseignant (application, visite guidée, documents produits, site, README) dit « étudiant », jamais « élève » : le module s'appelle « Étudiants », le panneau « Données des étudiants ». Un chemin de menu s'écrit avec « > » (« Mon établissement > Enseignants », « Échanger… > Changer d'ordinateur ») ; « → » reste aux boutons qui mènent à l'étape suivante et aux enchaînements d'états, « › » et « ‹ » aux flèches de navigation.
+
+**Pourquoi** : le DN MADE est un diplôme de l'enseignement supérieur, qui s'adresse à des étudiants ; et trois séparateurs différents pour la même chose laissaient croire à des sens distincts.
+
+**Inchangé** : identifiants, clés de stockage, champs de données, noms de fichiers et sélecteurs (`eleves`, `dnmax.eleves`, `data-mod="eleves"`…), pour ne rien casser dans les données existantes. Les noms déjà anonymisés en « Élève anonyme n » restent reconnus comme anonymes ; les nouveaux s'écrivent « Étudiant anonyme n » (`src/domaine/conservation.ts`). Les sections publiées du CHANGELOG et les décisions précédentes gardent leur vocabulaire d'origine.

@@ -9,8 +9,8 @@
 export const LONGUEUR_MINIMALE_MOT_DE_PASSE = 8;
 
 /**
- * Longueur minimale exigée quand le module Élèves est actif : les données
- * d'élèves sont des données personnelles, que seul le mot de passe protège
+ * Longueur minimale exigée quand le module Étudiants est actif : les données
+ * d'étudiants sont des données personnelles, que seul le mot de passe protège
  * (voir DECISIONS.md, décision 27). Cette règle est
  * appliquée par l'interface seulement ; l'enveloppe ne connaît pas les modules.
  */
@@ -18,7 +18,7 @@ export const LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES = 12;
 
 export type DefautMotDePasse = "trop-court" | "confirmation-differente";
 
-/** Longueur minimale d'un mot de passe selon que le module Élèves est actif ou non. */
+/** Longueur minimale d'un mot de passe selon que le module Étudiants est actif ou non. */
 export function longueurMinimaleExigee(moduleEleves: boolean): number {
   return moduleEleves ? LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES : LONGUEUR_MINIMALE_MOT_DE_PASSE;
 }

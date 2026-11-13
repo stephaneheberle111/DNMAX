@@ -22,7 +22,7 @@ Le compte rendu (points relevés, corrections faites, points laissés) est joint
 ## 2. Questions à se poser
 
 1. **Fonctions** : chaque fonction décrite sur le site et dans la documentation existe-t-elle, avec ce nom et à cet endroit (menu, onglet, bouton) ? Une fonction ajoutée, déplacée ou retirée dans la version est-elle reflétée partout (site, visite, CHANGELOG, README) ?
-2. **Vocabulaire** : mêmes mots partout pour les mêmes choses (référentiel, version validée, promotion, étudiant/élève, enseignant, « Échanger… », « Mon compte », « Préférences », « Paramètres »…). Libellés de boutons cités dans les textes identiques aux libellés réels.
+2. **Vocabulaire** : mêmes mots partout pour les mêmes choses (référentiel, version validée, promotion, « étudiant » (jamais « élève »), enseignant, « Échanger… », « Mon compte », « Préférences », « Paramètres »…). Chemins de menu écrits avec « > » (décision 28). Libellés de boutons cités dans les textes identiques aux libellés réels.
 3. **Données et confidentialité** : la page Confidentialité, la fiche pour l'établissement, l'information aux étudiants et la décision 20 disent-elles exactement ce que fait l'application (ce qui est stocké, où, chiffré ou non, durée de conservation, connexions sortantes et vers qui, mises à jour, échange en direct) ? Aucune connexion non annoncée (`src/configuration.ts`, capacités Tauri).
 4. **Chiffres et réglages** : durées, tailles, longueurs de mot de passe, nombre de sauvegardes, délais cités dans les textes = valeurs de `src/configuration.ts` et du code.
 5. **Versions et téléchargements** : numéro de version identique (`package.json`, `src-tauri/Cargo.toml`, CHANGELOG daté), liens de téléchargement du site valides, hébergement annoncé (OVH, GitHub) exact.
