@@ -2,6 +2,13 @@
 
 ## Non publié
 
+### Ajouté
+
+- Au premier lancement, avant le choix du mot de passe, une page « Avant de commencer » rappelle les bonnes pratiques : session protégée et non partagée, écran verrouillé, chiffrement du disque conseillé (BitLocker, FileVault, LUKS), sauvegardes hors de l'ordinateur, exports Word et Excel non chiffrés, code de secours gardé hors de l'ordinateur. Rien n'est bloquant : « J'ai compris, continuer ».
+- Avec le module Élèves, le mot de passe doit compter au moins 12 caractères : à l'activation du module, après l'avertissement RGPD, DNMAX fait confirmer le mot de passe et, s'il est plus court, en fait choisir un nouveau ; un mot de passe trop court est aussi remplacé à l'ouverture suivante, et « Mon compte » applique la même règle. Pas de double authentification : sans serveur, elle n'apporterait pas de vraie protection (voir DECISIONS.md, décision 25).
+- Avec le module Élèves, DNMAX se verrouille après 15 minutes sans activité : les modifications sont enregistrées, les données quittent la mémoire et le mot de passe est redemandé.
+- L'avertissement RGPD du module Élèves rappelle ces règles et conseille de chiffrer le disque de l'ordinateur ; la note pour le chef d'établissement et la fiche RGPD du site les mentionnent.
+
 ## 0.4.2 — 2026-11-13
 
 ### Ajouté

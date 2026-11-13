@@ -104,7 +104,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
 <tr><th>Lieu de stockage</th><td>Uniquement l'ordinateur de l'enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l'Union européenne des données d'élèves.</td></tr>
 <tr><th>Durée de conservation</th><td>${majuscule(ecrireDuree(champs.anneesConservation))} après la sortie de la promotion (fin de l'année scolaire où s'achève le diplôme). DNMAX le rappelle ensuite et propose d'anonymiser ou d'effacer les données ; une promotion peut aussi l'être plus tôt. La durée est réglable avec l'établissement.</td></tr>
 <tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l'établissement. Dans DNMAX, Paramètres → « Données des élèves » permet d'exporter toutes les données d'un étudiant, de l'effacer partout, et d'anonymiser ou d'effacer une promotion.</td></tr>
-<tr><th>Sécurité</th><td>Chiffrement de toutes les données saisies ; mot de passe demandé à chaque ouverture ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.</td></tr>
+<tr><th>Sécurité</th><td>Chiffrement de toutes les données saisies ; mot de passe d'au moins 12 caractères, demandé à chaque ouverture ; verrouillage après 15 minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.</td></tr>
 </table>
 <h2>Bonnes pratiques demandées aux enseignants</h2>
 <ul>

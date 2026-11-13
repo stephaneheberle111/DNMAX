@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { estJeuEntrees, verifierNouveauMotDePasse } from "./saisie-coffre";
+import { estJeuEntrees, longueurMinimaleExigee, verifierNouveauMotDePasse } from "./saisie-coffre";
 
 describe("verifierNouveauMotDePasse", () => {
   it("accepte un mot de passe assez long et confirmé", () => {
@@ -26,6 +26,29 @@ describe("verifierNouveauMotDePasse", () => {
 
   it("distingue les majuscules dans la confirmation", () => {
     expect(verifierNouveauMotDePasse("Tabouret", "tabouret")).toBe("confirmation-differente");
+  });
+});
+
+describe("longueur exigée selon le module Élèves", () => {
+  it("exige 12 caractères quand le module Élèves est actif", () => {
+    expect(longueurMinimaleExigee(true)).toBe(12);
+  });
+
+  it("garde 8 caractères sans le module Élèves", () => {
+    expect(longueurMinimaleExigee(false)).toBe(8);
+  });
+
+  it("refuse onze caractères quand le module Élèves est actif", () => {
+    expect(verifierNouveauMotDePasse("12345678901", "12345678901", longueurMinimaleExigee(true))).toBe("trop-court");
+  });
+
+  it("accepte douze caractères quand le module Élèves est actif", () => {
+    expect(verifierNouveauMotDePasse("123456789012", "123456789012", longueurMinimaleExigee(true))).toBeNull();
+  });
+
+  it("compte un émoji pour un caractère dans la règle renforcée", () => {
+    const onzeEmojis = "🪑".repeat(11);
+    expect(verifierNouveauMotDePasse(onzeEmojis, onzeEmojis, longueurMinimaleExigee(true))).toBe("trop-court");
   });
 });
 

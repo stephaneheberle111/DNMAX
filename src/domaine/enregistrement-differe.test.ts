@@ -155,6 +155,23 @@ describe("EnregistreurDiffere", () => {
     expect(surResultat).toHaveBeenLastCalledWith({ reussi: true });
   });
 
+  it("ne signale plus rien en attente après un vidage réussi", async () => {
+    const enregistrer = vi.fn<(entrees: Entrees) => Promise<void>>().mockResolvedValue();
+    const { enregistreur } = creerEnregistreur(enregistrer);
+    enregistreur.planifier({ a: "1" });
+    expect(enregistreur.aDesModificationsEnAttente).toBe(true);
+    await enregistreur.vider();
+    expect(enregistreur.aDesModificationsEnAttente).toBe(false);
+  });
+
+  it("signale l'état encore en attente après un vidage en échec", async () => {
+    const enregistrer = vi.fn<(entrees: Entrees) => Promise<void>>().mockRejectedValue(new Error("disque plein"));
+    const { enregistreur } = creerEnregistreur(enregistrer);
+    enregistreur.planifier({ a: "1" });
+    await enregistreur.vider();
+    expect(enregistreur.aDesModificationsEnAttente).toBe(true);
+  });
+
   it("après un échec, retente avec l'état le plus récent et non l'ancien", async () => {
     const premiere = creerEcritureManuelle();
     const enregistrer = vi

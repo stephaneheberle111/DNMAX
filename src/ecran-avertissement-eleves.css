@@ -18,6 +18,22 @@
   line-height: 1.5;
 }
 
+.avertissement-eleves .avertissement-securite {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--signal-soft);
+  color: var(--signal);
+  font-size: 13px;
+}
+
+.mot-de-passe-eleves {
+  max-width: 520px;
+}
+
+.mot-de-passe-eleves .compte-formulaire > .echange-actions {
+  align-self: stretch;
+}
+
 .avertissement-documents {
   display: flex;
   flex-wrap: wrap;

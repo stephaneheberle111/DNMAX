@@ -3,7 +3,8 @@ import "./ecran-compte.css";
 import { ADRESSE_CODE_SOURCE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./configuration";
 import { construireAdresseRetours, deduireSysteme } from "./domaine/adresse-retours";
 import { LONGUEUR_MAXIMALE_NOM } from "./domaine/identite";
-import { LONGUEUR_MINIMALE_MOT_DE_PASSE, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
+import { longueurMinimaleExigee, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
+import { moduleElevesActif } from "./domaine/securite";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { changerMotDePasse, lireVersion, ouvrirDansNavigateur } from "./enveloppe";
@@ -64,12 +65,10 @@ function creerRubriqueNom(acces: AccesDonnees): HTMLElement {
 
 function creerRubriqueMotDePasse(acces: AccesDonnees): HTMLElement {
   const rubrique = creer("section", "compte-rubrique");
+  // Le module Élèves exige un mot de passe plus long (voir `longueurMinimaleExigee`).
+  const longueurMinimale = longueurMinimaleExigee(moduleElevesActif(acces.lireEntrees()));
   const ancien = creerChamp("password", "Mot de passe actuel", "current-password");
-  const nouveau = creerChamp(
-    "password",
-    `Nouveau mot de passe (${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères au moins)`,
-    "new-password",
-  );
+  const nouveau = creerChamp("password", `Nouveau mot de passe (${String(longueurMinimale)} caractères au moins)`, "new-password");
   const confirmation = creerChamp("password", "Nouveau mot de passe, une seconde fois", "new-password");
   const { zone, dire } = creerMessage();
   const changer = creer("button", "btn", "Changer le mot de passe");
@@ -77,11 +76,11 @@ function creerRubriqueMotDePasse(acces: AccesDonnees): HTMLElement {
   const formulaire = creer("form", "compte-formulaire");
   formulaire.addEventListener("submit", (evenement) => {
     evenement.preventDefault();
-    const defaut = verifierNouveauMotDePasse(nouveau.champ.value, confirmation.champ.value);
+    const defaut = verifierNouveauMotDePasse(nouveau.champ.value, confirmation.champ.value, longueurMinimale);
     if (defaut !== null) {
       dire(
         defaut === "trop-court"
-          ? `Le nouveau mot de passe doit compter au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères.`
+          ? `Le nouveau mot de passe doit compter au moins ${String(longueurMinimale)} caractères.`
           : "Les deux saisies du nouveau mot de passe ne sont pas identiques.",
         true,
       );

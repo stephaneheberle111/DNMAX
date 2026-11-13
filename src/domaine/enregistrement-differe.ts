@@ -57,6 +57,11 @@ export class EnregistreurDiffere {
     await this.#ecrire();
   }
 
+  /** Vrai s'il reste un état non écrit (après un échec d'écriture, par exemple). */
+  get aDesModificationsEnAttente(): boolean {
+    return this.#enAttente !== null;
+  }
+
   #desarmer(): void {
     if (this.#jeton !== null) {
       this.#minuteur.desarmer(this.#jeton);
