@@ -1,71 +1,51 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { ErreurDirect, Expediteur, configurationConnexion, type ParametresDirect } from "./canal-direct";
+import { describe, expect, it } from "vitest";
+import { ErreurDirect, lireErreurDirect, lireEtape } from "./canal-direct";
 
-const PARAMETRES: ParametresDirect = {
-  delais: { rassemblement: 1_000, attenteCorrespondant: 1_000, connexion: 1_000, inactivite: 1_000 },
-  tailleMaximale: 1_000,
-};
-
-/** Configurations reçues par la fausse connexion, pour vérifier ce que DNMAX demande au navigateur. */
-const configurationsRecues: RTCConfiguration[] = [];
-
-/** Connexion simulée : rassemble ses candidats aussitôt, sans aucun accès au réseau. */
-class FausseConnexion extends EventTarget {
-  iceGatheringState: RTCIceGatheringState = "complete";
-  localDescription: RTCSessionDescriptionInit | null = null;
-
-  constructor(configuration: RTCConfiguration) {
-    super();
-    configurationsRecues.push(configuration);
-  }
-
-  createDataChannel(): object {
-    return {};
-  }
-
-  createOffer(): Promise<RTCSessionDescriptionInit> {
-    return Promise.resolve({ type: "offer", sdp: "v=0\r\n" });
-  }
-
-  setLocalDescription(description: RTCSessionDescriptionInit): Promise<void> {
-    this.localDescription = description;
-    return Promise.resolve();
-  }
-
-  close(): void {
-    // Rien à fermer : aucune connexion réelle.
-  }
-}
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  configurationsRecues.length = 0;
-});
-
-describe("configurationConnexion", () => {
-  it("ne déclare aucun serveur, ni de découverte d'adresse ni relais", () => {
-    expect(configurationConnexion().iceServers).toEqual([]);
+describe("lireErreurDirect", () => {
+  it("reprend un code d'erreur connu de l'enveloppe", () => {
+    expect(lireErreurDirect("code-errone")).toEqual(new ErreurDirect("code-errone"));
   });
 
-  it("rend une configuration neuve à chaque appel", () => {
-    const premiere = configurationConnexion();
-    premiere.iceServers?.push({ urls: "stun:exemple.invalid" });
-    expect(configurationConnexion().iceServers).toEqual([]);
+  it("ramène une erreur inconnue à « interne »", () => {
+    expect(lireErreurDirect("autre-chose").code).toBe("interne");
+    expect(lireErreurDirect(new Error("panne")).code).toBe("interne");
+    expect(lireErreurDirect(undefined).code).toBe("interne");
   });
 });
 
-describe("Expediteur.preparer", () => {
-  it("ouvre la connexion sans aucun serveur", async () => {
-    vi.stubGlobal("RTCPeerConnection", FausseConnexion);
-    const expediteur = await Expediteur.preparer(PARAMETRES);
-    expect(configurationsRecues).toHaveLength(1);
-    expect(configurationsRecues[0]?.iceServers).toEqual([]);
-    expect(expediteur.codeInvitation.startsWith("DNMAX-DIRECT:")).toBe(true);
+describe("lireEtape", () => {
+  it("lit le code à dicter et sa validité", () => {
+    expect(lireEtape({ etape: "code", code: "4821 7395", validiteSecondes: 300 })).toEqual({
+      etape: "code",
+      code: "4821 7395",
+      validiteSecondes: 300,
+    });
   });
 
-  it("échoue en « indisponible » quand l'afficheur web ne connaît pas WebRTC", async () => {
-    vi.stubGlobal("RTCPeerConnection", undefined);
-    await expect(Expediteur.preparer(PARAMETRES)).rejects.toEqual(new ErreurDirect("indisponible"));
+  it("refuse un code qui n'a pas la forme de deux groupes de quatre chiffres", () => {
+    expect(lireEtape({ etape: "code", code: "<b>1234</b>", validiteSecondes: 300 })).toBeNull();
+    expect(lireEtape({ etape: "code", code: "48217395", validiteSecondes: 300 })).toBeNull();
+  });
+
+  it("lit l'avancement du transfert", () => {
+    expect(lireEtape({ etape: "progression", faits: 10, total: 20 })).toEqual({ etape: "progression", faits: 10, total: 20 });
+  });
+
+  it("refuse un avancement incohérent", () => {
+    expect(lireEtape({ etape: "progression", faits: 30, total: 20 })).toBeNull();
+    expect(lireEtape({ etape: "progression", faits: -1, total: 20 })).toBeNull();
+    expect(lireEtape({ etape: "progression", faits: 1.5, total: 20 })).toBeNull();
+  });
+
+  it("lit les étapes sans détail", () => {
+    expect(lireEtape({ etape: "recherche" })).toEqual({ etape: "recherche" });
+    expect(lireEtape({ etape: "connexion", intrus: 1 })).toEqual({ etape: "connexion" });
+  });
+
+  it("ignore une étape inconnue ou mal formée", () => {
+    expect(lireEtape({ etape: "autre" })).toBeNull();
+    expect(lireEtape(null)).toBeNull();
+    expect(lireEtape("code")).toBeNull();
   });
 });

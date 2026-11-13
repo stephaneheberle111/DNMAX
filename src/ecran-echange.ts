@@ -43,7 +43,7 @@ import {
   protegerTexteEchange,
 } from "./enveloppe";
 import { echangeDirectDisponible } from "./canal-direct";
-import { creerMarqueBeta, montrerChoixDirect, montrerEnvoiDirect } from "./ecran-echange-direct";
+import { montrerChoixDirect, montrerEnvoiDirect } from "./ecran-echange-direct";
 
 /** Ce dont l'écran d'échange a besoin de l'application. */
 export interface AccesDonnees {
@@ -243,7 +243,7 @@ export function montrerExport(
   const choisies = new Set<string>();
   const diplomesChoisis = new Set<string>();
   const { boite, fermer } = ouvrirBoite(
-    destination === "direct" ? "Envoyer en direct (bêta)" : "Envoyer des évaluations et des référentiels",
+    destination === "direct" ? "Envoyer en direct" : "Envoyer des évaluations et des référentiels",
   );
   const contenant = destination === "direct" ? "L'envoi" : "Le fichier";
   boite.append(
@@ -306,7 +306,7 @@ export function montrerExport(
       "span",
       "",
       destination === "direct"
-        ? "Inclure les élèves et leurs résultats. L'envoi est alors chiffré : communiquez son mot de passe par un autre moyen que le code d'invitation."
+        ? "Inclure les élèves et leurs résultats. L'envoi est alors en plus chiffré par un mot de passe, que votre collègue saisira à la réception."
         : "Inclure les élèves et leurs résultats. Le fichier est alors chiffré : communiquez son mot de passe par un autre moyen que le fichier.",
     ),
   );
@@ -877,8 +877,7 @@ function montrerChoix(acces: AccesDonnees): void {
     fermer();
     montrerChoixDirect(acces);
   });
-  const titreDirect = creer("b", "");
-  titreDirect.append("Échange en direct ", creerMarqueBeta());
+  const titreDirect = creer("b", "", "Échange en direct");
   const disponible = echangeDirectDisponible();
   direct.disabled = !disponible;
   direct.append(
@@ -887,9 +886,9 @@ function montrerChoix(acces: AccesDonnees): void {
       "span",
       "",
       disponible
-        ? "D'ordinateur à ordinateur, sans fichier ni serveur, entre deux ordinateurs du même réseau (même wifi). " +
-            "Si la connexion échoue, l'échange par fichier reste disponible."
-        : "Indisponible sur cet ordinateur : son afficheur web ne permet pas les connexions directes. Utilisez l'échange par fichier.",
+        ? "D'ordinateur à ordinateur, sans fichier ni serveur, avec un code de 8 chiffres à dicter, entre deux ordinateurs " +
+            "du même réseau (même wifi). Si la connexion échoue, l'échange par fichier reste disponible."
+        : "Possible seulement dans l'application de bureau. Utilisez l'échange par fichier.",
     ),
   );
   choix.append(envoyer, recevoir, direct, transferer);
