@@ -3772,7 +3772,7 @@ function paintEleveField(){
   F.eleveIds=F.eleveIds.filter(id=>all.some(e=>e.id===id));
   host.innerHTML=all.length?all.map(e=>`<button type="button" class="liv" data-elv="${esc(e.id)}" aria-pressed="${F.eleveIds.includes(e.id)}">${esc(e.nom)}${many?`<span class="n">${esc(promoDisp(e.promo.nom))}</span>`:""}</button>`).join("")
     +(F.eleveIds.length?`<button type="button" class="liv add" id="elvAll">Toute la promotion</button>`:"")
-    :`<span class="hint">Choisis d'abord une promotion.</span>`;
+    :`<span class="hint">Choisissez d'abord une promotion.</span>`;
   const n=F.eleveIds.length;
   document.getElementById("eleveHint").textContent=!all.length?"":n?(n+" élève"+(n>1?"s":"")+" sur "+all.length+" : seuls "+(n>1?"eux sont notés":"lui est noté")+" à l'étape 4 et exporté"+(n>1?"s":"")+"."):"Toute la promotion — "+all.length+" élève"+(all.length>1?"s":"")+".";
   host.querySelectorAll("[data-elv]").forEach(b=>b.onclick=()=>{const id=b.dataset.elv;
@@ -4095,7 +4095,7 @@ function paintProf(){
   if(!Array.isArray(F.profs))F.profs=F.prof?String(F.prof).split(/,\s*/).filter(Boolean):[];
   const all=[...new Set([...DATA.enseignants.map(t=>t.nom).filter(Boolean),...F.profs])];
   host.innerHTML=all.map(n=>`<button type="button" class="liv" data-prof="${esc(n)}" aria-pressed="${F.profs.includes(n)}">${esc(n)}</button>`).join("")
-    ||`<span class="hint">Ajoute les enseignants dans Mon établissement › Enseignants.</span>`;
+    ||`<span class="hint">Ajoutez les enseignants dans Mon établissement › Enseignants.</span>`;
   host.querySelectorAll("[data-prof]").forEach(b=>b.onclick=()=>{const n=b.dataset.prof;
     F.profs=F.profs.includes(n)?F.profs.filter(x=>x!==n):[...F.profs,n];F.prof=F.profs.join(", ");
     save();paintProf();paintContexte();paintSteps()});
@@ -4192,8 +4192,8 @@ function paintSteps(){
   document.getElementById("s3sum").innerHTML= nl
     ? `${nl} ligne${nl>1?"s":""}<em>${nop?" · "+nop+" regroupement"+(nop>1?"s":""):""}${nform?" · "+nform+" formulée"+(nform>1?"s":""):""}</em>`
     : `<em>rien à formuler</em>`;
-  document.getElementById("n1hint").textContent=nliv?"":"Choisis au moins un livrable pour pouvoir les associer à l'étape 3.";
-  document.getElementById("n2hint").textContent=F.items.length?"":"Coche les compétences évaluées sur ce travail.";
+  document.getElementById("n1hint").textContent=nliv?"":"Choisissez au moins un livrable pour pouvoir les associer à l'étape 3.";
+  document.getElementById("n2hint").textContent=F.items.length?"":"Cochez les compétences évaluées sur ce travail.";
   const s4=document.getElementById("s4sum");
   if(s4){const st=evalStats(F);
     s4.innerHTML=!st.els?`<em>aucun élève</em>`
@@ -4232,7 +4232,7 @@ function paintContexte(){
 function paintPromos(){
   const g=id=>document.getElementById(id);
   const hp=g("helpPromo");
-  if(hp&&!hp.innerHTML)hp.innerHTML=help("Choisir une promotion renseigne la classe de l'évaluation et cale le semestre sur son année de formation. Ses élèves apparaissent à l'étape 4, où tu notes chacun ; à l'export, le Word sort un document par élève, degrés cochés, et l'Excel ajoute un onglet « Grille classe » rempli. Renommer un élève lui donne une nouvelle ligne : ses résultats déjà saisis ne le suivent pas.");
+  if(hp&&!hp.innerHTML)hp.innerHTML=help("Choisir une promotion renseigne la classe de l'évaluation et cale le semestre sur son année de formation. Ses élèves apparaissent à l'étape 4, où vous notez chacun ; à l'export, le Word sort un document par élève, degrés cochés, et l'Excel ajoute un onglet « Grille classe » rempli. Renommer un élève lui donne une nouvelle ligne : ses résultats déjà saisis ne le suivent pas.");
   const sel=g("f-promo");
   sel.innerHTML=`<option value="">— Aucune promotion —</option>`+promos.filter(pr=>migPromoCohorte(pr).diplomeId===DATA.activeDiplome||pr.id===F.promoId).map(pr=>
     `<option value="${pr.id}">${esc(promoLabel(pr))}</option>`).join("");
@@ -4392,7 +4392,7 @@ function paintPalette(){
   const host=document.getElementById("palLivr");
   host.innerHTML=F.livrables.length?F.livrables.map(x=>
     `<span class="liv drg" data-dragliv="${esc(x)}" aria-pressed="true" title="Glisser sur une ligne pour l'associer">${esc(x)}</span>`).join("")
-    :`<span class="hint">Aucun livrable — reviens à l'étape 1.</span>`;
+    :`<span class="hint">Aucun livrable — revenez à l'étape 1.</span>`;
   host.querySelectorAll("[data-dragliv]").forEach(el=>el.addEventListener("pointerdown",e=>
     magnetDrag(e,el,{kind:"liv",v:el.dataset.dragliv,label:el.dataset.dragliv,canDetach:false})));
 }
@@ -4402,7 +4402,7 @@ function paintLignes(){
   document.getElementById("lCount").textContent=L.length;
   document.getElementById("bLink").disabled=ui.sel.length<2;
   document.getElementById("n3hint").textContent=ui.sel.length?ui.sel.length+" ligne(s) cochée(s)":"Glisse-dépose, ou coche deux lignes et clique « Lier ».";
-  if(!L.length){host.innerHTML=`<div class="empty">Aucune compétence retenue. Reviens à l'étape 2.</div>`;return}
+  if(!L.length){host.innerHTML=`<div class="empty">Aucune compétence retenue. Revenez à l'étape 2.</div>`;return}
   host.innerHTML=L.map((l,n)=>{
     const key=l.k==="op"?"op:"+l.o.id:"one:"+l.it.code;
     const on=ui.sel.includes(key);
@@ -4576,10 +4576,10 @@ function paintEleves(){
   document.querySelectorAll("#eMode [data-emode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.emode===mode)));
   paintEprog();
   if(!els.length){
-    host.innerHTML=`<div class="empty">Aucun élève. Choisis une promotion à l'étape 1, ou saisis une liste de noms,
-      puis reviens ici pour évaluer chacun.</div>`;return;
+    host.innerHTML=`<div class="empty">Aucun élève. Choisissez une promotion à l'étape 1, ou saisissez une liste de noms,
+      puis revenez ici pour évaluer chacun.</div>`;return;
   }
-  if(!L.length){host.innerHTML=`<div class="empty">Aucune ligne à évaluer : reviens à l'étape 2 pour choisir des compétences.</div>`;return}
+  if(!L.length){host.innerHTML=`<div class="empty">Aucune ligne à évaluer : revenez à l'étape 2 pour choisir des compétences.</div>`;return}
   const niv=F.niveaux||[];
   if(mode==="grille"){
     const css=`grid-template-columns:minmax(150px,1.4fr) 112px repeat(${L.length},minmax(140px,1fr)) 64px 86px`;
@@ -4703,7 +4703,7 @@ function paintPick(){
       ? (cadre
         ? `${all.length} compétence${all.length>1?"s":""} portée${all.length>1?"s":""} par ${codes.length>1?"les "+codes.length+" enseignements":"l'enseignement"} choisi${codes.length>1?"s":""} à l'étape 1${nues?" ("+nues+(nues>1?" unités d'enseignement)":" unité d'enseignement)"):""} · <button type="button" class="lnk" id="pickAll">voir les ${dispo.length} du semestre</button>`
         : `Les ${dispo.length} compétences du semestre · <button type="button" class="lnk" id="pickAll">revenir aux ${dispo.filter(c=>ecsOf(c,sem).some(e=>codes.includes(e.ec))||F.items.some(i=>i.code===c.code)).length} de la sélection</button>`)
-      : `Les ${dispo.length} compétences du ${esc(sem)} — choisis des unités ou des enseignements à l'étape 1 pour n'en voir que la part concernée.`;
+      : `Les ${dispo.length} compétences du ${esc(sem)} — choisissez des unités ou des enseignements à l'étape 1 pour n'en voir que la part concernée.`;
     const ba=document.getElementById("pickAll");
     if(ba)ba.onclick=()=>{ui.allComps=!ui.allComps;paintPick()};
   }
@@ -5026,7 +5026,7 @@ function paintSaved(){
       exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()});
     root.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const f=fiches[+b.dataset.xi];if(!f)return;
       const s=suiviOf(f);
-      if(b.dataset.act==="fin"){if(s.evalue){delete s.evalue;delete s.mode}else{if(rendusManquants(f)){toast("Renseigne d'abord le rendu de chaque élève.");return}s.evalue=isoToday();s.mode=MOD.eleves?"dnmax":"main"}}
+      if(b.dataset.act==="fin"){if(s.evalue){delete s.evalue;delete s.mode}else{if(rendusManquants(f)){toast("Renseignez d'abord le rendu de chaque élève.");return}s.evalue=isoToday();s.mode=MOD.eleves?"dnmax":"main"}}
       if(b.dataset.act==="rest"){f.restit=f.restit||{};const k=b.dataset.rp;if(f.restit[k])delete f.restit[k];else f.restit[k]=isoToday()}
       if(b.dataset.act==="annul"){f.annulee=isoToday();toast("Évaluation annulée. Elle peut être rétablie depuis le bouton « Actions… ».")}
       if(b.dataset.act==="retab"){delete f.annulee;ui.delArm=null}
@@ -6129,7 +6129,7 @@ function paintMap(){
         :view==="table"?"Une ligne par enseignement constitutif, groupée par unité : la case donne le code que porte l'EC à ce semestre — il change d'une année de diplôme à l'autre. Un clic sur une case ouvre l'EC dans Constituer ; un clic sur une unité bascule sur « Recherche »."
         :view==="tablec"?"Une ligne par compétence, groupée par bloc : chaque case donne les EC qui la portent à ce semestre. Vide = la compétence n'est pas mobilisable ce semestre-là. Un clic sur une pastille d'EC l'ouvre dans Constituer ; un clic sur la compétence bascule sur « Recherche »."
         :view==="search"?"Recherche par code, UE ou mot-clé, regroupement au choix, filtres d'année et de semestres."
-        :"Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que tu survoles une flèche de rotation. La roue tourne quand tu survoles l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment autour du point visé ; « Ajuster » revient à la vue de départ.")}
+        :"Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que vous survoliez une flèche de rotation. La roue tourne quand vous survolez l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment autour du point visé ; « Ajuster » revient à la vue de départ.")}
     </div>
     ${view==="radial"?`<div class="radwrap"><div class="radcol">
       <div class="radzoom" role="group" aria-label="Zoom de la carte">
@@ -6278,7 +6278,7 @@ function paintAffect(host){
   const dIdx=id=>D.diplomes.findIndex(d=>d.id===id);
   cur.sort((x,y)=>(dIdx(x.diplomeId)-dIdx(y.diplomeId))||(promoAnneeAt(x,AS)-promoAnneeAt(y,AS)));
   if(!D.enseignants.length||!cur.length){
-    host.innerHTML=`<div class="panel"><div class="pick-head"><h3>Répartition de service</h3></div><div class="empty">${!D.enseignants.length?"Ajoute d'abord les enseignants (volet Enseignants).":""} ${!cur.length?"Aucune promotion en "+esc(AS)+" (volet Promotions).":""}</div></div>`;
+    host.innerHTML=`<div class="panel"><div class="pick-head"><h3>Répartition de service</h3></div><div class="empty">${!D.enseignants.length?"Ajoutez d'abord les enseignants (volet Enseignants).":""} ${!cur.length?"Aucune promotion en "+esc(AS)+" (volet Promotions).":""}</div></div>`;
     host.querySelector(".pick-head").insertAdjacentHTML("beforeend",yearSeg);
     host.querySelectorAll("[data-afy]").forEach(b=>b.onclick=()=>{ui.org.affY=b.dataset.afy;paintOrg()});return}
   const pr=cur.find(x=>x.id===ui.org.aff)||cur[0];ui.org.aff=pr.id;
@@ -6345,8 +6345,8 @@ function paintPromosOrg(host){
   }).join("");
   host.innerHTML=edPanel("Promotions",promos.length,`<button class="btn ghost" id="prAdd">+ Promotion</button>`,
     {css,cells:["Diplôme · mention","Début","Promotion","En "+AS,...(MOD.eleves?["Élèves"]:[]),""]},rows,
-    "Une promotion suit un groupe d'un diplôme et d'une mention de son entrée à sa sortie. Choisis d'abord le diplôme et la mention, puis l'année de début : le nom se compose seul avec le code du diplôme, l'année de début et l'année de fin, qui dépend de la durée du diplôme (Diplômes et mentions) — DNO-2025-2028 pour un DN MADE mention Objet en trois ans commencé en 2025. L'année de formation se déduit de l'année scolaire, et l'étape 1 de l'évaluation propose les promotions de la mention active."
-    +(MOD.eleves?" Ouvre « élèves » pour gérer la liste : renommer, retirer, ajouter plusieurs noms d'un coup, ou faire passer un élève dans une autre promotion, y compris d'une autre mention. Ses résultats déjà saisis restent attachés aux évaluations de son ancienne promotion.":" Le module « Élèves et promotions » (Paramètres) permet en plus de gérer la liste des élèves de chaque promotion."));
+    "Une promotion suit un groupe d'un diplôme et d'une mention de son entrée à sa sortie. Choisissez d'abord le diplôme et la mention, puis l'année de début : le nom se compose seul avec le code du diplôme, l'année de début et l'année de fin, qui dépend de la durée du diplôme (Diplômes et mentions) — DNO-2025-2028 pour un DN MADE mention Objet en trois ans commencé en 2025. L'année de formation se déduit de l'année scolaire, et l'étape 1 de l'évaluation propose les promotions de la mention active."
+    +(MOD.eleves?" Ouvrez « élèves » pour gérer la liste : renommer, retirer, ajouter plusieurs noms d'un coup, ou faire passer un élève dans une autre promotion, y compris d'une autre mention. Ses résultats déjà saisis restent attachés aux évaluations de son ancienne promotion.":" Le module « Élèves et promotions » (Paramètres) permet en plus de gérer la liste des élèves de chaque promotion."));
   const save2=()=>{savePromos();if(ui.tab!=="org")return;};
   const P=id=>promos.find(x=>x.id===id);
   const rename=(pr,fn)=>{fn();pr.nom=promoNomAuto(pr)};
@@ -6589,8 +6589,8 @@ function paintMatrice(host){
         ${blocs.map(b=>{const cs=compOf(b.num);return bande(b.num,b.nom,cs)+cs.map(ligne).join("")}).join("")}
         ${sansBloc.length?bande("—","compétences sans bloc",sansBloc)+sansBloc.map(ligne).join(""):""}
       </tbody></table></div>
-      ${!D.competences.length?`<div class="empty">Aucune compétence dans ce référentiel : ajoute-les à l'étape 3, Blocs et compétences.</div>`:""}`
-      :`<div class="empty">Aucun enseignement dans ce référentiel : ajoute-en un à l'étape 2, Enseignements constitutifs.</div>`}
+      ${!D.competences.length?`<div class="empty">Aucune compétence dans ce référentiel : ajoutez-les à l'étape 3, Blocs et compétences.</div>`:""}`
+      :`<div class="empty">Aucun enseignement dans ce référentiel : ajoutez-en un à l'étape 2, Enseignements constitutifs.</div>`}
   </div>`;
   // l'en-tête reste visible : on mesure ses deux premiers rangs pour les empiler
   const tbl=host.querySelector("table.mtx");
@@ -6639,7 +6639,7 @@ function paintConstituer(host){
     ${si<keys.length-1?`<button type="button" class="btn primary" data-cp="${keys[si+1]}">${si+2}. ${esc(CON_PANES[keys[si+1]])} →</button>`:""}</div>`;
   const valider=`<div class="panel"><div class="pick-head"><h3>Valider le référentiel · ${esc(dipLabel(curDip))}</h3>${etat}</div>
       <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
-        <div class="hint">Valider fige l'état du référentiel de cette mention à une date. À la validation, tu choisis les promotions en cours qui passent à cette version ; les autres gardent la leur, et les évaluations déjà enregistrées restent sur le référentiel sur lequel elles ont été faites.</div>
+        <div class="hint">Valider fige l'état du référentiel de cette mention à une date. À la validation, vous choisissez les promotions en cours qui passent à cette version ; les autres gardent la leur, et les évaluations déjà enregistrées restent sur le référentiel sur lequel elles ont été faites.</div>
         <div class="hint">Aucune évaluation ne peut être créée pour une promotion tant que son référentiel n'a pas été vérifié et validé ici. C'est l'enseignant qui est responsable du référentiel, y compris quand il est livré avec DNMAX ou reçu d'un collègue.</div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px"><span><b>${D.ues.length}</b> UE</span><span><b>${D.ecs.length}</b> EC</span><span><b>${D.blocs.length}</b> blocs</span><span><b>${D.competences.length}</b> compétences</span><span><b>${plan}</b> planifiées sur un semestre</span></div>
         ${D.competences.length-plan?`<div class="hint" style="color:var(--signal)">${D.competences.length-plan} compétence${D.competences.length-plan>1?"s ne sont rattachées":" n'est rattachée"} à aucun semestre (étape 4).</div>`:""}
@@ -6823,7 +6823,7 @@ function paintEtape(kind,host){
       const r=window.dnmaxPont.renumeroterBloc(D,inp.dataset.bnum,inp.value);
       if(r.modifie){D.dico=r.donnees.dico;D.refs=r.donnees.refs;if(r.donnees.versions)D.versions=r.donnees.versions;
         saveData(true,true);toast("Bloc renuméroté : ses compétences le suivent.");return}
-      if(r.refus==="doublon")toast("Le bloc "+inp.value.trim()+" existe déjà dans un référentiel qui retient celui-ci : choisis un autre numéro.");
+      if(r.refus==="doublon")toast("Le bloc "+inp.value.trim()+" existe déjà dans un référentiel qui retient celui-ci : choisissez un autre numéro.");
       else if(r.refus==="vide")toast("Un bloc garde un numéro : ses compétences s'y rattachent par lui.");
       paintRef()});
     host.querySelectorAll("[data-cnew]").forEach(b=>b.onclick=()=>{const c=etapeFresh("competences",b.dataset.cnew);
@@ -6891,7 +6891,7 @@ function paintEditor(pane,host){
           <input type="text" value="${esc(dp.code||"")}" data-dc="${i}" placeholder="${esc(autoDipCode(dp)||"DNO")}" aria-label="Code" class="mono">
           ${dvs.length>1?delBtn("dip"+i,"Supprimer"):`<span class="hint">—</span>`}</div>`).join("")}
       </div>`).join("")||`<div class="empty">Aucun diplôme : installez un référentiel depuis l'encart de départ, ou créez-en un avec « + Nouveau diplôme ».</div>`,
-      "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments, pour que tu n'aies qu'à ajuster les variations (Référentiel › Constituer, une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.")
+      "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments, pour que vous n'ayez qu'à ajuster les variations (Référentiel › Constituer, une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laisse-le vide pour qu'il suive, ou écris le tien.")
       +(dvs.length?`<div class="panel" style="max-width:720px;margin-top:18px"><div class="pick-head"><h3>Réglages du référentiel</h3>${dvs.length>1?`<select id="edDipAct" aria-label="Mention dont on règle le référentiel" style="width:auto;margin-left:auto">${dvs.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>`:`<span class="hint" style="margin-left:auto">${esc(dipLabel(dvs[0]))}</span>`}</div>
         <div class="panel-body">
           <div class="field"><label>Années et niveaux</label>
@@ -7672,7 +7672,7 @@ function paintProg(){
   const stTxt={ok:"Évaluée",part:"En cours",prevue:"Prévue, pas encore évaluée",autre:"Vue à un autre semestre",todo:"À évaluer"};
   const pct=rowsP.length?Math.round(nOk/rowsP.length*100):0;
   host.innerHTML=`<div class="panel">
-    <div class="pick-head"><h3>Progression${help("Pour une promotion en cours et un semestre : les compétences que le référentiel rattache à ce semestre, et ce que tes évaluations enregistrées en couvrent déjà. Une compétence est « évaluée » dès qu'une évaluation du semestre la contient, « en cours » tant que tous les élèves n'ont pas de niveau saisi. La répartition donne le dernier niveau de chaque élève.")}</h3>
+    <div class="pick-head"><h3>Progression${help("Pour une promotion en cours et un semestre : les compétences que le référentiel rattache à ce semestre, et ce que vos évaluations enregistrées en couvrent déjà. Une compétence est « évaluée » dès qu'une évaluation du semestre la contient, « en cours » tant que tous les élèves n'ont pas de niveau saisi. La répartition donne le dernier niveau de chaque élève.")}</h3>
       <div style="margin-left:auto">${viewSeg}</div></div>
     ${progFiltres(ps,pr,sem,semsAll,semCur,
       (tAvail.length?`<label><span class="sfl2">Enseignant</span><select data-pgsel="t" aria-label="Enseignant"><option value="">Tous</option>${tAvail.map(t=>`<option value="${t.id}" ${tSel.includes(t.id)?"selected":""}>${esc(t.nom)}</option>`).join("")}</select></label>`:"")
@@ -7766,7 +7766,7 @@ function paintProgEleve(host,c){
         <select id="pgEl" aria-label="Élève">${els.map(e=>`<option value="${esc(e.id)}" ${e.id===el.id?"selected":""}>${esc(e.nom)}</option>`).join("")}</select>
         <button type="button" class="btn ghost" id="pgElNext" ${i0>=els.length-1?"disabled":""} aria-label="Élève suivant">›</button>
         <span class="hint">${i0+1} / ${els.length}</span></label>`:"")}
-    ${!el?`<div class="empty">Aucun élève dans ${esc(pr.nom)}. Ajoute-les dans Mon établissement › Promotions.</div>`:`
+    ${!el?`<div class="empty">Aucun élève dans ${esc(pr.nom)}. Ajoutez-les dans Mon établissement › Promotions.</div>`:`
     <div class="pgsum">
       <div style="font-family:var(--fd);font-weight:700;font-size:15px">${esc(el.nom)} <span class="hint" style="font-weight:400">· ${esc(promoShort(pr)||pr.nom)}</span></div>
       <div><b class="big">${cnt("ok")}</b> / ${rowsA.length} évaluation${rowsA.length>1?"s":""} du ${esc(sem)} complète${cnt("ok")>1?"s":""} pour cet élève</div>
@@ -7937,7 +7937,7 @@ function saveFiche(){
 bind("bSave3","click",()=>{
   const maj=saveFiche();if(maj===null)return;
   if(MOD.fiches){ui.tab="saved";paintTabs();window.scrollTo({top:0,behavior:"smooth"});
-    toast((maj?"Évaluation mise à jour":"Évaluation enregistrée")+" — le Word et l'Excel se génèrent d'ici, quand tu veux.")}
+    toast((maj?"Évaluation mise à jour":"Évaluation enregistrée")+" — le Word et l'Excel se génèrent d'ici, quand vous voulez.")}
   else toast(maj?"Évaluation mise à jour.":"Évaluation enregistrée.");
 });
 ["bSave1","bSave2"].forEach(id=>bind(id,"click",()=>{

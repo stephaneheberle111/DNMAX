@@ -133,8 +133,8 @@ const PRISE_EN_MAIN: Parcours = {
       avanceAuClic: true,
     },
     {
-      titre: "1. Valider l'installation",
-      texte: "DNMAX montre ce que le référentiel ajouterait. Validez : l'application se recharge et la visite reprend à l'étape suivante.",
+      titre: "1. Installer le référentiel",
+      texte: "DNMAX montre ce que le référentiel ajouterait. Cliquez « Appliquer » : l'application se recharge et la visite reprend à l'étape suivante.",
       texteFait: "Votre référentiel est installé. Vous le retrouvez dans l'onglet « Référentiel ».",
       cibles: [".echange-boite .echange-actions .btn.primary", ".accueil-vide li:first-child", "#t-ref"],
       geste: "cliquer",
