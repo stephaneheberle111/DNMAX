@@ -26,6 +26,7 @@
     "@tauri-apps/plugin-process": "2.4.0",
     "@tauri-apps/plugin-updater": "2.14.1",
     "jszip": "3.10.1",
+    "pdfmake": "0.3.13",
     "xlsx": "0.18.5"
   },
   "devDependencies": {

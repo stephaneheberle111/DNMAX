@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Documents RGPD du module Élèves : chaque document s'ouvre d'abord en aperçu (feuilles A4), puis s'enregistre en PDF ou s'imprime. Ils ne citent plus aucun nom d'enseignant ni de chef d'établissement, mais exigent le nom de l'établissement et le contact du délégué à la protection des données, nouveau champ de Mon établissement > Établissement ; s'il en manque un, l'avertissement mène à leur saisie. « Information aux étudiants » a un titre plus lisible, une date en toutes lettres, un accusé de réception qui tient sur la page, et l'impression n'ajoute plus d'en-tête ni de pied de page. La note au chef d'établissement donne aussi l'adresse du code source. Documentation du site mise à jour.
+
 ## 0.4.2 — 2026-11-13
 
 ### Ajouté

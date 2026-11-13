@@ -1,0 +1,184 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/*
+ * Feuilles A4 : mêmes mesures que le PDF (`rendu-document-pdf.ts`), pour que
+ * l'aperçu, l'impression et le PDF se ressemblent.
+ */
+.document-a4 .feuille {
+  box-sizing: border-box;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 15mm 18mm;
+  background: #fff;
+  color: #000;
+  font-family: "Public Sans", sans-serif;
+  font-size: 11pt;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Les titres et paragraphes du document ne prennent rien des styles de l'application ni de la boîte d'aperçu. */
+.document-a4 .feuille h1,
+.document-a4 .feuille h2 {
+  padding: 0;
+  font-family: inherit;
+  letter-spacing: normal;
+  text-wrap: wrap;
+}
+
+.document-a4 .feuille h1 {
+  margin: 0 0 1.5mm;
+  font-size: 24pt;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.document-a4 .feuille .sous-titre {
+  margin: 0 0 2mm;
+  color: #333;
+  font-size: 14pt;
+}
+
+.document-a4 .feuille .contexte {
+  margin: 0 0 4mm;
+  color: #333;
+  font-size: 10.5pt;
+}
+
+.document-a4 .feuille p {
+  margin: 0 0 2.5mm;
+  color: inherit;
+  font-size: inherit;
+}
+
+.document-a4 .feuille h2 {
+  margin: 3mm 0 2mm;
+  font-size: 13.5pt;
+  font-weight: 700;
+}
+
+.document-a4 .feuille ul {
+  margin: 0 0 2.5mm;
+  padding-left: 5mm;
+}
+
+.document-a4 .feuille strong {
+  font-weight: 700;
+}
+
+.document-a4 .feuille .lien {
+  color: #1a4f9c;
+  text-decoration: underline;
+}
+
+.document-a4 .feuille table {
+  width: 100%;
+  margin: 0 0 2.5mm;
+  border-collapse: collapse;
+  font-size: 10pt;
+}
+
+.document-a4 .feuille th,
+.document-a4 .feuille td {
+  padding: 1.6mm 2.5mm;
+  border: 0.75pt solid #999;
+  text-align: left;
+  vertical-align: top;
+}
+
+.document-a4 .feuille th {
+  width: 32%;
+  font-weight: 700;
+}
+
+.document-a4 .feuille tr {
+  break-inside: avoid;
+}
+
+.document-a4 .feuille .a-remplir-ligne th {
+  height: 9mm;
+}
+
+.document-a4 .feuille .a-remplir-signature th {
+  height: 20mm;
+}
+
+.document-a4 .feuille .decoupe {
+  margin: 3mm 0 1mm;
+  padding-top: 1mm;
+  border-top: 0.75pt dashed #000;
+  font-size: 9pt;
+  text-align: center;
+}
+
+.document-a4 .feuille .insecable {
+  break-inside: avoid;
+}
+
+/* Aperçu : une boîte large, les feuilles sur un fond gris, comme posées sur une table. */
+.echange-boite.apercu-document {
+  max-width: min(920px, 100%);
+}
+
+.apercu-feuilles {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+  background: #d9dce1;
+  border-radius: var(--radius);
+}
+
+.apercu-feuilles .feuille {
+  margin: 0 auto 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.apercu-feuilles .feuille:last-child {
+  margin-bottom: 0;
+}
+
+.echange-boite .apercu-etat:empty {
+  display: none;
+}
+
+.echange-boite .apercu-erreur {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* Impression : le document seul, sans marge de page (donc sans en-tête ni pied ajoutés par le navigateur). */
+.document-imprimable {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html.impression-document body > :not(.document-imprimable) {
+    display: none !important;
+  }
+
+  html.impression-document,
+  html.impression-document body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff;
+  }
+
+  html.impression-document .document-imprimable {
+    display: block;
+  }
+
+  /* Chaque page commence une feuille ; sans hauteur imposée, un texte un peu long ne crée pas de page blanche. */
+  .document-imprimable .feuille {
+    min-height: 0;
+  }
+
+  .document-imprimable .feuille + .feuille {
+    break-before: page;
+  }
+}
