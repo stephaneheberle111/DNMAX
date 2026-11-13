@@ -115,14 +115,14 @@ nav.main a.cta{background:var(--accent);color:var(--accent-ink)}
 .etape h2{font:800 clamp(30px,3.4vw,44px)/1.06 var(--display);letter-spacing:-.02em;margin:0 0 16px}
 .etape p{margin:0 0 12px;color:var(--ink-2);font-size:18px;max-width:30em}
 .etape p strong{color:var(--ink)}
-.scene{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);height:calc(100vh - 64px);display:flex;align-items:center}
+.scene{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--entete,64px));height:calc(100vh - var(--entete,64px));display:flex;align-items:center}
 .scene-in{width:100%}
 .reperes{display:flex;gap:6px;justify-content:center;margin-top:18px}
 .reperes i{width:22px;height:4px;border-radius:2px;background:var(--line);transition:background .3s}
 .reperes i.on{background:var(--accent)}
 @media (max-width:900px){
   .visite .wrap{grid-template-columns:1fr;gap:0}
-  .scene{order:-1;height:auto;top:calc(env(safe-area-inset-top,0px) + 86px);z-index:5;padding:10px 0 8px;background:var(--paper);display:block}
+  .scene{order:-1;height:auto;top:calc(env(safe-area-inset-top,0px) + var(--entete,86px));z-index:5;padding:10px 0 8px;background:var(--paper);display:block}
   .reperes{margin-top:8px}
   .etapes{padding:4vh 0 20vh}
   .etape{min-height:56vh;justify-content:flex-start;padding-top:2vh}
@@ -132,63 +132,98 @@ nav.main a.cta{background:var(--accent);color:var(--accent-ink)}
 
 /* La fenêtre de l’application (reconstitution) */
 .app{
-  --a-paper:#F3F4F6; --a-surface:#FFFFFF; --a-ink:#15181E; --a-muted:#5C6472; --a-line:#D7DBE2; --a-accent:#1F4D8F; --a-soft:#E7EEF8;
+  --a-paper:#F3F4F6; --a-surface:#FFFFFF; --a-ink:#15181E; --a-muted:#5C6472; --a-line:#D7DBE2; --a-accent:#1F4D8F; --a-on-accent:#FFFFFF; --a-soft:#E7EEF8;
   container-type:inline-size;position:relative;aspect-ratio:16/11;background:var(--a-paper);color:var(--a-ink);
   border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
   box-shadow:0 40px 80px -40px rgba(15,30,60,.45),0 2px 6px rgba(15,30,60,.06);font-family:"Public Sans",Arial,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .app{
-  --a-paper:#13161A; --a-surface:#1B1F25; --a-ink:#E9ECF1; --a-muted:#99A2B0; --a-line:#2B313A; --a-accent:#7FA9E6; --a-soft:#1D2836;
+  --a-paper:#13161A; --a-surface:#1B1F25; --a-ink:#E9ECF1; --a-muted:#99A2B0; --a-line:#2B313A; --a-accent:#7FA9E6; --a-on-accent:#0F1726; --a-soft:#1D2836;
   box-shadow:0 40px 80px -40px rgba(0,0,0,.8)}}
-:root[data-theme="dark"] .app{--a-paper:#13161A; --a-surface:#1B1F25; --a-ink:#E9ECF1; --a-muted:#99A2B0; --a-line:#2B313A; --a-accent:#7FA9E6; --a-soft:#1D2836}
+:root[data-theme="dark"] .app{--a-paper:#13161A; --a-surface:#1B1F25; --a-ink:#E9ECF1; --a-muted:#99A2B0; --a-line:#2B313A; --a-accent:#7FA9E6; --a-on-accent:#0F1726; --a-soft:#1D2836}
 .app *{box-sizing:border-box}
 .app-fs{font-size:1.72cqw;line-height:1.45;display:flex;flex-direction:column;height:100%}
 .chrome{display:flex;align-items:center;gap:.5em;padding:.55em .9em;background:var(--a-surface);border-bottom:1px solid var(--a-line);font-size:.85em;color:var(--a-muted)}
 .chrome i{width:.85em;height:.85em;border-radius:50%;background:var(--a-line);display:inline-block}
 .chrome span{margin:0 auto;transform:translateX(-1.4em)}
-.onglets{display:flex;align-items:center;gap:.3em;padding:0 1em;background:var(--a-surface);border-bottom:1px solid var(--a-line);transition:opacity .4s}
-.onglets b{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;margin-right:1em;font-size:1.05em}
-.onglets span{padding:.7em .7em;color:var(--a-muted);border-bottom:2px solid transparent;white-space:nowrap}
-.onglets span.on{color:var(--a-ink);border-bottom-color:var(--a-accent);font-weight:600}
-.onglets .ech{margin-left:auto;border:1px solid var(--a-line);border-radius:.4em;padding:.25em .7em;color:var(--a-ink)}
+/* Barre du haut : la même que celle de l’application (onglets groupés, « Échanger… » et « Mon compte » à droite). */
+.onglets{display:flex;align-items:center;gap:.55em;padding:.45em .8em;background:var(--a-surface);border-bottom:1px solid var(--a-line);font-size:.8em;transition:opacity .4s}
+.onglets b{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.15em;margin-right:.35em}
+.ong-groupe{display:flex;gap:.15em;background:var(--a-paper);border:1px solid var(--a-line);border-radius:.45em;padding:.15em}
+.onglet{padding:.4em .62em;border-radius:.32em;color:var(--a-muted);white-space:nowrap;transition:background .3s,color .3s}
+.onglet.on{background:var(--a-surface);color:var(--a-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.outils{margin-left:auto;display:flex;gap:.35em}
+.outil{display:inline-flex;align-items:center;gap:.4em;padding:.4em .62em;border:1px solid var(--a-line);border-radius:.45em;background:var(--a-paper);color:var(--a-muted);white-space:nowrap;transition:background .3s,color .3s}
+.outil.on{background:var(--a-surface);color:var(--a-ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.outil svg{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.outil svg.chev{width:.85em;height:.85em}
 .app.ferme .onglets{opacity:0}
 .corps-app{position:relative;flex:1;overflow:hidden}
-.scr{position:absolute;inset:0;padding:1.3em 1.5em;opacity:0;transform:translateY(1em);transition:opacity .45s ease,transform .45s ease;pointer-events:none}
+.scr{position:absolute;inset:0;padding:1.2em 1.5em;opacity:0;transform:translateY(1em);transition:opacity .45s ease,transform .45s ease;pointer-events:none}
 .scr.on{opacity:1;transform:none}
 .scr .a{opacity:0;transform:translateY(.5em);transition:opacity .4s ease,transform .4s ease}
 .scr.on .a{opacity:1;transform:none;transition-delay:calc(var(--d,0)*1ms)}
-.app h4{font:700 1.25em/1.2 "Bricolage Grotesque",sans-serif;margin:0}
-.tb{display:flex;align-items:center;justify-content:space-between;margin-bottom:1em}
-.bt{display:inline-block;background:var(--a-accent);color:#fff;border-radius:.45em;padding:.45em .9em;font-weight:600;font-size:.95em}
+.app h4{font:700 1.15em/1.2 "Bricolage Grotesque",sans-serif;margin:0}
+.bt{display:inline-block;background:var(--a-accent);color:var(--a-on-accent);border-radius:.45em;padding:.45em .9em;font-weight:600;font-size:.95em;white-space:nowrap}
 .bt.ghost{background:transparent;color:var(--a-ink);border:1px solid var(--a-line)}
 .mut{color:var(--a-muted)}
 .pan{background:var(--a-surface);border:1px solid var(--a-line);border-radius:.6em;padding:.9em 1em}
 .lab{font-size:.78em;font-weight:600;color:var(--a-muted);margin:0 0 .3em}
-.inp{border:1px solid var(--a-line);border-radius:.4em;padding:.4em .6em;background:var(--a-paper);min-height:2.1em;margin-bottom:.8em}
-.chip{display:inline-block;border-radius:99em;padding:.25em .7em;font-size:.85em;font-weight:600;background:var(--a-soft);color:var(--a-ink);margin:0 .3em .35em 0;border:1px solid transparent}
+.grp-t{font-size:.72em;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--a-accent);margin:0 0 .45em}
+.inp{border:1px solid var(--a-line);border-radius:.4em;padding:.35em .6em;background:var(--a-paper);min-height:2em;margin-bottom:.65em}
+.chip{display:inline-block;border-radius:99em;padding:.22em .7em;font-size:.82em;font-weight:600;background:var(--a-soft);color:var(--a-ink);margin:0 .3em .35em 0;border:1px solid transparent;white-space:nowrap}
 .chip.off{background:transparent;border-color:var(--a-line);color:var(--a-muted);font-weight:500}
-.steps{display:flex;gap:.4em;margin-bottom:1em}
-.steps span{flex:1;display:flex;align-items:center;gap:.5em;padding:.45em .7em;border-radius:.5em;background:var(--a-surface);border:1px solid var(--a-line);color:var(--a-muted);font-weight:600;font-size:.9em;white-space:nowrap;overflow:hidden}
+.chip em{font-style:normal;font-weight:500;color:var(--a-muted);margin-left:.4em}
+.chip .k{font-family:"IBM Plex Mono",ui-monospace,monospace;margin-right:.45em}
+.nb{font:600 .8em/1 "IBM Plex Mono",ui-monospace,monospace;border:1px solid var(--a-line);border-radius:99em;padding:.25em .6em;color:var(--a-muted);background:var(--a-paper);white-space:nowrap}
+.tete{display:flex;align-items:center;gap:.6em;margin-bottom:.7em}
+.tete .pousse{margin-left:auto}
+.tete .bt{font-size:.8em;padding:.35em .75em}
+.steps{display:flex;gap:.4em;margin-bottom:.8em}
+.steps span{flex:1;display:flex;align-items:center;gap:.5em;padding:.4em .7em;border-radius:.5em;background:var(--a-surface);border:1px solid var(--a-line);color:var(--a-muted);font-weight:600;font-size:.88em;white-space:nowrap;overflow:hidden}
 .steps span b{display:inline-grid;place-items:center;width:1.6em;height:1.6em;border-radius:50%;background:var(--a-paper);font-size:.85em;flex:none}
 .steps span.on{border-color:var(--a-accent);color:var(--a-ink)}
-.steps span.on b{background:var(--a-accent);color:#fff}
+.steps span.on b{background:var(--a-accent);color:var(--a-on-accent)}
 .steps span.fait b{background:var(--a-soft);color:var(--a-accent)}
-.cols{display:grid;grid-template-columns:1.15fr 1fr;gap:1em}
+.cols{display:grid;grid-template-columns:1.1fr 1fr;gap:1.2em}
+.seg{display:inline-flex;border:1px solid var(--a-line);border-radius:.4em;overflow:hidden;font-size:.82em;margin-bottom:.65em}
+.seg span{padding:.25em .62em;color:var(--a-muted)}
+.seg span+span{border-left:1px solid var(--a-line)}
+.seg span.on{background:var(--a-accent);color:var(--a-on-accent);font-weight:600}
+.seg span.x{opacity:.45}
+.choix-l{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--a-line);border-radius:.4em;padding:.3em .6em;background:var(--a-paper);font-size:.88em;margin-bottom:.45em}
 
 /* Mes évaluations */
-.evs{list-style:none;margin:0;padding:0;display:grid;gap:.6em}
-.evs li{background:var(--a-surface);border:1px solid var(--a-line);border-radius:.6em;padding:.75em 1em;display:grid;grid-template-columns:1fr auto;gap:.2em 1em;align-items:center}
-.evs .t{font-weight:700}
-.evs .m{font-size:.85em;color:var(--a-muted)}
-.evs .s{grid-row:span 2;text-align:right;font-size:.85em;color:var(--a-muted)}
-.barre{width:7em;height:.45em;border-radius:1em;background:var(--a-paper);overflow:hidden;margin-top:.3em;margin-left:auto}
-.barre i{display:block;height:100%;width:0;background:var(--a-accent);transition:width .9s ease}
-.scr.on .barre i{width:var(--w);transition-delay:calc(var(--d,0)*1ms + 300ms)}
-.tag-s{display:inline-block;font-size:.8em;border-radius:99em;padding:.15em .6em;background:var(--a-paper);border:1px solid var(--a-line)}
+.slist{width:100%;border-collapse:collapse;font-size:.8em}
+.slist th{text-align:left;font-weight:600;color:var(--a-muted);padding:.35em .5em;border-bottom:1px solid var(--a-line);white-space:nowrap}
+.slist td{padding:.55em .5em;border-bottom:1px solid var(--a-line);vertical-align:middle}
+.slist tr:last-child td{border-bottom:0}
+.slist .pill{display:inline-block;border:1px solid var(--a-line);border-radius:99em;padding:.05em .5em;font-size:.9em;background:var(--a-paper)}
+.slist .mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.slist .bt{font-size:.9em;padding:.35em .65em}
+.filtres-a{display:flex;flex-wrap:wrap;align-items:center;gap:.4em;font-size:.78em;margin-bottom:.5em}
+.filtres-a .flt{border:1px solid var(--a-line);border-radius:.4em;padding:.25em .6em;white-space:nowrap}
+.filtres-a .rch{border:1px solid var(--a-line);border-radius:.4em;padding:.25em .6em;color:var(--a-muted);background:var(--a-paper);min-width:11em}
+.suivi .pts{display:flex;margin:.1em 0 .25em}
+.suivi .stc{display:inline-flex;flex-direction:column;align-items:center;gap:.25em;min-width:4.3em;position:relative;font-size:.66em;color:var(--a-muted);line-height:1.1}
+.suivi .stc+.stc::before{content:"";position:absolute;top:.48em;right:calc(50% + .7em);width:calc(100% - 1.4em);height:2px;background:var(--a-line);transition:background .3s}
+.suivi .stc i{width:1.1em;height:1.1em;border-radius:50%;border:2px solid var(--a-line);background:var(--a-surface);transition:background .3s,border-color .3s}
+.scr.on .suivi .stc.fait i,.scr.on .suivi .stc.demi i{border-color:var(--a-accent);transition-delay:calc(var(--d,0)*1ms)}
+.scr.on .suivi .stc.fait i{background:var(--a-accent)}
+.scr.on .suivi .stc.demi i{background:linear-gradient(90deg,var(--a-accent) 50%,var(--a-surface) 50%)}
+.scr.on .suivi .stc.on::before{background:var(--a-accent);transition-delay:calc(var(--d,0)*1ms)}
+.suivi .stc.cur i{box-shadow:0 0 0 .2em var(--a-soft)}
+.suivi .stl{font-weight:600;font-size:.95em}
+.suivi .stn{font-size:.85em;color:var(--a-muted)}
 
 /* Référentiel */
-.ref{display:grid;grid-template-columns:1.25fr 1fr;gap:1em;height:100%}
-.ref svg{width:100%;height:auto;max-height:100%}
+.scr[data-scr="ref"]{display:flex;flex-direction:column}
+.sous{display:flex;flex-wrap:wrap;gap:.3em;margin-bottom:.45em;font-size:.8em}
+.sous span{border:1px solid var(--a-line);border-radius:.4em;padding:.25em .65em;color:var(--a-muted);white-space:nowrap;background:var(--a-surface)}
+.sous span.on{background:var(--a-accent);border-color:var(--a-accent);color:var(--a-on-accent);font-weight:600}
+.sous.vues{font-size:.72em;margin-bottom:.3em}
+.ref{display:grid;grid-template-columns:1.25fr 1fr;gap:1em;flex:1;min-height:0}
+.ref svg{width:100%;height:100%;min-height:0}
 .roue2{transform-origin:380px 380px}
 .scr.on .roue2{animation:entre 1.3s cubic-bezier(.2,.7,.2,1) both}
 @keyframes entre{from{opacity:0;transform:rotate(-70deg) scale(.85)}to{opacity:1;transform:none}}
@@ -204,100 +239,143 @@ svg.dim .dot.off{opacity:.1}
 .fondu{transition:opacity .3s}
 
 /* Compétences */
-.blocs{display:grid;gap:.6em}
-.bloc-l{font-weight:700;font-size:.9em;margin:0 0 .3em}
-.cp{display:flex;align-items:center;gap:.6em;padding:.3em .5em;border-radius:.4em;font-size:.9em;white-space:nowrap;overflow:hidden}
+.portee{font-size:.78em;margin:-.3em 0 .6em}
+.portee u{text-decoration:none;color:var(--a-accent)}
+.blocs{display:grid;gap:.35em;min-width:0}
+.blocs>div{min-width:0}
+.bloc-l{display:flex;gap:.6em;align-items:baseline;font-size:.82em;margin:0 0 .2em;padding:.2em .5em;border-radius:.3em;background:var(--a-paper)}
+.bloc-l b{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.92em;white-space:nowrap;color:var(--a-accent)}
+.bloc-l span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp{display:flex;align-items:center;gap:.6em;padding:.18em .5em;border-radius:.4em;font-size:.88em;white-space:nowrap;overflow:hidden}
 .cp .cb{width:1.15em;height:1.15em;border-radius:.25em;border:1.5px solid var(--a-line);flex:none;display:grid;place-items:center;transition:background .25s,border-color .25s}
-.cp .cb::after{content:"";width:.55em;height:.3em;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(.05em,-.05em);opacity:0}
+.cp .cb::after{content:"";width:.55em;height:.3em;border-left:2px solid var(--a-on-accent);border-bottom:2px solid var(--a-on-accent);transform:rotate(-45deg) translate(.05em,-.05em);opacity:0}
 .cp code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.88em;font-weight:600;flex:none}
 .cp span{overflow:hidden;text-overflow:ellipsis;color:var(--a-muted)}
 .scr.on .cp.pris{background:var(--a-soft);transition:background .3s calc(var(--d)*1ms)}
 .scr.on .cp.pris .cb{background:var(--a-accent);border-color:var(--a-accent);transition-delay:calc(var(--d)*1ms)}
 .scr.on .cp.pris .cb::after{opacity:1;transition:opacity .2s calc(var(--d)*1ms)}
-.compteur{font:800 2.4em/1 "Bricolage Grotesque",sans-serif;color:var(--a-accent)}
+.filtre-c{border:1px solid var(--a-line);border-radius:.4em;padding:.25em .6em;color:var(--a-muted);background:var(--a-paper);font-size:.8em;flex:1;max-width:14em}
 
 /* Formulation */
-.lignes{display:grid;gap:.5em}
-.lg{display:grid;grid-template-columns:1fr 7.5em 9.5em;gap:.8em;align-items:center;background:var(--a-surface);border:1px solid var(--a-line);border-radius:.55em;padding:.6em .8em}
-.lg.groupe{border-left:.3em solid var(--a-accent)}
-.lg .crit{font-weight:600;font-size:.92em}
-.lg .crit em{font-weight:400;color:var(--a-muted)}
-.lg .codes{display:flex;flex-wrap:wrap;gap:.25em}
-.lg .codes code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.8em;font-weight:600;background:var(--a-paper);border:1px solid var(--a-line);border-radius:.3em;padding:.05em .35em}
-.entete{display:grid;grid-template-columns:1fr 7.5em 9.5em;gap:.8em;font-size:.78em;font-weight:600;color:var(--a-muted);padding:0 .9em .2em}
+.lignes{display:grid;gap:.4em}
+.lg{display:grid;grid-template-columns:auto 1fr;gap:.35em .7em;align-items:start;background:var(--a-surface);border:1px solid var(--a-line);border-radius:.55em;padding:.4em .8em}
+.lg>.cbx{width:1.05em;height:1.05em;border-radius:.25em;border:1.5px solid var(--a-line);margin-top:.15em}
+.lg.op{border-left:.3em solid var(--a-accent)}
+.lg .haut{display:flex;align-items:center;gap:.35em;min-width:0;overflow:hidden}
+.lg .num{font:700 .72em/1 "IBM Plex Mono",ui-monospace,monospace;background:var(--a-accent);color:var(--a-on-accent);border-radius:.3em;padding:.3em .45em;flex:none}
+.lg .cd{display:inline-flex;gap:.4em;align-items:baseline;border:1px solid var(--a-line);background:var(--a-paper);border-radius:.35em;padding:.1em .45em;font-size:.76em;min-width:0;max-width:24em;overflow:hidden}
+.lg .cd b{font-family:"IBM Plex Mono",ui-monospace,monospace;flex:none}
+.lg .cd span{color:var(--a-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lg .ro{grid-column:2;display:grid;grid-template-columns:auto 1fr auto;gap:.6em;align-items:center}
+.lg .mini{font-size:.7em;font-weight:600;color:var(--a-muted);white-space:nowrap}
+.lg .saisie{border:1px solid var(--a-line);border-radius:.35em;padding:.22em .5em;background:var(--a-paper);font-size:.85em;font-weight:600;min-width:0}
+.lg .saisie.attente{font-weight:400;color:var(--a-muted)}
+.lg .chip{margin:0;font-size:.76em}
+.lg .bt{font-size:.75em;padding:.2em .6em;margin-left:auto}
 
 /* Exporter */
-.choix{display:grid;grid-template-columns:.85fr 1.15fr;gap:1.2em;height:100%;align-items:center}
-.exp{display:grid;gap:.5em}
-.exp .bt{text-align:center;padding:.65em}
-.module{display:flex;align-items:center;gap:.7em;margin-top:1em;padding:.8em;border:1px dashed var(--a-line);border-radius:.6em;font-size:.9em}
+.choix{display:grid;grid-template-columns:.95fr 1.05fr;gap:1.4em;height:100%;align-items:center}
+.xa h4{font-size:1em}
+.xa .sous-t{font-size:.78em;margin:.15em 0 .7em}
+.xa .xh{font-size:.75em;font-weight:600;color:var(--a-muted);margin:.2em 0 .4em}
+.exp{display:grid;grid-template-columns:1fr 1fr;gap:.4em}
+.exp .fmt{display:flex;flex-direction:column;border:1px solid var(--a-line);border-radius:.45em;padding:.4em .6em;font-size:.85em;background:var(--a-surface)}
+.exp .fmt b{font-weight:600}
+.exp .fmt span{font:.82em "IBM Plex Mono",ui-monospace,monospace;color:var(--a-muted)}
+.scr.on .exp .fmt.va{border-color:var(--a-accent);box-shadow:0 0 0 .15em var(--a-soft);transition:box-shadow .3s 1s,border-color .3s 1s}
+.module{display:flex;align-items:center;gap:.7em;margin-top:1em;padding:.7em .8em;border:1px dashed var(--a-line);border-radius:.6em;font-size:.85em}
 .bascule-a{width:2.4em;height:1.35em;border-radius:1em;background:var(--a-line);position:relative;flex:none;transition:background .3s}
 .bascule-a::after{content:"";position:absolute;top:.17em;left:.17em;width:1em;height:1em;border-radius:50%;background:#fff;transition:transform .3s}
 .scr.on .bascule-a.va{background:var(--a-accent);transition-delay:2.2s}
 .scr.on .bascule-a.va::after{transform:translateX(1.05em);transition-delay:2.2s}
 .feuille{background:#fff;color:#15181E;border-radius:.3em;box-shadow:0 1.2em 2.4em -1.2em rgba(0,0,0,.35);padding:1.2em 1.3em;transform:rotate(2deg) translateX(20%);opacity:0;transition:transform .8s cubic-bezier(.2,.7,.2,1) .5s,opacity .5s .5s;position:relative}
 .scr.on .feuille{transform:rotate(1.5deg);opacity:1}
-.feuille .nom{position:absolute;top:-1.1em;right:.8em;font-size:.75em;font-weight:700;background:#2B579A;color:#fff;border-radius:.3em .3em 0 0;padding:.2em .6em}
+.feuille .nom{position:absolute;top:-1.1em;right:.8em;max-width:calc(100% - 1.6em);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72em;font-weight:700;background:#2B579A;color:#fff;border-radius:.3em .3em 0 0;padding:.2em .6em}
 .feuille h5{font:700 1em/1.25 "Bricolage Grotesque",sans-serif;margin:0 0 .2em}
 .feuille .m{font-size:.75em;color:#5C6472;margin:0 0 .7em}
-.feuille table{width:100%;border-collapse:collapse;font-size:.68em}
+.feuille table{width:100%;border-collapse:collapse;font-size:.66em}
 .feuille th,.feuille td{border:1px solid #CBD1DA;padding:.35em .4em;text-align:left;vertical-align:top}
 .feuille th{background:#EEF1F5}
 .feuille td.v{width:12%}
 
-/* Élèves */
-.grille-a{width:100%;border-collapse:separate;border-spacing:.25em;font-size:.88em}
-.grille-a th{font-weight:600;text-align:left;color:var(--a-muted);font-size:.85em;padding:0 .3em .2em;white-space:nowrap}
-.grille-a th.n{color:var(--a-ink);font-size:1em;white-space:nowrap}
-.grille-a td{height:2em;border-radius:.3em;background:var(--l0);transition:background .35s;text-align:center;font-size:.8em;font-weight:600}
+/* Étudiants */
+.grille-a{width:100%;border-collapse:separate;border-spacing:.25em;font-size:.84em;table-layout:fixed}
+.grille-a th{font-weight:600;text-align:left;color:var(--a-muted);font-size:.8em;padding:0 .3em .2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grille-a th.n{color:var(--a-ink);font-size:.95em}
+.grille-a th.e{width:11.5em}
+.grille-a th.r{width:5.2em}
+.grille-a th.f{width:3.4em;text-align:right}
+.grille-a td{height:2.3em;border-radius:.3em;background:var(--l0);transition:background .35s;text-align:center;font-size:.8em;font-weight:600}
+.grille-a td.rd,.grille-a td.ft{background:transparent;font-weight:500;color:var(--a-muted);text-align:left;white-space:nowrap}
+.grille-a td.ft{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace}
+.grille-a td.rd.nr{color:var(--bug,#B4432C);font-weight:600}
 .scr.on .grille-a td[data-l="1"]{background:var(--l1);transition-delay:calc(var(--d)*1ms)}
 .scr.on .grille-a td[data-l="2"]{background:var(--l2);transition-delay:calc(var(--d)*1ms)}
 .scr.on .grille-a td[data-l="3"]{background:var(--l3);transition-delay:calc(var(--d)*1ms)}
 .scr.on .grille-a td[data-l="4"]{background:var(--l4);color:#fff;transition-delay:calc(var(--d)*1ms)}
-.grille-a td.nr{background:transparent;border:1px dashed var(--a-line);color:var(--a-muted)}
-.leg{display:flex;flex-wrap:wrap;gap:.9em;font-size:.78em;color:var(--a-muted);margin-top:.7em}
+.grille-a td.sans{background:transparent;border:1px dashed var(--a-line)}
+.leg{display:flex;flex-wrap:wrap;gap:.9em;font-size:.76em;color:var(--a-muted);margin-top:.6em}
 .leg span{display:inline-flex;align-items:center;gap:.35em}
 .leg i{width:.9em;height:.9em;border-radius:.2em;display:inline-block}
-.seg2{display:inline-flex;border:1px solid var(--a-line);border-radius:.45em;overflow:hidden;font-size:.85em}
-.seg2 span{padding:.3em .8em}
-.seg2 span.on{background:var(--a-accent);color:#fff}
-.appr{margin-top:.8em;font-size:.85em}
-.appr b{display:block;margin-bottom:.15em}
+.seg2{display:inline-flex;border:1px solid var(--a-line);border-radius:.45em;overflow:hidden;font-size:.8em}
+.seg2 span{padding:.3em .8em;white-space:nowrap}
+.seg2 span.on{background:var(--a-accent);color:var(--a-on-accent)}
 
 /* Progression */
-.prog .lgp{display:grid;grid-template-columns:4em 1fr repeat(4,2.6em) 7.5em;gap:.4em;align-items:center;padding:.35em 0;border-bottom:1px solid var(--a-line);font-size:.9em}
-.prog .lgp.h{font-size:.78em;font-weight:600;color:var(--a-muted);border:0}
-.prog code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-weight:600;font-size:.88em}
+.prog .qui{font:700 1em "Bricolage Grotesque",sans-serif;margin:0 0 .5em}
+.prog .qui span{font:400 .85em "Public Sans",Arial,sans-serif;color:var(--a-muted)}
+.prog .bh{font-size:.8em;font-weight:700;padding:.35em 0 .25em;border-top:1px solid var(--a-line)}
+.prog .bh .mut{font-weight:400}
+.prog .bh.bloc{font-weight:500;border:0;padding:.35em 0 .1em;color:var(--a-muted)}
+.prog .lgp{display:grid;grid-template-columns:10.5em minmax(0,1fr) 9.5em 13em;gap:.6em;align-items:center;padding:.2em 0;font-size:.82em}
+.prog .pv{justify-self:start;font-size:.85em;font-weight:600;border-radius:99em;padding:.12em .6em;background:var(--l0);color:var(--a-ink);white-space:nowrap;transition:background .35s}
+.scr.on.prog .pv[data-l="1"]{background:var(--l1);color:#15181E;transition-delay:calc(var(--d)*1ms)}
+.scr.on.prog .pv[data-l="2"]{background:var(--l2);color:#15181E;transition-delay:calc(var(--d)*1ms)}
+.scr.on.prog .pv[data-l="3"]{background:var(--l3);color:#15181E;transition-delay:calc(var(--d)*1ms)}
+.scr.on.prog .pv[data-l="4"]{background:var(--l4);color:#fff;transition-delay:calc(var(--d)*1ms)}
 .prog .lib{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--a-muted)}
-.prog .c{height:1.5em;border-radius:.3em;background:var(--l0);transition:background .35s}
-.scr.on.prog .c[data-l="1"]{background:var(--l1);transition-delay:calc(var(--d)*1ms)}
-.scr.on.prog .c[data-l="2"]{background:var(--l2);transition-delay:calc(var(--d)*1ms)}
-.scr.on.prog .c[data-l="3"]{background:var(--l3);transition-delay:calc(var(--d)*1ms)}
-.scr.on.prog .c[data-l="4"]{background:var(--l4);transition-delay:calc(var(--d)*1ms)}
-.niv{font-size:.78em;font-weight:700;border-radius:99em;padding:.15em .55em;background:var(--a-soft);color:var(--a-accent);justify-self:start;white-space:nowrap}
+.prog .lib b{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--a-ink);margin-right:.4em}
+.prog .trj{display:flex;align-items:center;gap:.25em;font-size:.85em;white-space:nowrap;color:var(--a-muted)}
+.prog .trj i{display:inline-block;width:.75em;height:.75em;border-radius:50%;margin-right:.2em;vertical-align:-.05em}
+.dntrk{display:flex;gap:.25em}
+.dnst{display:inline-flex;align-items:center;gap:.25em;font-size:.78em;border:1px solid var(--a-line);border-radius:99em;padding:.1em .45em;color:var(--a-muted);white-space:nowrap}
+.dnst i{width:.6em;height:.6em;border-radius:50%;border:1.5px solid currentColor}
+.dnst.vu{color:var(--a-ink)}
+.dnst.ok{border-color:var(--a-accent);color:var(--a-accent);font-weight:600}
+.dnst.ok i{background:var(--a-accent);border-color:var(--a-accent)}
+.dnst.futur{opacity:.5;border-style:dashed}
 
 /* Échanger */
 .voile{position:absolute;inset:0;background:rgba(10,15,25,.35)}
-.modale{position:absolute;left:50%;top:50%;width:76%;transform:translate(-50%,-46%);opacity:0;transition:transform .5s cubic-bezier(.2,.7,.2,1) .2s,opacity .4s .2s;background:var(--a-surface);border:1px solid var(--a-line);border-radius:.8em;padding:1.2em 1.3em;box-shadow:0 2em 4em -2em rgba(0,0,0,.5)}
+.modale{position:absolute;left:50%;top:50%;width:80%;transform:translate(-50%,-46%);opacity:0;transition:transform .5s cubic-bezier(.2,.7,.2,1) .2s,opacity .4s .2s;background:var(--a-surface);border:1px solid var(--a-line);border-radius:.8em;padding:1em 1.2em;box-shadow:0 2em 4em -2em rgba(0,0,0,.5);font-size:.88em}
 .scr.on .modale{transform:translate(-50%,-50%);opacity:1}
-.fichier{display:flex;align-items:center;gap:.7em;padding:.6em .8em;background:var(--a-paper);border-radius:.5em;margin:.7em 0;font-size:.9em}
-.fichier .ic{width:2em;height:2.4em;border-radius:.25em;background:var(--a-accent);color:#fff;display:grid;place-items:center;font-size:.65em;font-weight:700;flex:none}
-.plan{display:grid;gap:.35em;margin:.6em 0 1em}
-.plan div{display:flex;justify-content:space-between;align-items:center;gap:1em;padding:.45em .7em;border:1px solid var(--a-line);border-radius:.45em;font-size:.9em}
-.st{font-size:.8em;font-weight:700;border-radius:99em;padding:.12em .6em;white-space:nowrap}
-.st.nv{background:#DDF1E4;color:#1E6B45}
-.st.md{background:#FBEBC8;color:#7A5410}
-.st.id{background:var(--a-paper);color:var(--a-muted);border:1px solid var(--a-line)}
-.ok-ref{font-size:.85em;color:#1E7A4F;font-weight:600}
+.modale .croix{margin-left:auto;color:var(--a-muted);font-size:1.2em;line-height:1}
+.modale>p{margin:.15em 0 .45em;font-size:.88em}
+.eliste{display:grid;border:1px solid var(--a-line);border-radius:.5em;margin:.6em 0 .8em;overflow:hidden}
+.eligne{display:grid;grid-template-columns:auto 1fr;gap:.6em;padding:.5em .7em;border-top:1px solid var(--a-line)}
+.eligne:first-child{border-top:0}
+.eligne.inactive{opacity:.6}
+.eligne .cbx{width:1.05em;height:1.05em;border-radius:.25em;border:1.5px solid var(--a-line);margin-top:.1em;display:grid;place-items:center}
+.eligne .cbx.on{background:var(--a-accent);border-color:var(--a-accent)}
+.eligne .cbx.on::after{content:"";width:.5em;height:.28em;border-left:2px solid var(--a-on-accent);border-bottom:2px solid var(--a-on-accent);transform:rotate(-45deg) translate(.05em,-.05em)}
+.et{display:flex;align-items:center;gap:.5em;font-weight:600;font-size:.92em}
+.ed{font-size:.78em;color:var(--a-muted)}
+.past{font-size:.82em;font-weight:700;border-radius:99em;padding:.1em .55em;white-space:nowrap;background:var(--a-paper);color:var(--a-muted);border:1px solid var(--a-line)}
+.past.creer{background:#DDF1E4;color:#1E6B45;border-color:transparent}
+.past.modifier{background:#FBEBC8;color:#7A5410;border-color:transparent}
+.actions-m{display:flex;justify-content:flex-end;gap:.5em}
 
 /* Coffre */
 .coffre-a{position:absolute;inset:0;display:grid;place-items:center;background:var(--a-paper)}
 .coffre-a .carte-c{width:52%;text-align:center}
 .coffre-a .cad{width:3.2em;height:3.2em;margin:0 auto .8em;border-radius:50%;background:var(--a-soft);display:grid;place-items:center;color:var(--a-accent)}
 .coffre-a .cad svg{width:1.6em;height:1.6em}
-.coffre-a .mdp{border:1px solid var(--a-line);border-radius:.5em;padding:.6em .8em;background:var(--a-surface);text-align:left;letter-spacing:.25em;min-height:2.4em;margin:.8em 0 .7em;font-size:1.05em}
-.coffre-a .bt{display:block;padding:.65em}
-.coffre-a .sec{font-size:.85em;margin-top:.8em;color:var(--a-muted)}
+.coffre-a h4{font-size:1.5em}
+.coffre-a .intro{font-size:.92em;color:var(--a-muted);margin:.4em 0 1em}
+.coffre-a .lab{text-align:left}
+.coffre-a .mdp{border:1px solid var(--a-line);border-radius:.5em;padding:.6em .8em;background:var(--a-surface);text-align:left;letter-spacing:.25em;min-height:2.4em;margin:0 0 .9em;font-size:1.05em}
+.coffre-a .cact{display:flex;align-items:center;justify-content:space-between;gap:1em}
+.coffre-a .lien{font-size:.85em;color:var(--a-accent)}
 
 /* Dernier appel */
 .fin{padding:96px 0;border-top:1px solid var(--line);text-align:center}
@@ -540,44 +618,62 @@ footer a{color:var(--ink-2)}
           <div class="app" id="app" role="img" aria-label="Reconstitution animée de l’application DNMAX, qui change à chaque étape de la visite">
             <div class="app-fs">
               <div class="chrome" aria-hidden="true"><i></i><i></i><i></i><span>DNMAX</span></div>
-              <div class="onglets" aria-hidden="true"><b>DNMAX</b><span>Mes évaluations</span><span>Progression</span><span>Référentiel</span><span>Mon établissement</span><span>Paramètres</span></div>
+              <div class="onglets" aria-hidden="true">
+                <b>DNMAX</b>
+                <span class="ong-groupe"><span class="onglet">Mes évaluations</span><span class="onglet">Progression</span><span class="onglet">Référentiel</span><span class="onglet">Mon établissement</span><span class="onglet">Paramètres</span></span>
+                <span class="outils">
+                  <span class="outil" id="outil-echange"><svg viewBox="0 0 20 20"><path d="M4 7h11m0 0-3-3m3 3-3 3M16 13H5m0 0 3-3m-3 3 3 3"/></svg>Échanger…</span>
+                  <span class="outil"><svg viewBox="0 0 20 20"><circle cx="10" cy="7" r="3.2"/><path d="M3.8 16.5c.9-3 3.3-4.6 6.2-4.6s5.3 1.6 6.2 4.6"/></svg>Mon compte<svg class="chev" viewBox="0 0 20 20"><path d="m6 8 4 4 4-4"/></svg></span>
+                </span>
+              </div>
               <div class="corps-app" aria-hidden="true">
 
                 <div class="scr" data-scr="saved">
-                  <div class="tb a"><h4>Mes évaluations</h4><span class="bt">+ Nouvelle évaluation</span></div>
-                  <ul class="evs">
-                    <li class="a" style="--d:120"><div class="t">Évaluation intermédiaire — Mobilier modulaire en frêne</div><div class="s">11 / 14 élèves<div class="barre"><i style="--w:78%"></i></div></div><div class="m">DN MADE 2 Objet · S3 · Degrés d’acquisition · modifiée par Sophie Hébert</div></li>
-                    <li class="a" style="--d:240"><div class="t">Fiche de lecture</div><div class="s">12 / 12 élèves<div class="barre"><i style="--w:100%"></i></div></div><div class="m">DN MADE 1 Objet · S1 · Niveaux de maîtrise · modifiée par Amina Benali</div></li>
-                    <li class="a" style="--d:360"><div class="t">Oral de présentation de projet</div><div class="s"><span class="tag-s">Exportée en Word</span></div><div class="m">DN MADE 2 Objet · S3 · Niveaux de maîtrise · modifiée par Marc Lenoir</div></li>
-                    <li class="a" style="--d:480"><div class="t">Carnet d’exposition</div><div class="s">6 / 14 élèves<div class="barre"><i style="--w:43%"></i></div></div><div class="m">DN MADE 3 Objet · S5 · Degrés d’acquisition · modifiée par Sophie Hébert</div></li>
-                  </ul>
+                  <div class="pan">
+                    <div class="tete a"><span class="bt">+ Nouvelle évaluation</span><h4>Évaluations enregistrées</h4><span class="nb">4</span></div>
+                    <div class="filtres-a a" style="--d:80"><span class="lab" style="margin:0">Filtrer</span><span class="flt"><span class="mut">Promotions</span> En cours ▾</span><span class="flt"><span class="mut">Semestres</span> Tous les semestres ▾</span><span class="flt"><span class="mut">Suivi</span> Tous les suivis ▾</span><span class="rch">Rechercher un intitulé</span></div>
+                    <table class="slist">
+                      <thead class="a" style="--d:100"><tr><th>Promotion</th><th>Sem.</th><th>Intitulé</th><th>Livrables</th><th>Comp.</th><th>Suivi</th><th></th></tr></thead>
+                      <tbody id="liste-evals"></tbody>
+                    </table>
+                  </div>
                 </div>
 
                 <div class="scr" data-scr="eval">
-                  <div class="steps a"><span class="on"><b>1</b>L’évaluation</span><span><b>2</b>Compétences</span><span><b>3</b>Formulation</span><span><b>4</b>Élèves</span></div>
-                  <div class="cols">
-                    <div class="pan a" style="--d:100">
-                      <p class="lab">Intitulé de l’évaluation</p>
-                      <div class="inp"><span id="tw"></span></div>
-                      <p class="lab">Consignes données aux élèves</p>
-                      <div class="inp a mut" style="--d:1500;font-size:.88em">Carnet de projet tenu depuis le lancement, trois maquettes de recherche au 1/5 sur l’assemblage, deux planches A2. Oral de cinq minutes.</div>
-                      <p class="lab">Livrables attendus</p>
-                      <div><span class="chip a" style="--d:1900">Carnet de projet</span><span class="chip a" style="--d:2050">Maquettes de recherches</span><span class="chip a" style="--d:2200">Planches de projet</span><span class="chip off">Diaporama</span><span class="chip off">Fiche de lecture</span></div>
-                    </div>
-                    <div class="pan a" style="--d:250">
-                      <p class="lab">Promotion et semestre</p>
-                      <div><span class="chip">DN MADE 2 Objet</span><span class="chip">S3</span></div>
-                      <p class="lab" style="margin-top:.5em">Unité d’enseignement</p>
-                      <div><span class="chip a" style="--d:2400">Ateliers de création</span></div>
-                      <p class="lab" style="margin-top:.5em">Enseignements constitutifs</p>
-                      <div><span class="chip a" style="--d:2550">EC 11.1 Techniques et savoir-faire</span><span class="chip a" style="--d:2700">EC 11.2 Mise en œuvre du projet</span></div>
-                      <p class="lab" style="margin-top:.5em">Échelle</p>
-                      <div class="a" style="--d:2900"><span class="chip off">1. Non acquis</span><span class="chip off">2. En cours</span><span class="chip off">3. Acquis</span><span class="chip off">4. Maîtrisé</span></div>
+                  <div class="steps a"><span class="on"><b>1</b>L’évaluation</span><span><b>2</b>Compétences</span><span><b>3</b>Formulation</span><span><b>4</b>Étudiants</span></div>
+                  <div class="pan">
+                    <div class="cols">
+                      <div class="a" style="--d:100">
+                        <p class="grp-t">Identification</p>
+                        <p class="lab">Intitulé de l’évaluation</p>
+                        <div class="inp"><span id="tw"></span></div>
+                        <p class="lab">Consignes données aux étudiants</p>
+                        <div class="inp a mut" style="--d:1500;font-size:.86em">Rendu intermédiaire du projet&nbsp;: carnet de projet tenu depuis le lancement, trois maquettes de recherche au 1/5 sur l’assemblage, deux planches A2 présentant le principe retenu.</div>
+                        <p class="lab">Livrables attendus</p>
+                        <div><span class="chip a" style="--d:1900">Carnet de projet</span><span class="chip off">Catalogue d’expérimentation</span><span class="chip a" style="--d:2050">Planches de projet</span><span class="chip a" style="--d:2200">Maquettes de recherches</span></div>
+                      </div>
+                      <div class="a" style="--d:250">
+                        <p class="grp-t">Contexte</p>
+                        <p class="lab">Promotions</p>
+                        <div><span class="chip off">DNO1</span><span class="chip">DNO2</span><span class="chip off">DNO3</span></div>
+                        <p class="lab">Semestre</p>
+                        <div class="seg"><span class="x">S1</span><span class="x">S2</span><span class="on">S3</span><span>S4</span><span class="x">S5</span><span class="x">S6</span></div>
+                        <p class="grp-t">Rattachement au référentiel</p>
+                        <p class="lab">Unité d’enseignement</p>
+                        <div><span class="chip a" style="--d:2400">ATELIERS DE CREATION<em>2/4</em></span></div>
+                        <p class="lab">Enseignements constitutifs</p>
+                        <div><span class="chip a" style="--d:2550"><span class="k">EC 11.1</span>Techniques et savoir-faire</span><span class="chip a" style="--d:2700"><span class="k">EC 11.2</span>Pratiques et mises en œuvre du projet</span></div>
+                        <p class="grp-t">Échelle</p>
+                        <div class="choix-l a" style="--d:2900"><span>Degrés d’acquisition</span><span class="mut">▾</span></div>
+                        <div class="a" style="--d:3000;font-size:.9em"><span class="chip off">Non acquis</span><span class="chip off">En cours d’acquisition</span><span class="chip off">Acquis</span><span class="chip off">Maîtrisé</span></div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div class="scr" data-scr="ref">
+                  <div class="sous a"><span>Constituer</span><span class="on">Explorer</span></div>
+                  <div class="sous vues a" style="--d:100"><span class="on">Carte radiale</span><span>Carte heuristique</span><span>Tableau EC × semestres</span><span>Tableau compétences × semestres</span><span>Recherche</span></div>
                   <div class="ref">
                     <svg id="roue-app" viewBox="0 0 760 760"></svg>
                     <div class="info">
@@ -591,79 +687,86 @@ footer a{color:var(--ink-2)}
                 </div>
 
                 <div class="scr" data-scr="comp">
-                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="on"><b>2</b>Compétences</span><span><b>3</b>Formulation</span><span><b>4</b>Élèves</span></div>
-                  <div class="cols" style="grid-template-columns:1fr 9em">
-                    <div class="pan blocs" id="liste-comp"></div>
-                    <div class="a" style="--d:200"><p class="lab">Compétences à évaluer</p><div class="compteur" id="compteur">0</div></div>
+                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="on"><b>2</b>Compétences</span><span><b>3</b>Formulation</span><span><b>4</b>Étudiants</span></div>
+                  <div class="pan a" style="--d:100">
+                    <div class="tete"><h4>Compétences à évaluer</h4><span class="nb" id="compteur">0</span><span class="filtre-c">Filtrer…</span><span class="bt ghost pousse">Tout décocher</span></div>
+                    <p class="portee mut" id="portee"></p>
+                    <div class="blocs" id="liste-comp"></div>
                   </div>
                 </div>
 
                 <div class="scr" data-scr="form">
-                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="fait"><b>2</b>Compétences</span><span class="on"><b>3</b>Formulation</span><span><b>4</b>Élèves</span></div>
-                  <div class="entete a"><span>Critère observable</span><span>Compétences</span><span>Livrable</span></div>
-                  <div class="lignes">
-                    <div class="lg groupe a" style="--d:150"><div class="crit a" style="--d:900">Constituer un corpus de références et en tirer des principes formels réutilisables</div><div class="codes"><code>C4.1</code><code>C4.3</code></div><div><span class="chip a" style="--d:1700">Carnet de projet</span></div></div>
-                    <div class="lg groupe a" style="--d:300"><div class="crit a" style="--d:1150">Éprouver les assemblages par la maquette et en dégager un principe technique viable</div><div class="codes"><code>C10.3</code><code>C11.2</code></div><div><span class="chip a" style="--d:1850">Maquettes de recherches</span></div></div>
-                    <div class="lg a" style="--d:450"><div class="crit a" style="--d:1400">Présenter le principe d’assemblage sur deux planches lisibles à un mètre</div><div class="codes"><code>C10.6</code></div><div><span class="chip a" style="--d:2000">Planches de projet</span></div></div>
-                    <div class="lg a" style="--d:600"><div class="crit"><em>Se servir aisément des différents registres d’expression écrite et orale</em></div><div class="codes"><code>C2.1</code></div><div><span class="chip a" style="--d:2150">Carnet de projet</span></div></div>
-                  </div>
+                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="fait"><b>2</b>Compétences</span><span class="on"><b>3</b>Formulation</span><span><b>4</b>Étudiants</span></div>
+                  <div class="tete a"><h4>Lignes de l’évaluation</h4><span class="nb">4</span><span class="bt ghost pousse" style="opacity:.55">Lier les lignes cochées</span><span class="bt ghost">Tout décocher</span></div>
+                  <div class="lignes" id="lignes-form"></div>
                 </div>
 
                 <div class="scr" data-scr="export">
                   <div class="choix">
                     <div>
-                      <p class="lab a">Exporter la grille</p>
-                      <div class="exp">
-                        <span class="bt a" style="--d:150">Word</span>
-                        <span class="bt ghost a" style="--d:250">Excel</span>
-                        <span class="bt ghost a" style="--d:350">OpenDocument</span>
+                      <div class="pan xa a">
+                        <h4>Évaluation intermédiaire — Mobilier modulaire en frêne</h4>
+                        <p class="sous-t mut">DNO2 · S3</p>
+                        <p class="grp-t">Exporter</p>
+                        <p class="xh">Grille à remplir à la main</p>
+                        <div class="exp">
+                          <span class="fmt va a" style="--d:150"><b>Word</b><span>.docx</span></span>
+                          <span class="fmt a" style="--d:250"><b>Excel</b><span>.xlsx</span></span>
+                          <span class="fmt a" style="--d:350"><b>OpenDocument texte</b><span>.odt</span></span>
+                          <span class="fmt a" style="--d:450"><b>OpenDocument tableur</b><span>.ods</span></span>
+                        </div>
                       </div>
-                      <div class="module a" style="--d:1400"><span class="bascule-a va"></span><span><b>Module Élèves</b><br><span class="mut">évaluer chaque élève dans DNMAX</span></span></div>
+                      <div class="module a" style="--d:1400"><span class="bascule-a va"></span><span><b>Module Étudiants</b><br><span class="mut">Paramètres &gt; Modules de l’application</span></span></div>
                     </div>
                     <div class="feuille">
-                      <span class="nom">Mobilier_modulaire.docx</span>
+                      <span class="nom">S3 - DNO2 - Évaluation intermédiaire — Mobilier modulaire en frêne.docx</span>
                       <h5>Évaluation intermédiaire — Mobilier modulaire en frêne</h5>
                       <p class="m">DN MADE 2 Objet, S3. Livrables&nbsp;: carnet de projet, maquettes, planches.</p>
                       <table>
-                        <tr><th>Critère observable</th><th>Non acquis</th><th>En cours</th><th>Acquis</th><th>Maîtrisé</th></tr>
+                        <tr><th>Critère observable</th><th>Non acquis</th><th>En cours d’acquisition</th><th>Acquis</th><th>Maîtrisé</th></tr>
                         <tr><td>Constituer un corpus de références… <b>C4.1 C4.3</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
                         <tr><td>Éprouver les assemblages par la maquette… <b>C10.3 C11.2</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
                         <tr><td>Présenter le principe d’assemblage… <b>C10.6</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
-                        <tr><td>Registres d’expression écrite et orale <b>C2.1</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
+                        <tr><td>Se servir aisément des différents registres… <b>C2.1</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
                       </table>
                     </div>
                   </div>
                 </div>
 
                 <div class="scr" data-scr="eleves">
-                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="fait"><b>2</b>Compétences</span><span class="fait"><b>3</b>Formulation</span><span class="on"><b>4</b>Élèves</span></div>
-                  <div class="tb a" style="margin-bottom:.6em"><span class="lab" style="margin:0">DN MADE 2 Objet, 14 élèves</span><span class="seg2"><span>Fiche par élève</span><span class="on">Grille de la promo</span></span></div>
-                  <table class="grille-a a" style="--d:100" id="grille-promo">
-                    <thead><tr><th></th><th>Corpus</th><th>Assemblages</th><th>Planches</th><th>Expression</th></tr></thead>
-                    <tbody></tbody>
-                  </table>
-                  <div class="leg a" style="--d:300"><span><i style="background:var(--l1)"></i>Non acquis</span><span><i style="background:var(--l2)"></i>En cours d’acquisition</span><span><i style="background:var(--l3)"></i>Acquis</span><span><i style="background:var(--l4)"></i>Maîtrisé</span></div>
+                  <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="fait"><b>2</b>Compétences</span><span class="fait"><b>3</b>Formulation</span><span class="on"><b>4</b>Étudiants</span></div>
+                  <div class="pan a" style="--d:100">
+                    <div class="tete"><h4>Évaluation des étudiants</h4><span class="nb">14</span><span class="seg2 pousse"><span>Fiche par étudiant</span><span class="on">Grille de la promo</span></span></div>
+                    <table class="grille-a" id="grille-promo">
+                      <thead><tr><th class="e">Étudiant</th><th class="r">Rendu</th><th>C4.1 + C4.3</th><th>C10.3 + C11.2</th><th>C10.6</th><th>C2.1</th><th class="f">Fait</th></tr></thead>
+                      <tbody></tbody>
+                    </table>
+                    <div class="leg a" style="--d:300"><span><i style="background:var(--l1)"></i>Non acquis</span><span><i style="background:var(--l2)"></i>En cours d’acquisition</span><span><i style="background:var(--l3)"></i>Acquis</span><span><i style="background:var(--l4)"></i>Maîtrisé</span></div>
+                  </div>
                 </div>
 
                 <div class="scr prog" data-scr="prog">
-                  <div class="tb a"><h4>Progression élève</h4><span class="chip">Camille Ferrand, DN MADE 2 Objet</span></div>
-                  <div class="lgp h a"><span></span><span>Compétence</span><span>S1</span><span>S2</span><span>S3</span><span>S4</span><span>Niveau DN MADE</span></div>
-                  <div id="prog-lignes"></div>
+                  <div class="pan">
+                    <div class="tete a"><h4>Progression étudiant</h4><span class="seg2 pousse"><span>Promotion</span><span class="on">Étudiant</span></span></div>
+                    <p class="qui a" style="--d:80">Camille Ferrand <span>· DNO2</span></p>
+                    <div class="bh a" style="--d:120">Acquisition des compétences <span class="mut">— 5 / 6 acquises (dernier niveau ≥ «&nbsp;Acquis&nbsp;»), jusqu’au S3</span></div>
+                    <div id="prog-lignes"></div>
+                  </div>
                 </div>
 
                 <div class="scr" data-scr="echange">
-                  <div class="tb"><h4>Mes évaluations</h4><span class="bt">+ Nouvelle évaluation</span></div>
+                  <div class="pan"><div class="tete"><span class="bt">+ Nouvelle évaluation</span><h4>Évaluations enregistrées</h4><span class="nb">4</span></div></div>
                   <div class="voile"></div>
                   <div class="modale">
-                    <h4>Importer des évaluations</h4>
-                    <div class="fichier"><span class="ic">.dnmax</span><div><b>evaluations-lenoir.dnmax</b><br><span class="mut">Envoyé par Marc Lenoir</span></div></div>
-                    <div class="ok-ref a" style="--d:700">✓ Construites sur le même référentiel que le vôtre</div>
-                    <div class="plan">
-                      <div class="a" style="--d:1000"><span>Fiche de lecture — corpus critique</span><span class="st nv">nouvelle</span></div>
-                      <div class="a" style="--d:1200"><span>Oral de présentation de projet</span><span class="st md">modifiée</span></div>
-                      <div class="a" style="--d:1400"><span>Carnet d’exposition</span><span class="st id">identique</span></div>
+                    <div class="tete" style="margin-bottom:.4em"><h4>Ce que ce fichier changerait</h4><span class="croix">×</span></div>
+                    <p>Fichier créé par Marc Lenoir le 12/11/2026 17:42.</p>
+                    <p>1 nouvelle(s) · 1 modifiée(s) · 1 identique(s). Rien n’est changé tant que vous n’avez pas validé. Vos évaluations absentes de ce fichier ne sont pas touchées.</p>
+                    <div class="eliste">
+                      <div class="eligne a" style="--d:700"><i class="cbx on"></i><div><div class="et"><span class="past creer">Nouvelle</span><span>Oral de présentation de projet</span></div><div class="ed">Dans le fichier&nbsp;: 12/11/2026 17:30, par Marc Lenoir</div><div class="ed">Même référentiel que le vôtre.</div></div></div>
+                      <div class="eligne a" style="--d:950"><i class="cbx on"></i><div><div class="et"><span class="past modifier">Modifiée</span><span>Fiche de lecture — Objets du quotidien</span></div><div class="ed">Chez vous&nbsp;: 03/11/2026 09:12, par Sophie Hébert · Dans le fichier&nbsp;: 10/11/2026 16:05, par Marc Lenoir</div><div class="ed">Ce qui change&nbsp;: Compétences et critères, Consignes.</div><div class="ed">Vos étudiants, leurs résultats et votre suivi sont conservés.</div><div class="ed">Même référentiel que le vôtre.</div></div></div>
+                      <div class="eligne inactive a" style="--d:1200"><i class="cbx"></i><div><div class="et"><span class="past">Identique</span><span>Carnet d’exposition</span></div><div class="ed">Chez vous&nbsp;: 28/10/2026 11:20, par Sophie Hébert · Dans le fichier&nbsp;: 28/10/2026 11:20, par Sophie Hébert</div></div></div>
                     </div>
-                    <div class="a" style="display:flex;justify-content:flex-end;gap:.5em;--d:1600"><span class="bt ghost">Annuler</span><span class="bt">Importer</span></div>
+                    <div class="actions-m a" style="--d:1450"><span class="bt ghost">Annuler</span><span class="bt">Appliquer (2)</span></div>
                   </div>
                 </div>
 
@@ -671,10 +774,11 @@ footer a{color:var(--ink-2)}
                   <div class="coffre-a">
                     <div class="carte-c">
                       <div class="cad a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-                      <h4 class="a" style="--d:100">Ouvrir votre coffre</h4>
+                      <h4 class="a" style="--d:100">DNMAX</h4>
+                      <p class="intro a" style="--d:150">Saisissez votre mot de passe pour ouvrir vos données.</p>
+                      <p class="lab a" style="--d:200">Mot de passe</p>
                       <div class="mdp a" style="--d:200"><span id="mdp"></span></div>
-                      <span class="bt a" style="--d:300">Ouvrir</span>
-                      <p class="sec a" style="--d:400">Mot de passe oublié&nbsp;? Utilisez votre code de secours.</p>
+                      <div class="cact a" style="--d:300"><span class="lien">Mot de passe oublié&nbsp;?</span><span class="bt">Ouvrir</span></div>
                     </div>
                   </div>
                 </div>
@@ -1177,63 +1281,146 @@ npm run dev</code></pre>
   const roueApp = construireRoue(document.getElementById("roue-app"),"roue2",true);
 
   /* ---------- Contenus générés de la visite ---------- */
+  const el = (balise, classe, texte) => { const e=document.createElement(balise); if (classe) e.className=classe; if (texte!==undefined) e.textContent=texte; return e; };
+  (function listeEvaluations(){
+    // Les étapes du suivi et leurs libellés sont ceux de « Mes évaluations » ; [étape atteinte, à moitié faite].
+    const ETAPES=["Préparée","Distribuée","Rendue","Évaluée","Restituée"];
+    const evals=[
+      ["DNO2","S3","Évaluation intermédiaire — Mobilier modulaire en frêne","Carnet de projet",2,6,[3,true],"Évaluation en cours","→ 3 étudiants à saisir (11/14)"],
+      ["DNO2","S4","Soutenance intermédiaire — oral et planches","Oral de présentation de projet",1,3,[0,false],"Préparée","→ distribution prévue le 24/11"],
+      ["DNO3","S5","Carnet d’exposition","Carnet d’exposition",0,4,[1,false],"Distribuée","→ rendu attendu le 27/11"],
+      ["DNO1","S1","Fiche de lecture — Objets du quotidien","Fiche de lecture",0,3,[4,false],"Restituée","✓ terminée le 16/10"]
+    ];
+    const hote=document.getElementById("liste-evals");
+    evals.forEach(([promo,sem,titre,livrable,autres,nbComp,[etape,demi],statut,suite],r)=>{
+      const tr=el("tr","a"); tr.style.setProperty("--d",180+r*140);
+      const td=(...enfants)=>{ const c=el("td"); c.append(...enfants); tr.appendChild(c); return c; };
+      td(el("b","",promo)); td(el("span","pill",sem)); td(titre);
+      const liv=td(livrable); if (autres) liv.append(" ",el("span","mut","+"+autres));
+      td(el("span","mono",String(nbComp)));
+      const suivi=el("div","suivi"), pts=el("span","pts");
+      ETAPES.forEach((nom,k)=>{
+        const c=el("span","stc"+(k<etape?" fait":k===etape?(demi?" demi cur":" fait cur"):"")+(k&&k<=etape?" on":""));
+        c.style.setProperty("--d",400+r*140+k*160);
+        c.append(el("i"),el("small","",nom)); pts.appendChild(c);
+      });
+      suivi.append(pts,el("div","stl",statut),el("div","stn",suite));
+      td(suivi); td(el("span","bt ghost","Actions…"));
+      hote.appendChild(tr);
+    });
+  })();
   const CHOISIES = ["C4.1","C4.3","C10.3","C10.6","C11.2","C2.1"];
+  /* Comme l’application : les compétences portées par les EC choisis à l’étape 1 (ici EC 11.1 et 11.2, en deuxième année),
+     plus celles déjà retenues ; le compteur rapporte les cochées à ce total. */
+  const ANNEE=2;
+  const duSemestre=new Set([].concat(...REF.ecs.map(e=>e.k[ANNEE]||[])));
+  const portees=new Set([].concat(...REF.ecs.filter(e=>["EC 11.1","EC 11.2"].includes(e.y[ANNEE])).map(e=>e.k[ANNEE]),CHOISIES));
   (function listeComp(){
     const hote=document.getElementById("liste-comp");
+    document.getElementById("portee").replaceChildren(
+      `${portees.size} compétences portées par les 2 enseignements choisis à l’étape 1 (1 unité d’enseignement) · `,
+      el("u","",`voir les ${duSemestre.size} du semestre`));
     let n=0;
-    ["4","10","11","2"].forEach(b=>{
-      const codes=Object.keys(REF.comps).filter(c=>REF.comps[c][1]===b).sort(cmpCode);
-      const montrer=codes.filter((c,i)=>CHOISIES.includes(c)||i<2).slice(0,4);
-      const bl=document.createElement("div");
-      const t=document.createElement("p"); t.className="bloc-l"; t.textContent="Bloc "+b+" — "+REF.blocs[b]; bl.appendChild(t);
+    ["2","4","10","11"].forEach(b=>{
+      const codes=[...portees].filter(c=>REF.comps[c][1]===b).sort(cmpCode);
+      // Les cochées, et une voisine non cochée par bloc pour montrer le choix.
+      const pris=codes.filter(c=>CHOISIES.includes(c));
+      const montrer=[...pris,...codes.filter(c=>!pris.includes(c)).slice(0,1)].sort(cmpCode);
+      const bl=el("div");
+      const t=el("p","bloc-l"); t.append(el("b","","BLOC "+b),el("span","",REF.blocs[b])); bl.appendChild(t);
       montrer.forEach(c=>{
-        const l=document.createElement("div"); l.className="cp"+(CHOISIES.includes(c)?" pris":"");
+        const l=el("div","cp"+(CHOISIES.includes(c)?" pris":""));
         if (CHOISIES.includes(c)) l.style.setProperty("--d", 500+(n++)*380);
-        const cb=document.createElement("i"); cb.className="cb";
-        const co=document.createElement("code"); co.textContent=c;
-        const s=document.createElement("span"); s.textContent=REF.comps[c][0];
-        l.append(cb,co,s); bl.appendChild(l);
+        l.append(el("i","cb"),el("code","",c),el("span","",REF.comps[c][0]));
+        bl.appendChild(l);
       });
       hote.appendChild(bl);
     });
   })();
+  (function lignesFormulation(){
+    // Lignes de l’évaluation d’exemple de l’application : deux regroupements (OP), une compétence reformulée, une laissée telle quelle.
+    const lignes=[
+      ["OP 1",["C4.1","C4.3"],"Constituer un corpus de références et en tirer des principes formels réutilisables","Carnet de projet"],
+      ["OP 2",["C10.3","C11.2"],"Éprouver les assemblages par la maquette et en dégager un principe technique viable","Maquettes de recherches"],
+      ["",["C10.6"],"Présenter le principe d’assemblage sur deux planches lisibles à un mètre","Planches de projet"],
+      ["",["C2.1"],"","Carnet de projet"]
+    ];
+    const hote=document.getElementById("lignes-form");
+    lignes.forEach(([op,codes,critere,livrable],r)=>{
+      const lg=el("div","lg a"+(op?" op":"")); lg.style.setProperty("--d",150+r*150);
+      const haut=el("div","haut");
+      if (op) haut.appendChild(el("span","num",op));
+      codes.forEach(c=>{ const cd=el("span","cd"); cd.append(el("b","",c),el("span","",REF.comps[c][0])); haut.appendChild(cd); });
+      if (op) haut.appendChild(el("span","bt ghost","Délier"));
+      const ro=el("div","ro");
+      const champ=critere?el("span","saisie a",critere):el("span","saisie attente","Formuler ce qui est attendu (sinon l’intitulé du référentiel)…");
+      if (critere) champ.style.setProperty("--d",900+r*250);
+      const chip=el("span","chip a",livrable); chip.style.setProperty("--d",1700+r*150);
+      ro.append(el("span","mini","Critère observable"),champ,chip);
+      lg.append(el("i","cbx"),haut,ro);
+      hote.appendChild(lg);
+    });
+  })();
   (function grillePromo(){
+    // Une colonne par ligne de l’évaluation, comme la grille de la promo ; 0 : non rendu, rien à saisir.
     const noms=["Camille Ferrand","Yasmine Haddad","Noé Baptiste","Linh Tran","Timothée Vasseur","Aïssatou Konaté","Sacha Delaunay"];
-    const nv=[[3,4,3,3],[2,3,3,4],[3,2,2,3],[4,4,3,3],[1,2,0,2],[3,3,4,3],[2,2,3,2]];
+    const nv=[[3,4,3,3],[2,3,3,4],[3,2,2,3],[4,4,3,null],0,[3,3,4,3],[2,1,3,2]];
     const tb=document.querySelector("#grille-promo tbody");
     let d=400;
     noms.forEach((nom,r)=>{
-      const tr=document.createElement("tr");
-      const th=document.createElement("th"); th.className="n"; th.textContent=nom; tr.appendChild(th);
-      nv[r].forEach(l=>{
-        const td=document.createElement("td");
-        if (l===0){ td.className="nr"; td.textContent="non rendu"; }
-        else { td.dataset.l=l; td.style.setProperty("--d",d); d+=55; }
+      const tr=el("tr");
+      tr.appendChild(el("th","n",nom));
+      const nr=nv[r]===0, niveaux=nr?[null,null,null,null]:nv[r];
+      tr.appendChild(el("td","rd"+(nr?" nr":""),nr?"Non rendu":"Rendu"));
+      niveaux.forEach(l=>{
+        const td=el("td");
+        if (l===null) td.className="sans";
+        else { td.dataset.l=l; td.style.setProperty("--d",d); d+=45; }
         tr.appendChild(td);
       });
+      tr.appendChild(el("td","ft",`${niveaux.filter(l=>l!==null).length}/4`));
       tb.appendChild(tr);
     });
   })();
   (function progression(){
-    const lignes=[["C4.1",[2,3,3,0],"Guidé — DN2"],["C4.3",[1,2,3,0],"Guidé — DN2"],["C10.3",[0,2,2,0],"Initié — DN1"],["C10.6",[2,2,4,0],"Guidé — DN2"],["C11.2",[0,1,3,0],"Guidé — DN2"],["C2.1",[3,3,3,0],"Guidé — DN2"],["C8.1",[2,0,0,0],"Initié — DN1"]];
+    // [code, évaluations (semestre, degré de 1 à 4)] ; un niveau DN MADE est atteint dès un « Acquis » dans son année.
+    const PALIERS=["Initié","Guidé","Autonome"], ANNEE_COURANTE=2, SEUIL=3;
+    const lignes=[["C2.1",[["S1",3],["S2",3],["S3",3]]],["C4.1",[["S1",2],["S2",3],["S3",3]]],["C4.3",[["S2",2],["S3",3]]],
+      ["C10.3",[["S2",2],["S3",2]]],["C10.6",[["S2",2],["S3",4]]],["C11.2",[["S3",3]]]];
+    const DEGRES=["Non acquis","En cours d’acquisition","Acquis","Maîtrisé"];
     const hote=document.getElementById("prog-lignes");
-    let d=300;
-    lignes.forEach(([c,ls,niv],r)=>{
-      const l=document.createElement("div"); l.className="lgp a"; l.style.setProperty("--d",100+r*80);
-      const co=document.createElement("code"); co.textContent=c;
-      const lib=document.createElement("span"); lib.className="lib"; lib.textContent=REF.comps[c][0];
-      l.append(co,lib);
-      ls.forEach(v=>{ const s=document.createElement("span"); s.className="c"; if(v){ s.dataset.l=v; s.style.setProperty("--d",d); d+=60; } l.appendChild(s); });
-      const n=document.createElement("span"); n.className="niv"; n.textContent=niv; l.appendChild(n);
+    let d=500, bloc="", r=0;
+    lignes.forEach(([c,evals])=>{
+      const b=REF.comps[c][1];
+      if (b!==bloc){ bloc=b; const h=el("div","bh bloc a",`${b} - ${REF.blocs[b]}`); h.style.setProperty("--d",160+r*80); hote.appendChild(h); }
+      const l=el("div","lgp a"); l.style.setProperty("--d",200+r*80); r++;
+      const dernier=evals[evals.length-1][1];
+      const pv=el("span","pv",DEGRES[dernier-1]); pv.dataset.l=dernier; pv.style.setProperty("--d",d); d+=120;
+      const lib=el("span","lib"); lib.append(el("b","",c),REF.comps[c][0]);
+      const trj=el("span","trj");
+      evals.forEach(([s,v],j)=>{
+        if (j) trj.append(el("span","",v>evals[j-1][1]?"↗":v<evals[j-1][1]?"↘":"→"));
+        const p=el("span"); const pastille=el("i"); pastille.style.background=`var(--l${v})`; p.append(pastille,s); trj.appendChild(p);
+      });
+      const dn=el("span","dntrk");
+      PALIERS.forEach((nom,k)=>{
+        const an=k+1, dansAnnee=evals.filter(([s])=>Math.ceil(+s.slice(1)/2)===an);
+        const ok=dansAnnee.some(([,v])=>v>=SEUIL), vu=dansAnnee.length>0;
+        const s=el("span","dnst"+(ok?" ok":vu?" vu":"")+(an>ANNEE_COURANTE?" futur":"")); s.append(el("i"),nom); dn.appendChild(s);
+      });
+      l.append(pv,lib,trj,dn);
       hote.appendChild(l);
     });
   })();
-
   /* ---------- La visite au défilement ---------- */
+  // Sur téléphone, le menu passe sur plusieurs lignes : la reconstitution se cale sous l’en-tête, quelle que soit sa hauteur.
+  const entete=document.querySelector("header.top");
+  if (entete && "ResizeObserver" in window) new ResizeObserver(()=>document.documentElement.style.setProperty("--entete",entete.offsetHeight+"px")).observe(entete);
   const app=document.getElementById("app");
   const etapes=[...document.querySelectorAll(".etape")];
   const ecrans=[...document.querySelectorAll(".scr")];
-  const onglets=[...app.querySelectorAll(".onglets span")];
+  const onglets=[...app.querySelectorAll(".onglets .onglet")];
+  const outilEchange=document.getElementById("outil-echange");
   const reperes=document.getElementById("reperes");
   etapes.forEach(()=>reperes.appendChild(document.createElement("i")));
   let actif=null, jeton=0;
@@ -1249,8 +1436,8 @@ npm run dev</code></pre>
       setTimeout(tape,500);
     }
     if (id==="comp"){
-      const c=document.getElementById("compteur"); c.textContent="0";
-      CHOISIES.forEach((_,i)=>plus(500+i*380+200,()=>{ c.textContent=String(i+1); },t));
+      const c=document.getElementById("compteur"); c.textContent=`0 / ${portees.size}`;
+      CHOISIES.forEach((_,i)=>plus(500+i*380+200,()=>{ c.textContent=`${i+1} / ${portees.size}`; },t));
     }
     if (id==="ref"){
       const svg=document.getElementById("roue-app"), info=document.getElementById("ref-info");
@@ -1287,6 +1474,7 @@ npm run dev</code></pre>
     const tab=+st.dataset.tab;
     onglets.forEach((o,i)=>o.classList.toggle("on",i===tab));
     app.classList.toggle("ferme",id==="coffre");
+    outilEchange.classList.toggle("on",id==="echange");
     [...reperes.children].forEach((r,i)=>r.classList.toggle("on",etapes[i]===st));
     sequence(id);
   }
