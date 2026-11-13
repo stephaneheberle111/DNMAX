@@ -1,6 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { LONGUEUR_MAXIMALE_NOM, creerIdentite, lireIdentite, nettoyerNom, separerNom } from "./identite";
+import { LONGUEUR_MAXIMALE_NOM, creerIdentite, identiteRenommee, lireIdentite, nettoyerNom, separerNom } from "./identite";
+
+describe("identiteRenommee", () => {
+  const IDENTITE = { id: "poste-1", nom: "Camille Ferrand", prenom: "Camille", nomFamille: "Ferrand" };
+
+  it("rend l'identité corrigée, avec le même identifiant", () => {
+    expect(identiteRenommee(IDENTITE, "Camille", "Ferrand-Roux")).toEqual({
+      id: "poste-1",
+      nom: "Camille Ferrand-Roux",
+      prenom: "Camille",
+      nomFamille: "Ferrand-Roux",
+    });
+  });
+
+  it("ne change rien quand seuls des espaces diffèrent", () => {
+    expect(identiteRenommee(IDENTITE, "Camille ", "  Ferrand")).toBeNull();
+  });
+
+  it("garde l'identité tant que le prénom ou le nom est vide", () => {
+    expect(identiteRenommee(IDENTITE, "", "Ferrand")).toBeNull();
+    expect(identiteRenommee(IDENTITE, "Camille", "  ")).toBeNull();
+  });
+
+  it("ignore une valeur qui n'est pas du texte", () => {
+    expect(identiteRenommee(IDENTITE, undefined, "Ferrand")).toBeNull();
+    expect(identiteRenommee(IDENTITE, "Camille", 42)).toBeNull();
+  });
+});
 
 describe("nettoyerNom", () => {
   it("retire les espaces superflus", () => {

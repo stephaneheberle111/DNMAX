@@ -1,0 +1,96 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* « Échanger… » et « Mon compte » à droite de la barre du haut : même hauteur,
+   même fond et même bordure que le groupe d'onglets, pour se lire comme ses voisins. */
+.bar-outils {
+  position: relative;
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.bar-outil {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.bar-outil:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.bar-outil:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Menu ouvert, ou page Préférences affichée : le bouton se marque comme un onglet choisi. */
+.bar-outil[aria-expanded="true"],
+.bar-outil.actif {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line-strong);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.bar-icone,
+.bar-chevron {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bar-chevron {
+  width: 14px;
+  height: 14px;
+  margin-left: -2px;
+  transition: transform 0.15s;
+}
+
+.bar-outil[aria-expanded="true"] .bar-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-chevron {
+    transition: none;
+  }
+}
+
+/* Grands écrans (1920 px et plus) : la barre gagne en présence, comme le texte (voir application.css). */
+@media (min-width: 1700px) {
+  .bar-outils {
+    gap: 8px;
+  }
+
+  .bar-outil {
+    padding: 8px 15px;
+  }
+}
+
+/* Téléphone : les onglets passent en bas ; la barre du haut ne garde que les icônes. */
+html[data-device="phone"] .bar-outil {
+  min-height: 40px;
+  padding: 7px 10px;
+  font-size: 0;
+  gap: 3px;
+}
+
+html[data-device="phone"] .bar-chevron {
+  margin-left: 0;
+}

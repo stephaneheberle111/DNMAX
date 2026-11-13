@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { normaliserNomPersonne, provisionnerEnseignantMoi, renommerEnseignantMoi } from "./enseignant-moi";
+import { normaliserNomPersonne, provisionnerEnseignantMoi } from "./enseignant-moi";
 import type { Identite } from "./identite";
 
 const IDENTITE: Identite = { id: "poste-1", nom: "Hélène Durand", prenom: "Hélène", nomFamille: "Durand" };
@@ -63,29 +63,5 @@ describe("provisionnerEnseignantMoi", () => {
     if (premier !== null) {
       expect(provisionnerEnseignantMoi(premier, IDENTITE)).toBeNull();
     }
-  });
-});
-
-describe("renommerEnseignantMoi", () => {
-  const moi = { id: "poste-1", prenom: "Hélène", nomFam: "Durand", nom: "Hélène Durand", discipline: "Atelier" };
-  const renommee: Identite = { id: "poste-1", nom: "Hélène Martin-Durand", prenom: "Hélène", nomFamille: "Martin-Durand" };
-
-  it("reporte le nouveau nom sur l'enseignant créé pour l'installation", () => {
-    expect(renommerEnseignantMoi({ enseignants: [COLLEGUE, moi], moi: "poste-1" }, renommee)).toEqual({
-      enseignants: [COLLEGUE, { ...moi, nomFam: "Martin-Durand", nom: "Hélène Martin-Durand" }],
-      moi: "poste-1",
-    });
-  });
-
-  it("laisse un enseignant « moi » choisi à la main", () => {
-    expect(renommerEnseignantMoi({ enseignants: [COLLEGUE, moi], moi: "t1" }, renommee)).toBeNull();
-  });
-
-  it("ne change rien si l'enseignant a été supprimé", () => {
-    expect(renommerEnseignantMoi({ enseignants: [COLLEGUE], moi: "poste-1" }, renommee)).toBeNull();
-  });
-
-  it("ne change rien quand le nom est déjà le bon", () => {
-    expect(renommerEnseignantMoi({ enseignants: [moi], moi: "poste-1" }, IDENTITE)).toBeNull();
   });
 });

@@ -120,7 +120,7 @@ const PRISE_EN_MAIN: Parcours = {
       titre: "Bienvenue dans DNMAX",
       texte:
         "En quelques minutes, vous allez installer et valider votre référentiel, déclarer vos promotions, vos collègues et votre répartition de service, puis créer et exporter votre première évaluation. " +
-        "Vous pouvez passer cette visite à tout moment et la relancer depuis « Mon compte ».",
+        "Vous pouvez passer cette visite à tout moment et la relancer depuis « Paramètres », panneau « Visites guidées ».",
     },
     {
       titre: "1. Choisir le référentiel",
@@ -271,7 +271,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "C'est prêt",
       texte:
-        "Vous savez l'essentiel. Pour saisir les résultats élève par élève, activez le module Élèves dans « Paramètres » : il a sa propre visite, comme le module Niveaux DN MADE. Cette visite se relance depuis « Mon compte ».",
+        "Vous savez l'essentiel. Pour saisir les résultats élève par élève, activez le module Élèves dans « Paramètres » : il a sa propre visite, comme le module Niveaux DN MADE. Cette visite se relance depuis « Paramètres », panneau « Visites guidées ».",
     },
   ],
 };
