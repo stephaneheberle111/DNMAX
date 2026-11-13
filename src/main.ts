@@ -28,6 +28,9 @@ import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } fro
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
 import { proposerOuvertureExport } from "./ecran-export";
+import { confirmerMotDePasseEleves } from "./ecran-mot-de-passe-eleves";
+import { lireVerrouillageParInactivite, surveillerInactivite } from "./ecran-verrouillage";
+import { moduleElevesActif } from "./domaine/securite";
 import { installerSauvegardes } from "./ecran-sauvegardes";
 import {
   attendreAvantFermeture,
@@ -59,11 +62,17 @@ const MINUTEUR_NAVIGATEUR: Minuteur = {
 async function ouvrirDonnees(): Promise<Entrees> {
   const etat = await lireEtatCoffre();
   // Déjà ouvert : la page a été rechargée en cours de session, inutile de redemander le mot de passe.
-  return etat === "ouvert" ? await lireCoffre() : await demanderOuvertureCoffre(etat === "verrouille");
+  return etat === "ouvert"
+    ? await lireCoffre()
+    : await demanderOuvertureCoffre(etat === "verrouille", lireVerrouillageParInactivite());
 }
 
 /** Application ouverte dans son enveloppe : magasin enregistré dans le coffre, et de quoi échanger. */
-async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: AccesDonnees }> {
+async function creerMagasinProtege(): Promise<{
+  magasin: MagasinMemoire;
+  acces: AccesDonnees;
+  ecrireEnAttente: () => Promise<boolean>;
+}> {
   const entrees = await ouvrirDonnees();
   const enregistreur = new EnregistreurDiffere(
     enregistrerCoffre,
@@ -143,7 +152,11 @@ async function creerMagasinProtege(): Promise<{ magasin: MagasinMemoire; acces: 
       window.location.reload();
     },
   };
-  return { magasin, acces };
+  const ecrireEnAttente = async (): Promise<boolean> => {
+    await enregistreur.vider();
+    return !enregistreur.aDesModificationsEnAttente;
+  };
+  return { magasin, acces, ecrireEnAttente };
 }
 
 async function demarrer(): Promise<void> {
@@ -156,9 +169,12 @@ async function demarrer(): Promise<void> {
     await chargerInterfaceHistorique(new MagasinMemoire({}, () => undefined));
     return;
   }
-  const { magasin, acces } = await creerMagasinProtege();
+  const { magasin, acces, ecrireEnAttente } = await creerMagasinProtege();
+  surveillerInactivite({ verrouillageExige: () => moduleElevesActif(magasin.entrees()), ecrireEnAttente });
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
-  await chargerInterfaceHistorique(magasin, proposerOuvertureExport);
+  await chargerInterfaceHistorique(magasin, proposerOuvertureExport, () =>
+    confirmerMotDePasseEleves(() => acces.enregistrerMaintenant()),
+  );
   // L'enseignant qui a donné son nom figure d'office parmi les enseignants de l'établissement, marqué « moi ».
   ajusterEnseignants((donnees) => provisionnerEnseignantMoi(donnees, acces.identite));
   installerEchange(acces);

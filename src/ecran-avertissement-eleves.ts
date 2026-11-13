@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-avertissement-eleves.css";
-import { ANNEES_CONSERVATION_ELEVES } from "./configuration";
+import { ANNEES_CONSERVATION_ELEVES, DELAI_VERROUILLAGE_INACTIVITE_MS } from "./configuration";
+import { LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES } from "./domaine/saisie-coffre";
 import {
   composerFicheEleves,
   composerNoteEtablissement,
@@ -88,6 +89,11 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
         "p",
         "",
         "L'accusé de réception n'est pas un consentement : l'évaluation relève de la mission de l'établissement, les élèves en sont informés.",
+      ),
+      creer(
+        "p",
+        "avertissement-securite",
+        `Sécurité : avec ce module, DNMAX exige un mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères et se verrouille après ${String(Math.round(DELAI_VERROUILLAGE_INACTIVITE_MS / 60_000))} minutes sans activité. Chiffrez aussi le disque de l'ordinateur (BitLocker sous Windows, FileVault sur Mac, LUKS sous Linux) : c'est conseillé, pas obligatoire. Les exports Word et Excel, eux, ne sont pas chiffrés.`,
       ),
     );
 

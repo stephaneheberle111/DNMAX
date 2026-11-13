@@ -1,0 +1,13 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+/* Opaque et au-dessus de tout : plus rien des données ne reste visible pendant le verrouillage. */
+.voile-verrouillage {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 15px;
+}

@@ -773,7 +773,16 @@ footer a{color:var(--ink-2)}
 
 <div data-doc="demarrer" data-titre="Premier lancement">
 <h3>Premier lancement</h3>
-<p>Au premier démarrage, DNMAX vous guide en trois étapes&nbsp;:</p>
+<p>Au premier démarrage, une page rappelle d’abord quelques bonnes pratiques&nbsp;; ce sont des conseils, rien ne vous empêche de continuer&nbsp;:</p>
+<ul>
+<li>une session à vous sur l’ordinateur, protégée par un mot de passe, sans partager ni la session ni l’ordinateur&nbsp;;</li>
+<li>l’écran verrouillé dès que vous vous éloignez (Windows + L, Ctrl + Cmd + Q sur Mac, Super + L sous Linux)&nbsp;;</li>
+<li>le disque de l’ordinateur chiffré, conseillé&nbsp;: BitLocker ou «&nbsp;Chiffrement de l’appareil&nbsp;» sous Windows (Paramètres › Confidentialité et sécurité), FileVault sur Mac (Réglages Système › Confidentialité et sécurité), LUKS sous Linux (à choisir à l’installation du système)&nbsp;;</li>
+<li>des sauvegardes, dont une copie de temps en temps hors de l’ordinateur (voir «&nbsp;Données et sauvegardes&nbsp;»)&nbsp;;</li>
+<li>les exports Word et Excel, qui ne sont pas chiffrés&nbsp;;</li>
+<li>le code de secours, à garder hors de l’ordinateur.</li>
+</ul>
+<p>DNMAX vous guide ensuite en trois étapes&nbsp;:</p>
 <ol>
 <li><strong>Choisissez un mot de passe.</strong> Il protège le fichier qui contient toutes vos données. Il vous sera demandé à chaque ouverture.</li>
 <li><strong>Notez votre code de secours, et gardez-le en lieu sûr.</strong> C’est votre seul recours si vous oubliez votre mot de passe.</li>
@@ -834,7 +843,7 @@ footer a{color:var(--ink-2)}
 <tr><th>Lieu de stockage</th><td>Uniquement l’ordinateur de l’enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l’Union européenne des données d’élèves.</td></tr>
 <tr><th>Durée de conservation</th><td>Un an après la sortie de la promotion (fin de l’année scolaire où s’achève le diplôme). DNMAX le rappelle ensuite et propose d’anonymiser ou d’effacer les données ; une promotion peut aussi l’être plus tôt. La durée est réglable avec l’établissement.</td></tr>
 <tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l’établissement. Dans DNMAX, Paramètres → «&nbsp;Données des élèves&nbsp;» permet d’exporter toutes les données d’un étudiant, de l’effacer partout, et d’anonymiser ou d’effacer une promotion.</td></tr>
-<tr><th>Sécurité</th><td>Chiffrement de toutes les données saisies ; mot de passe demandé à chaque ouverture ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.</td></tr>
+<tr><th>Sécurité</th><td>Chiffrement de toutes les données saisies ; mot de passe d’au moins 12 caractères, demandé à chaque ouverture ; verrouillage après 15 minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.</td></tr>
 </table></div>
 <h4>Bonnes pratiques à demander aux enseignants</h4>
 <ul>
@@ -915,6 +924,15 @@ footer a{color:var(--ink-2)}
 <h4>En dernier recours, à la main</h4>
 <p>Si DNMAX ne s’ouvre plus du tout&nbsp;: quittez DNMAX, copiez dans <code>sauvegardes/</code> le fichier du jour voulu (<code>coffre-AAAA-MM-JJ.dnmax</code>) à la place de <code>coffre.dnmax</code>, puis relancez DNMAX avec le mot de passe qui était en vigueur ce jour-là. Gardez de côté une copie de l’ancien <code>coffre.dnmax</code> avant de l’écraser.</p>
 <div class="alerte"><p>Les sauvegardes sont chiffrées comme le coffre&nbsp;: elles ne vous seront d’aucune aide sans votre mot de passe ou votre code de secours.</p></div>
+<h4>Protéger l’ordinateur</h4>
+<p>Le chiffrement de DNMAX protège vos données quand l’application est fermée. Il ne remplace pas la protection de l’ordinateur&nbsp;: une session protégée par un mot de passe et non partagée, l’écran verrouillé quand vous vous éloignez, et, c’est conseillé, le disque chiffré (BitLocker sous Windows, FileVault sur Mac, LUKS sous Linux). Les documents exportés (Word, Excel) ne sont pas chiffrés&nbsp;: rangez-les à l’abri et supprimez ceux qui contiennent des élèves quand ils ne servent plus. Gardez de temps en temps une copie de vos données sur une clé ou un disque externe («&nbsp;Échanger…&nbsp;» → «&nbsp;Changer d’ordinateur&nbsp;»).</p>
+<h4>Avec le module Élèves</h4>
+<p>Les noms et résultats des élèves sont des données personnelles. Quand le module Élèves est actif&nbsp;:</p>
+<ul>
+<li><strong>le mot de passe doit compter au moins 12 caractères</strong> (8 sans le module). À l’activation, DNMAX vous demande de confirmer votre mot de passe et, s’il est plus court, d’en choisir un nouveau&nbsp;; une courte phrase facile à retenir convient très bien. Un mot de passe trop court est aussi remplacé à l’ouverture suivante. Le code de secours reste le même&nbsp;;</li>
+<li><strong>DNMAX se verrouille après 15 minutes sans activité</strong> (ni souris ni clavier)&nbsp;: vos modifications sont enregistrées, les données quittent la mémoire et le mot de passe est redemandé. Si l’enregistrement échoue, DNMAX ne se verrouille pas, pour ne rien perdre, et réessaie un peu plus tard.</li>
+</ul>
+<p>DNMAX ne propose pas de double authentification (code reçu par SMS ou application)&nbsp;: sans serveur, elle n’apporterait pas de vraie protection supplémentaire. Ce sont le mot de passe et la protection de l’ordinateur qui comptent.</p>
 </div>
 
 <div data-doc="ordinateur" data-titre="Changer d’ordinateur">

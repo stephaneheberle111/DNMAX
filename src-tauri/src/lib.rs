@@ -277,6 +277,34 @@ fn changer_mot_de_passe(
     Ok(())
 }
 
+/// Vérifie le mot de passe du coffre ouvert, sans rien changer.
+///
+/// Sert quand l'interface doit s'assurer que c'est bien l'enseignant qui est
+/// devant l'écran (avant d'activer le module Élèves, par exemple).
+#[tauri::command(async)]
+fn verifier_mot_de_passe(
+    application: AppHandle,
+    session: State<'_, Session>,
+    mot_de_passe: String,
+) -> Result<(), ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let session = session.verrou();
+    if session.is_none() {
+        return Err(ErreurCommande::CoffreVerrouille);
+    }
+    let fichier = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
+    coffre::ouvrir(&fichier, &mot_de_passe)?;
+    Ok(())
+}
+
+/// Referme le coffre : la clé quitte la mémoire et le mot de passe devra être
+/// saisi de nouveau. L'interface écrit ce qui est en attente avant d'appeler
+/// cette commande ; un enregistrement plus tardif serait refusé.
+#[tauri::command(async)]
+fn verrouiller_coffre(session: State<'_, Session>) {
+    *session.verrou() = None;
+}
+
 /// Relit le contenu du coffre déjà ouvert (après un rechargement de la page, par exemple).
 #[tauri::command(async)]
 fn lire_coffre(
@@ -568,7 +596,9 @@ pub fn lancer() {
             installer_coffre,
             changer_mot_de_passe,
             lister_sauvegardes,
-            restaurer_sauvegarde
+            restaurer_sauvegarde,
+            verifier_mot_de_passe,
+            verrouiller_coffre
         ])
         .setup(|application| {
             // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.

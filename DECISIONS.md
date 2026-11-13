@@ -95,7 +95,9 @@ La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en
 
 **Conséquence assumée** : mot de passe **et** code de secours perdus, les données sont irrécupérables, y compris par l'auteur de l'application.
 
-**Reste à faire** : verrouiller sans quitter. (Le changement de mot de passe est décrit dans la décision 18, la restauration d'une sauvegarde dans la décision 22.)
+**Verrouiller sans quitter** : avec le module Élèves, l'application se verrouille d'elle-même après une période sans activité (décision 25). (Le changement de mot de passe est décrit dans la décision 18, la restauration d'une sauvegarde dans la décision 22.)
+
+**Au premier lancement**, avant le choix du mot de passe, une page rappelle ce que ce chiffrement ne couvre pas et les bonnes pratiques qui le complètent : session protégée et non partagée, écran verrouillé, chiffrement du disque (BitLocker, FileVault, LUKS) conseillé, sauvegardes hors de l'ordinateur, exports non chiffrés, code de secours gardé hors de l'ordinateur. Elle ne bloque rien : DNMAX ne peut pas vérifier ces points, et le chiffrement du disque ne dépend pas toujours de l'enseignant.
 
 ## 9. Installeurs construits par l'intégration continue, sans certificat
 
@@ -331,3 +333,17 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Conséquence pour les installations existantes** : les versions validées avant cette décision n'ont pas d'attestation ; l'enseignant doit les valider une fois avant d'enregistrer de nouveau une évaluation. Aucune donnée n'est modifiée par la mise à jour.
 
 **Exemple** : « Charger un exemple » atteste, pour sa démonstration, le référentiel qu'il installe lui-même (version notée « Exemple ») et les mentions qu'il en dérive ; il n'atteste jamais un référentiel déjà présent.
+
+## 25. Pas de double authentification ; avec le module Élèves, mot de passe plus long et verrouillage après inactivité
+
+**Demandé** : une double authentification (code reçu par SMS, par courriel ou par une application) pour protéger les données d'élèves.
+
+**Écarté** : DNMAX n'a ni serveur ni compte. Un second facteur n'a de sens que si un tiers le vérifie avant de livrer la clé ; ici, tout se passe sur l'ordinateur de l'enseignant, et la clé des données ne dépend que du mot de passe (décision 8). Un code vérifié par l'application elle-même serait contourné en lisant directement le fichier chiffré : il n'ajouterait qu'une saisie, pas de protection. Rattacher la clé à un objet physique (clé de sécurité matérielle) protégerait vraiment, mais au prix d'un matériel à acheter et d'un risque de perte des données en cas de perte de l'objet, sans commune mesure avec l'usage.
+
+**Retenu à la place**, quand le module Élèves est actif :
+
+- **un mot de passe de 12 caractères au moins** (8 sans le module ; `LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES`, `src/domaine/saisie-coffre.ts`). Le mot de passe n'est jamais conservé, et sa longueur ne peut donc pas être connue après coup : à l'activation du module, après l'avertissement RGPD, DNMAX fait confirmer le mot de passe (vérifié par l'enveloppe, commande `verifier_mot_de_passe`) et, s'il est trop court, en fait choisir un nouveau. À l'ouverture, le mot de passe saisi est connu un instant : s'il est trop court alors que le module est actif (coffre antérieur à cette règle, mot de passe redéfini par le code de secours), un nouveau est demandé avant d'entrer. « Mon compte » applique la même longueur. La règle est tenue par l'interface : l'enveloppe ne connaît pas les modules et garde son minimum de 8 ;
+- **un verrouillage après 15 minutes sans activité** (`DELAI_VERROUILLAGE_INACTIVITE_MS`, `src/configuration.ts`). Ce qui est en attente est écrit, puis l'enveloppe oublie la clé (commande `verrouiller_coffre`) et la page se recharge : plus rien ne reste en mémoire, et le mot de passe est redemandé. Si l'écriture échoue, l'application ne se verrouille pas, pour ne rien perdre, et réessaie après un nouveau délai. L'inactivité se mesure à l'horloge, contrôlée régulièrement et à chaque action, plutôt que par une minuterie qui peut se figer pendant la mise en veille : au réveil, la première action verrouille. Règle : `SurveillanceInactivite`, `src/domaine/securite.ts`, testée avec une horloge simulée ;
+- **un rappel du chiffrement du disque** dans l'avertissement RGPD du module.
+
+**Limite** : une attente sans clavier ni souris (un échange en direct qui attend l'autre enseignant, par exemple) compte comme de l'inactivité ; l'échange est alors interrompu par le verrouillage et se relance.

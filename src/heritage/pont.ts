@@ -44,7 +44,8 @@ interface Pont {
   ajusterEnseignants?: (regle: RegleEnseignants) => void;
   /**
    * Appelée quand l'enseignant coche le module Élèves : avertissement RGPD et
-   * documents à remettre. Rend `true` s'il confirme l'activation.
+   * documents à remettre, puis mot de passe renforcé. Rend `true` s'il
+   * confirme l'activation.
    *
    * @param etablissement nom de l'établissement saisi dans « Mon établissement », vide s'il ne l'est pas
    */
@@ -106,10 +107,14 @@ async function enregistrerPourInterfaceHistorique(
  *
  * @param surExport appelée après chaque document enregistré, avec le nom proposé pour ce document
  *   et l'indication qu'il contient, ou non, des données d'élèves
+ * @param confirmerMotDePasseEleves dernière étape de l'activation du module Élèves, après
+ *   l'avertissement RGPD : rend `true` si le mot de passe convient au module. Hors de
+ *   l'enveloppe, il n'y a pas de mot de passe : rien n'est demandé.
  */
 export async function chargerInterfaceHistorique(
   magasin: MagasinMemoire,
   surExport: SurExport = () => undefined,
+  confirmerMotDePasseEleves: () => Promise<boolean> = () => Promise.resolve(true),
 ): Promise<void> {
   window.XLSX = XLSX;
   window.JSZip = JSZip;
@@ -119,11 +124,11 @@ export async function chargerInterfaceHistorique(
     estCadreVierge,
     nettoyerDiplomesVierges,
     // L'interface historique n'est pas typée : le nom reçu est vérifié.
-    confirmerModuleEleves: (etablissement) =>
-      confirmerActivationEleves({
+    confirmerModuleEleves: async (etablissement) =>
+      (await confirmerActivationEleves({
         etablissement: typeof etablissement === "string" ? etablissement : "",
         enseignant: lireIdentite(magasin.getItem(CLE_IDENTITE))?.nom ?? "",
-      }),
+      })) && (await confirmerMotDePasseEleves()),
     // Données non typées : elles sont relues prudemment, et tout ce qui est illisible vaut « non validé ».
     referentielValide: {
       promotion: (donnees, promotion) =>
