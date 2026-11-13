@@ -122,7 +122,7 @@ export function composerFicheEleves(champs: ChampsDocumentsRgpd): DocumentImprim
       type: "paragraphe",
       contenu: [
         texte(
-          "Elles restent sur l'ordinateur de votre enseignant, chiffrées et protégées par un mot de passe. Elles ne sont ni envoyées sur Internet ni confiées à une entreprise. Votre enseignant peut les transmettre à un collègue de l'équipe pédagogique, dans un fichier protégé par un mot de passe.",
+          "Elles restent sur l'ordinateur de votre enseignant, chiffrées et protégées par un mot de passe. Elles ne sont ni envoyées sur Internet ni confiées à une entreprise. Votre enseignant peut les transmettre à un collègue de l'équipe pédagogique, dans un fichier protégé par un mot de passe ou directement d'ordinateur à ordinateur sur le réseau local, protégées de la même façon.",
         ),
       ],
     },
