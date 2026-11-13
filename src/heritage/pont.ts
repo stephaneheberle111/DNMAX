@@ -65,7 +65,8 @@ interface Pont {
   ouvrirEtablissement?: () => void;
   /**
    * Appelée quand l'enseignant coche le module Élèves : avertissement RGPD et
-   * documents à remettre. Rend `true` s'il confirme l'activation.
+   * documents à remettre, puis mot de passe renforcé. Rend `true` s'il
+   * confirme l'activation.
    *
    * @param etablissement l'objet `DATA.etab` de « Mon établissement » (champs `nom` et `contactDpo` lus)
    */
@@ -131,10 +132,14 @@ async function enregistrerPourInterfaceHistorique(
  *
  * @param surExport appelée après chaque document enregistré, avec le nom proposé pour ce document
  *   et l'indication qu'il contient, ou non, des données d'élèves
+ * @param confirmerMotDePasseEleves dernière étape de l'activation du module Élèves, après
+ *   l'avertissement RGPD : rend `true` si le mot de passe convient au module. Hors de
+ *   l'enveloppe, il n'y a pas de mot de passe : rien n'est demandé.
  */
 export async function chargerInterfaceHistorique(
   magasin: MagasinMemoire,
   surExport: SurExport = () => undefined,
+  confirmerMotDePasseEleves: () => Promise<boolean> = () => Promise.resolve(true),
 ): Promise<void> {
   window.XLSX = XLSX;
   window.JSZip = JSZip;
@@ -146,15 +151,15 @@ export async function chargerInterfaceHistorique(
     zoomCarte,
     renumeroterBloc,
     confirmerChangementEchelle,
-        // L'interface historique n'est pas typée : les champs reçus sont vérifiés.
-    confirmerModuleEleves: (etablissement) =>
-      confirmerActivationEleves({
+    // L'interface historique n'est pas typée : les champs reçus sont vérifiés.
+    confirmerModuleEleves: async (etablissement) =>
+      (await confirmerActivationEleves({
         etablissement: lireSaisieEtablissement(etablissement),
         allerSaisirEtablissement: () => {
           window.dnmaxPont?.ouvrirEtablissement?.();
         },
         date: new Date(),
-      }),
+      })) && (await confirmerMotDePasseEleves()),
     // Données non typées : elles sont relues prudemment, et tout ce qui est illisible vaut « non validé ».
     referentielValide: {
       promotion: (donnees, promotion) =>

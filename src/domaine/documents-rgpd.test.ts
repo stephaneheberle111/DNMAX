@@ -17,6 +17,7 @@ const CHAMPS: ChampsDocumentsRgpd = {
   anneesConservation: 1,
   date: new Date(2026, 10, 13),
   adresseCodeSource: "https://exemple.org/dnmax",
+  minutesVerrouillage: 15,
 };
 
 /** Tout le texte d'un document, blocs imbriqués compris, pour y chercher une phrase. */
@@ -155,6 +156,12 @@ describe("composerFicheEleves", () => {
 });
 
 describe("composerNoteEtablissement", () => {
+  it("cite la longueur du mot de passe et le délai de verrouillage du module Élèves", () => {
+    const texte = texteDe(composerNoteEtablissement({ ...CHAMPS, minutesVerrouillage: 20 }));
+    expect(texte).toContain("mot de passe d'au moins 12 caractères");
+    expect(texte).toContain("verrouillage après 20 minutes sans activité");
+  });
+
   it("s'intitule « Note au chef d'établissement », sur deux pages", () => {
     const note = composerNoteEtablissement(CHAMPS);
     expect(note.pages[0]?.[0]).toEqual({ type: "titre", texte: "Note au chef d'établissement" });
