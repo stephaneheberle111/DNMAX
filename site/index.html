@@ -874,8 +874,18 @@ footer a{color:var(--ink-2)}
 <p>Le tableau enseignements × semestres donne le code que porte chaque enseignement à chaque semestre. Le tableau compétences × semestres donne les enseignements qui portent chaque compétence&nbsp;; une case vide signifie qu’elle n’y est pas mobilisable.</p>
 <h4>Recherche</h4>
 <p>Par code, unité ou mot-clé, avec regroupement au choix et filtres d’année et de semestres.</p>
+<h4>Constituer le référentiel</h4>
+<p>Référentiel → <strong>Constituer</strong> construit ou corrige le référentiel de la mention choisie, en cinq étapes&nbsp;:</p>
+<ol>
+<li><strong>Unités d’enseignement</strong>&nbsp;: couleur, code, nom et semestres de chaque UE.</li>
+<li><strong>Enseignements constitutifs</strong>&nbsp;: couleur, codes par année, intitulé, UE de rattachement, semestres et ECTS de chaque EC.</li>
+<li><strong>Blocs et compétences</strong>&nbsp;: numéro et intitulé de chaque bloc, puis code, intitulé et bloc de chaque compétence. Les EC qui portent une compétence s’y lisent sans s’y modifier.</li>
+<li><strong>Planification par semestre</strong>&nbsp;: le tableau compétences × enseignements, où chaque case rattache une compétence à un EC pour un semestre.</li>
+<li><strong>Validation</strong>, décrite ci-dessous.</li>
+</ol>
+<p>Chaque étape ne crée, ne renomme et ne retire que ses propres éléments&nbsp;; ceux des autres étapes y apparaissent en lecture seule. Le nom d’une UE se modifie à l’étape&nbsp;1, pas à l’étape&nbsp;2, où l’on choisit seulement l’UE d’un enseignement. «&nbsp;Retirer&nbsp;» enlève un élément du référentiel de cette mention sans l’effacer&nbsp;: il reste proposé dans la liste d’ajout, parmi les éléments déjà connus. Un nom, un code ou un intitulé est commun aux mentions qui retiennent le même élément&nbsp;: le modifier le modifie dans chacune. Changer le numéro d’un bloc fait suivre ses compétences&nbsp;; un numéro déjà pris par un autre bloc est refusé.</p>
 <h4>Vérifier et valider le référentiel</h4>
-<p>Avant une première évaluation, ouvrez Référentiel → Constituer et relisez les unités, les enseignements et la planification par semestre. À la dernière étape, «&nbsp;Validation&nbsp;», cochez la case «&nbsp;J’ai vérifié ce référentiel et j’en assume le contenu&nbsp;: l’hébergeur et le développeur de DNMAX n’en sont pas responsables&nbsp;», puis cliquez «&nbsp;Valider cette version&nbsp;». Sans la case cochée, rien n’est validé.</p>
+<p>Avant une première évaluation, ouvrez Référentiel → Constituer et relisez les unités, les enseignements, les blocs et compétences et la planification par semestre. À la dernière étape, «&nbsp;Validation&nbsp;», cochez la case «&nbsp;J’ai vérifié ce référentiel et j’en assume le contenu&nbsp;: l’hébergeur et le développeur de DNMAX n’en sont pas responsables&nbsp;», puis cliquez «&nbsp;Valider cette version&nbsp;». Sans la case cochée, rien n’est validé.</p>
 <p>Un référentiel installé depuis l’encart de départ ou reçu d’un collègue arrive <strong>non validé</strong>, même si son auteur l’avait validé chez lui&nbsp;: c’est votre propre vérification qui compte. Dans la liste des versions, chacune indique si vous l’avez validée&nbsp;; une ancienne version encore suivie par une promotion se valide aussi depuis cette liste, avec la même case. L’exemple («&nbsp;Charger un exemple&nbsp;») valide pour sa démonstration le référentiel qu’il installe lui-même, jamais le vôtre.</p>
 </div>
 
