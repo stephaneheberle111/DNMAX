@@ -135,7 +135,7 @@ La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en
 
 **Limite assumée** : le nom est déclaratif. Rien n'empêche de saisir le nom d'un autre, ni de retoucher un fichier d'échange : c'est une information entre personnes de confiance, pas une preuve. Une signature vérifiable demanderait d'échanger des clés entre enseignants.
 
-Le nom se corrige dans « Mon compte » (décision 18).
+Le nom se corrige sur la ligne « C'est moi » de « Mon établissement » (décision 18).
 
 ## 12. Un référentiel reçu devient une nouvelle version, jamais activée d'office
 
@@ -143,7 +143,7 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Rien n'est activé** : ni le référentiel de travail, ni la version en vigueur, ni les promotions ne changent. L'enseignant applique lui-même la version reçue depuis Référentiel → Constituer → Validation. Un import ne peut donc pas modifier en silence le référentiel sur lequel des évaluations sont en cours.
 
-**Le dictionnaire de libellés est partagé entre tous les diplômes** : un libellé reçu est réutilisé s'il existe déjà à l'identique, ajouté sinon, et rangé sous un nouvel identifiant si le sien est déjà pris par un libellé différent. Un libellé local n'est jamais modifié. Conséquence visible : après réception d'un référentiel qui reformule une compétence, le dictionnaire (Référentiel → Définir) contient les deux formulations.
+**Le dictionnaire de libellés est partagé entre tous les diplômes** : un libellé reçu est réutilisé s'il existe déjà à l'identique, ajouté sinon, et rangé sous un nouvel identifiant si le sien est déjà pris par un libellé différent. Un libellé local n'est jamais modifié. Conséquence visible : après réception d'un référentiel qui reformule une compétence, le dictionnaire interne contient les deux formulations, et la plus ancienne reste proposée dans la liste d'ajout de Référentiel → Constituer.
 
 **Évaluations du même fichier** : une évaluation construite sur le référentiel reçu est rattachée à la version créée.
 
@@ -221,13 +221,18 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Limite** : l'exemple chargé avant cette version n'a pas d'état « avant » enregistré et ne peut pas être retiré par ce bouton.
 
-## 18. « Mon compte » : nom, mot de passe, à propos et retours
+## 18. « Mon compte » : un menu, mot de passe et préférences
 
-**Retenu** : un bouton « Mon compte… » ouvre trois rubriques.
+**Retenu** (révisé) : « Mon compte » est un menu de la barre du haut, à droite des onglets, à côté de « Échanger… », avec deux entrées.
 
-- **Nom** : l'enseignant peut le corriger ; son identifiant d'installation ne change pas, et les modifications déjà signées gardent l'ancien nom.
 - **Mot de passe** : il se change en fournissant l'ancien. Seule la clé de données est ré-enfermée sous le nouveau mot de passe ; le contenu n'est pas rechiffré et le code de secours reste valable. Les sauvegardes antérieures s'ouvrent toujours avec le mot de passe en vigueur le jour où elles ont été faites.
-- **À propos** : version, licence, et trois liens ouverts dans le navigateur (idées et bugs, site, code source).
+- **Préférences** : une page sans onglet propre, qui regroupe ce qui relève du goût de l'enseignant plutôt que de l'établissement : thème (clair, sombre, comme le système), échelles d'évaluation, nom du champ d'évaluation et livrables proposés. Tout changement d'échelle rappelle d'abord que l'échelle officielle des DN MADE est celle des niveaux de maîtrise.
+
+**Nom** : il ne se corrige plus dans « Mon compte » mais sur la ligne « C'est moi » de « Mon établissement » › « Enseignants », qui le montrait déjà : un seul endroit pour un même nom. L'identité (qui signe les envois) reprend ce prénom et ce nom tant qu'ils sont tous deux remplis ; l'identifiant d'installation ne change pas, et les modifications déjà signées gardent l'ancien nom.
+
+**À propos** (version, licence, liens vers les idées et bugs, le site et le code source) s'ouvre depuis le pied de page. Les **visites guidées** se relancent depuis Paramètres.
+
+**Thème** : rangé dans le stockage de la vue web de l'ordinateur, pas dans le coffre, pour s'appliquer dès l'écran du mot de passe. Ce n'est qu'un réglage d'affichage ; il n'est ni chiffré, ni échangé, ni sauvegardé.
 
 **Canal de retours** : la page « Idées et bugs » du site, qui ouvre un ticket prérempli sur GitHub. Un enseignant sans compte GitHub ne peut donc pas déposer lui-même un retour par ce canal.
 
@@ -318,7 +323,7 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 ## 23. Visite guidée intégrée, guidée par l'état réel des données
 
-**Retenu** : une visite pas à pas dans l'application (`src/ecran-parcours.ts`, étapes dans `src/parcours-etapes.ts`), plutôt qu'une documentation ou une vidéo. L'écran est grisé sauf la zone où agir ; un curseur animé montre le geste attendu. La prise en main se lance à la première ouverture, une seule fois (entrée `dnmax.parcours` du coffre), et se relance depuis « Mon compte » ; les modules Élèves et Niveaux DN MADE ont chacun leur visite, lancée depuis leur carte dans Paramètres.
+**Retenu** : une visite pas à pas dans l'application (`src/ecran-parcours.ts`, étapes dans `src/parcours-etapes.ts`), plutôt qu'une documentation ou une vidéo. L'écran est grisé sauf la zone où agir ; un curseur animé montre le geste attendu. La prise en main se lance à la première ouverture, une seule fois (entrée `dnmax.parcours` du coffre), et se relance depuis Paramètres, panneau « Visites guidées » ; les modules Élèves et Niveaux DN MADE ont chacun leur visite, lancée depuis leur carte dans Paramètres.
 
 **Pourquoi** : les bêta-testeurs doivent pouvoir démarrer seuls, sans démonstration. Chaque étape lit ce qui est réellement fait (référentiel installé, promotions, enseignants, répartition, évaluations, modules ; `src/domaine/parcours.ts`) : elle salue l'objectif atteint et passe à la suite, et saute ce qui était déjà fait quand on relance la visite.
 
@@ -339,3 +344,21 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Conséquence pour les installations existantes** : les versions validées avant cette décision n'ont pas d'attestation ; l'enseignant doit les valider une fois avant d'enregistrer de nouveau une évaluation. Aucune donnée n'est modifiée par la mise à jour.
 
 **Exemple** : « Charger un exemple » atteste, pour sa démonstration, le référentiel qu'il installe lui-même (version notée « Exemple ») et les mentions qu'il en dérive ; il n'atteste jamais un référentiel déjà présent.
+
+## 25. Aucune donnée dans ce qui est livré, vérifié à chaque fusion
+
+**Retenu** : l'intégration continue démarre l'interface telle qu'elle est livrée, dans un navigateur sans données, et échoue si le démarrage contient autre chose qu'une installation vierge (`outils/verifier-installation-vide.ts`, règle testée dans `outils/installation-vide.ts`) : ni référentiel, ni diplôme nommé, ni établissement, ni enseignant, ni promotion, ni élève, ni évaluation. Seuls sont admis le diplôme-cadre vide et la liste des types de livrables proposés.
+
+**Pourquoi** : livrer une donnée d'exemple ou un reste d'essai dans une version mettrait des noms dans les installations des enseignants. Une vérification humaine ne suffit pas à le garantir dans la durée.
+
+**Outil** : Playwright (licence Apache 2.0, statut SILL non vérifié), déjà utilisé pour les essais à l'écran ; retenu pour piloter un vrai navigateur sans serveur ni service extérieur.
+
+## 26. Le référentiel se constitue en cinq étapes, sans volet « Définir »
+
+**Retenu** : le volet Référentiel → Définir, qui éditait à part les noms, codes et intitulés de tous les éléments, est abandonné. Référentiel → Constituer compte cinq étapes : 1. unités d'enseignement, 2. enseignements constitutifs, 3. blocs et compétences (nouvelle), 4. planification par semestre, 5. validation. Chaque étape crée, renomme et retire **ses propres éléments seulement** ; les autres y sont en lecture seule (à l'étape 2, l'UE d'un EC se choisit dans une liste mais ne se renomme pas ; à l'étape 4, blocs et compétences ne se créent ni ne se modifient plus, seules les cases du tableau changent).
+
+**Raison** : deux endroits pour modifier le même élément brouillaient qui modifie quoi, et l'enseignant passait de Définir à Constituer pour une seule correction. Une étape par niveau du référentiel suit l'ordre dans lequel on le construit.
+
+**Modèle de données inchangé** : le dictionnaire (`dnmade.data` → `dico`) reste le magasin des noms, codes et intitulés, commun aux mentions ; chaque référentiel (`refs`) garde ses associations. Les étapes modifient la vue fusionnée de la mention active, qui rejoint le dictionnaire à l'enregistrement, comme avant. Aucune migration : les données existantes s'affichent telles quelles, et l'échange de référentiels, l'exemple et la validation ne changent pas. « Retirer » enlève l'élément du référentiel sans l'effacer du dictionnaire (les versions datées peuvent encore en avoir besoin) ; il reste proposé dans la liste d'ajout de son étape.
+
+**Numéro d'un bloc** : une compétence désigne son bloc par son numéro. Renuméroter un bloc fait donc suivre les compétences qui le désignaient dans chaque référentiel qui retient ce bloc et dans les versions datées, et un numéro déjà porté par un autre bloc d'un de ces référentiels est refusé. Règle pure et testée : `src/domaine/numero-bloc.ts`, appelée via le pont (`window.dnmaxPont.renumeroterBloc`). Avant, changer le numéro dans Définir laissait les compétences « sans bloc ».
