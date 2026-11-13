@@ -77,7 +77,7 @@ const GABARIT_CREATION = `
   <label>Mot de passe, une seconde fois
     <input type="password" name="confirmation" autocomplete="new-password" required></label>
   <p class="coffre-avertissement">Sans ce mot de passe ni le code de secours affiché à l'étape suivante, vos données
-     sont définitivement illisibles : personne ne peut les récupérer.</p>
+     sont définitivement illisibles&nbsp;: personne ne peut les récupérer.</p>
   <p class="coffre-erreur" role="alert" hidden></p>
   <div class="coffre-actions">
     <button type="button" class="lnk" data-role="transfert">J'ai déjà mes données sur un autre ordinateur</button>
