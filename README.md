@@ -4,7 +4,7 @@ DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs �
 
 C'est une application de bureau autonome pour Windows, Linux et macOS : pas de serveur central, pas de compte, les données restent sur l'ordinateur de l'enseignant.
 
-> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs élèves. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Les mises à jour leur sont proposées au lancement (voir « Publier une version »).
+> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs élèves. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Les mises à jour leur sont proposées quand ils cliquent « Rechercher une mise à jour », en bas de la fenêtre (voir « Publier une version »).
 
 ## Où sont les données
 
@@ -123,7 +123,7 @@ L'atelier « Téléchargements » (`.github/workflows/telechargements.yml`) dép
 
 **À la main, en secours** : client FTP (FileZilla, par exemple) en **« Connexion FTP explicite sur TLS »**, jamais en FTP clair ; copier le contenu de `site/`, y compris le fichier caché `.htaccess`, dans `www`. Vérifier ensuite <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
 
-Le formulaire « Idées et bugs » de la page ouvre un ticket prérempli sur GitHub.
+Le formulaire « Idées et bugs » de la page ouvre, au choix, un ticket prérempli sur GitHub ou un message prérempli adressé à contact@dnmax.fr.
 
 Les boutons de téléchargement pointent sur des fichiers à nom fixe de la dernière version publiée (`DNMAX-windows.exe`, `DNMAX-macos.dmg`, `DNMAX-linux.AppImage`, `DNMAX-linux.deb`), que l'atelier « Publication » joint à chaque version.
 
