@@ -142,7 +142,7 @@ Le nom se corrige dans « Mon compte » (décision 18).
 
 **Rien n'est activé** : ni le référentiel de travail, ni la version en vigueur, ni les promotions ne changent. L'enseignant applique lui-même la version reçue depuis Référentiel → Constituer → Validation. Un import ne peut donc pas modifier en silence le référentiel sur lequel des évaluations sont en cours.
 
-**Le dictionnaire de libellés est partagé entre tous les diplômes** : un libellé reçu est réutilisé s'il existe déjà à l'identique, ajouté sinon, et rangé sous un nouvel identifiant si le sien est déjà pris par un libellé différent. Un libellé local n'est jamais modifié. Conséquence visible : après réception d'un référentiel qui reformule une compétence, le dictionnaire (Référentiel → Définir) contient les deux formulations.
+**Le dictionnaire de libellés est partagé entre tous les diplômes** : un libellé reçu est réutilisé s'il existe déjà à l'identique, ajouté sinon, et rangé sous un nouvel identifiant si le sien est déjà pris par un libellé différent. Un libellé local n'est jamais modifié. Conséquence visible : après réception d'un référentiel qui reformule une compétence, le dictionnaire interne contient les deux formulations, et la plus ancienne reste proposée dans la liste d'ajout de Référentiel → Constituer.
 
 **Évaluations du même fichier** : une évaluation construite sur le référentiel reçu est rattachée à la version créée.
 
@@ -339,3 +339,13 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Pourquoi** : livrer une donnée d'exemple ou un reste d'essai dans une version mettrait des noms dans les installations des enseignants. Une vérification humaine ne suffit pas à le garantir dans la durée.
 
 **Outil** : Playwright (licence Apache 2.0, statut SILL non vérifié), déjà utilisé pour les essais à l'écran ; retenu pour piloter un vrai navigateur sans serveur ni service extérieur.
+
+## 26. Le référentiel se constitue en cinq étapes, sans volet « Définir »
+
+**Retenu** : le volet Référentiel → Définir, qui éditait à part les noms, codes et intitulés de tous les éléments, est abandonné. Référentiel → Constituer compte cinq étapes : 1. unités d'enseignement, 2. enseignements constitutifs, 3. blocs et compétences (nouvelle), 4. planification par semestre, 5. validation. Chaque étape crée, renomme et retire **ses propres éléments seulement** ; les autres y sont en lecture seule (à l'étape 2, l'UE d'un EC se choisit dans une liste mais ne se renomme pas ; à l'étape 4, blocs et compétences ne se créent ni ne se modifient plus, seules les cases du tableau changent).
+
+**Raison** : deux endroits pour modifier le même élément brouillaient qui modifie quoi, et l'enseignant passait de Définir à Constituer pour une seule correction. Une étape par niveau du référentiel suit l'ordre dans lequel on le construit.
+
+**Modèle de données inchangé** : le dictionnaire (`dnmade.data` → `dico`) reste le magasin des noms, codes et intitulés, commun aux mentions ; chaque référentiel (`refs`) garde ses associations. Les étapes modifient la vue fusionnée de la mention active, qui rejoint le dictionnaire à l'enregistrement, comme avant. Aucune migration : les données existantes s'affichent telles quelles, et l'échange de référentiels, l'exemple et la validation ne changent pas. « Retirer » enlève l'élément du référentiel sans l'effacer du dictionnaire (les versions datées peuvent encore en avoir besoin) ; il reste proposé dans la liste d'ajout de son étape.
+
+**Numéro d'un bloc** : une compétence désigne son bloc par son numéro. Renuméroter un bloc fait donc suivre les compétences qui le désignaient dans chaque référentiel qui retient ce bloc et dans les versions datées, et un numéro déjà porté par un autre bloc d'un de ces référentiels est refusé. Règle pure et testée : `src/domaine/numero-bloc.ts`, appelée via le pont (`window.dnmaxPont.renumeroterBloc`). Avant, changer le numéro dans Définir laissait les compétences « sans bloc ».
