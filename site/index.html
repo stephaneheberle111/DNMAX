@@ -719,7 +719,7 @@ footer a{color:var(--ink-2)}
         </div>
         <div class="sys" data-os="linux">
           <div><h3>Linux</h3></div>
-          <div><p>L’AppImage se met à jour d’elle-même&nbsp;; le paquet .deb s’installe comme les autres.</p><p class="fmt">.AppImage (servie par GitHub), ou <a href="telechargements/DNMAX-linux.deb">paquet .deb</a></p></div>
+          <div><p>L’AppImage se met à jour depuis DNMAX&nbsp;; le paquet .deb se remplace à la main.</p><p class="fmt">.AppImage (servie par GitHub), ou <a href="telechargements/DNMAX-linux.deb">paquet .deb</a></p></div>
           <a class="btn primary" href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.AppImage">Télécharger pour Linux</a>
         </div>
       </div>
@@ -745,7 +745,7 @@ footer a{color:var(--ink-2)}
       </div>
       <div class="note">
         <h3>Votre système affiche un avertissement au premier lancement&nbsp;?</h3>
-        <p style="margin:0 0 8px">Les versions d’essai ne sont pas encore signées par Microsoft ni Apple. C’est attendu&nbsp;:</p>
+        <p style="margin:0 0 8px">Les installeurs ne sont pas encore signés par Microsoft ni Apple. C’est attendu&nbsp;:</p>
         <ul>
           <li><strong>Windows</strong>&nbsp;: à «&nbsp;Windows a protégé votre ordinateur&nbsp;», cliquez «&nbsp;Informations complémentaires&nbsp;» puis «&nbsp;Exécuter quand même&nbsp;».</li>
           <li><strong>macOS</strong>&nbsp;: si l’ouverture est refusée, allez dans Réglages Système → Confidentialité et sécurité, puis «&nbsp;Ouvrir quand même&nbsp;».</li>
@@ -846,10 +846,10 @@ footer a{color:var(--ink-2)}
 <tr><th>Destinataires</th><td>L’enseignant ; les collègues de l’équipe pédagogique à qui il transmet volontairement une évaluation (fichier chiffré par mot de passe, ou échange direct d’ordinateur à ordinateur) ; l’étudiant pour ses propres résultats. L’éditeur de DNMAX et l’hébergeur du site n’y ont jamais accès.</td></tr>
 <tr><th>Lieu de stockage</th><td>Uniquement l’ordinateur de l’enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l’Union européenne des données d’élèves.</td></tr>
 <tr><th>Durée de conservation</th><td>Un an après la sortie de la promotion (fin de l’année scolaire où s’achève le diplôme). DNMAX le rappelle ensuite et propose d’anonymiser ou d’effacer les données ; une promotion peut aussi l’être plus tôt. La durée est réglable avec l’établissement.</td></tr>
-<tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l’enseignant ou du délégué à la protection des données de l’établissement. Dans DNMAX, Paramètres &gt; Données des élèves permet d’exporter toutes les données d’un étudiant, de l’effacer partout, et d’anonymiser ou d’effacer une promotion.</td></tr>
+<tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l’enseignant ou du délégué à la protection des données. Dans DNMAX, Paramètres &gt; Données des élèves permet d’exporter toutes les données d’un étudiant, de l’effacer partout, et d’anonymiser ou d’effacer une promotion.</td></tr>
 <tr><th>Sécurité</th><td>Chiffrement de toutes les données saisies ; mot de passe d’au moins 12 caractères, demandé à chaque ouverture ; verrouillage après 15 minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des élèves.</td></tr>
 </table></div>
-<h4>Bonnes pratiques à demander aux enseignants</h4>
+<h4>Bonnes pratiques demandées aux enseignants</h4>
 <ul>
 <li>utiliser DNMAX sur un ordinateur protégé par un mot de passe de session, de préférence avec le chiffrement du disque activé&nbsp;;</li>
 <li>ne pas l’installer sur un poste partagé entre plusieurs personnes&nbsp;;</li>
@@ -867,8 +867,8 @@ footer a{color:var(--ink-2)}
 <div class="modele">
 <p><strong>Information aux étudiants&nbsp;: vos données dans le suivi de vos évaluations</strong></p>
 <p>Pour évaluer vos compétences tout au long du DN MADE, vos enseignants peuvent utiliser l’application DNMAX. Elle enregistre votre prénom, votre nom, votre promotion, vos niveaux par compétence, leurs observations et leurs appréciations, et les dates de rendu de vos travaux.</p>
-<p>Ces données servent uniquement à votre évaluation et au suivi de votre progression. Le responsable de ce traitement est [nom de l’établissement], représenté par son chef d’établissement, dans le cadre de sa mission d’enseignement.</p>
-<p>Elles restent sur l’ordinateur de votre enseignant, chiffrées et protégées par un mot de passe. Elles ne sont ni envoyées sur Internet ni confiées à une entreprise. Votre enseignant peut les transmettre à un collègue de l’équipe pédagogique, dans un fichier protégé par un mot de passe.</p>
+<p>Ces données servent uniquement à votre évaluation et au suivi de votre progression. Le responsable de ce traitement est [nom de l’établissement], représenté par son chef d’établissement, dans le cadre de sa mission d’enseignement. Vous n’avez donc pas à donner votre accord&nbsp;: cette note vous en informe.</p>
+<p>Elles restent sur l’ordinateur de votre enseignant, chiffrées et protégées par un mot de passe. Elles ne sont ni envoyées sur Internet ni confiées à une entreprise. Votre enseignant peut les transmettre à un collègue de l’équipe pédagogique, dans un fichier protégé par un mot de passe ou directement d’ordinateur à ordinateur sur le réseau local, protégées de la même façon.</p>
 <p>Elles sont conservées jusqu’à un an après la fin de votre diplôme, puis anonymisées ou effacées.</p>
 <p>Vous pouvez demander à consulter vos données, à les faire corriger ou, dans les cas prévus par la loi, à les faire effacer, auprès de votre enseignant ou du délégué à la protection des données de l’établissement&nbsp;: [contact du DPD]. Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (cnil.fr).</p>
 </div>
@@ -963,7 +963,7 @@ footer a{color:var(--ink-2)}
 <h3>Mises à jour</h3>
 <p>DNMAX ne se connecte pas seul à Internet. De temps en temps, cliquez «&nbsp;Rechercher une mise à jour&nbsp;» en bas de la fenêtre&nbsp;: si une version plus récente existe, elle vous est proposée et ne s’installe qu’avec votre accord.</p>
 <p>Le risque&nbsp;: qu’une version modifiée par un tiers, contenant un programme malveillant ou détournant vos données, se fasse passer pour une mise à jour. Pour l’éviter, chaque mise à jour est signée par l’auteur de DNMAX, et l’application refuse toute version dont la signature ne correspond pas.</p>
-<p>Sous Linux, seule l’AppImage se met à jour d’elle-même. Avec le paquet .deb, téléchargez la nouvelle version depuis la page Télécharger.</p>
+<p>Sous Linux, seule l’AppImage se met à jour depuis DNMAX («&nbsp;Rechercher une mise à jour&nbsp;»). Avec le paquet .deb, téléchargez la nouvelle version depuis la page Télécharger.</p>
 </div>
 
 <div data-doc="contribuer" data-titre="Contribuer au code">
@@ -1089,7 +1089,7 @@ npm run dev</code></pre>
       <h3>Connexions à Internet</h3>
       <p>L’application ne se connecte pas seule à Internet. Une seule fonction s’y connecte, et uniquement quand vous la lancez&nbsp;: la recherche de mise à jour. L’échange en direct, lui, reste sur votre réseau local.</p>
       <h3>Échange en direct</h3>
-      <p>L’échange en direct transmet le contenu choisi directement de votre ordinateur à celui de votre collègue, sur le même réseau local (même wifi). Il ne contacte <strong>aucun serveur</strong>, ni de l’éditeur ni d’un tiers&nbsp;: aucune donnée, pas même l’adresse de l’ordinateur, ne sort du réseau local. Pendant l’envoi, votre ordinateur s’annonce sur le réseau local pour que celui de votre collègue le trouve&nbsp;; cette annonce, visible des autres appareils du réseau, ne porte ni votre nom ni celui de l’ordinateur&nbsp;: seulement un numéro de version technique, les deux premiers chiffres du code et un numéro de port, et elle cesse dès la fin de l’échange (5&nbsp;minutes au plus). Le contenu est chiffré pendant le trajet, avec une clé tirée du code de 8&nbsp;chiffres&nbsp;: sans le code, un autre appareil du même wifi ne peut ni lire le contenu ni se faire passer pour l’un des deux ordinateurs. Ne dictez le code qu’au collègue concerné.</p>
+      <p>L’échange en direct transmet le contenu choisi directement de votre ordinateur à celui de votre collègue, sur le même réseau local (même wifi). Il ne contacte <strong>aucun serveur</strong>, ni de l’éditeur ni d’un tiers&nbsp;: aucune donnée, pas même l’adresse de l’ordinateur, ne sort du réseau local. Pendant l’envoi, votre ordinateur s’annonce sur le réseau local pour que celui de votre collègue le trouve&nbsp;; cette annonce, visible des autres appareils du réseau, ne porte ni votre nom ni celui de l’ordinateur&nbsp;: seulement un nom tiré au hasard, l’adresse de l’ordinateur sur le réseau local, un numéro de version technique, les deux premiers chiffres du code et un numéro de port, et elle cesse dès la fin de l’échange (5&nbsp;minutes au plus). Le contenu est chiffré pendant le trajet, avec une clé tirée du code de 8&nbsp;chiffres&nbsp;: sans le code, un autre appareil du même wifi ne peut ni lire le contenu ni se faire passer pour l’un des deux ordinateurs. Ne dictez le code qu’au collègue concerné.</p>
       <h3>Vérification des mises à jour</h3>
       <p>Quand vous cliquez «&nbsp;Rechercher une mise à jour&nbsp;» en bas de la fenêtre, elle demande à GitHub si une nouvelle version existe&nbsp;; GitHub reçoit alors l’adresse IP de l’ordinateur et la date de la demande. Aucune donnée saisie dans l’application n’accompagne cette demande. Une mise à jour n’est installée qu’avec votre accord.</p>
 

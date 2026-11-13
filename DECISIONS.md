@@ -196,7 +196,7 @@ Le nom se corrige sur la ligne « C'est moi » de « Mon établissement » (déc
 
 **Limites** :
 
-- sous Linux, seule l'AppImage se met à jour d'elle-même ; un paquet `.deb` se remplace à la main ;
+- sous Linux, seule l'AppImage se met à jour depuis DNMAX ; un paquet `.deb` se remplace à la main ;
 - la perte de la clé privée empêcherait de publier des mises à jour acceptées par les postes déjà installés : il faudrait leur faire réinstaller l'application.
 
 ## 16. L'application est livrée vide
