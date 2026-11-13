@@ -16,7 +16,8 @@
     "test": "vitest run",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "verifier:vide": "node outils/verifier-installation-vide.ts"
+    "verifier:vide": "node outils/verifier-installation-vide.ts",
+    "verifier:saisie": "node outils/verifier-saisie.ts"
   },
   "dependencies": {
     "@fontsource/bricolage-grotesque": "5.3.0",

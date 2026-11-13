@@ -389,3 +389,19 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Pourquoi** : le DN MADE est un diplôme de l'enseignement supérieur, qui s'adresse à des étudiants ; et trois séparateurs différents pour la même chose laissaient croire à des sens distincts.
 
 **Inchangé** : identifiants, clés de stockage, champs de données, noms de fichiers et sélecteurs (`eleves`, `dnmax.eleves`, `data-mod="eleves"`…), pour ne rien casser dans les données existantes. Les noms déjà anonymisés en « Élève anonyme n » restent reconnus comme anonymes ; les nouveaux s'écrivent « Étudiant anonyme n » (`src/domaine/conservation.ts`). Les sections publiées du CHANGELOG et les décisions précédentes gardent leur vocabulaire d'origine.
+
+## 29. Une évaluation s'enregistre d'elle-même
+
+**Constat** : l'interface historique tenait l'évaluation ouverte dans un brouillon (`dnmade.draft`), recopié dans la liste (`dnmade.fiches`) seulement au clic sur « Enregistrer l'évaluation ». Ouvrir une autre évaluation remplaçait le brouillon sans prévenir : des résultats saisis étaient perdus. Rien à l'écran ne permettait de savoir si une saisie était en sécurité.
+
+**Retenu** : chaque modification du brouillon est recopiée aussitôt dans la liste (`save()` de l'interface historique). Il n'y a plus de bouton « Enregistrer » ; l'en-tête de l'évaluation dit « Enregistrée automatiquement à chaque modification ». Une nouvelle évaluation entre dans la liste dès qu'elle a un intitulé, un livrable ou une compétence, pour qu'un clic sur « + Nouvelle évaluation » sans suite n'y laisse pas de ligne vide.
+
+**Conséquences** :
+
+- on ne peut plus abandonner des modifications en quittant sans enregistrer : pour essayer, « Dupliquer » d'abord ;
+- tant que le référentiel d'une évaluation n'est pas validé (décision 24), rien n'est recopié dans la liste ; l'en-tête le dit, et « Retour à « Mes évaluations » » explique pourquoi ;
+- au démarrage, un brouillon qui diffère de l'évaluation de même identifiant dans la liste est réaligné sur elle : des modifications laissées sans « Enregistrer » avant cette version ne sont pas appliquées d'office ;
+- supprimer une évaluation vide aussi le brouillon qui la portait, sans quoi la modification suivante la ferait réapparaître ;
+- pour la visite guidée, une évaluation « créée » est une évaluation qui retient au moins une compétence (`lireAvancement`), puisqu'un intitulé suffit désormais à la faire entrer dans la liste.
+
+**Vérification** : `npm run verifier:saisie` déroule ces cas dans un navigateur, sur l'exemple, et regarde ce qui est réellement écrit dans le stockage. Lancé par l'intégration continue.

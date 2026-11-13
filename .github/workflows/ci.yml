@@ -30,6 +30,8 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           npm run verifier:vide
+      - name: La saisie d'une évaluation s'enregistre d'elle-même
+        run: npm run verifier:saisie
 
   enveloppe:
     name: Enveloppe de bureau (format, clippy, tests)

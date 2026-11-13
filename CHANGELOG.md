@@ -2,6 +2,17 @@
 
 ## Non publié
 
+### Modifié
+
+- Une évaluation s'enregistre d'elle-même : chaque modification (intitulé, compétences, formulation, résultats des étudiants) rejoint aussitôt « Mes évaluations ». Les boutons « Enregistrer » disparaissent ; à l'étape Formulation, « Retour à « Mes évaluations » » les remplace. Une nouvelle évaluation entre dans la liste dès qu'elle a un intitulé, un livrable ou une compétence. La visite guidée suit.
+
+### Corrigé
+
+- Des résultats saisis sans cliquer sur « Enregistrer l'évaluation » étaient perdus, sans avertissement, à l'ouverture d'une autre évaluation.
+- Ouvrir une évaluation par un clic sur sa ligne, après avoir évalué les étudiants d'une autre, laissait à l'écran la grille de la précédente : la composition de l'évaluation ouverte s'affiche désormais.
+- Une évaluation supprimée ne peut plus réapparaître dans la liste à la modification suivante.
+- Les derniers messages au tutoiement de l'étape Formulation disparaissent avec le bouton.
+
 ## 0.5.1 — 2026-11-13
 
 ### Ajouté
