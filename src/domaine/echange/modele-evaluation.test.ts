@@ -9,6 +9,10 @@ describe("extraireModele", () => {
     expect(Object.keys(modele).sort()).toEqual(["classes", "consignes", "id", "items", "titre"]);
   });
 
+  it("retire la marque de brouillon, propre à cet enseignant", () => {
+    expect(extraireModele(creerEvaluation({ brouillon: true }))).not.toHaveProperty("brouillon");
+  });
+
   it("ne modifie pas l'évaluation d'origine", () => {
     const evaluation = creerEvaluation();
     extraireModele(evaluation);
@@ -23,6 +27,10 @@ describe("extraireModele", () => {
 describe("ontMemeModele", () => {
   it("ignore une différence de résultats d'étudiants", () => {
     expect(ontMemeModele(creerEvaluation(), creerEvaluation({ res: {} }))).toBe(true);
+  });
+
+  it("ne tient pas la sortie des brouillons pour une modification", () => {
+    expect(ontMemeModele(creerEvaluation({ brouillon: true }), creerEvaluation())).toBe(true);
   });
 
   it("détecte une différence d'intitulé", () => {

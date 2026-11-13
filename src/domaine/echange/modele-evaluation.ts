@@ -8,7 +8,8 @@ import type { Evaluation, ObjetJson } from "./modele";
  *
  * - `res`, `eleves`, `eleveIds`, `eleveId`, `restit` : étudiants et résultats ;
  * - `suivi`, `date` : avancement et date de saisie chez cet enseignant ;
- * - `promoId`, `refV` : identifiants locaux, sans valeur sur un autre poste.
+ * - `promoId`, `refV` : identifiants locaux, sans valeur sur un autre poste ;
+ * - `brouillon` : état de la saisie chez cet enseignant (décision 29).
  */
 export const CHAMPS_LOCAUX = [
   "res",
@@ -20,6 +21,7 @@ export const CHAMPS_LOCAUX = [
   "date",
   "promoId",
   "refV",
+  "brouillon",
 ] as const;
 
 /** Le modèle d'une évaluation : ce qui peut être partagé avec un autre enseignant. */
