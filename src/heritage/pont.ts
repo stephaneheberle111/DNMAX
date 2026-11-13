@@ -6,6 +6,7 @@ import { estObjet, lireDonneesEtablissementDe, lirePromotion } from "../domaine/
 import { estCadreVierge, nettoyerDiplomesVierges } from "../domaine/diplome-vierge";
 import * as zoomCarte from "../domaine/zoom-carte";
 import { renumeroterBloc } from "../domaine/numero-bloc";
+import * as saisieResultats from "../domaine/saisie-resultats";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
@@ -88,6 +89,8 @@ interface Pont {
   readonly zoomCarte: typeof zoomCarte;
   /** Référentiel > Constituer > Blocs et compétences : nouveau numéro d'un bloc (voir `domaine/numero-bloc`). */
   readonly renumeroterBloc: typeof renumeroterBloc;
+  /** Règles de la saisie des résultats des étudiants (voir `domaine/saisie-resultats`). */
+  readonly saisie: typeof saisieResultats;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: DemandeEnregistrement): Promise<void>;
@@ -150,6 +153,7 @@ export async function chargerInterfaceHistorique(
     nettoyerDiplomesVierges,
     zoomCarte,
     renumeroterBloc,
+    saisie: saisieResultats,
     confirmerChangementEchelle,
     // L'interface historique n'est pas typée : les champs reçus sont vérifiés.
     confirmerModuleEleves: async (etablissement) =>

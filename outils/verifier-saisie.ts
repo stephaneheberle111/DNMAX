@@ -20,6 +20,7 @@ const CLE_BROUILLON = "dnmade.draft";
 const EVALUATION_A = "Évaluation intermédiaire — Mobilier modulaire en frêne";
 const EVALUATION_B = "Soutenance intermédiaire — oral et planches";
 const ETUDIANT = "Elif Yilmaz";
+const ETUDIANT_SANS_NIVEAU = "Enzo Ferreira";
 const NOUVEL_INTITULE = "Contrôle de l'enregistrement automatique";
 const DELAI_MS = 20000;
 
@@ -27,7 +28,7 @@ interface EvaluationLue {
   id?: string;
   titre?: string;
   brouillon?: boolean;
-  res?: Record<string, { nr?: string }>;
+  res?: Record<string, { nr?: string; rendu?: string; n?: Record<string, unknown> }>;
 }
 
 /** Lit une entrée du stockage ; hors de l'enveloppe, c'est un magasin en mémoire qui sait lister ses entrées. */
@@ -113,6 +114,28 @@ async function verifier(page: Page): Promise<string[]> {
   const affiche = await page.locator(".egrid .er", { hasText: ETUDIANT }).locator("select.est").inputValue();
   if (affiche !== "nr" || !(await nonRenduEnregistre())) {
     ecarts.push("la saisie est perdue après être passé par une autre évaluation");
+  }
+
+  // 3 bis. Un niveau saisi au clavier est enregistré et vaut travail rendu ; « Non rendu » l'efface.
+  const ligneVierge = page.locator(".egrid .er", { hasText: ETUDIANT_SANS_NIVEAU });
+  const idVierge = (await ligneVierge.getAttribute("data-row")) ?? "";
+  const resultatVierge = async (): Promise<{ niveaux: number; rendu: boolean; nonRendu: boolean }> => {
+    const lu = (await lireEvaluations(page)).find((evaluation) => evaluation.titre === EVALUATION_A)?.res?.[idVierge];
+    return { niveaux: Object.keys(lu?.n ?? {}).length, rendu: lu?.rendu !== undefined, nonRendu: lu?.nr !== undefined };
+  };
+  await ligneVierge.locator(".ntk").first().focus();
+  await page.keyboard.press("ArrowRight");
+  const apresNiveau = await resultatVierge();
+  if (apresNiveau.niveaux !== 1 || !apresNiveau.rendu) {
+    ecarts.push("un niveau saisi au clavier n'est pas enregistré, ou ne passe pas l'étudiant à « Rendu »");
+  }
+  if ((await ligneVierge.locator(".n").textContent()) !== "1/4") {
+    ecarts.push("le décompte de la ligne ne suit pas le niveau saisi");
+  }
+  await page.locator(".egrid .er", { hasText: ETUDIANT_SANS_NIVEAU }).locator("select.est").selectOption("nr");
+  const apresNonRendu = await resultatVierge();
+  if (apresNonRendu.niveaux !== 0 || !apresNonRendu.nonRendu || apresNonRendu.rendu) {
+    ecarts.push("« Non rendu » n'efface pas les niveaux de l'étudiant");
   }
 
   // 4. Une nouvelle évaluation est gardée dès qu'elle a un intitulé, en brouillon, et le reste si l'on en ouvre une autre.
