@@ -28,6 +28,7 @@ export interface Avancement {
   elevesInscrits: number;
   enseignants: number;
   repartition: boolean;
+  /** Évaluations enregistrées par l'enseignant ; les brouillons, gardés automatiquement, ne comptent pas. */
   evaluations: number;
   moduleEleves: boolean;
   moduleNiveaux: boolean;
@@ -80,7 +81,7 @@ export function lireAvancement(entrees: Entrees): Avancement {
     elevesInscrits: listePromotions.reduce((total: number, promotion) => total + compterEleves(promotion), 0),
     enseignants: longueur(donnees.enseignants),
     repartition: contientUneAttribution(donnees.affectH) || contientUneAttribution({ courant: donnees.affect }),
-    evaluations: lireEvaluations(entrees[CLE_EVALUATIONS]).length,
+    evaluations: lireEvaluations(entrees[CLE_EVALUATIONS]).filter((evaluation) => evaluation.brouillon !== true).length,
     moduleEleves: modulesActifs.eleves === true,
     moduleNiveaux: modulesActifs.dn === true,
   };

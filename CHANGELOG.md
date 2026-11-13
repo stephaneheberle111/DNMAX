@@ -4,11 +4,16 @@
 
 ### Modifié
 
+- Plus rien ne se perd dans une évaluation : chaque modification (intitulé, compétences, formulation, résultats des étudiants) est gardée aussitôt. Une évaluation commencée apparaît dans « Mes évaluations » comme **brouillon** : elle ne compte pas dans Progression, ne peut être ni évaluée, ni exportée, ni envoyée à un collègue, et n'avance pas dans le suivi. « Enregistrer l'évaluation », à l'étape Formulation, la sort des brouillons ; il lui faut un intitulé et au moins une compétence. Une fois enregistrée, ses modifications et les résultats saisis sont pris en compte sans autre clic. Les boutons « Enregistrer » des étapes 1 et 2 et de la saisie des étudiants disparaissent. Un brouillon se supprime depuis la liste.
 - Menu « Actions… » : « Annuler l'évaluation » précise que rien n'est supprimé et qu'elle peut être rétablie.
 - Paramètres : la description de l'exemple dit ce qu'il charge réellement (un établissement complet, résultats compris) et qu'il active le module Étudiants.
 
 ### Corrigé
 
+- Des résultats saisis sans cliquer sur « Enregistrer l'évaluation » étaient perdus, sans avertissement, à l'ouverture d'une autre évaluation.
+- Ouvrir une évaluation par un clic sur sa ligne, après avoir évalué les étudiants d'une autre, laissait à l'écran la grille de la précédente : la composition de l'évaluation ouverte s'affiche désormais.
+- Une évaluation supprimée ne peut plus réapparaître dans la liste à la modification suivante.
+- Les derniers messages au tutoiement de l'étape Formulation disparaissent avec le bouton.
 - Grille de la promo : les lignes des étudiants sans niveau saisi ont la même hauteur que les autres.
 - Progression : les dates des évaluations s'écrivent « 23/10 », comme dans « Mes évaluations ».
 - Mon établissement > Diplômes et mentions : la consigne des identifiants d'année est passée au vouvoiement.
