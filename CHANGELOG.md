@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.6.0 — 2026-11-13
+
 ### Modifié
 
 - Plus rien ne se perd dans une évaluation : chaque modification (intitulé, compétences, formulation, résultats des étudiants) est gardée aussitôt. Une évaluation commencée apparaît dans « Mes évaluations » comme **brouillon** : elle ne compte pas dans Progression, ne peut être ni évaluée, ni exportée, ni envoyée à un collègue, et n'avance pas dans le suivi. « Enregistrer l'évaluation », à l'étape Formulation, la sort des brouillons ; il lui faut un intitulé et au moins une compétence. Une fois enregistrée, ses modifications et les résultats saisis sont pris en compte sans autre clic. Les boutons « Enregistrer » des étapes 1 et 2 et de la saisie des étudiants disparaissent. Un brouillon se supprime depuis la liste.
