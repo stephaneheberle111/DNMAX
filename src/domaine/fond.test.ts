@@ -11,8 +11,8 @@ describe("lireFond", () => {
     });
   });
 
-  it("donne le feutre, en force normale, avec le X en creux, quand rien n'est enregistré", () => {
-    expect(lireFond(null)).toEqual({ trame: "feutre", force: "normale", xEnCreux: true });
+  it("donne le fond lisse, en force normale, avec le X en creux, quand rien n'est enregistré", () => {
+    expect(lireFond(null)).toEqual({ trame: "lisse", force: "normale", xEnCreux: true });
     expect(lireFond(undefined)).toBe(FOND_PAR_DEFAUT);
   });
 
@@ -24,7 +24,7 @@ describe("lireFond", () => {
 
   it("remplace chaque champ inconnu par sa valeur par défaut sans perdre les autres", () => {
     expect(lireFond(JSON.stringify({ trame: "marbre", force: "peine", xEnCreux: "oui" }))).toEqual({
-      trame: "feutre",
+      trame: "lisse",
       force: "peine",
       xEnCreux: true,
     });

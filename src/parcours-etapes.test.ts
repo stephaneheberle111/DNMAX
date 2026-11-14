@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { chapitreDe, PARCOURS_DEFINIS } from "./parcours-etapes";
+import { PARCOURS, type Avancement, type IdentifiantParcours } from "./domaine/parcours";
+import { chapitreDe, PARCOURS_DEFINIS, type Etape } from "./parcours-etapes";
 
 const ETAPES = [
   { titre: "Bienvenue" },
@@ -44,5 +45,79 @@ describe("prise en main, grande étape Référentiel", () => {
     const presentation = rang("#refPane .steps");
     expect(presentation).toBeGreaterThan(rang('#refNav [data-pane="constituer"]'));
     expect(presentation).toBeLessThan(rang('#refPane .steps [data-cp="valider"]'));
+  });
+});
+
+const TOUT_FAIT: Avancement = {
+  referentiel: true,
+  referentielValide: true,
+  promotions: 3,
+  elevesInscrits: 40,
+  enseignants: 4,
+  repartition: true,
+  evaluations: 12,
+  moduleEleves: true,
+  moduleNiveaux: true,
+};
+
+const RIEN_FAIT: Avancement = {
+  referentiel: false,
+  referentielValide: false,
+  promotions: 0,
+  elevesInscrits: 0,
+  enseignants: 1,
+  repartition: false,
+  evaluations: 0,
+  moduleEleves: false,
+  moduleNiveaux: false,
+};
+
+/** Étapes gardées quand tout est déjà fait, hors écran déjà affiché : ce que montre une visite rejouée. */
+function etapesRejouees(identifiant: IdentifiantParcours, avancement: Avancement): readonly Etape[] {
+  return PARCOURS_DEFINIS[identifiant].etapes.filter((etape) => etape.groupeFait?.(avancement) !== true);
+}
+
+describe("visite rejouée quand tout est déjà fait", () => {
+  it("mène encore à chaque volet de « Mon établissement », où la bulle dit ce qui est fait", () => {
+    const cibles = etapesRejouees("prise-en-main", TOUT_FAIT).flatMap((etape) => etape.cibles ?? []);
+    for (const volet of ["promos", "enseignants", "affect"]) {
+      expect(cibles).toContain(`[data-opane="${volet}"]`);
+    }
+  });
+
+  it("ne fait pas créer une nouvelle évaluation", () => {
+    const cibles = etapesRejouees("prise-en-main", TOUT_FAIT).flatMap((etape) => etape.cibles ?? []);
+    expect(cibles).not.toContain("#bNew");
+  });
+
+  it("chaque étape au message « ici » est précédée d'une étape qui mène à son écran", () => {
+    for (const identifiant of PARCOURS) {
+      const etapes = etapesRejouees(identifiant, TOUT_FAIT);
+      etapes.forEach((etape, rang) => {
+        if (etape.texteFait?.includes(" ici") === true) {
+          expect(etapes[rang - 1]?.atteinte, `${identifiant} : ${etape.titre}`).toBeDefined();
+        }
+      });
+    }
+  });
+
+  it("sans rien de fait, aucune étape n'est sautée pour cause d'objectif atteint", () => {
+    for (const identifiant of PARCOURS) {
+      expect(etapesRejouees(identifiant, RIEN_FAIT)).toHaveLength(PARCOURS_DEFINIS[identifiant].etapes.length);
+    }
+  });
+});
+
+describe("boîte d'actions ouverte pendant la visite", () => {
+  it("est refermée par « Suivant » quand l'étape suivante éclaire un onglet", () => {
+    for (const identifiant of PARCOURS) {
+      const etapes = PARCOURS_DEFINIS[identifiant].etapes;
+      etapes.forEach((etape, rang) => {
+        const dansLaBoite = etape.cibles?.some((cible) => cible.includes("dialog")) === true;
+        if (dansLaBoite && rang < etapes.length - 1) {
+          expect(etape.fermeLaBoite, `${identifiant} : ${etape.titre}`).toBe(true);
+        }
+      });
+    }
   });
 });

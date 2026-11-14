@@ -16,8 +16,12 @@ export type Geste = "cliquer" | "remplir" | "regarder";
  * - `objectif` : ce que l'étape fait accomplir ; s'il est atteint pendant
  *   l'étape, la visite le salue et passe à la suite. S'il l'était déjà, la
  *   bulle le dit et propose de continuer.
- * - `groupeFait` : sur une étape de navigation, saute l'étape quand le but du
- *   groupe auquel elle mène est déjà atteint.
+ * - `groupeFait` : saute l'étape quand le but de son groupe est déjà atteint.
+ *   Réservé aux étapes qui feraient refaire quelque chose (choisir un
+ *   référentiel, créer une évaluation) ou détailler un écran devenu inutile :
+ *   une étape de navigation qui mène à un objectif déjà atteint reste jouée,
+ *   pour que la bulle « déjà fait » s'affiche sur le bon écran, en particulier
+ *   quand la visite est rejouée.
  */
 export interface Etape {
   titre: string;
@@ -34,6 +38,8 @@ export interface Etape {
   groupeFait?: (avancement: Avancement) => boolean;
   /** L'étape avance au clic sur la zone éclairée. */
   avanceAuClic?: boolean;
+  /** « Suivant » referme la boîte de l'application ouverte pendant l'étape, qui cacherait la suite. */
+  fermeLaBoite?: boolean;
 }
 
 export interface Parcours {
@@ -89,14 +95,13 @@ const ALLER_PARAMETRES: Etape = {
   avanceAuClic: true,
 };
 
-function allerVolet(volet: string, libelle: string, groupeFait: (avancement: Avancement) => boolean): Etape {
+function allerVolet(volet: string, libelle: string): Etape {
   return {
     titre: libelle,
     texte: `Choisissez le volet « ${libelle} ».`,
     cibles: [`[data-opane="${volet}"]`],
     geste: "cliquer",
     atteinte: voletOuvert(volet),
-    groupeFait,
     avanceAuClic: true,
   };
 }
@@ -121,8 +126,8 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "Bienvenue dans DNMAX",
       texte:
-        "En quelques minutes, vous allez installer et valider votre référentiel, déclarer vos promotions, vos collègues et votre répartition de service, puis créer et exporter votre première évaluation. " +
-        "Vous pouvez passer cette visite à tout moment et la relancer depuis « Paramètres », panneau « Visites guidées ».",
+        "En quelques minutes, la visite vous mène pas à pas : installer et valider votre référentiel, déclarer vos promotions, vos collègues et votre répartition de service, puis créer et exporter une évaluation. " +
+        "Ce qui est déjà fait est coché au passage. Vous pouvez passer la visite à tout moment et la relancer depuis « Paramètres », panneau « Visites guidées ».",
     },
     {
       titre: "1. Choisir le référentiel",
@@ -149,7 +154,6 @@ const PRISE_EN_MAIN: Parcours = {
       cibles: ["#t-ref"],
       geste: "cliquer",
       atteinte: ongletOuvert("v-ref"),
-      groupeFait: (avancement) => avancement.referentielValide,
       avanceAuClic: true,
     },
     {
@@ -191,8 +195,8 @@ const PRISE_EN_MAIN: Parcours = {
       geste: "cliquer",
       objectif: (avancement) => avancement.referentielValide,
     },
-    { ...ALLER_ETABLISSEMENT, groupeFait: (avancement) => avancement.promotions > 0 },
-    allerVolet("promos", "Promotions", (avancement) => avancement.promotions > 0),
+    ALLER_ETABLISSEMENT,
+    allerVolet("promos", "Promotions"),
     {
       titre: "2. Déclarer vos promotions",
       texte:
@@ -203,8 +207,8 @@ const PRISE_EN_MAIN: Parcours = {
       geste: "cliquer",
       objectif: (avancement) => avancement.promotions > 0,
     },
-    { ...ALLER_ETABLISSEMENT, groupeFait: colleguesDeclares },
-    allerVolet("enseignants", "Enseignants", colleguesDeclares),
+    ALLER_ETABLISSEMENT,
+    allerVolet("enseignants", "Enseignants"),
     {
       titre: "3. Déclarer vos collègues",
       texte:
@@ -215,8 +219,8 @@ const PRISE_EN_MAIN: Parcours = {
       geste: "cliquer",
       objectif: colleguesDeclares,
     },
-    { ...ALLER_ETABLISSEMENT, groupeFait: (avancement) => avancement.repartition },
-    allerVolet("affect", "Répartition de service", (avancement) => avancement.repartition),
+    ALLER_ETABLISSEMENT,
+    allerVolet("affect", "Répartition de service"),
     {
       titre: "4. Répartir les enseignements",
       texte:
@@ -227,7 +231,7 @@ const PRISE_EN_MAIN: Parcours = {
       geste: "cliquer",
       objectif: (avancement) => avancement.repartition,
     },
-    { ...ALLER_EVALUATIONS, groupeFait: (avancement) => avancement.evaluations > 0 },
+    ALLER_EVALUATIONS,
     {
       titre: "5. Créer une évaluation",
       texte: "Cliquez « Nouvelle évaluation ».",
@@ -282,11 +286,12 @@ const PRISE_EN_MAIN: Parcours = {
       cibles: FENETRE_ACTIONS,
       pointe: "[data-xk]",
       geste: "cliquer",
+      fermeLaBoite: true,
     },
     {
       titre: "C'est prêt",
       texte:
-        "Vous savez l'essentiel. Pour saisir les résultats étudiant par étudiant, activez le module Étudiants dans « Paramètres » : il a sa propre visite, comme le module Niveaux DN MADE. Cette visite se relance depuis « Paramètres », panneau « Visites guidées ».",
+        "Vous savez l'essentiel. Pour saisir les résultats étudiant par étudiant, le module Étudiants, dans « Paramètres », a sa propre visite, comme le module Niveaux DN MADE. Cette visite se relance depuis « Paramètres », panneau « Visites guidées ».",
     },
   ],
 };
@@ -299,7 +304,7 @@ const MODULE_ELEVES: Parcours = {
       texte:
         "Il sert à évaluer chaque étudiant dans l'application : grille de saisie de la promotion, observations, non-rendus, un document par étudiant, et la progression de chacun. Les noms et résultats restent sur cet ordinateur.",
     },
-    { ...ALLER_PARAMETRES, groupeFait: (avancement) => avancement.moduleEleves },
+    ALLER_PARAMETRES,
     {
       titre: "Activer le module",
       texte: "Activez l'interrupteur du module « Étudiants ».",
@@ -309,8 +314,8 @@ const MODULE_ELEVES: Parcours = {
       geste: "cliquer",
       objectif: (avancement) => avancement.moduleEleves,
     },
-    { ...ALLER_ETABLISSEMENT, groupeFait: (avancement) => avancement.elevesInscrits > 0 },
-    allerVolet("promos", "Promotions", (avancement) => avancement.elevesInscrits > 0),
+    ALLER_ETABLISSEMENT,
+    allerVolet("promos", "Promotions"),
     {
       titre: "Inscrire les étudiants",
       texte:
@@ -333,6 +338,7 @@ const MODULE_ELEVES: Parcours = {
       texte: "…puis « Évaluer les étudiants » : la grille de la promotion s'ouvre, une ligne par étudiant, avec observations et appréciation.",
       cibles: ["[data-sai]", ...FENETRE_ACTIONS],
       geste: "cliquer",
+      fermeLaBoite: true,
     },
     {
       titre: "Suivre chaque étudiant",
@@ -356,7 +362,7 @@ const MODULE_NIVEAUX: Parcours = {
       texte:
         "Il attribue à chaque étudiant le niveau atteint sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec une maîtrise suffisante. Il s'appuie sur le module Étudiants.",
     },
-    { ...ALLER_PARAMETRES, groupeFait: (avancement) => avancement.moduleNiveaux },
+    ALLER_PARAMETRES,
     {
       titre: "Activer le module Étudiants",
       texte: "Le module Niveaux DN MADE a besoin du module Étudiants : activez d'abord celui-ci.",
