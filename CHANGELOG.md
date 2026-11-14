@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Modifié
+
+- Le fond de page est désormais « Lisse » par défaut. Un fond déjà choisi dans Mon compte > Préférences > Apparence est conservé.
+
 ### Corrigé
 
 - Visite guidée rejouée : elle ne reste plus bloquée sur « Paramètres ». Elle repasse par chaque écran (Référentiel, Mon établissement et ses volets, Mes évaluations) et y coche ce qui est déjà fait, au lieu d'afficher « déjà fait… ici » sans rien montrer. Elle ne fait pas créer de nouvelle évaluation.

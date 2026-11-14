@@ -18,7 +18,7 @@ export interface Fond {
   readonly xEnCreux: boolean;
 }
 
-export const FOND_PAR_DEFAUT: Fond = { trame: "feutre", force: "normale", xEnCreux: true };
+export const FOND_PAR_DEFAUT: Fond = { trame: "lisse", force: "normale", xEnCreux: true };
 
 export function estTrame(valeur: unknown): valeur is Trame {
   return typeof valeur === "string" && (TRAMES as readonly string[]).includes(valeur);
