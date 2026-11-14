@@ -17,15 +17,15 @@ body {
   pointer-events: none;
 }
 /* La trame est une couche à part : en thème sombre elle est inversée, le X en creux non. */
+/* Sans réglage (ou « lisse », le fond par défaut), pas de trame. */
 .fond-page::before {
   content: "";
   position: absolute;
   inset: 0;
+}
+html[data-fond="feutre"] .fond-page::before {
   background-image: url("./assets/fond/feutre.png");
   background-size: 256px 256px;
-}
-html[data-fond="lisse"] .fond-page::before {
-  background-image: none;
 }
 html[data-fond="toile"] .fond-page::before {
   background-image: url("./assets/fond/toile.png");
