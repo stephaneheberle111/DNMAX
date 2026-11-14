@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.7.1 — 2026-11-14
+
 ### Modifié
 
 - Le fond de page est désormais « Lisse » par défaut. Un fond déjà choisi dans Mon compte > Préférences > Apparence est conservé.
