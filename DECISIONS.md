@@ -47,9 +47,15 @@ La consigne est de préférer, à fonction égale, un outil référencé au [SIL
 
 **Il ne doit plus changer** : le modifier ferait perdre aux enseignants l'accès à leurs données, qui resteraient dans l'ancien dossier.
 
-## 4. Icône provisoire
+## 4. Identité visuelle : signe X « plein & délié », papier et pétrole
 
-L'icône est un simple pavé « DN » généré depuis `src-tauri/icone-source.svg` avec `npx tauri icon`. À remplacer par l'identité visuelle définitive.
+**Retenu** : le nom « DNMA » (Bricolage Grotesque 800) suivi du signe X en couleur ; papier `#F1ECE0`, cartes `#FFFDF7`, encre `#1C1A15`, pétrole `#10555F` et ses nuances ; l'icône est le X blanc et pétrole clair sur un pavé pétrole arrondi. Le signe a trois niveaux de détail : fin (88 px et plus), moyen (40 à 87 px), simple (moins de 40 px). Les icônes de `src-tauri/icons/` se régénèrent avec `node outils/generer-icones.ts` (dessin dans `outils/icones.ts`), le sceau des exports avec `node outils/generer-sceau.ts`. L'onglet d'un navigateur ne montre que le X, sans pavé (`public/favicon.svg`, clair et sombre).
+
+**Fond de page** : trame PNG transparente répétée (feutre 256 px, toile 40 px, vergé 78 px) et X en creux en bas à droite, réglés dans Préférences et rangés, comme le thème, dans le stockage de la vue web (propre au compte de l'utilisateur sur l'ordinateur), pour habiller déjà l'écran du mot de passe. En thème sombre, la trame est inversée et atténuée. Jamais imprimé ni exporté.
+
+**Exports** : aucune mention de l'application, aucun aplat, tout au trait noir ; un niveau = une case vide. Le sceau est une image : Word et LibreOffice n'ont pas la police.
+
+**Largeur** : Paramètres et Préférences sont centrés sur 900 px ; « Mes évaluations », Progression, Référentiel et Mon établissement gardent leur largeur, leurs tableaux ne tenant pas dans 900 px.
 
 ## 5. L'interface de la maquette est reprise telle quelle
 

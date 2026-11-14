@@ -8,6 +8,7 @@ import "@fontsource/public-sans/400-italic.css";
 import "@fontsource/public-sans/400.css";
 import "@fontsource/public-sans/500.css";
 import "@fontsource/public-sans/600.css";
+import "./identite.css";
 import { EnregistreurDiffere, type Minuteur } from "./domaine/enregistrement-differe";
 import { MagasinMemoire, type Entrees } from "./domaine/magasin-memoire";
 import { CLE_EVALUATIONS } from "./domaine/echange/modele";
@@ -24,6 +25,7 @@ import { suivreHauteurBarre } from "./ecran-entetes";
 import { installerParcours } from "./ecran-parcours";
 import { installerPiedDePage } from "./ecran-pied";
 import { montrerNouveautesAuLancement } from "./ecran-nouveautes";
+import { appliquerFondEnregistre, installerChoixFond } from "./ecran-fond";
 import { appliquerThemeEnregistre, installerChoixTheme } from "./ecran-preferences";
 import { installerDonneesEleves, rappelerConservation } from "./ecran-droits-eleves";
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
@@ -167,6 +169,7 @@ async function creerMagasinProtege(): Promise<{
 async function demarrer(): Promise<void> {
   // Dès l'écran du mot de passe, qui précède tout le reste.
   appliquerThemeEnregistre();
+  appliquerFondEnregistre();
   suivreHauteurBarre();
   // Hors de l'enveloppe (page ouverte dans un navigateur pendant le développement),
   // il n'y a ni coffre ni boîtes de dialogue du système : les données ne vivent
@@ -175,6 +178,7 @@ async function demarrer(): Promise<void> {
     document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
     await chargerInterfaceHistorique(new MagasinMemoire({}, () => undefined));
     installerChoixTheme();
+    installerChoixFond();
     installerCompte(null);
     return;
   }
@@ -188,6 +192,7 @@ async function demarrer(): Promise<void> {
   ajusterEnseignants((donnees) => provisionnerEnseignantMoi(donnees, acces.identite));
   suivreRenommageMoi(reprendreNom);
   installerChoixTheme();
+  installerChoixFond();
   installerEchange(acces);
   suivreExemple(acces);
   installerDonneesEleves(acces);

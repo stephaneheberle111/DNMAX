@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    .d { fill: none; stroke: #1C1A15; stroke-width: 8.5; stroke-linecap: round; }
+    .p { fill: #10555F; }
+    @media (prefers-color-scheme: dark) { .d { stroke: #F1ECE0; } .p { fill: #62A9AE; } }
+  </style>
+  <path class="d" d="M17 85 35.6 66.4M66.5 35.5 85 17"/>
+  <path class="p" d="M12 23 40 12C56 34.3 72 56.7 88 79L64 90C46.7 67.7 29.3 45.3 12 23Z"/>
+</svg>

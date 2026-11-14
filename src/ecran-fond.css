@@ -1,0 +1,153 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Bloc « Fond de page » de Préférences > Apparence. */
+.choix-fond {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.choix-fond-tete h4 {
+  margin: 0 0 3px;
+  font-family: var(--fd);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.choix-fond-trames {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 720px) {
+  .choix-fond-trames {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+html[data-device="phone"] .choix-fond-trames {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.carte-fond {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.carte-fond:has(input:checked) {
+  padding: 11px;
+  border: 2px solid var(--accent);
+}
+.carte-fond:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.apercu-fond {
+  position: relative;
+  display: block;
+  height: 112px;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background-color: var(--paper);
+}
+.apercu-fond::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.apercu-fond[data-trame="feutre"]::before {
+  background-image: url("./assets/fond/feutre.png");
+  background-size: 256px 256px;
+}
+.apercu-fond[data-trame="toile"]::before {
+  background-image: url("./assets/fond/toile.png");
+  background-size: 40px 40px;
+}
+.apercu-fond[data-trame="verge"]::before {
+  background-image: url("./assets/fond/verge.png");
+  background-size: 78px 78px;
+}
+/* Même rendu que le fond de page en thème sombre (src/identite.css). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .apercu-fond::before {
+    filter: invert(1);
+    opacity: 0.35;
+  }
+}
+:root[data-theme="dark"] .apercu-fond::before {
+  filter: invert(1);
+  opacity: 0.35;
+}
+.carte-fond-choix {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.carte-fond-choix input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+.carte-fond-choix > span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.carte-fond-choix b {
+  font-size: 15px;
+  font-weight: 600;
+}
+.carte-fond-choix small {
+  font-size: 13px;
+  color: var(--muted);
+}
+.choix-fond-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  flex-wrap: wrap;
+}
+.choix-fond-force {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.choix-fond-force > span {
+  font-size: 15px;
+  margin-right: 4px;
+}
+.choix-fond-force .btn {
+  min-height: 44px;
+  padding: 0 18px;
+  font-weight: 600;
+}
+.choix-fond-force .btn[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent, #fff);
+}
+.choix-fond-x {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 15px;
+  cursor: pointer;
+}
+.choix-fond-x input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accent);
+}
