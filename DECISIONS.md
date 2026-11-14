@@ -236,7 +236,7 @@ Le nom se corrige sur la ligne « C'est moi » de « Mon établissement » (déc
 **Retenu** (révisé) : « Mon compte » est un menu de la barre du haut, à droite des onglets, à côté de « Échanger… », avec deux entrées.
 
 - **Mot de passe** : il se change en fournissant l'ancien. Seule la clé de données est ré-enfermée sous le nouveau mot de passe ; le contenu n'est pas rechiffré et le code de secours reste valable. Les sauvegardes antérieures s'ouvrent toujours avec le mot de passe en vigueur le jour où elles ont été faites.
-- **Préférences** : une page sans onglet propre, qui regroupe ce qui relève du goût de l'enseignant plutôt que de l'établissement : thème (clair, sombre, comme le système), échelles d'évaluation, nom du champ d'évaluation et livrables proposés. Tout changement d'échelle rappelle d'abord que l'échelle officielle des DN MADE est celle des niveaux de maîtrise.
+- **Préférences** : une page sans onglet propre, qui regroupe ce qui relève du goût de l'enseignant plutôt que de l'établissement : thème (clair, sombre, comme le système), fond de page (voir décision 4), échelles d'évaluation, nom du champ d'évaluation et livrables proposés. Tout changement d'échelle rappelle d'abord que l'échelle officielle des DN MADE est celle des niveaux de maîtrise.
 
 **Nom** : il ne se corrige plus dans « Mon compte » mais sur la ligne « C'est moi » de « Mon établissement » › « Enseignants », qui le montrait déjà : un seul endroit pour un même nom. L'identité (qui signe les envois) reprend ce prénom et ce nom tant qu'ils sont tous deux remplis ; l'identifiant d'installation ne change pas, et les modifications déjà signées gardent l'ancien nom.
 

@@ -145,9 +145,9 @@ flowchart LR
 - `src/domaine/` : ce qui calcule. Aucune dépendance au navigateur ni à Tauri, donc testable directement.
 - `src/enveloppe.ts` : ce qui parle à l'extérieur.
 - `src/ecran-coffre.ts` : l'écran de mot de passe.
-- `src/ecran-compte.ts` : le menu « Mon compte » (mot de passe, préférences). `src/ecran-preferences.ts` : thème et avertissement de changement d'échelle de la page Préférences. `src/ecran-exemple.ts` : le retrait de l'exemple.
+- `src/ecran-compte.ts` : le menu « Mon compte » (mot de passe, préférences). `src/ecran-preferences.ts` : thème et avertissement de changement d'échelle de la page Préférences. `src/ecran-fond.ts` : le fond de page (règles dans `src/domaine/fond.ts`). `src/identite.css` : l'identité visuelle (nom, onglets à icône, cartes, fond), décision 4. `src/ecran-exemple.ts` : le retrait de l'exemple.
 - `src/ecran-accueil.ts` : l'encart des premiers pas sur une installation vide. `src/configuration.ts` : les adresses publiques du projet.
-- `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ».
+- `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ». `outils/generer-icones.ts` et `outils/generer-sceau.ts` régénèrent les icônes de l'application et le sceau DN MADE des exports.
 - `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans. `src/canal-direct.ts` et `src/ecran-echange-direct.ts` : l'échange en direct, d'ordinateur à ordinateur avec un code de 8 chiffres, sur un même réseau local et sans aucun serveur ; le transport est dans `src-tauri/src/direct.rs` (code, authentification et chiffrement) et `src-tauri/src/voisinage.rs` (annonce sur le réseau local) (décision 21).
 - `src-tauri/` : la fenêtre de bureau et ses droits (`capabilities/`). Dans `src-tauri/src/` : `coffre.rs` chiffre (sans toucher au disque), `depot.rs` range les fichiers (sans connaître le chiffrement), `export.rs` écrit les exports, `direct.rs` et `voisinage.rs` font l'échange en direct, `lib.rs` relie le tout aux commandes appelées par l'interface.
 

@@ -3929,7 +3929,7 @@ function toast(m){const d=document.createElement("div");d.className="toast";d.te
    appeler save(true). */
 function save(valide){enregistrerDansListe(valide===true);LS.set("dnmade.draft",F);paintEnregistrement()}
 /* Une nouvelle évaluation n'entre dans la liste qu'une fois commencée, pour qu'un clic sur
-   « + Nouvelle évaluation » sans suite n'y laisse pas une ligne vide. */
+   « Nouvelle évaluation » sans suite n'y laisse pas une ligne vide. */
 function evaluationCommencee(f){return SAISIE.evaluationCommencee(f)}
 /* Rend "liste" si l'évaluation en cours est dans « Mes évaluations », "bloquee" si son référentiel
    non validé l'empêche d'y entrer, "vide" si elle n'est pas encore commencée. */
@@ -4040,7 +4040,7 @@ function paintForm(){
   g("f-eleves").value=F.eleves;
   paintSems();
   const hE=g("helpEch");
-  if(hE&&!hE.innerHTML)hE.innerHTML=help("L'échelle donne les niveaux de la jauge d'évaluation, à l'écran comme dans le Word et l'Excel. Une nouvelle évaluation prend l'échelle par défaut ; la liste propose toutes les échelles activées dans Mon compte > Préférences > Échelles d'évaluation.");
+  if(hE&&!hE.innerHTML)hE.innerHTML=help("L'échelle donne les niveaux de l'évaluation : une jauge à l'écran, une case par niveau dans les documents Word et OpenDocument, et, dans l'Excel, l'intitulé du niveau atteint. Une nouvelle évaluation prend l'échelle par défaut ; la liste propose toutes les échelles activées dans Mon compte > Préférences > Échelles d'évaluation.");
   g("row-ec").hidden=!MOD.ec;
   g("fgroup-ref").hidden=!MOD.ec;
   paintContexte();
@@ -5031,7 +5031,7 @@ function paintSaved(){
   document.getElementById("sCount").textContent=nVis<fiches.length?nVis+" / "+fiches.length:fiches.length;
   const h=document.getElementById("savedList");
   if(!fiches.length){h.innerHTML=`<div class="empty">Aucune évaluation enregistrée.
-    <button class="btn" id="bNew2">+ Nouvelle évaluation</button> ou <button class="btn ghost" id="bDemo2">chargez un exemple</button>.</div>`;
+    <button class="btn" id="bNew2">Nouvelle évaluation</button> ou <button class="btn ghost" id="bDemo2">chargez un exemple</button>.</div>`;
     const d=document.getElementById("bDemo2");if(d)d.onclick=loadDemo;
     const n=document.getElementById("bNew2");if(n)n.onclick=nouvelleFiche;return}
   h.innerHTML=`<table class="t slist"><thead><tr><th>Promotion</th><th>Sem.</th><th>Intitulé</th><th>Livrables</th><th>Comp.</th><th class="csuivi"><span style="display:inline-flex;gap:6px;align-items:center">Suivi ${help("Chaque évaluation avance sur 5 étapes : <b>Préparée → Distribuée → Rendue → Évaluée → Restituée</b>. Point plein = étape franchie, point à moitié plein = étape commencée. Distribuée et Rendue avancent seules avec les dates prévues ; les suivantes avec vos actions (saisie ou export de la grille, « Terminer », « Marquer restituée »). La ligne grise indique la prochaine chose à faire.","rt")}</span></th><th aria-label="Actions"></th></tr></thead><tbody>
