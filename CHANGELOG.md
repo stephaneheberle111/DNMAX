@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.7.0 — 2026-11-14
+
 ### Ajouté
 
 - Nouvelle identité visuelle : papier crème, couleur pétrole, nom « DNMA » suivi du signe X, une icône devant chaque menu, et une nouvelle icône de l'application.
