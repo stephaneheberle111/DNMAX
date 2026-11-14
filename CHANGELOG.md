@@ -2,6 +2,17 @@
 
 ## Non publié
 
+### Ajouté
+
+- Nouvelle identité visuelle : papier crème, couleur pétrole, nom « DNMA » suivi du signe X, une icône devant chaque menu, et une nouvelle icône de l'application.
+- Mon compte > Préférences > Apparence : choix du fond de page (Lisse, Feutre, Toile ou Vergé), de la force du relief (Normale ou À peine) et du X en creux en bas de page. Le choix vaut pour toutes les pages, jamais pour les documents exportés.
+
+### Modifié
+
+- Documents Word et OpenDocument : en-tête compact (titre et informations à gauche, petit sceau DN MADE à droite), tout au trait noir, sans aplat de couleur. Le niveau se coche dans une case par niveau, au lieu d'une jauge à griser ; dans une restitution, la case du niveau atteint est cochée. Pied de page avec l'intitulé et le numéro de page.
+- Les niveaux d'acquisition s'affichent en nuances de pétrole, du plus clair au plus foncé.
+- « Mes évaluations » porte son titre en tête de page, avec le bouton « Nouvelle évaluation ».
+
 ## 0.6.0 — 2026-11-14
 
 ### Modifié

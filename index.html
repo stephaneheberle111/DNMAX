@@ -5,13 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>DNMAX</title>
     <link rel="stylesheet" href="/heritage/application.css" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
+    <!-- Fond de page : trame et X en creux, réglés dans Préférences (src/ecran-fond.ts) ; jamais imprimés ni exportés. -->
+    <div class="fond-page" aria-hidden="true">
+      <svg class="fond-x" viewBox="0 0 100 100" focusable="false">
+        <defs>
+          <g id="signe-fin">
+            <path fill="none" stroke-width="2.6" stroke-linecap="round" d="M12 88 42.1 57.9M63.4 36.6 88 12M7.4 83.4l9.2 9.2M83.4 7.4l9.2 9.2"/>
+            <path stroke="none" d="M17 25 41 14C58.5 34 73 55 85.5 77L66 87C53 65.5 37.5 44.5 17 25Z"/>
+          </g>
+        </defs>
+        <use href="#signe-fin" class="creux-ombre-large" transform="translate(-.5 -1.1)"/>
+        <use href="#signe-fin" class="creux-lumiere-large" transform="translate(.5 1.1)"/>
+        <use href="#signe-fin" class="creux-ombre" transform="translate(-.25 -.55)"/>
+        <use href="#signe-fin" class="creux-lumiere" transform="translate(.25 .55)"/>
+        <use href="#signe-fin" class="creux-fond"/>
+      </svg>
+    </div>
 <!-- Début de l'interface historique : balisage repris tel quel, voir public/heritage/application.js -->
 
 <header class="bar">
   <div class="bar-in">
-    <div class="brand"><b>DNMAX</b></div>
+    <div class="brand" role="img" aria-label="DNMAX"><b aria-hidden="true">DNMA</b><svg class="signe" viewBox="0 0 100 100" aria-hidden="true"><path class="signe-delie" d="M13 87 40.9 59.1M64.7 35.3 87 13M8 82l10 10M82 8l10 10"/><path class="signe-plein" d="M16 25 42 14C59 34 74 55 87 77L65 87C52.5 65.5 37 44.5 16 25Z"/></svg></div>
     <nav class="tabs" role="tablist">
       <button role="tab" id="t-saved" aria-selected="true">Mes évaluations</button>
       <button role="tab" id="t-prog" aria-selected="false">Progression</button>
@@ -183,8 +200,9 @@
   </section>
 
   <section id="v-saved" hidden>
+    <div class="vue-entete"><h1 class="vue-titre">Mes évaluations</h1><button class="btn primary" id="bNew">Nouvelle évaluation</button></div>
     <div class="panel">
-      <div class="pick-head"><button class="btn" id="bNew">+ Nouvelle évaluation</button><h3>Évaluations enregistrées</h3><span class="count" id="sCount">0</span>
+      <div class="pick-head"><h3>Évaluations enregistrées</h3><span class="count" id="sCount">0</span>
       </div>
       <div class="sfbar" id="sFilters" hidden></div>
       <div class="tw" id="savedList"></div>
@@ -282,6 +300,31 @@
           <label><input type="radio" name="theme" value="systeme"> Comme le système</label>
         </div>
         <div class="hint">« Comme le système » suit le réglage clair ou sombre de l'ordinateur. Le choix vaut pour cet ordinateur.</div>
+        <!-- Ajout : fond de page, géré par src/ecran-fond.ts -->
+        <div class="choix-fond" id="choix-fond">
+          <div class="choix-fond-tete">
+            <h4>Fond de page</h4>
+            <div class="hint">Chaque utilisateur choisit son papier. Le réglage vaut pour toutes les pages, jamais pour les exports.</div>
+          </div>
+          <div class="choix-fond-trames" role="radiogroup" aria-label="Fond de page">
+            <label class="carte-fond"><span class="apercu-fond" data-trame="lisse"></span>
+              <span class="carte-fond-choix"><input type="radio" name="fond" value="lisse"><span><b>Lisse</b><small>aucun relief</small></span></span></label>
+            <label class="carte-fond"><span class="apercu-fond" data-trame="feutre"></span>
+              <span class="carte-fond-choix"><input type="radio" name="fond" value="feutre"><span><b>Feutre</b><small>grain de papier d'art</small></span></span></label>
+            <label class="carte-fond"><span class="apercu-fond" data-trame="toile"></span>
+              <span class="carte-fond-choix"><input type="radio" name="fond" value="toile"><span><b>Toile</b><small>trame de reliure</small></span></span></label>
+            <label class="carte-fond"><span class="apercu-fond" data-trame="verge"></span>
+              <span class="carte-fond-choix"><input type="radio" name="fond" value="verge"><span><b>Vergé</b><small>papier à diplôme</small></span></span></label>
+          </div>
+          <div class="choix-fond-options">
+            <div class="choix-fond-force" role="group" aria-label="Force du relief">
+              <span>Force du relief</span>
+              <button type="button" class="btn" data-force="normale" aria-pressed="true">Normale</button>
+              <button type="button" class="btn" data-force="peine" aria-pressed="false">À peine</button>
+            </div>
+            <label class="choix-fond-x"><input type="checkbox" id="fond-x-creux" checked> Afficher le X en creux en bas de page</label>
+          </div>
+        </div>
       </div>
     </div>
     <div class="panel">

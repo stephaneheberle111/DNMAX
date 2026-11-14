@@ -1,0 +1,223 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Identité visuelle : nom « DNMA » + signe X, onglets à icône, cartes sur papier, fond de page gaufré.
+   Les couleurs sont les variables de public/heritage/application.css ; ici, la forme. */
+
+/* ---------- Papier et fond de page ---------- */
+html {
+  background: var(--paper);
+}
+body {
+  /* Le papier est porté par <html> : le fond de page, en z-index négatif, passe ainsi sous le contenu. */
+  background: transparent;
+}
+.fond-page {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+/* La trame est une couche à part : en thème sombre elle est inversée, le X en creux non. */
+.fond-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("./assets/fond/feutre.png");
+  background-size: 256px 256px;
+}
+html[data-fond="lisse"] .fond-page::before {
+  background-image: none;
+}
+html[data-fond="toile"] .fond-page::before {
+  background-image: url("./assets/fond/toile.png");
+  background-size: 40px 40px;
+}
+html[data-fond="verge"] .fond-page::before {
+  background-image: url("./assets/fond/verge.png");
+  background-size: 78px 78px;
+}
+html[data-relief="peine"] .fond-page {
+  opacity: 0.5;
+}
+.fond-x {
+  position: absolute;
+  right: 26px;
+  bottom: calc(26px + var(--hauteur-pied, 0px));
+  width: 210px;
+  height: 210px;
+}
+html[data-x-creux="non"] .fond-x {
+  display: none;
+}
+html[data-device="phone"] .fond-x {
+  right: 6px;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  width: 130px;
+  height: 130px;
+}
+.fond-x use {
+  --creux: rgba(58, 44, 22, 0.099);
+  fill: var(--creux);
+  stroke: var(--creux);
+}
+.fond-x .creux-lumiere-large { --creux: rgba(255, 255, 255, 0.427); }
+.fond-x .creux-ombre { --creux: rgba(58, 44, 22, 0.22); }
+.fond-x .creux-lumiere { --creux: rgba(255, 255, 255, 0.95); }
+.fond-x .creux-fond { --creux: var(--paper); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fond-page::before { filter: invert(1); opacity: 0.35; }
+  :root:not([data-theme="light"]) .fond-x .creux-ombre-large { --creux: rgba(0, 0, 0, 0.25); }
+  :root:not([data-theme="light"]) .fond-x .creux-lumiere-large { --creux: rgba(255, 255, 255, 0.03); }
+  :root:not([data-theme="light"]) .fond-x .creux-ombre { --creux: rgba(0, 0, 0, 0.5); }
+  :root:not([data-theme="light"]) .fond-x .creux-lumiere { --creux: rgba(255, 255, 255, 0.08); }
+}
+:root[data-theme="dark"] .fond-page::before { filter: invert(1); opacity: 0.35; }
+:root[data-theme="dark"] .fond-x .creux-ombre-large { --creux: rgba(0, 0, 0, 0.25); }
+:root[data-theme="dark"] .fond-x .creux-lumiere-large { --creux: rgba(255, 255, 255, 0.03); }
+:root[data-theme="dark"] .fond-x .creux-ombre { --creux: rgba(0, 0, 0, 0.5); }
+:root[data-theme="dark"] .fond-x .creux-lumiere { --creux: rgba(255, 255, 255, 0.08); }
+@media print {
+  .fond-page { display: none; }
+}
+
+/* ---------- Nom : « DNMA » suivi du signe X en couleur ---------- */
+.brand {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 1px;
+  margin-right: 8px;
+}
+.brand b {
+  font-family: var(--fd);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.signe {
+  width: 0.885em;
+  height: 0.885em;
+  flex-shrink: 0;
+  margin-bottom: -0.115em;
+  font-size: 26px;
+}
+.signe-delie {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 4.6;
+  stroke-linecap: round;
+}
+.signe-plein {
+  fill: var(--accent);
+}
+html[data-device="phone"] .brand b,
+html[data-device="phone"] .signe {
+  font-size: 24px;
+}
+@media (min-width: 1700px) {
+  .brand b,
+  .signe {
+    font-size: 28px;
+  }
+}
+
+/* ---------- Bandeau et onglets à icône ---------- */
+header.bar {
+  background: var(--surface);
+  border-bottom-color: var(--line);
+}
+nav.tabs {
+  background: none;
+  border: 0;
+  padding: 0;
+  gap: 4px;
+}
+nav.tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 400;
+}
+nav.tabs button::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  background: currentColor;
+  mask: var(--icone) center / contain no-repeat;
+}
+nav.tabs button:hover {
+  color: var(--ink);
+}
+nav.tabs button[aria-selected="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  box-shadow: none;
+  font-weight: 600;
+}
+#t-saved { --icone: url("./assets/icones/evaluations.svg"); }
+#t-prog { --icone: url("./assets/icones/progression.svg"); }
+#t-ref { --icone: url("./assets/icones/referentiel.svg"); }
+#t-org { --icone: url("./assets/icones/etablissement.svg"); }
+#t-set { --icone: url("./assets/icones/parametres.svg"); }
+html[data-device="phone"] nav.tabs {
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  padding: 6px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+  box-shadow: none;
+}
+html[data-device="phone"] nav.tabs button {
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-height: 52px;
+  font-size: 11px;
+}
+html[data-device="phone"] nav.tabs button::before {
+  width: 24px;
+  height: 24px;
+}
+html[data-device="phone"] nav.tabs button[aria-selected="true"] {
+  background: none;
+}
+
+/* ---------- Titres, cartes, boutons ---------- */
+.vue-titre {
+  font-family: var(--fd);
+  font-weight: 800;
+  font-size: 32px;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+html[data-device="phone"] .vue-titre {
+  font-size: 26px;
+}
+.vue-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.vue-entete .vue-titre {
+  margin-right: auto;
+}
+.vue-entete .btn.primary {
+  min-height: 44px;
+  padding: 0 18px;
+  font-weight: 600;
+}
+.panel {
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .panel { box-shadow: none; }
+}
+:root[data-theme="dark"] .panel { box-shadow: none; }
+.btn.primary {
+  font-weight: 600;
+}
