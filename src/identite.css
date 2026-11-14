@@ -221,3 +221,111 @@ html[data-device="phone"] .vue-titre {
 .btn.primary {
   font-weight: 600;
 }
+
+/* ---------- Paramètres et Préférences : format de la planche « Fond de page » ----------
+   Un titre de page, puis une carte par réglage : titre de section en Bricolage, texte
+   d'explication en gris, marges de 22 px. */
+.vue-reglages {
+  gap: 20px;
+}
+.vue-reglages > .vue-titre {
+  margin-bottom: -2px;
+}
+.vue-reglages .panel > .pick-head {
+  padding: 20px 22px 4px;
+  border-bottom: 0;
+  gap: 10px;
+}
+.vue-reglages .panel > .pick-head h3 {
+  font-family: var(--fd);
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--ink);
+}
+.vue-reglages .panel > .pick-head .count {
+  align-self: center;
+}
+.vue-reglages .panel > .panel-body {
+  padding: 8px 22px 22px;
+  gap: 14px;
+}
+.vue-reglages .panel-body > .hint {
+  font-size: 14px;
+  line-height: 1.45;
+}
+/* Modules : une ligne par module, séparée par un filet, alignée sur les marges de la carte. */
+.vue-reglages #modList {
+  padding: 6px 22px 10px;
+}
+.vue-reglages .mod {
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px 0;
+  border-top-color: var(--line-soft);
+}
+.vue-reglages .mod b {
+  display: inline;
+  font-family: var(--fb);
+  font-weight: 600;
+  font-size: 15px;
+}
+.vue-reglages .mod .d {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.vue-reglages .mod .off {
+  margin-top: 6px;
+  font-family: var(--fb);
+  font-size: 13px;
+  font-weight: 600;
+}
+.vue-reglages .mod .modvisite {
+  margin-top: 8px;
+  padding: 0 14px;
+  min-height: 36px;
+  border-color: var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13.5px;
+}
+.vue-reglages .mod .modvisite:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* Échelles d'évaluation : mêmes lignes que les modules. */
+.vue-reglages #echList {
+  padding: 6px 22px 10px;
+}
+.vue-reglages input[type="radio"],
+.vue-reglages input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+/* Boutons discrets des réglages (données des étudiants, valeurs par défaut…) : bordés, pour se lire comme des boutons. */
+.vue-reglages .panel .btn.ghost:not(.modvisite) {
+  border-color: var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 7px 12px;
+}
+.vue-reglages .panel .btn.ghost:not(.modvisite):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.vue-reglages .choix-fond-tete .hint {
+  font-size: 14px;
+  line-height: 1.45;
+}
+html[data-device="phone"] .vue-reglages .panel > .pick-head {
+  padding: 16px 16px 2px;
+}
+html[data-device="phone"] .vue-reglages .panel > .panel-body {
+  padding: 8px 16px 16px;
+}
+html[data-device="phone"] .vue-reglages #modList,
+html[data-device="phone"] .vue-reglages #echList {
+  padding: 4px 16px 8px;
+}

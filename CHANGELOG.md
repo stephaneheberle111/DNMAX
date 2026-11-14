@@ -12,6 +12,7 @@
 - Documents Word et OpenDocument : en-tête compact (titre et informations à gauche, petit sceau DN MADE à droite), tout au trait noir, sans aplat de couleur. Le niveau se coche dans une case par niveau, au lieu d'une jauge à griser ; dans une restitution, la case du niveau atteint est cochée. Pied de page avec l'intitulé et le numéro de page.
 - Les niveaux d'acquisition s'affichent en nuances de pétrole, du plus clair au plus foncé.
 - « Mes évaluations » porte son titre en tête de page, avec le bouton « Nouvelle évaluation ».
+- Paramètres et Préférences : un titre de page, puis une carte par réglage avec un titre lisible et son explication ; les modules et les échelles s'alignent sur les marges de la carte.
 
 ## 0.6.0 — 2026-11-14
 
