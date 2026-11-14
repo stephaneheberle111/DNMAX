@@ -230,7 +230,7 @@ const PRISE_EN_MAIN: Parcours = {
     { ...ALLER_EVALUATIONS, groupeFait: (avancement) => avancement.evaluations > 0 },
     {
       titre: "5. Créer une évaluation",
-      texte: "Cliquez « + Nouvelle évaluation ».",
+      texte: "Cliquez « Nouvelle évaluation ».",
       cibles: ["#bNew"],
       geste: "cliquer",
       atteinte: ongletOuvert("v-new"),
