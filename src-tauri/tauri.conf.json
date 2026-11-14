@@ -44,6 +44,11 @@
     "category": "Education",
     "macOS": {
       "signingIdentity": "-"
+    },
+    "windows": {
+      "nsis": {
+        "installerHooks": "windows/crochets-installeur.nsh"
+      }
     }
   },
   "plugins": {

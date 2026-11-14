@@ -162,6 +162,7 @@ flowchart LR
 | Les tests du chiffrement sont lents | Leur passer `DERIVATION_DE_TEST` (coût minimal), jamais `PARAMETRES_PAR_DEFAUT`. |
 | Changer `document.title` ne change pas le titre de la fenêtre | Le fixer côté Rust avec `set_title`. |
 | `npm run lint` signale une erreur de type sur `import.meta.dirname` | `@types/node` doit être installé et listé dans `types` de `tsconfig.json`. |
+| Après une mise à jour Windows, la barre des tâches et les raccourcis gardent l'ancienne icône | Windows met en cache l'icône d'un programme remplacé au même endroit, et l'installeur de Tauri ne le prévient que pour les associations de fichiers. Le crochet `src-tauri/windows/crochets-installeur.nsh` le prévient et reconstruit le cache après chaque installation. À défaut : désépingler puis réépingler DNMAX. |
 
 ## Documents
 
