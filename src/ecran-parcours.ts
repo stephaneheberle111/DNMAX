@@ -30,6 +30,8 @@ const IDENTIFIANT_PANNEAU_VISITES = "panneau-visites";
 
 /** Boîtes de dialogue de l'application : quand l'une est ouverte, elle grise déjà le reste. */
 const SELECTEUR_BOITES = '.echange-fond, .modal:not([hidden]), [role="dialog"][aria-modal="true"]';
+/** Bouton de fermeture d'une boîte de l'application. */
+const SELECTEUR_FERMER_BOITE = '[role="dialog"][aria-modal="true"] [aria-label="Fermer"]';
 
 type Acces = Pick<AccesDonnees, "lireEntrees" | "ecrireEntree">;
 
@@ -175,6 +177,11 @@ function construire(): void {
 }
 
 function demonter(): void {
+  // Un salut en attente ferait avancer la visite suivante, relancée entre-temps.
+  if (visite?.salut !== null && visite?.salut !== undefined) {
+    window.clearTimeout(visite.salut);
+    visite.salut = null;
+  }
   for (const element of [...elements.voiles, elements.anneau, elements.curseur, elements.bulle]) {
     element?.remove();
   }
@@ -237,9 +244,9 @@ export function terminer(): void {
   if (visite !== null) {
     noterVu(visite.identifiant);
   }
+  demonter();
   visite = null;
   noterReprise();
-  demonter();
 }
 
 function aller(index: number): void {
@@ -288,8 +295,8 @@ function avancerDepuis(index: number): void {
   }
 }
 
-/** Couleurs des éclats : les bleus de l'application. */
-const COULEURS_ECLATS = ["#2f5bd3", "#4f7fe0", "#8fb4ee", "#1f3f9e", "#c9dbff"];
+/** Couleurs des éclats : les nuances de pétrole de l'identité, relevées d'une pointe de cuivre. */
+const COULEURS_ECLATS = ["#10555f", "#2a7f88", "#62a9ae", "#a8d2d4", "#8a4a0e"];
 
 /** Au-delà de ce délai, un clic n'est plus considéré comme la cause d'une réussite. */
 const DELAI_CLIC_RECENT_MS = 4000;
@@ -335,7 +342,7 @@ function eclater(x: number, y: number, nombre: number): void {
     // Angles réguliers et distances alternées : une gerbe régulière, sans hasard.
     eclat.style.setProperty("--angle", `${String((360 / nombre) * rang)}deg`);
     eclat.style.setProperty("--distance", `${String(46 + (rang % 3) * 22)}px`);
-    eclat.style.setProperty("--couleur", COULEURS_ECLATS[rang % COULEURS_ECLATS.length] ?? "#2f5bd3");
+    eclat.style.setProperty("--couleur", COULEURS_ECLATS[rang % COULEURS_ECLATS.length] ?? "#10555f");
     eclat.style.setProperty("--delai", `${String((rang % 4) * 30)}ms`);
     gerbe.append(eclat);
   }
@@ -433,6 +440,9 @@ function afficherBulle(): void {
     } else if (etape.avanceAuClic === true && !fait) {
       cliquerPourLEnseignant(etape);
     } else {
+      if (etape.fermeLaBoite === true) {
+        document.querySelector<HTMLElement>(SELECTEUR_FERMER_BOITE)?.click();
+      }
       suivante();
     }
   });

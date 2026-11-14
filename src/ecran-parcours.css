@@ -58,20 +58,21 @@
 }
 
 .parcours-anneau-reussi {
-  border-color: #2e9b5d !important;
+  border-color: var(--accent, #10555f) !important;
+  border-style: solid !important;
   animation: parcours-pulsation-reussie 0.9s ease-out;
 }
 
 .parcours-anneau-reussi::before {
-  background: #2e9b5d;
+  background: var(--accent, #10555f);
 }
 
 @keyframes parcours-pulsation-reussie {
   0% {
-    box-shadow: 0 0 0 0 rgba(46, 155, 93, 0.6);
+    box-shadow: 0 0 0 0 rgba(98, 169, 174, 0.7);
   }
   100% {
-    box-shadow: 0 0 0 22px rgba(46, 155, 93, 0);
+    box-shadow: 0 0 0 22px rgba(98, 169, 174, 0);
   }
 }
 
@@ -107,13 +108,13 @@
 
 @keyframes parcours-pulsation-douce {
   0% {
-    box-shadow: 0 0 0 0 rgba(143, 180, 238, 0.5);
+    box-shadow: 0 0 0 0 rgba(98, 169, 174, 0.5);
   }
   70% {
-    box-shadow: 0 0 0 12px rgba(143, 180, 238, 0);
+    box-shadow: 0 0 0 12px rgba(98, 169, 174, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(143, 180, 238, 0);
+    box-shadow: 0 0 0 0 rgba(98, 169, 174, 0);
   }
 }
 
@@ -352,7 +353,7 @@
 }
 
 .parcours-chapitre-fait + .parcours-chapitre::before {
-  background: #2e9b5d;
+  background: var(--accent, #10555f);
 }
 
 .parcours-pastille {
@@ -375,9 +376,9 @@
 }
 
 .parcours-chapitre-fait .parcours-pastille {
-  border-color: #2e9b5d;
-  background: #2e9b5d;
-  color: #fff;
+  border-color: var(--accent, #10555f);
+  background: var(--accent-soft, #dcebea);
+  color: var(--accent, #10555f);
 }
 
 .parcours-chapitre-actif {
@@ -388,7 +389,7 @@
 .parcours-chapitre-actif .parcours-pastille {
   border-color: var(--accent, #10555f);
   background: var(--accent, #10555f);
-  color: #fff;
+  color: var(--on-accent, #fff);
   animation: parcours-pulsation 1.8s ease-out infinite;
 }
 
@@ -503,8 +504,8 @@
   height: 20px;
   margin-right: 6px;
   border-radius: 50%;
-  background: #2e9b5d;
-  color: #fff;
+  background: var(--accent, #10555f);
+  color: var(--on-accent, #fff);
   font-size: 12px;
   font-weight: 700;
   vertical-align: 1px;
@@ -518,7 +519,7 @@
 }
 
 .parcours-reussie {
-  border-color: #2e9b5d;
+  border-color: var(--accent, #10555f);
 }
 
 .parcours-actions {
@@ -574,7 +575,7 @@
   animation: none;
   box-shadow:
     0 0 0 4px rgba(42, 127, 136, 0.35),
-    0 0 28px 6px rgba(121, 169, 211, 0.55);
+    0 0 28px 6px rgba(168, 210, 212, 0.55);
 }
 
 /* Pendant le trajet de la zone, la bulle attend, invisible, et ses animations aussi. */

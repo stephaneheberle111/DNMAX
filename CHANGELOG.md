@@ -2,6 +2,12 @@
 
 ## Non publié
 
+### Corrigé
+
+- Visite guidée rejouée : elle ne reste plus bloquée sur « Paramètres ». Elle repasse par chaque écran (Référentiel, Mon établissement et ses volets, Mes évaluations) et y coche ce qui est déjà fait, au lieu d'afficher « déjà fait… ici » sans rien montrer. Elle ne fait pas créer de nouvelle évaluation.
+- Visite guidée : « Suivant » referme la fenêtre d'actions d'une évaluation, qui cachait l'étape suivante.
+- Visite guidée : couleurs accordées à la nouvelle identité (coches, pastilles, halos et éclats en pétrole, au lieu du vert et du bleu).
+
 ## 0.7.0 — 2026-11-14
 
 ### Ajouté
