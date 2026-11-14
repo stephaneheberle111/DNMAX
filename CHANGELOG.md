@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Corrigé
+
+- Windows : après la mise à jour, la barre des tâches, le menu Démarrer et le raccourci du bureau montrent la nouvelle icône de DNMAX au lieu de l'ancienne. Si l'ancienne reste affichée sur une épingle, désépinglez puis réépinglez DNMAX.
+
 ## 0.7.0 — 2026-11-14
 
 ### Ajouté
