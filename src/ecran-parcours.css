@@ -172,6 +172,49 @@
   display: none;
 }
 
+/* « Parcourir » : le curseur se pose sur chaque élément tour à tour, et glisse de l'un à l'autre. */
+.parcours-curseur[data-geste="parcourir"] {
+  animation: none;
+  transition:
+    left 0.55s cubic-bezier(0.55, 0.05, 0.3, 1),
+    top 0.55s cubic-bezier(0.55, 0.05, 0.3, 1);
+}
+
+.parcours-curseur[data-geste="parcourir"]::after {
+  animation: parcours-onde-halte 1.3s ease-out infinite;
+}
+
+@keyframes parcours-onde-halte {
+  0%,
+  40% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  85% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* « Glisser » : le curseur emporte la pastille de son point de départ jusqu'à la zone de dépôt. */
+.parcours-curseur[data-geste="glisser"]::after {
+  left: 8px;
+  top: 16px;
+  width: 26px;
+  height: 14px;
+  border-radius: 7px;
+  border: 0;
+  background: var(--accent, #10555f);
+  opacity: 0.85;
+  animation: none;
+}
+
 @keyframes parcours-trajet {
   0% {
     transform: translate(var(--depart-x, 0), var(--depart-y, 0));

@@ -4,6 +4,7 @@
 
 ### Modifié
 
+- Visite guidée : la page défile d'elle-même jusqu'à la zone à cliquer ; le curseur passe d'une étape à l'autre de « Constituer » ; la case d'attestation puis « Valider cette version » sont montrées tour à tour, et la réussite n'est saluée qu'une fois la version validée ; dans « Échanger », la bulle dit de fermer la boîte pour continuer ; à la création d'une évaluation, le curseur montre chaque champ, des confettis saluent chaque passage d'étape, et la formulation montre le glisser-déposer d'un livrable.
 - Nouveau signe X : son plein s'effile vers le bas. Il remplace l'ancien partout : icône de l'application et de la barre des tâches, en-tête, X en creux du fond de page, favicon, site.
 - Mon établissement : le volet « Promotions » passe avant « Enseignants ».
 - La barre de titre de la fenêtre affiche « DNMAX », sans numéro de version.
@@ -16,6 +17,7 @@
 
 ### Corrigé
 
+- Visite guidée : à l'étape « Compétences », le curseur invitait à écrire au lieu de cocher une case ; à l'étape « Vos préférences », la bulle cachait le menu « Mon compte ».
 - Documents Word et OpenDocument : les noms des niveaux au-dessus de la jauge ne sont plus coupés au milieu d'un mot (« Non acqui-s ») ; chacun a la place de son mot le plus long, et le texte se réduit un peu si la colonne est étroite.
 
 ## 0.8.0 — 2026-11-15
