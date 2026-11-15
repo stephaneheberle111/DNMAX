@@ -46,8 +46,22 @@ export function messagePourErreur(erreur: unknown): string {
   return MESSAGES_ERREUR[erreur instanceof ErreurCoffre ? erreur.code : "interne"];
 }
 
+/** Nombre d'étapes de la page de bienvenue ; la dernière (la mention) suit l'ouverture des données (src/ecran-bienvenue.ts). */
+export const NOMBRE_ETAPES_BIENVENUE = 4;
+
+function marqueEtape(rang: number): string {
+  return `<p class="bienvenue-etape">Étape ${String(rang)} sur ${String(NOMBRE_ETAPES_BIENVENUE)}</p>`;
+}
+
+/** Longueur maximale du nom de l'établissement saisi à la bienvenue. */
+const LONGUEUR_MAXIMALE_ETABLISSEMENT = 120;
+
 const GABARIT_BONNES_PRATIQUES = `
-  <h1>Avant de commencer</h1>
+  ${marqueEtape(1)}
+  <h1>Bienvenue dans DNMAX</h1>
+  <p>En quatre étapes, DNMAX se prépare pour vous : votre nom et celui de votre établissement, un mot de passe
+     qui protège vos données, puis votre mention, dont le référentiel et les trois promotions en cours sont installés d'office.
+     La visite guidée prendra ensuite le relais pour explorer l'application.</p>
   <p>DNMAX chiffre vos données par votre mot de passe. Quelques réflexes protègent le reste de l'ordinateur ;
      ce sont des conseils, rien ne vous empêche de continuer.</p>
   <ul class="coffre-pratiques">
@@ -66,9 +80,28 @@ const GABARIT_BONNES_PRATIQUES = `
         contiennent des étudiants dès qu'ils ne servent plus.</li>
     <li><b>Le code de secours</b>, affiché à l'étape suivante, se garde sur papier, hors de l'ordinateur.</li>
   </ul>
-  <div class="coffre-actions"><span></span><button type="submit" class="btn primary">J'ai compris, continuer</button></div>`;
+  <p class="coffre-erreur" role="alert" hidden></p>
+  <div class="coffre-actions">
+    <button type="button" class="lnk" data-role="transfert">J'ai déjà mes données sur un autre ordinateur</button>
+    <button type="submit" class="btn primary">Commencer</button></div>`;
+
+const GABARIT_PROFIL = `
+  ${marqueEtape(2)}
+  <h1>Vous et votre établissement</h1>
+  <p>Votre prénom et votre nom signent les fichiers que vous envoyez à d'autres enseignants : chacun voit ainsi qui a écrit quoi.
+     Le nom de l'établissement figure dans les documents remis aux étudiants.</p>
+  <label>Votre prénom
+    <input type="text" name="prenom" autocomplete="given-name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>
+  <label>Votre nom
+    <input type="text" name="nom" autocomplete="family-name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>
+  <label>Nom de l'établissement
+    <input type="text" name="etablissement" autocomplete="organization" maxlength="${String(LONGUEUR_MAXIMALE_ETABLISSEMENT)}" placeholder="Lycée …" required></label>
+  <p class="coffre-erreur" role="alert" hidden></p>
+  <div class="coffre-actions"><button type="button" class="lnk" data-role="retour">← Retour</button>
+    <button type="submit" class="btn primary">Continuer</button></div>`;
 
 const GABARIT_CREATION = `
+  ${marqueEtape(3)}
   <h1>Protégez vos données</h1>
   <p>DNMAX chiffre tout ce que vous saisissez — évaluations, étudiants, résultats — avant de l'écrire sur cet ordinateur.
      Choisissez un mot de passe : il vous sera demandé à chaque ouverture.</p>
@@ -80,10 +113,11 @@ const GABARIT_CREATION = `
      sont définitivement illisibles&nbsp;: personne ne peut les récupérer.</p>
   <p class="coffre-erreur" role="alert" hidden></p>
   <div class="coffre-actions">
-    <button type="button" class="lnk" data-role="transfert">J'ai déjà mes données sur un autre ordinateur</button>
+    <button type="button" class="lnk" data-role="retour">← Retour</button>
     <button type="submit" class="btn primary">Créer mon espace protégé</button></div>`;
 
 const GABARIT_CODE_SECOURS = `
+  ${marqueEtape(3)}
   <h1>Notez votre code de secours</h1>
   <p>Si vous oubliez votre mot de passe, ce code est le seul moyen de retrouver vos données.
      Il ne sera plus jamais affiché : recopiez-le sur papier et rangez-le hors de cet ordinateur.</p>
@@ -202,13 +236,70 @@ function signalerDefautMotDePasse(
   return defaut !== null;
 }
 
-function montrerBonnesPratiques(ecran: HTMLElement, continuer: () => void): void {
+function montrerBonnesPratiques(ecran: HTMLElement, terminer: (ouverture: OuvertureCoffre) => void, profil: Profil | null = null): void {
   const formulaire = afficherFormulaire(ecran, GABARIT_BONNES_PRATIQUES);
   formulaire.classList.add("coffre-large");
   formulaire.querySelector<HTMLButtonElement>("button[type=submit]")?.focus();
   formulaire.addEventListener("submit", (evenement) => {
     evenement.preventDefault();
-    continuer();
+    montrerProfil(ecran, terminer, profil);
+  });
+  formulaire.querySelector("[data-role=transfert]")?.addEventListener("click", () => {
+    installerCoffre()
+      .then((installe) => {
+        if (installe) {
+          // Les données transférées s'ouvrent avec le mot de passe de l'ancien ordinateur, et portent déjà le nom de l'enseignant.
+          montrerOuverture(ecran, terminer);
+        }
+      })
+      .catch((erreur: unknown) => {
+        afficherErreur(formulaire, messagePourErreur(erreur));
+      });
+  });
+}
+
+/** Ce que l'enseignant a saisi à la bienvenue, avant que ses données n'existent. */
+export interface Profil {
+  prenom: string;
+  nom: string;
+  etablissement: string;
+}
+
+/** Données ouvertes ; `profil` n'est renseigné qu'à la création, quand la bienvenue l'a demandé. */
+export interface OuvertureCoffre {
+  entrees: Entrees;
+  profil: Profil | null;
+}
+
+function remplirChamp(formulaire: HTMLFormElement, nom: string, valeur: string): void {
+  const champ = formulaire.elements.namedItem(nom);
+  if (champ instanceof HTMLInputElement) {
+    champ.value = valeur;
+  }
+}
+
+function montrerProfil(ecran: HTMLElement, terminer: (ouverture: OuvertureCoffre) => void, precedent: Profil | null): void {
+  const formulaire = afficherFormulaire(ecran, GABARIT_PROFIL);
+  if (precedent !== null) {
+    remplirChamp(formulaire, "prenom", precedent.prenom);
+    remplirChamp(formulaire, "nom", precedent.nom);
+    remplirChamp(formulaire, "etablissement", precedent.etablissement);
+  }
+  formulaire.addEventListener("submit", (evenement) => {
+    evenement.preventDefault();
+    const profil: Profil = {
+      prenom: lireChamp(formulaire, "prenom").trim(),
+      nom: lireChamp(formulaire, "nom").trim(),
+      etablissement: lireChamp(formulaire, "etablissement").trim(),
+    };
+    if (creerIdentite(profil.prenom, profil.nom, "verification") === null || profil.etablissement === "") {
+      afficherErreur(formulaire, "Indiquez votre prénom, votre nom et celui de votre établissement pour continuer.");
+      return;
+    }
+    montrerCreation(ecran, terminer, profil);
+  });
+  formulaire.querySelector("[data-role=retour]")?.addEventListener("click", () => {
+    montrerBonnesPratiques(ecran, terminer);
   });
 }
 
@@ -238,30 +329,24 @@ function terminerOuverture(
   });
 }
 
-function montrerCreation(ecran: HTMLElement, terminer: (entrees: Entrees) => void): void {
+function montrerCreation(ecran: HTMLElement, terminer: (ouverture: OuvertureCoffre) => void, profil: Profil): void {
   const formulaire = afficherFormulaire(ecran, GABARIT_CREATION);
   brancherSoumission(formulaire, async () => {
     if (signalerDefautMotDePasse(formulaire)) {
       return;
     }
     const codeSecours = await creerCoffre(lireChamp(formulaire, "motDePasse"));
-    montrerCodeSecours(ecran, codeSecours, terminer);
+    montrerCodeSecours(ecran, codeSecours, () => {
+      // Un coffre qui vient d'être créé est vide.
+      terminer({ entrees: {}, profil });
+    });
   });
-  formulaire.querySelector("[data-role=transfert]")?.addEventListener("click", () => {
-    installerCoffre()
-      .then((installe) => {
-        if (installe) {
-          // Les données transférées s'ouvrent avec le mot de passe de l'ancien ordinateur.
-          montrerOuverture(ecran, terminer);
-        }
-      })
-      .catch((erreur: unknown) => {
-        afficherErreur(formulaire, messagePourErreur(erreur));
-      });
+  formulaire.querySelector("[data-role=retour]")?.addEventListener("click", () => {
+    montrerProfil(ecran, terminer, profil);
   });
 }
 
-function montrerCodeSecours(ecran: HTMLElement, codeSecours: string, terminer: (entrees: Entrees) => void): void {
+function montrerCodeSecours(ecran: HTMLElement, codeSecours: string, continuer: () => void): void {
   const formulaire = afficherFormulaire(ecran, GABARIT_CODE_SECOURS);
   const zoneCode = formulaire.querySelector("[data-role=code]");
   if (zoneCode !== null) {
@@ -269,12 +354,11 @@ function montrerCodeSecours(ecran: HTMLElement, codeSecours: string, terminer: (
   }
   formulaire.addEventListener("submit", (evenement) => {
     evenement.preventDefault();
-    // Un coffre qui vient d'être créé est vide.
-    terminer({});
+    continuer();
   });
 }
 
-function montrerOuverture(ecran: HTMLElement, terminer: (entrees: Entrees) => void, verrouilleParInactivite = false): void {
+function montrerOuverture(ecran: HTMLElement, terminer: (ouverture: OuvertureCoffre) => void, verrouilleParInactivite = false): void {
   const formulaire = afficherFormulaire(ecran, GABARIT_OUVERTURE);
   if (verrouilleParInactivite) {
     const avis = document.createElement("p");
@@ -285,21 +369,25 @@ function montrerOuverture(ecran: HTMLElement, terminer: (entrees: Entrees) => vo
   }
   brancherSoumission(formulaire, async () => {
     const motDePasse = lireChamp(formulaire, "motDePasse");
-    terminerOuverture(ecran, motDePasse, await ouvrirCoffre(motDePasse), terminer);
+    terminerOuverture(ecran, motDePasse, await ouvrirCoffre(motDePasse), (entrees) => {
+      terminer({ entrees, profil: null });
+    });
   });
   formulaire.querySelector("[data-role=oubli]")?.addEventListener("click", () => {
     montrerSecours(ecran, terminer);
   });
 }
 
-function montrerSecours(ecran: HTMLElement, terminer: (entrees: Entrees) => void): void {
+function montrerSecours(ecran: HTMLElement, terminer: (ouverture: OuvertureCoffre) => void): void {
   const formulaire = afficherFormulaire(ecran, GABARIT_SECOURS);
   brancherSoumission(formulaire, async () => {
     if (signalerDefautMotDePasse(formulaire)) {
       return;
     }
     const motDePasse = lireChamp(formulaire, "motDePasse");
-    terminerOuverture(ecran, motDePasse, await ouvrirCoffreParSecours(lireChamp(formulaire, "codeSecours"), motDePasse), terminer);
+    terminerOuverture(ecran, motDePasse, await ouvrirCoffreParSecours(lireChamp(formulaire, "codeSecours"), motDePasse), (entrees) => {
+      terminer({ entrees, profil: null });
+    });
   });
   formulaire.querySelector("[data-role=retour]")?.addEventListener("click", () => {
     montrerOuverture(ecran, terminer);
@@ -310,26 +398,25 @@ function montrerSecours(ecran: HTMLElement, terminer: (entrees: Entrees) => void
  * Affiche l'écran de création ou d'ouverture du coffre et rend les données
  * de l'enseignant une fois le coffre ouvert. L'écran se retire alors de la page.
  *
- * Au tout premier lancement (pas encore de coffre), une page de bonnes
- * pratiques précède le choix du mot de passe.
+ * Au tout premier lancement (pas encore de coffre), c'est la page de
+ * bienvenue : conseils, nom de l'enseignant et de l'établissement, puis mot
+ * de passe et code de secours. Le profil saisi est rendu avec les données.
  *
  * @param verrouilleParInactivite explique à l'enseignant pourquoi le mot de passe est redemandé
  */
-export function demanderOuvertureCoffre(coffreExiste: boolean, verrouilleParInactivite = false): Promise<Entrees> {
+export function demanderOuvertureCoffre(coffreExiste: boolean, verrouilleParInactivite = false): Promise<OuvertureCoffre> {
   return new Promise((resoudre) => {
     const ecran = document.createElement("div");
     ecran.className = "ecran-coffre";
     document.body.prepend(ecran);
-    const terminer = (entrees: Entrees): void => {
+    const terminer = (ouverture: OuvertureCoffre): void => {
       ecran.remove();
-      resoudre(entrees);
+      resoudre(ouverture);
     };
     if (coffreExiste) {
       montrerOuverture(ecran, terminer, verrouilleParInactivite);
     } else {
-      montrerBonnesPratiques(ecran, () => {
-        montrerCreation(ecran, terminer);
-      });
+      montrerBonnesPratiques(ecran, terminer);
     }
   });
 }

@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- Page de bienvenue au premier lancement, en quatre étapes : conseils, prénom, nom et établissement, mot de passe et code de secours, puis mention. Pour Objet ou Espace, DNMAX installe le référentiel livré et crée les trois promotions en cours ; pour une autre mention, on continue sans référentiel. Elle remplace l'encart « Pour commencer, il vous faut un référentiel ».
+
 ### Modifié
 
 - Le fond de page est désormais « Lisse » par défaut. Un fond déjà choisi dans Mon compte > Préférences > Apparence est conservé.
