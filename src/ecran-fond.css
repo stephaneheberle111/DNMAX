@@ -151,3 +151,24 @@ html[data-device="phone"] .choix-fond-trames {
   margin: 0;
   accent-color: var(--accent);
 }
+/* Préférences > Documents exportés : dossier proposé par « Enregistrer sous ». */
+.choix-dossier-exports {
+  display: flex;
+  align-items: center;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.choix-dossier-exports > div {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.choix-dossier-exports #p-dossier-chemin {
+  overflow-wrap: anywhere;
+  font-family: var(--fm);
+}
+.choix-dossier-exports .btn {
+  min-height: 44px;
+}
