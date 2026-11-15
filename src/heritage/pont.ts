@@ -14,7 +14,6 @@ import { diplomeAReferentielValide, promotionAReferentielValide } from "../domai
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
 import { lireSaisieEtablissement } from "../domaine/documents-rgpd";
 import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
-import { confirmerChangementEchelle } from "../ecran-preferences";
 import {
   choisirDossierExports,
   enregistrerFichier,
@@ -66,7 +65,6 @@ interface Pont {
    * Appelée avant tout changement d'échelle d'évaluation dans Préférences.
    * Rend `true` si l'enseignant confirme.
    */
-  readonly confirmerChangementEchelle: () => Promise<boolean>;
   /**
    * Préférences > Documents exportés : dossier proposé par « Enregistrer sous ».
    * Absent hors de l'enveloppe de bureau, qui seule enregistre des fichiers.
@@ -177,7 +175,6 @@ export async function chargerInterfaceHistorique(
     saisie: saisieResultats,
     evaluation: reglesEvaluation,
     jauge: jaugeExport,
-    confirmerChangementEchelle,
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
       : {}),

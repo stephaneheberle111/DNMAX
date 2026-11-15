@@ -3258,20 +3258,9 @@ const REF_DEFAULT = {
 };
 const SEMS = ["S1","S2","S3","S4","S5","S6"];
 const anneeOf = sem => Math.floor(Math.max(0,SEMS.indexOf(sem))/2)+1;
-const PRESETS = {
-  maitrise:{nom:"Niveaux de maîtrise",niveaux:["Insuffisant","Fragile","Satisfaisant","Très bonne maîtrise"]},
-  acq:{nom:"Degrés d'acquisition",niveaux:["Non acquis","En cours d'acquisition","Acquis","Maîtrisé"]},
-  note:{nom:"Note chiffrée",niveaux:["Note / 20"]},
-  libre:{nom:"Personnalisé",niveaux:["À compléter"]}
-};
-/* échelles : actives et par défaut se règlent dans Mon compte > Préférences ; chaque évaluation garde la sienne */
-const ECH=(()=>{let e=null;try{e=JSON.parse(STOCKAGE.getItem("dnmade.echelles")||"null")}catch(_){}
-  e=e||{};
-  if(!Array.isArray(e.actifs)||!e.actifs.length)e.actifs=["maitrise"];   // « Degrés d'acquisition » se coche dans Préférences
-  if(!e.def||!e.actifs.includes(e.def))e.def=e.actifs.includes("maitrise")?"maitrise":e.actifs[0];
-  if(Array.isArray(e.libre)&&e.libre.length)PRESETS.libre.niveaux=e.libre.slice();return e})();
-function saveEch(){try{STOCKAGE.setItem("dnmade.echelles",JSON.stringify(ECH))}catch(_){}}
-const DEF_PRESET_GET=()=>PRESETS[ECH.def]?ECH.def:"maitrise";
+/* une seule échelle pour tous, celle des niveaux de maîtrise (voir src/domaine/evaluation.ts) */
+const PRESETS = {maitrise:{nom:EVAL.ECHELLE.nom,niveaux:[...EVAL.ECHELLE.niveaux]}};
+const DEF_PRESET_GET=()=>"maitrise";
 const MODULES = {
   base:{nom:"Base",def:true,locked:true,
     d:"Toujours actif. Composer une évaluation (livrables, compétences, regroupements, consignes et attendus, rattachement aux UE et EC), l'enregistrer dans Mes évaluations avec son suivi, l'exporter en Word, Excel ou OpenDocument ; explorer et importer le référentiel ; décrire l'établissement (mentions, enseignants, promotions, répartition de service) et suivre la progression des promotions."},
@@ -3568,12 +3557,11 @@ let delArm = null;
 /* brouillon de départ : une évaluation vide (vierge() ne peut pas servir ici, elle lit F) */
 let F = LS.get("dnmade.draft",null) || {id:uid(),promoId:"",titre:"",livrables:[],semestre:"S1",classe:"",
   date:new Date().toISOString().slice(0,10),prof:"",ues:[],ecCodes:[],compCode:"",consignes:"",
-  ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),opts:{crit:true,obs:true,coef:false},
+  ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),opts:{crit:true,obs:true},
   eleves:"",items:[],res:{}};
 /* Une évaluation de la liste est sa propre référence : un brouillon qui s'en écartait (modifications
    laissées sans « Enregistrer » avant l'enregistrement automatique) ne doit pas l'écraser à la première retouche. */
 {const enregistree=fiches.find(f=>f&&f.id===F.id);if(enregistree)F=structuredClone(enregistree)}
-if(F.preset && !PRESETS[F.preset]){F.preset=DEF_PRESET_GET();F.niveaux=PRESETS[DEF_PRESET_GET()].niveaux.slice()}
 migF(F);
 /* un diplôme-cadre vierge resté à côté d'un vrai diplôme n'a plus lieu d'être */
 {const nt=window.dnmaxPont.nettoyerDiplomesVierges(DATA,promos);
@@ -3714,7 +3702,8 @@ function refreshPromoOption(){const pr=curPromo();if(!pr)return;
 function setSemestre(sem){F.semestre=sem;syncItemEcs()}
 function ecsOf(c,sem){return (c.ecs||[]).filter(e=>e.sem===sem)}
 function compsFor(sem){return REF.competences.filter(c=>ecsOf(c,sem).length>0)}
-function itemEcs(c,sem){return EVAL.ecsRetenus(ecsOf(c,sem).map(e=>e.ec),F.ecCodes)}
+/* une UE retenue vaut tous ses EC du semestre */
+function itemEcs(c,sem){return EVAL.ecsRetenus(ecsOf(c,sem).map(e=>e.ec),[...F.ecCodes,...(F.ues||[]).flatMap(u=>ecsOfUe(u,sem))])}
 function syncItemEcs(){F.items.forEach(it=>{const c=REF.competences.find(x=>x.code===it.code);it.ecs=c?itemEcs(c,F.semestre):[]})}
 function ecsOfSem(sem){
   const m=new Map();
@@ -3840,7 +3829,7 @@ function vierge(){
   const dp=DATA.diplomes.find(x=>x.id===DATA.activeDiplome)||{};
   return migF({id:uid(),promoId:"",titre:"",livrables:[],semestre:semSuggere()||"S1",classe:"",
     date:new Date().toISOString().slice(0,10),prof:"",ues:[],ecCodes:[],compCode:"",consignes:"",
-    ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),opts:{crit:true,obs:true,coef:false},
+    ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),opts:{crit:true,obs:true},
     eleves:"",items:[],res:{}});
 }
 function nouvelleFiche(){
@@ -3850,17 +3839,8 @@ function nouvelleFiche(){
   paintTabs();paintForm();paintPick();paintLignes();goStep(1);
   window.scrollTo({top:0,behavior:"smooth"});
 }
-function paintEchForm(){
-  const g=id=>document.getElementById(id);if(!g("lvRead"))return;
-  if(!F.niveaux||!F.niveaux.length||!F.preset){F.preset=F.preset||DEF_PRESET_GET();F.niveaux=(F.niveaux&&F.niveaux.length)?F.niveaux:PRESETS[F.preset].niveaux.slice()}
-  ["f-levels","bAddLevel"].forEach(id=>{const x=g(id);if(x)x.hidden=true});
-  g("lvRead").hidden=false;
-  g("lvRead").innerHTML=F.niveaux.map((n,i)=>
-    `<span class="pill">${i+1}. ${esc(n)}</span>`).join(" ");
-}
 function paintForm(){
   REF=computeREF();
-  try{paintEchForm()}catch(e){console.error(e)}
   const g=id=>document.getElementById(id);
   const dvs=dipVisibles(), nd=dvs.length;
   g("fld-dip").hidden = true;   // la mention découle des promotions cochées
@@ -3875,36 +3855,9 @@ function paintForm(){
   g("f-consignes").value=F.consignes;
   g("f-eleves").value=F.eleves;
   paintSems();
-  const hE=g("helpEch");
-  if(hE&&!hE.innerHTML)hE.innerHTML=help("L'échelle donne les niveaux de la jauge d'évaluation, à l'écran comme dans les documents Word et OpenDocument, et, dans l'Excel, l'intitulé du niveau atteint. Une nouvelle évaluation prend l'échelle par défaut ; la liste propose toutes les échelles activées dans Mon compte > Préférences > Échelles d'évaluation.");
   paintContexte();
   g("panel-eleves").hidden=true;
   g("step1cols").style.gridTemplateColumns="minmax(0,1fr)";
-  const ps=g("f-preset");
-  // l'échelle se choisit parmi celles activées dans Préférences (par défaut : celle marquée « par défaut ») ;
-  // on ne la change plus une fois des niveaux saisis pour des étudiants
-  if(!F.niveaux||!F.niveaux.length){F.preset=DEF_PRESET_GET();F.niveaux=PRESETS[F.preset].niveaux.slice()}
-  g("fld-preset").hidden=false;
-  g("f-levels").hidden=true;
-  g("bAddLevel").hidden=true;
-  g("lvRead").hidden=false;
-  g("lvRead").innerHTML=F.niveaux.map((n,i)=>
-    `<span class="pill">${i+1}. ${esc(n)}</span>`).join(" ");
-  ps.innerHTML=Object.entries(PRESETS).filter(([k])=>ECH.actifs.includes(k)||k===F.preset)
-    .map(([k,v])=>`<option value="${k}">${esc(v.nom)}${k===ECH.def?" (par défaut)":""}${!ECH.actifs.includes(k)?" — désactivée":""}</option>`).join("");
-  ps.value=F.preset;
-  {const saisi=Object.values(F.res||{}).some(r=>hasSaisie(r)), h=g("f-presetHint");
-   ps.disabled=saisi;
-   if(h)h.textContent=saisi?"Des niveaux sont déjà saisis pour des étudiants : l'échelle ne peut plus changer.":"Échelles activées dans Mon compte > Préférences > Échelles d'évaluation."}
-  ps.onchange=()=>{if(Object.values(F.res||{}).some(r=>hasSaisie(r)))return;F.preset=ps.value;F.niveaux=PRESETS[ps.value].niveaux.slice();save();paintForm();paintLignes()};
-  g("f-levels").innerHTML=F.niveaux.map((n,i)=>
-    `<div class="lv"><input type="text" value="${esc(n)}" data-i="${i}" aria-label="Degré ${i+1}"><button class="btn ghost" data-rm="${i}" aria-label="Supprimer">×</button></div>`).join("");
-  g("f-levels").querySelectorAll("input").forEach(inp=>inp.oninput=()=>{F.niveaux[+inp.dataset.i]=inp.value;F.preset="libre";save()});
-  g("f-levels").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{if(F.niveaux.length<2)return;F.niveaux.splice(+b.dataset.rm,1);F.preset="libre";save();paintForm()});
-  // colonne observations toujours présente ; colonne coef. seulement avec l'échelle « note chiffrée »
-  F.opts=F.opts||{};F.opts.obs=true;F.opts.coef=F.preset==="note";
-  // une seule échelle possible : rien à choisir, le bloc Échelle n'apparaît pas
-  {const one=g("f-preset").options.length<=1;["fgroup-ech","fld-preset","lvRead"].forEach(id=>{const x=g(id);if(x)x.hidden=one})}
   paintSteps();
 }
 function anneeOfClasse(t){return EVAL.anneeDeClasse(t)}
@@ -4532,7 +4485,7 @@ function paintPick(){
   host.querySelectorAll("[data-pkf]").forEach(b=>b.onclick=()=>{ui.pf=b.dataset.pkf;paintPick()});
   host.querySelectorAll(".cbox").forEach(cb=>cb.onchange=()=>{
     const code=cb.dataset.code, c=REF.competences.find(x=>x.code===code);
-    if(cb.checked)F.items.push({code,ecs:itemEcs(c,sem),coef:1,op:"",libelle:"",livrables:[]});
+    if(cb.checked)F.items.push({code,ecs:itemEcs(c,sem),op:"",libelle:"",livrables:[]});
     else F.items=F.items.filter(i=>i.code!==code);
     save();paintPick();paintSteps()});
 
@@ -6773,7 +6726,7 @@ function fillRes(f,seed,part){
 }
 function demoFiche3(){
   const mk=(code,lib,livr)=>{const c=REF.competences.find(x=>x.code===code);
-    return c?{code,ecs:itemEcs(c,"S4"),coef:1,op:"",libelle:lib||"",livrables:livr||[]}:null};
+    return c?{code,ecs:itemEcs(c,"S4"),op:"",libelle:lib||"",livrables:livr||[]}:null};
   const OR="Oral de présentation de projet", PL="Planches de projet";
   const items=[mk("C10.6","Exposer le projet en cinq minutes, intentions puis démonstration",[OR]),
     mk("C2.2","",[OR]),mk("C11.5","Tenir le calendrier annoncé et rendre les pièces attendues",[PL])].filter(Boolean);
@@ -6782,12 +6735,12 @@ function demoFiche3(){
     date:new Date(Date.now()-86400000*6).toISOString().slice(0,10),prof:"Marc Lenoir",
     ues:["UE ATELIERS DE CREATION"],ecCodes:[],compCode:"",
     consignes:"Oral de cinq minutes devant le groupe, deux planches A2 affichées. Questions du jury pendant cinq minutes.",
-    ops:[],preset:"acq",niveaux:PRESETS.acq.niveaux.slice(),
-    opts:{crit:true,obs:true,coef:false},eleves:"",items};
+    ops:[],preset:"maitrise",niveaux:PRESETS.maitrise.niveaux.slice(),
+    opts:{crit:true,obs:true},eleves:"",items};
 }
 function demoFiche(){
   const mk=(code,lib,livr)=>{const c=REF.competences.find(x=>x.code===code);
-    return c?{code,ecs:itemEcs(c,"S3"),coef:1,op:"",libelle:lib||"",livrables:livr||[]}:null};
+    return c?{code,ecs:itemEcs(c,"S3"),op:"",libelle:lib||"",livrables:livr||[]}:null};
   const CP="Carnet de projet", MQ="Maquettes de recherches", PL="Planches de projet";
   const op1={id:uid(),libelle:"Constituer un corpus de références et en tirer des principes formels réutilisables",livrables:[CP]};
   const op2={id:uid(),libelle:"Éprouver les assemblages par la maquette et en dégager un principe technique viable",livrables:[MQ]};
@@ -6802,20 +6755,20 @@ function demoFiche(){
     date:new Date().toISOString().slice(0,10),prof:"Sophie Hébert",
     ues:["UE ATELIERS DE CREATION"],ecCodes:["EC 11.1","EC 11.2"],compCode:"C10.6",
     consignes:"Rendu intermédiaire du projet : carnet de projet tenu depuis le lancement, trois maquettes de recherche au 1/5 sur l'assemblage, deux planches A2 présentant le principe retenu. Oral de cinq minutes devant le groupe.",
-    ops:[op1,op2],preset:"acq",niveaux:PRESETS.acq.niveaux.slice(),
-    opts:{crit:true,obs:true,coef:false},eleves:"",items};
+    ops:[op1,op2],preset:"maitrise",niveaux:PRESETS.maitrise.niveaux.slice(),
+    opts:{crit:true,obs:true},eleves:"",items};
 }
 function demoFiche2(){
   const mk=code=>{const c=REF.competences.find(x=>x.code===code);
-    return c?{code,ecs:c.ecs.filter(e=>e.sem==="S1").map(e=>e.ec),coef:1,op:"",libelle:"",livrables:["Fiche de lecture"]}:null};
+    return c?{code,ecs:c.ecs.filter(e=>e.sem==="S1").map(e=>e.ec),op:"",libelle:"",livrables:["Fiche de lecture"]}:null};
   const items=["C4.2","C4.4","C2.1"].map(mk).filter(Boolean);
   return {id:uid(),promoId:"",titre:"Fiche de lecture — Objets du quotidien",
     livrables:["Fiche de lecture"],semestre:"S1",classe:"DN MADE 1 Objet",
     date:new Date(Date.now()-86400000*21).toISOString().slice(0,10),prof:"Sophie Hébert",
     ues:["UE HUMANITES et CULTURE"],ecCodes:["EC 1.1"],compCode:"C4.2",
     consignes:"Lecture d'un chapitre au choix dans la bibliographie, restitution en une page : thèse de l'auteur, notions clés, lien avec le projet d'atelier en cours.",
-    ops:[],preset:"acq",niveaux:PRESETS.acq.niveaux.slice(),
-    opts:{crit:true,obs:true,coef:false},eleves:"",items};
+    ops:[],preset:"maitrise",niveaux:PRESETS.maitrise.niveaux.slice(),
+    opts:{crit:true,obs:true},eleves:"",items};
 }
 /* Jeu d'exemple étendu : 4 mentions, des promotions de chaque année (et une sortie),
    des dizaines d'évaluations réparties sur les semestres écoulés, avec résultats. */
@@ -6871,7 +6824,7 @@ function demoMass(){
         for(let e=0;e<nev;e++){
           const [typ,liv0]=pick(TYPES), liv=LIV.includes(liv0)?liv0:pick(LIV);
           const comps=shuffle(dispo).slice(0,3+Math.floor(rnd()*4));
-          const items=comps.map(c=>({code:c.code,ecs:itemEcs(c,sem),coef:1,op:"",libelle:"",livrables:[liv]}));
+          const items=comps.map(c=>({code:c.code,ecs:itemEcs(c,sem),op:"",libelle:"",livrables:[liv]}));
           const mo=first?[9,10,11,12,0][Math.min(4,Math.floor((e+0.5)*5/nev))]:[1,2,3,4,5][Math.min(4,Math.floor((e+0.5)*5/nev))];
           const dt=new Date(mo>=8?yr:yr+1,mo,3+Math.floor(rnd()*24));
           const now=new Date(), future=dt>now;
@@ -6895,7 +6848,7 @@ function demoMass(){
           out.push({id:uid(),demo:true,promoId:pr.id,classes:[pr.nom],classe:pr.nom,
             titre:typ+" — "+theme+" ("+sem+")",livrables:[liv],semestre:sem,date:dt.toISOString().slice(0,10),prof:pick(PROFS),
             ues:[],ecCodes:[],compCode:"",consignes:typ+" portant sur "+theme+".",ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),
-            opts:{crit:true,obs:true,coef:false},eleves:"",items,res,suivi,
+            opts:{crit:true,obs:true},eleves:"",items,res,suivi,
             restit:(()=>{const rd=new Date(dt.getTime()+86400000*(7+Math.floor(rnd()*10)));
               if(future||recent||rd>new Date()||(main&&!suivi.evalue))return {};const iso=rd.toISOString().slice(0,10);
               Object.values(res).forEach(r=>{if(rnd()<0.92)r.rest=iso});return {[pr.nom]:iso}})()});
@@ -6995,28 +6948,9 @@ function paintVocab(){
     PREFS.critLabel=sel.value;savePrefs();document.getElementById("p-critwrap").hidden=true;paintLignes()};
   inp.oninput=()=>{PREFS.critLabel=inp.value;savePrefs();paintLignes()};
 }
-function paintEch(){
-  const host=document.getElementById("echList");if(!host)return;
-  const keys=Object.keys(PRESETS);
-  host.innerHTML=keys.map(k=>{const v=PRESETS[k], on=ECH.actifs.includes(k), d=ECH.def===k;
-    return `<div class="mod"><label class="tg"><input type="checkbox" data-ech="${k}" ${on?"checked":""} ${d?"disabled":""} aria-label="Activer ${esc(v.nom)}"><span></span></label>
-      <div style="min-width:0;flex:1"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>${esc(v.nom)}</b>
-        <label class="rstl"><input type="radio" name="echdef" data-echdef="${k}" ${d?"checked":""} ${on?"":"disabled"}> par défaut</label></div>
-        ${k==="libre"?`<input type="text" data-echlib value="${esc(v.niveaux.join(" / "))}" placeholder="Niveau 1 / Niveau 2 / …" style="margin-top:6px" aria-label="Niveaux de l'échelle personnalisée, séparés par /">`
-          :`<div class="d">${v.niveaux.map((n,i)=>`<span class="pill">${i+1}. ${esc(n)}</span>`).join(" ")}</div>`}</div></div>`}).join("");
-  // Tout changement d'échelle rappelle d'abord l'échelle officielle : la case reprend son état tant qu'il n'est pas confirmé.
-  const confirmer=fn=>{paintEch();window.dnmaxPont.confirmerChangementEchelle().then(ok=>{if(ok){fn();saveEch()}paintEch()})};
-  host.querySelectorAll("[data-ech]").forEach(cb=>cb.onchange=()=>{const k=cb.dataset.ech,on=cb.checked;
-    confirmer(()=>{ECH.actifs=on?[...new Set([...ECH.actifs,k])]:ECH.actifs.filter(x=>x!==k)})});
-  host.querySelectorAll("[data-echdef]").forEach(r=>r.onchange=()=>{const k=r.dataset.echdef;
-    confirmer(()=>{ECH.def=k;toast("Échelle par défaut : "+PRESETS[k].nom)})});
-  const li=host.querySelector("[data-echlib]");
-  if(li)li.onchange=()=>{const l=li.value.split("/").map(x=>x.trim()).filter(Boolean);if(!l.length)return;
-    PRESETS.libre.niveaux=l;ECH.libre=l;saveEch()};
-}
-/* Préférences (menu « Mon compte ») : échelles, vocabulaire et livrables proposés ; le thème est tenu par l'application. */
+/* Préférences (menu « Mon compte ») : vocabulaire et livrables proposés ; le thème est tenu par l'application. */
 function paintPrefs(){
-  paintEch();paintVocab();paintSceau();
+  paintVocab();paintSceau();
   paintEditor("livrables",document.getElementById("prefLivr"));
 }
 function paintSet(){
@@ -7055,7 +6989,6 @@ function columns(){
   // une colonne Livrable seulement si les lignes n'ont pas toutes les mêmes livrables
   if(F.livrables.length>1&&new Set(rs.map(r=>r.livr||"")).size>1)c.push({k:"livr",t:"Livrable",w:12});
   c.push({k:"lib",t:critLabel(),w:24});
-  if(F.preset==="note")c.push({k:"coef",t:"Coef.",w:5});
   c.push({k:"niv",t:"Niveau d'acquisition",w:30,lv:true});
   c.push({k:"obs",t:"Observations",w:17});
   return c;
@@ -7080,13 +7013,13 @@ function rows(){
       ecn:ecNoms([...new Set(its.flatMap(i=>i.ecs||[]))]),
       livr:(o.livrables||[]).join(" ; "),
       key:"op:"+o.id,
-      coef:o.coef||1,ord:[0,opIndex(o.id),0]});
+      ord:[0,opIndex(o.id),0]});
   });
   F.items.filter(i=>!i.op).forEach(it=>{
     const c=REF.competences.find(x=>x.code===it.code)||{libelle:"",bloc:""};
     out.push({op:false,bloc:c.bloc,code:it.code,comp:c.libelle?it.code+" — "+c.libelle:it.code,lib:it.libelle&&it.libelle!==c.libelle?it.libelle:"",ec:(it.ecs||[]).join(", "),ecn:ecNoms(it.ecs),
       livr:(it.livrables||[]).join(" ; "),key:"one:"+it.code,
-      coef:it.coef||1,ord:[1,+c.bloc||99,ecNum(it.code)]});
+      ord:[1,+c.bloc||99,ecNum(it.code)]});
   });
   return out.sort((a,b)=>{for(let i=0;i<3;i++){const x=(a.ord[i]||0)-(b.ord[i]||0);if(x)return x}return 0});
 }
@@ -7515,7 +7448,8 @@ function paintProg(){
 function dnPalier(a){const n=(REF.meta.niveaux||[]).find(x=>+x.annee===+a);return (n&&n.label)||["Initié","Guidé","Autonome"][a-1]||("Année "+a)}
 function paintProgEleve(host,c){
   const {ps,pr,sem,semsAll,semCur,els,fs,me,nMine,onlyMine,viewSeg}=c;
-  const LV=PRESETS[DEF_PRESET_GET()].niveaux, NL=LV.length, thr=Math.max(1,Math.ceil((NL-1)/2));
+  // acquise à partir de « Satisfaisant » (voir src/domaine/evaluation.ts)
+  const LV=PRESETS[DEF_PRESET_GET()].niveaux, NL=LV.length, thr=EVAL.RANG_ACQUIS;
   const el=els.find(e=>e.id===ui.prog.el)||els[0];if(el)ui.prog.el=el.id;
   const dateOf=f=>f.distribPrev||(f.suivi&&f.suivi.distrib)||f.date||"";
   const norm=(f,v)=>{const N=(f.niveaux||[]).length||NL;return Math.round((+v)/Math.max(1,N-1)*(NL-1))};
@@ -7723,7 +7657,6 @@ bind("p-eleves","input",e=>{const pr=curPromo();if(!pr)return;
   const n=(pr.liste||[]).length;
   document.getElementById("p-count").textContent=n+(n>1?" inscrits":" inscrit");refreshPromoOption();
   if(ui.step===4)paintEleves();paintSteps()});
-bind("bAddLevel","click",()=>{F.niveaux.push("Nouveau degré");F.preset="libre";save();paintForm()});
 bind("f-search","input",e=>{ui.q=e.target.value;paintPick()});
 bind("bClear","click",()=>{F.items=[];F.ops=[];ui.sel=[];save();paintPick();paintSteps()});
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>goStep(b.dataset.go));
@@ -7737,7 +7670,7 @@ bind("bSave3","click",()=>{
   const brouillon=!!F.brouillon||!fiches.some(f=>f.id===F.id);
   if(brouillon){
     const manque=EVAL.manquesPourEnregistrer(F);
-    if(manque.length){toast("Pour enregistrer l'évaluation, il lui manque "+manque.join(" et ")+".");return}
+    if(manque.length){toast("Pour enregistrer l'évaluation, il lui manque "+EVAL.enumerer(manque)+".");return}
   }
   save(true);
   ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"});
