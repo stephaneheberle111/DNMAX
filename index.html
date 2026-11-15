@@ -353,6 +353,13 @@
       <div class="panel-body">
         <label class="choix-fond-x"><input type="checkbox" id="p-sceau"> Afficher le sceau DN MADE en tête des documents Word et OpenDocument</label>
         <div class="hint">Désactivé par défaut. Le sceau se place à droite de l'en-tête de chaque fiche ; l'Excel n'en a pas.</div>
+        <div class="choix-dossier-exports" id="p-dossier" hidden>
+          <div><b>Dossier proposé pour enregistrer</b>
+            <div class="hint" id="p-dossier-chemin">Documents (par défaut)</div></div>
+          <button type="button" class="btn" id="p-dossier-choisir">Choisir…</button>
+          <button type="button" class="btn ghost" id="p-dossier-oublier" hidden>Revenir à Documents</button>
+        </div>
+        <div class="hint" id="p-dossier-aide" hidden>La boîte « Enregistrer sous » s'ouvre dans ce dossier pour les documents Word, Excel et OpenDocument, les fichiers d'échange et les documents RGPD. S'il n'existe plus (clé débranchée, dossier renommé), elle s'ouvre dans Documents.</div>
       </div>
     </div>
     <div id="prefLivr"></div>
