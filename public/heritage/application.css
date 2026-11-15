@@ -751,58 +751,11 @@ table.t tr:last-child td{border-bottom:0}
 .hbub b{color:#fff;font-weight:600}
 .notice{font-size:12.5px;color:var(--muted);background:var(--surface-2);border:1px dashed var(--line);border-radius:5px;padding:9px 11px}
 
-/* ===================== Téléphone ===================== */
-html[data-device="phone"] body{font-size:15px}
-html[data-device="phone"] input,html[data-device="phone"] select,html[data-device="phone"] textarea{font-size:16px}
-html[data-device="phone"] main{padding:12px max(10px,env(safe-area-inset-right,0px)) calc(86px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
-html[data-device="phone"] .bar-in{padding-block:8px;gap:8px}
-html[data-device="phone"] .brand span{display:none}
-/* onglets en barre du bas, à portée de pouce */
-html[data-device="phone"] nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;border-radius:0;border:0;border-top:1px solid var(--line);
-  background:var(--surface);padding:5px 4px calc(5px + env(safe-area-inset-bottom,0px));gap:0;box-shadow:0 -4px 14px rgba(0,0,0,.06)}
-html[data-device="phone"] nav.tabs button{flex:1 1 0;min-width:0;padding:8px 2px;font-size:11.5px;line-height:1.15;white-space:normal;text-align:center;min-height:44px}
-html[data-device="phone"] nav.tabs button[aria-selected="true"]{box-shadow:none;color:var(--accent);background:var(--accent-soft)}
-/* cibles tactiles */
-html[data-device="phone"] .btn{min-height:40px}
-html[data-device="phone"] .liv,html[data-device="phone"] .ec,html[data-device="phone"] .rst{min-height:34px;padding-top:6px;padding-bottom:6px}
-html[data-device="phone"] .cbox{width:22px;height:22px}
-/* tout sur une colonne */
-html[data-device="phone"] .ed{grid-template-columns:minmax(0,1fr)!important;gap:7px}
-html[data-device="phone"] .row2,html[data-device="phone"] .cols2,html[data-device="phone"] .cols3,html[data-device="phone"] .work,
-html[data-device="phone"] .radwrap,html[data-device="phone"] .afrow,html[data-device="phone"] .pgrow{grid-template-columns:minmax(0,1fr)!important}
-html[data-device="phone"] .pick-head{flex-wrap:wrap;gap:8px}
-html[data-device="phone"] .pick-head>div[style*="margin-left:auto"]{margin-left:0!important;width:100%}
-html[data-device="phone"] .panel{border-radius:10px}
-html[data-device="phone"] .subnav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-html[data-device="phone"] .subnav button{flex:none}
-/* étapes : défilement horizontal, sans résumé */
-html[data-device="phone"] .steps{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px}
-html[data-device="phone"] .steps li{flex:0 0 auto}
-html[data-device="phone"] .steps button{padding:8px 11px}
-html[data-device="phone"] .steps button .s{display:none}
-/* Mes évaluations : une carte par évaluation */
-html[data-device="phone"] #savedList table.t,html[data-device="phone"] #savedList tbody{display:block}
-html[data-device="phone"] #savedList thead{display:none}
-html[data-device="phone"] #savedList tr{display:flex;flex-wrap:wrap;gap:6px 12px;padding:12px;border-bottom:1px solid var(--line)}
-html[data-device="phone"] #savedList td{display:block;padding:0;border:0;font-size:13px}
-html[data-device="phone"] #savedList td:first-child{flex:1 1 100%;font-size:15px}
-html[data-device="phone"] #savedList td:nth-child(4){display:none}
-html[data-device="phone"] #savedList td.sact{flex:1 1 100%;white-space:normal!important}
-html[data-device="phone"] #savedList td.sact .btn{padding:6px 10px}
-/* jauge : plus épaisse au doigt */
-html[data-device="phone"] .ntk .nt{height:18px;border-radius:9px}
-html[data-device="phone"] .ntk .nf{border-radius:9px}
-html[data-device="phone"] .ntk .ns{display:none}
-/* carte radiale : vue entière, encadré dessous */
-html[data-device="phone"] .radwrap>.radinfo{align-self:stretch}
-html[data-device="phone"] .xpop{right:auto;left:0}
-html[data-device="phone"] .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
-
 /* ===================== Grands écrans ===================== */
 /* Sur un écran de 1920 ou 2560 px, la zone utile figée à 1240 px laissait de larges marges vides
    et un texte de 14 px difficile à lire de loin. On élargit par paliers plutôt que d'occuper toute
    la largeur : au-delà de ~1900 px, des lignes et des tableaux trop étirés se lisent mal.
-   Rien ne change sous 1400 px. Les règles html[data-device="phone"] restent prioritaires. */
+   Rien ne change sous 1400 px. */
 @media (min-width:1400px){
   .bar-in,main{max-width:1360px}
 }

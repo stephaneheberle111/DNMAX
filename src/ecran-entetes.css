@@ -83,14 +83,3 @@
   }
 }
 
-/* Téléphone : les onglets passent en bas ; la barre du haut ne garde que les icônes. */
-html[data-device="phone"] .bar-outil {
-  min-height: 40px;
-  padding: 7px 10px;
-  font-size: 0;
-  gap: 3px;
-}
-
-html[data-device="phone"] .bar-chevron {
-  margin-left: 0;
-}

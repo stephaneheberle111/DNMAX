@@ -6,8 +6,7 @@ import { estObjet, type ObjetJson } from "./echange/modele";
  *
  * Le résultat d'un étudiant, tel que l'interface historique le range dans
  * `res[idEtudiant]` : `n` (niveau atteint, par ligne évaluée), `p` (position
- * du curseur, en pourcentage, par ligne), `c` (ancien détail du niveau),
- * `obs` (observation par ligne), `appr` (appréciation), et au plus une des
+ * du curseur, en pourcentage, par ligne), `obs` (observation par ligne), `appr` (appréciation), et au plus une des
  * dates `rendu`, `nr` (non rendu) ou `disp` (dispensé).
  *
  * Ces fonctions ne modifient jamais ce qu'on leur passe : elles rendent un
@@ -170,7 +169,7 @@ export function changerRendu(resultat: unknown, statut: unknown, aujourdhui: str
   const avaitUneSaisie = aDesNiveaux(reste) || Object.values(objet(reste.obs)).some(estVrai) || estVrai(reste.appr);
   if (statut === "nr" || statut === "disp") {
     return {
-      resultat: { ...reste, [statut]: aujourdhui, n: {}, c: {}, p: {}, obs: {}, appr: "" },
+      resultat: { ...reste, [statut]: aujourdhui, n: {}, p: {}, obs: {}, appr: "" },
       avis: avaitUneSaisie ? "saisie-effacee" : null,
     };
   }
@@ -188,7 +187,7 @@ export function changerRendu(resultat: unknown, statut: unknown, aujourdhui: str
  * position du curseur. Un niveau saisi vaut travail rendu : l'étudiant passe
  * « Rendu » s'il ne l'était pas (`devenu-rendu`), y compris s'il était noté
  * non rendu ou dispensé (`absence-levee`). Effacer un niveau ne change pas
- * le statut. L'ancien détail du niveau (`c`) est retiré pour cette ligne.
+ * le statut.
  */
 export function noterNiveau(
   resultat: unknown,
@@ -201,9 +200,6 @@ export function noterNiveau(
   const niveaux = sans(objet(lu.n), cle);
   const positions = sans(objet(lu.p), cle);
   const suivant: ObjetJson = { ...lu, n: niveaux, p: positions };
-  if (estObjet(lu.c)) {
-    suivant.c = sans(lu.c, cle);
-  }
   if (pourcentage === null) {
     return { resultat: suivant, effet: "inchange" };
   }

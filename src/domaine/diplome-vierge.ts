@@ -7,11 +7,7 @@ import { PARTIES, lireListes } from "./echange/referentiel-echange";
  * parce qu'elle a besoin d'un diplôme actif pour fonctionner. Il porte la
  * marque `cadre` et reste invisible tant qu'il est vierge ; le premier
  * référentiel reçu, ou le premier diplôme créé à la main, le réutilise.
- *
- * Les versions précédentes le créaient sans marque, sous le nom « Diplôme » :
- * ce nom, sans mention ni code, le désigne encore.
  */
-const NOM_CADRE_HISTORIQUE = "Diplôme";
 
 function texte(valeur: unknown): string {
   return typeof valeur === "string" ? valeur.trim() : "";
@@ -22,10 +18,7 @@ function table(valeur: unknown): ObjetJson {
 }
 
 function estCadre(diplome: ObjetJson): boolean {
-  return (
-    diplome.cadre === true ||
-    (texte(diplome.nom) === NOM_CADRE_HISTORIQUE && texte(diplome.mention) === "" && texte(diplome.code) === "")
-  );
+  return diplome.cadre === true;
 }
 
 /**
@@ -87,8 +80,7 @@ export interface Nettoyage {
 }
 
 /**
- * Retire les diplômes-cadres vierges dès qu'un autre diplôme existe, et marque
- * comme cadre celui qui reste seul sous l'ancien nom « Diplôme ».
+ * Retire les diplômes-cadres vierges dès qu'un autre diplôme existe.
  *
  * Seuls les cadres sont retirés : un diplôme créé à la main et pas encore
  * rempli est gardé, l'enseignant l'a voulu. Le diplôme actif est reporté sur
@@ -111,13 +103,10 @@ export function nettoyerDiplomesVierges(donnees: unknown, promotions: unknown): 
   // Seuls des cadres vierges : le premier reste, l'interface a besoin d'un diplôme.
   const garde = cadres.length === diplomes.length ? cadres[0] : undefined;
   const retires = cadres.filter((cadre) => cadre !== garde).map((cadre) => cadre.id);
-  const aMarquer = garde !== undefined && (garde.cadre !== true || texte(garde.nom) !== "");
-  if (retires.length === 0 && !aMarquer) {
+  if (retires.length === 0) {
     return { donnees, retires, modifie: false };
   }
-  const restants = diplomes
-    .filter((diplome) => !(estObjet(diplome) && typeof diplome.id === "string" && retires.includes(diplome.id)))
-    .map((diplome) => (diplome === garde ? { ...garde, nom: "", cadre: true } : diplome));
+  const restants = diplomes.filter((diplome) => !(estObjet(diplome) && typeof diplome.id === "string" && retires.includes(diplome.id)));
   const sansRetires = (valeur: unknown): ObjetJson =>
     Object.fromEntries(Object.entries(table(valeur)).filter(([id]) => !retires.includes(id)));
   const nettoyees: ObjetJson = { ...donnees, diplomes: restants };
