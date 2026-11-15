@@ -1,8 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { colleguesDeclares, type Avancement, type IdentifiantParcours } from "./domaine/parcours";
 
-/** Geste que l'animation suggère sur la zone éclairée. */
-export type Geste = "cliquer" | "remplir" | "regarder";
+/**
+ * Geste que l'animation suggère sur la zone éclairée : `parcourir` promène le
+ * curseur d'un élément désigné par `pointe` au suivant ; `glisser` le fait
+ * partir de l'élément `depuis` jusqu'à `pointe`, comme un glisser-déposer.
+ */
+export type Geste = "cliquer" | "remplir" | "regarder" | "parcourir" | "glisser";
+
+/** Valeur fixe, ou relue sur l'écran à chaque image (selon ce que l'enseignant a déjà fait). */
+export type Selon<T> = T | (() => T);
 
 /**
  * Une étape d'une visite guidée.
@@ -29,11 +36,16 @@ export interface Etape {
   texte: string;
   texteFait?: string;
   cibles?: readonly string[];
-  /** Élément, dans la zone éclairée, vers lequel le curseur animé se dirige (par défaut, la zone elle-même). */
-  pointe?: string;
+  /**
+   * Élément, dans la zone éclairée, vers lequel le curseur animé se dirige (par
+   * défaut, la zone elle-même) ; pour `parcourir`, tous les éléments désignés, tour à tour.
+   */
+  pointe?: Selon<string | undefined>;
+  /** Pour `glisser` : élément d'où part le curseur (sélecteur cherché dans toute la page). */
+  depuis?: Selon<string | undefined>;
   /** Boutons que la bulle, rangée dans un coin, doit laisser visibles (en plus de `pointe`). */
   aDegager?: string;
-  geste?: Geste;
+  geste?: Selon<Geste>;
   atteinte?: () => boolean;
   objectif?: (avancement: Avancement) => boolean;
   groupeFait?: (avancement: Avancement) => boolean;
@@ -43,6 +55,13 @@ export interface Etape {
   fermeLaBoite?: boolean;
   /** Étape de navigation sans zone à cliquer pour l'enseignant : « Suivant » ouvre l'écran visé à sa place. */
   ouvrir?: () => void;
+  /**
+   * Quand une boîte de l'application s'ouvre pendant l'étape : ce que la bulle
+   * dit alors, et la zone de la boîte à éclairer (par exemple « Fermer »).
+   */
+  siBoite?: { texte: string; cibles: readonly string[] };
+  /** Confettis quand l'étape est atteinte par un clic de l'enseignant (bouton de passage d'une étape à l'autre). */
+  celebrer?: boolean;
 }
 
 export interface Parcours {
@@ -78,6 +97,22 @@ function cliquer(selecteur: string): () => void {
     const element = [...document.querySelectorAll<HTMLElement>(selecteur)].find((candidat) => candidat.getClientRects().length > 0);
     element?.click();
   };
+}
+
+/** Vrai si au moins une case désignée est cochée. */
+function caseCochee(selecteur: string): boolean {
+  return [...document.querySelectorAll<HTMLInputElement>(selecteur)].some((caseACocher) => caseACocher.checked);
+}
+
+/** Où en est la formulation : il reste un livrable à glisser, une compétence à rédiger, ou plus qu'à enregistrer. */
+function etapeFormulation(): "glisser" | "remplir" | "cliquer" {
+  // Sans livrable à l'étape 1, il n'y a rien à glisser : on passe à la rédaction.
+  const aGlisser = document.querySelector("#palLivr [data-dragliv]") !== null;
+  if (aGlisser && document.querySelector("#lignes [data-lliv]") === null) {
+    return "glisser";
+  }
+  const champs = [...document.querySelectorAll<HTMLInputElement>("#lignes input[data-lib]")];
+  return champs.some((champ) => champ.value.trim() === "") ? "remplir" : "cliquer";
 }
 
 function ongletOuvert(identifiantVue: string): () => boolean {
@@ -199,7 +234,8 @@ const PRISE_EN_MAIN: Parcours = {
         "UE, puis EC, puis blocs et compétences ; la planification rattache ensuite chaque compétence aux EC, semestre par semestre, avant la validation. " +
         "Chaque étape ne modifie que ses propres éléments : le nom d'une UE se change à l'étape 1, pas à l'étape 2. C'est aussi ici que l'on construit un référentiel de zéro.",
       cibles: ["#refPane .steps"],
-      geste: "regarder",
+      pointe: ":scope > *",
+      geste: "parcourir",
     },
     {
       titre: "1. Validation",
@@ -216,7 +252,8 @@ const PRISE_EN_MAIN: Parcours = {
         "Cochez la case par laquelle vous attestez l'avoir vérifié et en assumer le contenu, puis cliquez « Valider cette version ». Sans validation, aucune évaluation ne peut être créée.",
       texteFait: "Votre référentiel est validé : vous pouvez évaluer avec.",
       cibles: ["#cpMain .panel", "#t-ref"],
-      pointe: "#cAtteste",
+      // D'abord la case d'attestation, puis le bouton : la réussite ne vient qu'une fois la version validée.
+      pointe: () => (caseCochee("#cAtteste") ? "#cValid" : "#cAtteste"),
       aDegager: "#cValid",
       geste: "cliquer",
       objectif: (avancement) => avancement.referentielValide,
@@ -227,7 +264,11 @@ const PRISE_EN_MAIN: Parcours = {
         "Un autre référentiel (une autre mention, une nouvelle version) s'ajoute par « Échanger… > Recevoir », avec le fichier d'un collègue " +
         "ou celui téléchargé sur le site de DNMAX : vous voyez ce qu'il contient avant de l'installer.",
       cibles: ["#bouton-echange"],
-      geste: "regarder",
+      geste: () => (visible(".echange-boite") ? "cliquer" : "regarder"),
+      siBoite: {
+        texte: "Rien à faire ici pour l'instant : vous pourrez y revenir quand un collègue vous enverra un fichier. Pour continuer la visite, cliquez « Fermer ».",
+        cibles: [".echange-boite .echange-actions .btn"],
+      },
     },
     ALLER_ETABLISSEMENT,
     allerVolet("promos", "Promotions"),
@@ -290,31 +331,39 @@ const PRISE_EN_MAIN: Parcours = {
       texte:
         "Donnez un intitulé, cochez la ou les promotions concernées et les livrables attendus. Passez ensuite à l'étape 2, « Compétences ».",
       cibles: ["#step1"],
-      pointe: "#f-titre",
+      // Le curseur passe de l'intitulé aux livrables, aux promotions et au semestre, puis au bouton de l'étape 2.
+      pointe: '#f-titre, #f-livr, #f-classes, #f-sem, [data-go="2"]',
       aDegager: '[data-go="2"]',
-      geste: "remplir",
+      geste: "parcourir",
       atteinte: () => visible("#step2") || visible("#step3"),
       groupeFait: creationSansObjet,
       ouvrir: cliquer('[data-go="2"]'),
+      celebrer: true,
     },
     {
       titre: "5. Les compétences",
       texte: "Cochez les compétences évaluées, choisies dans votre référentiel, puis passez à l'étape 3, « Formulation ».",
       cibles: ["#step2"],
+      // Des cases à cocher, pas du texte : le curseur montre une case, puis le bouton de l'étape 3 une fois une compétence cochée.
+      pointe: () => (caseCochee('#step2 input[type="checkbox"]') ? '[data-go="3"]' : 'input[type="checkbox"]'),
       aDegager: '[data-go="3"]',
-      geste: "remplir",
+      geste: "cliquer",
       atteinte: () => visible("#step3"),
       groupeFait: creationSansObjet,
       ouvrir: cliquer('[data-go="3"]'),
+      celebrer: true,
     },
     {
       titre: "5. Formuler et enregistrer",
       texte:
-        "Pour chaque compétence, rédigez ce que vous attendez (la compétence opérationnelle). Votre saisie est gardée en brouillon au fur et à mesure. Cliquez enfin « Enregistrer l'évaluation » : elle sort des brouillons et peut être distribuée.",
+        "Glissez un livrable de la colonne de gauche sur chaque ligne, puis rédigez ce que vous attendez pour chaque compétence (la compétence opérationnelle). " +
+        "Votre saisie est gardée en brouillon au fur et à mesure. Cliquez enfin « Enregistrer l'évaluation » : elle sort des brouillons et peut être distribuée.",
       texteFait: "Votre évaluation est enregistrée.",
       cibles: ["#step3", "#t-saved"],
-      pointe: "#bSave3",
-      geste: "cliquer",
+      // Trois temps, selon ce qui est déjà fait : glisser un livrable, rédiger, enregistrer.
+      geste: () => etapeFormulation(),
+      pointe: () => ({ glisser: "#lignes .livrow", remplir: "#lignes input[data-lib]", cliquer: "#bSave3" })[etapeFormulation()],
+      depuis: "#palLivr [data-dragliv]",
       objectif: (avancement) => avancement.evaluations > 0,
       groupeFait: (avancement) => !avancement.referentielValide,
     },
@@ -340,7 +389,9 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "6. Vos préférences",
       texte: "Ouvrez « Mon compte », puis « Préférences ».",
-      cibles: ["#bouton-compte"],
+      // Menu ouvert : c'est lui qu'on éclaire, la bulle se place dessous sans le cacher.
+      cibles: ["#menu-compte:not([hidden])", "#bouton-compte"],
+      pointe: () => (visible("#menu-compte") ? ".menu-compte-entree:last-child" : undefined),
       geste: "cliquer",
       atteinte: ongletOuvert("v-pref"),
       ouvrir: () => window.dnmaxPont?.ouvrirPreferences?.(),

@@ -175,3 +175,41 @@ describe("prise en main exploratoire", () => {
     expect(preferences?.atteinte).toBeTypeOf("function");
   });
 });
+
+describe("prise en main, guidage fin", () => {
+  const etapes = PARCOURS_DEFINIS["prise-en-main"].etapes;
+  const etapeCiblant = (selecteur: string): Etape | undefined => etapes.find((etape) => etape.cibles?.includes(selecteur) === true);
+
+  it("ne fait pas croire qu'il faut écrire pour choisir les compétences : le geste est un clic sur une case", () => {
+    expect(etapeCiblant("#step2")?.geste).toBe("cliquer");
+  });
+
+  it("fait cocher l'attestation puis cliquer « Valider cette version », sans saluer avant la validation", () => {
+    const valider = etapes.find((etape) => etape.titre === "1. Valider le référentiel");
+    expect(valider?.pointe).toBeTypeOf("function");
+    expect(valider?.objectif?.({ ...RIEN_FAIT, referentiel: true })).toBe(false);
+  });
+
+  it("promène le curseur d'une étape de « Constituer » à la suivante", () => {
+    expect(etapeCiblant("#refPane .steps")?.geste).toBe("parcourir");
+  });
+
+  it("dit quoi faire quand la boîte « Échanger » est ouverte, et éclaire « Fermer »", () => {
+    const echanger = etapeCiblant("#bouton-echange");
+    expect(echanger?.siBoite?.texte).toContain("Fermer");
+    expect(echanger?.siBoite?.cibles).toContain(".echange-boite .echange-actions .btn");
+  });
+
+  it("fête le passage d'une page de l'évaluation à la suivante", () => {
+    expect(etapeCiblant("#step1")?.celebrer).toBe(true);
+    expect(etapeCiblant("#step2")?.celebrer).toBe(true);
+  });
+
+  it("montre le glisser-déposer d'un livrable à l'étape Formulation", () => {
+    expect(etapes.find((etape) => etape.cibles?.includes("#step3") === true)?.depuis).toBe("#palLivr [data-dragliv]");
+  });
+
+  it("éclaire le menu « Mon compte » une fois ouvert, pour que la bulle ne le cache pas", () => {
+    expect(etapeCiblant("#bouton-compte")?.cibles?.[0]).toBe("#menu-compte:not([hidden])");
+  });
+});
