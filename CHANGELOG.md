@@ -2,6 +2,14 @@
 
 ## Non publié
 
+### Modifié
+
+- Documents Word et OpenDocument : retour à la jauge d'acquisition de la version 0.6.0, avec le nom des niveaux au-dessus, désormais en nuances de pétrole ; vide dans la grille à remplir, remplie jusqu'au niveau atteint dans les restitutions. L'en-tête et la mise en page reviennent eux aussi à ceux de la 0.6.0.
+
+### Ajouté
+
+- Mon compte > Préférences > Documents exportés : afficher ou non le sceau DN MADE en tête des documents Word et OpenDocument (désactivé par défaut).
+
 ## 0.8.0 — 2026-11-15
 
 ### Ajouté

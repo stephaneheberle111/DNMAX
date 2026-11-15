@@ -128,7 +128,7 @@ export function installerCompte(acces: AccesDonnees | null): void {
       montrerMotDePasse(acces);
     });
   }
-  ajouterEntree("Préférences", "Thème et fond de page, échelles, vocabulaire, livrables", ouvrirPreferences);
+  ajouterEntree("Préférences", "Thème et fond de page, échelles, vocabulaire, livrables, documents exportés", ouvrirPreferences);
   menu.append(nom, ...entrees);
   bouton.parentElement.append(menu);
   bouton.setAttribute("aria-haspopup", "menu");
