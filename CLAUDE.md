@@ -36,6 +36,7 @@ Ne pas changer de pile sans demander.
 - 👁️ Tenir un `CHANGELOG.md` court (Ajouté / Modifié / Corrigé / Sécurité).
 - 🔒 Aucun fichier généré ni secret dans les commits.
 - 🔒 **Discrétion sur l'outillage** : aucune mention d'un assistant ou d'un outil d'IA dans le code, ses commentaires, la documentation, les messages de commit (pas de ligne de co-auteur ni de lien de session), les noms de branches, les tickets et les demandes de fusion. Seule exception tolérée : le nom et le contenu du présent fichier.
+- 🔒 **Identité des commits** : en début de session, avant tout commit, régler l'identité git du dépôt sur `git config user.name "Stéphane Héberlé"` et `git config user.email "contact@dnmax.fr"`, puis le vérifier avec `git var GIT_AUTHOR_IDENT`. Les demandes de fusion ne portent pas de pied de page ajouté par l'outillage : le retirer s'il apparaît.
 
 ## 3. Qualité du code
 
