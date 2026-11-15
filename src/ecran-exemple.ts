@@ -14,7 +14,6 @@ const SELECTEUR_BOUTONS_EXEMPLE = "#bDemo, #bDemo2";
 /** Boutons à côté desquels « Retirer l'exemple » est proposé. */
 const IDENTIFIANTS_VOISINS = ["bNew", "bDemo"];
 const CLASSE_BOUTON_RETRAIT = "retrait-exemple";
-const SELECTEUR_ENCART_ACCUEIL = ".accueil-vide";
 
 function decrireBilan(bilan: BilanRetrait): string[] {
   const phrases = [
@@ -95,8 +94,6 @@ export function suivreExemple(acces: AccesDonnees): void {
         const instantane = composerInstantane(avant, acces.lireEntrees(), lireInstantane(avant[CLE_INSTANTANE_EXEMPLE]));
         acces.ecrireEntree(CLE_INSTANTANE_EXEMPLE, JSON.stringify(instantane));
         actualiserBoutons(acces);
-        // L'exemple apporte son référentiel : l'encart des premiers pas n'a plus lieu d'être.
-        document.querySelector(SELECTEUR_ENCART_ACCUEIL)?.remove();
       }, 0);
     },
     true,
