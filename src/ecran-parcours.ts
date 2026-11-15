@@ -439,6 +439,9 @@ function afficherBulle(): void {
       terminer();
     } else if (etape.avanceAuClic === true && !fait) {
       cliquerPourLEnseignant(etape);
+    } else if (etape.ouvrir !== undefined && etape.atteinte?.() !== true) {
+      // L'écran ouvert, la relecture de l'avancement voit l'étape atteinte et passe à la suite.
+      etape.ouvrir();
     } else {
       if (etape.fermeLaBoite === true) {
         document.querySelector<HTMLElement>(SELECTEUR_FERMER_BOITE)?.click();

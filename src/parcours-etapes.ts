@@ -16,9 +16,10 @@ export type Geste = "cliquer" | "remplir" | "regarder";
  * - `objectif` : ce que l'étape fait accomplir ; s'il est atteint pendant
  *   l'étape, la visite le salue et passe à la suite. S'il l'était déjà, la
  *   bulle le dit et propose de continuer.
- * - `groupeFait` : saute l'étape quand le but de son groupe est déjà atteint.
- *   Réservé aux étapes qui feraient refaire quelque chose (choisir un
- *   référentiel, créer une évaluation) ou détailler un écran devenu inutile :
+ * - `groupeFait` : saute l'étape quand elle n'a pas lieu d'être : but de son
+ *   groupe déjà atteint, ou condition préalable manquante (pas d'export sans
+ *   évaluation). Réservé aux étapes qui feraient refaire quelque chose (créer
+ *   une évaluation), échoueraient, ou détailleraient un écran devenu inutile :
  *   une étape de navigation qui mène à un objectif déjà atteint reste jouée,
  *   pour que la bulle « déjà fait » s'affiche sur le bon écran, en particulier
  *   quand la visite est rejouée.
@@ -40,6 +41,8 @@ export interface Etape {
   avanceAuClic?: boolean;
   /** « Suivant » referme la boîte de l'application ouverte pendant l'étape, qui cacherait la suite. */
   fermeLaBoite?: boolean;
+  /** Étape de navigation sans zone à cliquer pour l'enseignant : « Suivant » ouvre l'écran visé à sa place. */
+  ouvrir?: () => void;
 }
 
 export interface Parcours {
@@ -67,6 +70,14 @@ export function chapitreDe(etapes: readonly Pick<Etape, "titre">[], index: numbe
 function visible(selecteur: string): boolean {
   const element = document.querySelector<HTMLElement>(selecteur);
   return element !== null && !element.hidden && element.getClientRects().length > 0;
+}
+
+/** Clique le premier élément visible désigné, s'il y en a un. */
+function cliquer(selecteur: string): () => void {
+  return () => {
+    const element = [...document.querySelectorAll<HTMLElement>(selecteur)].find((candidat) => candidat.getClientRects().length > 0);
+    element?.click();
+  };
 }
 
 function ongletOuvert(identifiantVue: string): () => boolean {
@@ -119,61 +130,76 @@ const ACTIONS_EVALUATION = ["#savedList [data-xm]"];
 /** Fenêtre ou menu d'actions d'une évaluation, quelle que soit sa forme. */
 const FENETRE_ACTIONS = ['[role="dialog"][aria-modal="true"]', ".xpop:not([hidden])"];
 
+const ALLER_REFERENTIEL: Etape = {
+  titre: "Référentiel",
+  texte: "Ouvrez l'onglet « Référentiel » : il contient le référentiel de votre mention.",
+  cibles: ["#t-ref"],
+  geste: "cliquer",
+  atteinte: ongletOuvert("v-ref"),
+  avanceAuClic: true,
+};
+
+function paneReferentiel(pane: string): () => boolean {
+  return () => visible("#v-ref") && document.querySelector(`#refNav [data-pane="${pane}"][aria-pressed="true"]`) !== null;
+}
+
+/** Créer une évaluation n'a pas lieu d'être : il y en a déjà une, ou le référentiel n'est pas validé (création refusée). */
+function creationSansObjet(avancement: Avancement): boolean {
+  return avancement.evaluations > 0 || !avancement.referentielValide;
+}
+
+function sansEvaluation(avancement: Avancement): boolean {
+  return avancement.evaluations === 0;
+}
+
+/**
+ * Visite de prise en main : exploratoire. L'obligatoire (nom, établissement,
+ * mot de passe, référentiel et promotions de la mention) est fait par la page
+ * de bienvenue ; la visite montre où tout se trouve et coche ce qui est déjà fait.
+ */
 const PRISE_EN_MAIN: Parcours = {
   titre: "Prise en main",
-  chapitres: ["Référentiel", "Promotions", "Collègues", "Répartition", "Évaluation", "Export"],
+  chapitres: ["Référentiel", "Promotions", "Collègues", "Répartition", "Évaluation", "Réglages"],
   etapes: [
     {
-      titre: "Bienvenue dans DNMAX",
+      titre: "Découvrir DNMAX",
       texte:
-        "En quelques minutes, la visite vous mène pas à pas : installer et valider votre référentiel, déclarer vos promotions, vos collègues et votre répartition de service, puis créer et exporter une évaluation. " +
-        "Ce qui est déjà fait est coché au passage. Vous pouvez passer la visite à tout moment et la relancer depuis « Paramètres », panneau « Visites guidées ».",
+        "Votre espace est prêt. La visite vous fait explorer l'application en six temps : le référentiel, vos promotions, vos collègues, " +
+        "la répartition de service, une première évaluation, puis vos préférences et les modules. Ce qui est déjà fait est coché au passage. " +
+        "Rien n'y est obligatoire : passez une étape avec « Suivant », ou toute la visite, et relancez-la depuis « Paramètres », panneau « Visites guidées ».",
     },
+    ALLER_REFERENTIEL,
     {
-      titre: "1. Choisir le référentiel",
-      texte:
-        "Cliquez sur votre mention, Objet ou Espace : le référentiel est livré avec DNMAX, rien à télécharger. Vous verrez ce qu'il contient avant de l'installer.",
-      cibles: [".accueil-vide li:first-child", "#bouton-echange"],
-      pointe: ".btn",
+      titre: "1. Explorer",
+      texte: "Choisissez « Explorer » : le référentiel s'y lit d'un coup d'œil.",
+      cibles: ['#refNav [data-pane="explorer"]'],
       geste: "cliquer",
-      groupeFait: (avancement) => avancement.referentiel,
+      atteinte: paneReferentiel("explorer"),
       avanceAuClic: true,
     },
     {
-      titre: "1. Installer le référentiel",
-      texte: "DNMAX montre ce que le référentiel ajouterait. Cliquez « Appliquer » : l'application se recharge et la visite reprend à l'étape suivante.",
-      texteFait: "Votre référentiel est installé. Vous le retrouvez dans l'onglet « Référentiel ».",
-      cibles: [".echange-boite .echange-actions .btn.primary", ".accueil-vide li:first-child", "#t-ref"],
-      geste: "cliquer",
-      objectif: (avancement) => avancement.referentiel,
-    },
-    {
-      titre: "1. Mon référentiel",
+      titre: "1. La carte du référentiel",
       texte:
-        "Avant une première évaluation, vérifiez le référentiel : vous en êtes responsable, même s'il est livré avec DNMAX. Ouvrez l'onglet « Référentiel ».",
-      cibles: ["#t-ref"],
-      geste: "cliquer",
-      atteinte: ongletOuvert("v-ref"),
-      avanceAuClic: true,
+        "Chaque portion de la carte est une unité d'enseignement, année par année : survolez-la pour l'éclater, cliquez pour la figer. " +
+        "La recherche retrouve une compétence par son code (C4.1, EC 11.2) ou un mot-clé.",
+      cibles: ["#refExplore"],
+      geste: "regarder",
     },
     {
       titre: "1. Constituer",
-      texte:
-        "Choisissez « Constituer » : le référentiel s'y relit en cinq étapes, des unités d'enseignement à la validation.",
+      texte: "Choisissez maintenant « Constituer » : le référentiel s'y relit et s'y corrige en cinq étapes, des unités d'enseignement à la validation.",
       cibles: ['#refNav [data-pane="constituer"]'],
       geste: "cliquer",
-      atteinte: () => visible("#v-ref") && document.querySelector('#refNav [data-pane="constituer"][aria-pressed="true"]') !== null,
-      groupeFait: (avancement) => avancement.referentielValide,
+      atteinte: paneReferentiel("constituer"),
       avanceAuClic: true,
     },
     {
       titre: "1. Les cinq étapes",
       texte:
         "UE, puis EC, puis blocs et compétences ; la planification rattache ensuite chaque compétence aux EC, semestre par semestre, avant la validation. " +
-        "Chaque étape ne modifie que ses propres éléments : le nom d'une UE se change à l'étape 1, pas à l'étape 2. Corrigez ce qui doit l'être, puis « Suivant ».",
+        "Chaque étape ne modifie que ses propres éléments : le nom d'une UE se change à l'étape 1, pas à l'étape 2. C'est aussi ici que l'on construit un référentiel de zéro.",
       cibles: ["#refPane .steps"],
       geste: "regarder",
-      groupeFait: (avancement) => avancement.referentielValide,
     },
     {
       titre: "1. Validation",
@@ -181,13 +207,13 @@ const PRISE_EN_MAIN: Parcours = {
       cibles: ['#refPane .steps [data-cp="valider"]'],
       geste: "cliquer",
       atteinte: () => visible("#cAtteste"),
-      groupeFait: (avancement) => avancement.referentielValide,
       avanceAuClic: true,
     },
     {
       titre: "1. Valider le référentiel",
       texte:
-        "Relisez le référentiel. Cochez ensuite la case par laquelle vous attestez l'avoir vérifié et en assumer le contenu, puis cliquez « Valider cette version ». Sans validation, aucune évaluation ne peut être créée.",
+        "Avant une première évaluation, vérifiez le référentiel : vous en êtes responsable, même s'il est livré avec DNMAX. " +
+        "Cochez la case par laquelle vous attestez l'avoir vérifié et en assumer le contenu, puis cliquez « Valider cette version ». Sans validation, aucune évaluation ne peut être créée.",
       texteFait: "Votre référentiel est validé : vous pouvez évaluer avec.",
       cibles: ["#cpMain .panel", "#t-ref"],
       pointe: "#cAtteste",
@@ -195,13 +221,22 @@ const PRISE_EN_MAIN: Parcours = {
       geste: "cliquer",
       objectif: (avancement) => avancement.referentielValide,
     },
+    {
+      titre: "1. Ajouter un référentiel",
+      texte:
+        "Un autre référentiel (une autre mention, une nouvelle version) s'ajoute par « Échanger… > Recevoir », avec le fichier d'un collègue " +
+        "ou celui téléchargé sur le site de DNMAX : vous voyez ce qu'il contient avant de l'installer.",
+      cibles: ["#bouton-echange"],
+      geste: "regarder",
+    },
     ALLER_ETABLISSEMENT,
     allerVolet("promos", "Promotions"),
     {
-      titre: "2. Déclarer vos promotions",
+      titre: "2. Vos promotions",
       texte:
-        "Cliquez « + Promotion », choisissez le diplôme et la mention, puis l'année d'entrée : DNMAX suit ensuite la promotion d'année en année. Déclarez-en au moins une.",
-      texteFait: "Vos promotions sont déclarées. Vous pourrez en ajouter d'autres ici.",
+        "Cliquez « + Promotion », choisissez le diplôme et la mention, puis l'année d'entrée : DNMAX suit ensuite la promotion d'année en année.",
+      texteFait:
+        "Vos promotions en cours sont déclarées : DNMAX les fait passer d'année en année. « + Promotion » en ajoute une autre ici, par exemple d'une autre mention.",
       cibles: ["#orgPane"],
       pointe: "#prAdd",
       geste: "cliquer",
@@ -210,7 +245,7 @@ const PRISE_EN_MAIN: Parcours = {
     ALLER_ETABLISSEMENT,
     allerVolet("enseignants", "Enseignants"),
     {
-      titre: "3. Déclarer vos collègues",
+      titre: "3. Vos collègues",
       texte:
         "Vous êtes déjà dans la liste, marqué « C'est moi » : la progression montrera vos promotions. Ajoutez vos collègues avec « + Ajouter » : prénom et nom.",
       texteFait: "L'équipe est déclarée. Vous pourrez ajouter d'autres collègues ici.",
@@ -234,11 +269,20 @@ const PRISE_EN_MAIN: Parcours = {
     ALLER_EVALUATIONS,
     {
       titre: "5. Créer une évaluation",
+      texte:
+        "Une évaluation se construit sur un référentiel validé : DNMAX refuse « Nouvelle évaluation » tant que le vôtre ne l'est pas. " +
+        "Validez-le dans Référentiel > Constituer > Validation, puis revenez ici.",
+      cibles: ["#bNew"],
+      geste: "regarder",
+      groupeFait: (avancement) => avancement.referentielValide,
+    },
+    {
+      titre: "5. Créer une évaluation",
       texte: "Cliquez « Nouvelle évaluation ».",
       cibles: ["#bNew"],
       geste: "cliquer",
       atteinte: ongletOuvert("v-new"),
-      groupeFait: (avancement) => avancement.evaluations > 0,
+      groupeFait: creationSansObjet,
       avanceAuClic: true,
     },
     {
@@ -250,7 +294,8 @@ const PRISE_EN_MAIN: Parcours = {
       aDegager: '[data-go="2"]',
       geste: "remplir",
       atteinte: () => visible("#step2") || visible("#step3"),
-      groupeFait: (avancement) => avancement.evaluations > 0,
+      groupeFait: creationSansObjet,
+      ouvrir: cliquer('[data-go="2"]'),
     },
     {
       titre: "5. Les compétences",
@@ -259,7 +304,8 @@ const PRISE_EN_MAIN: Parcours = {
       aDegager: '[data-go="3"]',
       geste: "remplir",
       atteinte: () => visible("#step3"),
-      groupeFait: (avancement) => avancement.evaluations > 0,
+      groupeFait: creationSansObjet,
+      ouvrir: cliquer('[data-go="3"]'),
     },
     {
       titre: "5. Formuler et enregistrer",
@@ -270,28 +316,64 @@ const PRISE_EN_MAIN: Parcours = {
       pointe: "#bSave3",
       geste: "cliquer",
       objectif: (avancement) => avancement.evaluations > 0,
+      groupeFait: (avancement) => !avancement.referentielValide,
     },
     ALLER_EVALUATIONS,
     {
-      titre: "6. Exporter",
+      titre: "5. Exporter",
       texte: "Ouvrez les actions de votre évaluation.",
       cibles: ACTIONS_EVALUATION,
       geste: "cliquer",
       avanceAuClic: true,
+      groupeFait: sansEvaluation,
     },
     {
-      titre: "6. Choisir le format",
+      titre: "5. Choisir le format",
       texte:
         "Choisissez Word, Excel ou OpenDocument. Le document reprend les compétences avec leur code, ce que vous attendez et votre nom en en-tête.",
       cibles: FENETRE_ACTIONS,
       pointe: "[data-xk]",
       geste: "cliquer",
       fermeLaBoite: true,
+      groupeFait: sansEvaluation,
+    },
+    {
+      titre: "6. Vos préférences",
+      texte: "Ouvrez « Mon compte », puis « Préférences ».",
+      cibles: ["#bouton-compte"],
+      geste: "cliquer",
+      atteinte: ongletOuvert("v-pref"),
+      ouvrir: () => window.dnmaxPont?.ouvrirPreferences?.(),
+    },
+    {
+      titre: "6. Apparence et échelles",
+      texte:
+        "Thème clair ou sombre, fond et couleur du papier ; plus bas, les échelles d'évaluation, le vocabulaire et les livrables proposés. Ces réglages valent pour cet ordinateur.",
+      cibles: ["#v-pref .panel"],
+      geste: "regarder",
+    },
+    ALLER_PARAMETRES,
+    {
+      titre: "6. Le module Étudiants",
+      texte:
+        "Pour saisir les résultats de chaque étudiant, activez ici le module Étudiants : il demande quelques précautions (information des étudiants, mot de passe plus long) " +
+        "et a sa propre visite, comme le module Niveaux DN MADE qui s'appuie sur lui.",
+      texteFait: "Le module Étudiants est actif. Sa visite se lance avec « Visite guidée », juste en dessous.",
+      cibles: ['#modList .mod:has([data-mod="eleves"])'],
+      pointe: ".tg",
+      geste: "regarder",
+      objectif: (avancement) => avancement.moduleEleves,
+    },
+    {
+      titre: "6. Les visites guidées",
+      texte: "Toutes les visites se relancent ici, à tout moment.",
+      cibles: ["#panneau-visites"],
+      geste: "regarder",
     },
     {
       titre: "C'est prêt",
       texte:
-        "Vous savez l'essentiel. Pour saisir les résultats étudiant par étudiant, le module Étudiants, dans « Paramètres », a sa propre visite, comme le module Niveaux DN MADE. Cette visite se relance depuis « Paramètres », panneau « Visites guidées ».",
+        "Vous avez fait le tour de l'essentiel. Le module Étudiants et le module Niveaux DN MADE ont chacun leur visite, et celle-ci se relance depuis « Paramètres », panneau « Visites guidées ».",
     },
   ],
 };
