@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Traduit un document imprimable en définition pdfmake (objets simples, sans
  * accès à la bibliothèque) : la mise en page se teste sans produire de PDF.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /**
  * Écrit une valeur JSON sous une forme unique : clés d'objet triées, sans espace.

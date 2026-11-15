@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import "./ecran-documentation.css";
 // Une seule source pour le site et l'application : la documentation et la page Confidentialité
 // sont lues dans le site livré avec DNMAX, et s'affichent sans connexion.
@@ -141,9 +141,9 @@ export function montrerLicence(): void {
   const resume = creer(
     "p",
     "doc-resume",
-    "DNMAX est un logiciel libre : vous pouvez l'utiliser, l'étudier, le modifier et le redistribuer, aux conditions de la licence ci-dessous. " +
-      "Il est fourni sans garantie. Le texte qui fait foi est celui de la licence elle-même.",
+    "DNMAX est un logiciel libre : vous pouvez l'utiliser, l'étudier, le modifier et le redistribuer, aux conditions de la licence ci-dessous, régie par le droit français. " +
+      "Il est fourni sans garantie (articles 8 et 9). Le texte qui fait foi est celui de la licence elle-même.",
   );
-  const texte = creer("pre", "doc-licence", licence);
+  const texte = creer("pre", "doc-licence", licence.trim());
   boite.append(resume, texte, actionsFermer(fermer));
 }

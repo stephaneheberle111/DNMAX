@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { ecrireJsonCanonique } from "../empreinte";
 import { analyserJson, estObjet, type Evaluation, type ObjetJson } from "./modele";
 import { normaliserNom } from "./referentiel";

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /**
  * Règle : ce qu'une installation neuve a le droit de contenir au démarrage.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { THEME_PAR_DEFAUT, attributTheme, estTheme, lireTheme, type Theme } from "./domaine/theme";
 import { creer, creerBouton, ouvrirBoite } from "./ecran-echange";
 

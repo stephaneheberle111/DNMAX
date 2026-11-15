@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { colleguesDeclares, type Avancement, type IdentifiantParcours } from "./domaine/parcours";
 
 /**

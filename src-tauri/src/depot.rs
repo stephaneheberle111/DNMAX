@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 //! Rangement du coffre sur le disque : lecture, écriture sans risque de
 //! fichier à moitié écrit, et sauvegardes datées.

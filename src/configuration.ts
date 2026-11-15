@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /**
  * Adresses publiques du projet. L'application ne s'y connecte pas d'elle-même :
@@ -9,8 +9,8 @@ export const ADRESSE_SITE = "https://dnmax.fr/";
 export const ADRESSE_RETOURS = "https://dnmax.fr/#idees";
 export const ADRESSE_CODE_SOURCE = "https://github.com/stephaneheberle111/DNMAX";
 
-
-export const LICENCE = "AGPL-3.0-or-later";
+/** Nom de la licence tel que l'enseignant le lit (identifiant SPDX : `CECILL-2.1`, texte dans `LICENSE`). */
+export const LICENCE = "CeCILL v2.1";
 
 /**
  * Années pendant lesquelles les données d'étudiants d'une promotion sont gardées

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /**
  * Démarre l'interface telle qu'elle est livrée, dans un navigateur sans

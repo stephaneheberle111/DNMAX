@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { CLE_BROUILLON, effacerEleve } from "./droits-eleve";
 import { CLE_DONNEES, CLE_EVALUATIONS, CLE_PROMOTIONS, analyserJson, estObjet, type ObjetJson } from "./echange/modele";
 import { normaliserNom } from "./echange/referentiel";

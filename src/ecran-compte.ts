@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import "./ecran-compte.css";
 import { longueurMinimaleExigee, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
 import { moduleElevesActif } from "./domaine/securite";

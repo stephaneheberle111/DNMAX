@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 // Les fichiers sont ceux que le site propose au téléchargement : une seule source pour les deux.
 import espace from "../site/referentiels/dn-made-espace.dnmax?raw";
 import objet from "../site/referentiels/dn-made-objet.dnmax?raw";

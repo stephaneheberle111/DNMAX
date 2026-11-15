@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import "./ecran-verrouillage.css";
 import { DELAI_VERROUILLAGE_INACTIVITE_MS, INTERVALLE_CONTROLE_INACTIVITE_MS } from "./configuration";
 import { SurveillanceInactivite } from "./domaine/securite";

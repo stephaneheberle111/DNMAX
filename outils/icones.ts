@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Dessin de l'icône de l'application : le signe X « plein & délié », blanc et
  * pétrole clair, sur un pavé pétrole arrondi. Le plein s'effile vers le bas

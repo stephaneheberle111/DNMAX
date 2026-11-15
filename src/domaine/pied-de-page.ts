@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Bas de page et documents consultables hors ligne : ce qu'affiche l'indicateur
  * de mise à jour, et ce que devient chaque lien de la documentation reprise du site.

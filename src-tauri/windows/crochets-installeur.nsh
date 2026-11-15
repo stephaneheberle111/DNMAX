@@ -1,4 +1,4 @@
-; SPDX-License-Identifier: AGPL-3.0-or-later
+; SPDX-License-Identifier: CECILL-2.1
 ; Crochets de l'installeur Windows (NSIS), appelés par le modèle de Tauri.
 ;
 ; Une mise à jour remplace DNMAX.exe au même endroit : Windows garde alors

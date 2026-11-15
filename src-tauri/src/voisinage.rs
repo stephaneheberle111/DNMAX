@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 //! Annonce et recherche d'un envoi en direct sur le réseau local (mDNS/DNS-SD).
 //!

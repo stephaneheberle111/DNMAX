@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Jauge des exports Word et OpenDocument : largeur des libellés de niveaux
  * écrits au-dessus de la jauge. Calculs seuls, en twips (1/1440 de pouce).

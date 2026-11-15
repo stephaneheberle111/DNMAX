@@ -2,7 +2,7 @@
 name = "dnmax"
 version = "0.8.0"
 description = "Évaluations par compétences pour les enseignants de DN MADE"
-license = "AGPL-3.0-or-later"
+license = "CECILL-2.1"
 edition = "2021"
 rust-version = "1.97"
 publish = false
