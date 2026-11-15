@@ -61,12 +61,7 @@ html[data-relief="peine"] .fond-page {
 html[data-x-creux="non"] .fond-x {
   display: none;
 }
-html[data-device="phone"] .fond-x {
-  right: 6px;
-  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-  width: 130px;
-  height: 130px;
-}
+
 .fond-x use {
   --creux: rgba(58, 44, 22, 0.099);
   fill: var(--creux);
@@ -123,10 +118,7 @@ html[data-device="phone"] .fond-x {
 .signe-plein {
   fill: var(--accent);
 }
-html[data-device="phone"] .brand b,
-html[data-device="phone"] .signe {
-  font-size: 24px;
-}
+
 @media (min-width: 1700px) {
   .brand b,
   .signe {
@@ -176,26 +168,6 @@ nav.tabs button[aria-selected="true"] {
 #t-ref { --icone: url("./assets/icones/referentiel.svg"); }
 #t-org { --icone: url("./assets/icones/etablissement.svg"); }
 #t-set { --icone: url("./assets/icones/parametres.svg"); }
-html[data-device="phone"] nav.tabs {
-  border-top: 1px solid var(--line);
-  background: var(--surface);
-  padding: 6px 8px calc(10px + env(safe-area-inset-bottom, 0px));
-  box-shadow: none;
-}
-html[data-device="phone"] nav.tabs button {
-  flex-direction: column;
-  justify-content: center;
-  gap: 3px;
-  min-height: 52px;
-  font-size: 11px;
-}
-html[data-device="phone"] nav.tabs button::before {
-  width: 24px;
-  height: 24px;
-}
-html[data-device="phone"] nav.tabs button[aria-selected="true"] {
-  background: none;
-}
 
 /* ---------- Titres, cartes, boutons ---------- */
 .vue-titre {
@@ -205,9 +177,7 @@ html[data-device="phone"] nav.tabs button[aria-selected="true"] {
   line-height: 1.08;
   letter-spacing: -0.02em;
 }
-html[data-device="phone"] .vue-titre {
-  font-size: 26px;
-}
+
 .vue-entete {
   display: flex;
   align-items: center;
@@ -331,16 +301,6 @@ html[data-device="phone"] .vue-titre {
 .vue-reglages .choix-fond-tete .hint {
   font-size: 14px;
   line-height: 1.45;
-}
-html[data-device="phone"] .vue-reglages .panel > .pick-head {
-  padding: 16px 16px 2px;
-}
-html[data-device="phone"] .vue-reglages .panel > .panel-body {
-  padding: 8px 16px 16px;
-}
-html[data-device="phone"] .vue-reglages #modList,
-html[data-device="phone"] .vue-reglages #echList {
-  padding: 4px 16px 8px;
 }
 
 /* ---------- Carte radiale du référentiel, thème sombre ----------

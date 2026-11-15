@@ -466,3 +466,13 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 - les versions publiées jusqu'à la 0.8.0 restent sous AGPL-3.0-or-later : une licence accordée ne se retire pas ;
 - chaque fichier source porte l'en-tête `SPDX-License-Identifier: CECILL-2.1` ;
 - le texte de la licence est livré avec l'application et lisible depuis le pied de page (« Licence »), comme l'exige l'article 5.3.1, avec l'avertissement sur l'absence de garantie.
+
+## 34. Plus de reprise des anciens formats de données, plus de mise en page téléphone
+
+**Constat** : personne n'utilise encore DNMAX en dehors de son auteur. L'interface historique portait pourtant le code de reprise de tous les formats passés (référentiel à matières, codes d'EC uniques, champs d'évaluation renommés, résultats à décimales, répartition non datée, ancien cadre « Diplôme », noms de l'exemple d'avant), et une mise en page pour téléphone alors que DNMAX ne s'installe que sur ordinateur (fenêtre de 900 px au moins).
+
+**Retenu** : ce code est retiré, ainsi que les fonctions que plus rien n'appelait. La construction des données d'une installation neuve (`construireDonnees`) remplace l'ancienne migration, qu'elle utilisait détournée. Les modules « EC », « Consignes », « Mes évaluations » et « Référentiel », fondus dans la Base depuis longtemps, ne sont plus des réglages.
+
+**Vérifié** : une installation neuve, l'exemple, les écrans de l'éditeur et les exports Word, OpenDocument et Excel donnent exactement le même résultat qu'avant ; des données enregistrées par la 0.8 s'ouvrent à l'identique.
+
+**Conséquence** : des données antérieures à la 0.8 ne seraient plus reprises. Aucune n'existe chez un enseignant.

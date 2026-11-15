@@ -131,7 +131,7 @@ describe("aDesNiveaux", () => {
 });
 
 describe("changerRendu", () => {
-  const saisi = { n: { a: 2 }, p: { a: 60 }, c: { a: 6 }, obs: { a: "Soigné" }, appr: "Bon travail", rendu: HIER, rest: HIER };
+  const saisi = { n: { a: 2 }, p: { a: 60 }, obs: { a: "Soigné" }, appr: "Bon travail", rendu: HIER, rest: HIER };
 
   it("marque rendu sans toucher à la saisie", () => {
     const { resultat, avis } = changerRendu({ n: {}, obs: {}, appr: "" }, "rendu", AUJOURDHUI);
@@ -141,7 +141,7 @@ describe("changerRendu", () => {
 
   it("efface niveaux, observations et appréciation d'un non rendu, et le signale", () => {
     const { resultat, avis } = changerRendu(saisi, "nr", AUJOURDHUI);
-    expect(resultat).toEqual({ n: {}, p: {}, c: {}, obs: {}, appr: "", nr: AUJOURDHUI, rest: HIER });
+    expect(resultat).toEqual({ n: {}, p: {}, obs: {}, appr: "", nr: AUJOURDHUI, rest: HIER });
     expect(avis).toBe("saisie-effacee");
   });
 
@@ -204,14 +204,9 @@ describe("noterNiveau", () => {
   });
 
   it("efface le niveau d'une ligne sans changer le statut de rendu", () => {
-    const { resultat, effet } = noterNiveau({ n: { a: 2, b: 1 }, p: { a: 60, b: 20 }, c: { a: 6 }, rendu: HIER }, "a", null, QUATRE, AUJOURDHUI);
-    expect(resultat).toEqual({ n: { b: 1 }, p: { b: 20 }, c: {}, rendu: HIER });
+    const { resultat, effet } = noterNiveau({ n: { a: 2, b: 1 }, p: { a: 60, b: 20 }, rendu: HIER }, "a", null, QUATRE, AUJOURDHUI);
+    expect(resultat).toEqual({ n: { b: 1 }, p: { b: 20 }, rendu: HIER });
     expect(effet).toBe("inchange");
-  });
-
-  it("retire l'ancien détail du niveau de la ligne notée", () => {
-    const { resultat } = noterNiveau({ n: { a: 1 }, c: { a: 2, b: 5 }, rendu: HIER }, "a", 90, QUATRE, AUJOURDHUI);
-    expect(resultat.c).toEqual({ b: 5 });
   });
 
   it("ne modifie pas le résultat reçu", () => {
