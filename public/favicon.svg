@@ -4,6 +4,6 @@
     .p { fill: #10555F; }
     @media (prefers-color-scheme: dark) { .d { stroke: #F1ECE0; } .p { fill: #62A9AE; } }
   </style>
-  <path class="d" d="M17 85 35.6 66.4M66.5 35.5 85 17"/>
-  <path class="p" d="M12 23 40 12C56 34.3 72 56.7 88 79L64 90C46.7 67.7 29.3 45.3 12 23Z"/>
+  <path class="d" d="M17 85 40.6 59.4M67.7 32.3 85 17"/>
+  <path class="p" d="M15 26.5 42.5 13C59.5 33 72.5 55.5 81 82.5L74 86C56.5 66.5 38.5 45.5 15 26.5Z"/>
 </svg>
