@@ -246,8 +246,17 @@
     <div class="panel" id="panneau-mises-a-jour" hidden>
       <div class="pick-head"><h3>Mises à jour</h3></div>
       <div class="panel-body">
-        <div class="hint">DNMAX ne se connecte jamais seul à Internet. Lancez ici une recherche, ou d'un clic sur la version en bas de la fenêtre : DNMAX interroge alors le dépôt du projet sur GitHub, sans rien transmettre de vos données.</div>
+        <div class="hint">DNMAX ne se connecte jamais à Internet sans votre accord. Lancez ici une recherche, ou d'un clic sur la version en bas de la fenêtre : DNMAX interroge alors le dépôt du projet sur GitHub, sans rien transmettre de vos données.</div>
         <div class="maj-ligne"><button type="button" class="btn" id="bMiseAJour">Rechercher une mise à jour</button><span class="hint" id="etatMiseAJour"></span></div>
+      </div>
+    </div>
+    <!-- Ajout à l'interface historique : règles d'évaluation, affichées par src/ecran-regles.ts, qui rend ce panneau visible -->
+    <div class="panel" id="panneau-regles" hidden>
+      <div class="pick-head"><h3>Règles d'évaluation</h3></div>
+      <div class="panel-body">
+        <div class="hint">Les mêmes pour tous les enseignants, pour que deux collègues lisent de la même façon une évaluation qu'ils s'échangent.</div>
+        <ul class="liste-regles" id="liste-regles"></ul>
+        <label class="ligne-case"><input type="checkbox" id="r-masquer-comparaison"> Dans Progression étudiant, ne pas situer l'étudiant par rapport à sa promotion</label>
       </div>
     </div>
     <!-- Ajout à l'interface historique : visites guidées, lancées par src/ecran-parcours.ts, qui rend ce panneau visible -->

@@ -115,3 +115,21 @@ body {
   gap: 8px 14px;
   margin-top: 10px;
 }
+
+.liste-regles {
+  margin: 10px 0 12px;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.liste-regles .regle + .regle {
+  margin-top: 4px;
+}
+
+.ligne-case {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13.5px;
+}
