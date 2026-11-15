@@ -188,7 +188,7 @@ Le nom se corrige sur la ligne « C'est moi » de « Mon établissement » (déc
 
 ## 15. Mises à jour proposées, jamais imposées, et publiées à la main
 
-**Retenu** : quand l'enseignant clique « Rechercher une mise à jour » dans le pied de page, l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
+**Retenu** : quand l'enseignant lance une recherche (clic sur la version dans le pied de page, ou Paramètres > Mises à jour), l'application consulte le manifeste de la dernière version publiée sur le dépôt GitHub. S'il existe une version plus récente, une annonce la propose : « Installer et redémarrer » ou « Plus tard ». Rien n'est téléchargé ni installé sans l'accord de l'enseignant, et ce qui est en attente d'enregistrement est écrit avant le redémarrage.
 
 **Appel réseau à la demande seulement.** C'est le seul moment où l'application se connecte à Internet ; l'échange en direct (décision 21) reste sur le réseau local. Jusqu'à la version 0.1.1, la vérification avait lieu à chaque lancement ; elle transmettait à GitHub l'adresse IP du poste à chaque ouverture, sans que l'enseignant l'ait demandé. Elle n'a plus lieu que sur sa demande, ce qui rend l'application silencieuse sur le réseau par défaut (RGPD : minimisation). Aucune donnée de l'enseignant n'est transmise. Si la vérification échoue, l'application le dit et propose de réessayer.
 
@@ -439,3 +439,11 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 - `dnmax.bienvenue` note la bienvenue faite ; elle ne s'affiche que sur une installation sans référentiel ni évaluation, si bien qu'une installation déjà utilisée ne la voit jamais ;
 - la validation du référentiel reste dans la visite : attester avoir vérifié un référentiel suppose de l'avoir lu ;
 - l'encart « Pour commencer, il vous faut un référentiel » disparaît : la bienvenue le remplace.
+
+## 32. Documentation, Confidentialité et licence lues dans l'application, sans connexion
+
+**Constat** : le pied de page ouvrait le site dans le navigateur pour la documentation et la page Confidentialité, alors que DNMAX se veut utilisable sans Internet ; un poste hors ligne n'avait aucune aide.
+
+**Retenu** : la documentation (rubriques `data-doc` du site), la page Confidentialité et le fichier `LICENSE` sont intégrés à l'application au moment de la construction et affichés dans une boîte. Le site reste la seule source : une correction de la documentation vaut pour les deux. Les scripts et gestionnaires d'évènements du site sont retirés de la copie ; un lien vers une autre rubrique reste dans l'application, un lien externe s'ouvre dans le navigateur, seulement si l'enseignant clique.
+
+**Conséquence** : le texte affiché est celui de la version installée ; une page du site modifiée après la publication n'apparaît qu'à la version suivante.
