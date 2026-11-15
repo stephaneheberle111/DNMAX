@@ -2,6 +2,10 @@
 
 ## Non publié
 
+### Ajouté
+
+- Mon compte > Préférences > Apparence : « Couleur du papier » règle l'intensité de la couleur de fond, de Pâle à Soutenue, en thème clair comme en sombre. Normale reste la teinte habituelle.
+
 ### Modifié
 
 - Le fond de page est désormais « Lisse » par défaut. Un fond déjà choisi dans Mon compte > Préférences > Apparence est conservé.
