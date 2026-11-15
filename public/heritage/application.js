@@ -4040,7 +4040,7 @@ function paintForm(){
   g("f-eleves").value=F.eleves;
   paintSems();
   const hE=g("helpEch");
-  if(hE&&!hE.innerHTML)hE.innerHTML=help("L'échelle donne les niveaux de l'évaluation : une jauge à l'écran, une case par niveau dans les documents Word et OpenDocument, et, dans l'Excel, l'intitulé du niveau atteint. Une nouvelle évaluation prend l'échelle par défaut ; la liste propose toutes les échelles activées dans Mon compte > Préférences > Échelles d'évaluation.");
+  if(hE&&!hE.innerHTML)hE.innerHTML=help("L'échelle donne les niveaux de la jauge d'évaluation, à l'écran comme dans les documents Word et OpenDocument, et, dans l'Excel, l'intitulé du niveau atteint. Une nouvelle évaluation prend l'échelle par défaut ; la liste propose toutes les échelles activées dans Mon compte > Préférences > Échelles d'évaluation.");
   g("row-ec").hidden=!MOD.ec;
   g("fgroup-ref").hidden=!MOD.ec;
   paintContexte();
@@ -7256,6 +7256,11 @@ function loadDemo(){
   toast("Exemple chargé : "+MS.nM+" mentions, "+MS.nPr+" promotions, "+(MS.fiches.length+3)+" évaluations, résultats saisis"+on+".");
   window.scrollTo({top:0,behavior:"smooth"});
 }
+function paintSceau(){
+  const cb=document.getElementById("p-sceau");if(!cb)return;
+  cb.checked=sceauActif();
+  cb.onchange=()=>{PREFS.sceau=cb.checked;savePrefs()};
+}
 function paintVocab(){
   const sel=document.getElementById("p-critsel"), inp=document.getElementById("p-critlab");
   if(!sel)return;
@@ -7290,7 +7295,7 @@ function paintEch(){
 }
 /* Préférences (menu « Mon compte ») : échelles, vocabulaire et livrables proposés ; le thème est tenu par l'application. */
 function paintPrefs(){
-  paintEch();paintVocab();
+  paintEch();paintVocab();paintSceau();
   paintEditor("livrables",document.getElementById("prefLivr"));
 }
 function paintSet(){
@@ -7334,7 +7339,7 @@ function columns(){
   if(F.livrables.length>1&&new Set(rs.map(r=>r.livr||"")).size>1)c.push({k:"livr",t:"Livrable",w:12});
   c.push({k:"lib",t:critLabel(),w:24});
   if(F.preset==="note")c.push({k:"coef",t:"Coef.",w:5});
-  c.push({k:"niv",t:"Niveau",w:(F.niveaux||[]).length>1?16:12,lv:true});
+  c.push({k:"niv",t:"Niveau d'acquisition",w:30,lv:true});
   c.push({k:"obs",t:"Observations",w:17});
   return c;
 }
@@ -7426,7 +7431,7 @@ function buildXlsx(fmt){
 const X=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 function wp(text,o={}){
   const rpr=`<w:rPr>${o.b?"<w:b/>":""}${o.i?"<w:i/>":""}${o.sz?`<w:sz w:val="${o.sz*2}"/><w:szCs w:val="${o.sz*2}"/>`:""}${o.color?`<w:color w:val="${o.color}"/>`:""}${o.caps?"<w:caps/>":""}${o.mono?`<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/>`:""}</w:rPr>`;
-  const ppr=`<w:pPr>${o.align?`<w:jc w:val="${o.align}"/>`:""}<w:spacing w:before="${o.before||0}" w:after="${o.after==null?60:o.after}" w:line="240" w:lineRule="auto"/>${o.border?`<w:pBdr><w:bottom w:val="single" w:sz="8" w:space="2" w:color="${ENCRE_DOC}"/></w:pBdr>`:""}</w:pPr>`;
+  const ppr=`<w:pPr>${o.align?`<w:jc w:val="${o.align}"/>`:""}<w:spacing w:before="${o.before||0}" w:after="${o.after==null?60:o.after}" w:line="240" w:lineRule="auto"/>${o.border?`<w:pBdr><w:bottom w:val="single" w:sz="8" w:space="2" w:color="D6CDB9"/></w:pBdr>`:""}</w:pPr>`;
   const runs=String(text==null?"":text).split("\n").map((l,i)=>
     `${i?'<w:r><w:br/></w:r>':''}<w:r>${rpr}<w:t xml:space="preserve">${X(l)}</w:t></w:r>`).join("");
   return `<w:p>${ppr}${runs}</w:p>`;
@@ -7438,18 +7443,16 @@ function wtc(content,o={}){
 function wtr(cells,o={}){return `<w:tr>${o.head?'<w:trPr><w:tblHeader/></w:trPr>':''}${cells}</w:tr>`}
 function wtable(rowsXml,widths){
   return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblBorders>`+
-  ["top","left","bottom","right","insideH","insideV"].map(s=>`<w:${s} w:val="single" w:sz="6" w:space="0" w:color="${ENCRE_DOC}"/>`).join("")+
+  ["top","left","bottom","right","insideH","insideV"].map(s=>`<w:${s} w:val="single" w:sz="6" w:space="0" w:color="C4BAA3"/>`).join("")+
   `</w:tblBorders><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:left w:w="80" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr>`+
   `<w:tblGrid>${widths.map(w=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>${rowsXml}</w:tbl>`;
 }
-/* ---------- Exports texte : identité visuelle ----------
-   Tout au trait noir, sans aplat ni mention de l'application. En-tête : titre et informations à
-   gauche, petit sceau DN MADE à droite. Un niveau = une case vide ; le niveau atteint, s'il est
-   connu, est coché d'une croix. */
-const ENCRE_DOC="1C1A15";
-const SCEAU_PX=92, CASE_PX=16, CASE_ECART=10, EMU_PX=9525;
+/* Sceau DN MADE en tête des documents Word et OpenDocument : facultatif, réglé dans
+   Mon compte > Préférences > Documents exportés, désactivé par défaut. Image
+   public/documents/sceau-dn-made.png (voir outils/generer-sceau.ts), lue au premier export qui l'affiche. */
+const SCEAU_PX=72, EMU_PX=9525, SCEAU_TW=1500;
 let SCEAU=null;
-/* image du sceau (public/documents/sceau-dn-made.png, voir outils/generer-sceau.ts), lue au premier export */
+function sceauActif(){return PREFS.sceau===true}
 async function chargerSceau(){
   if(SCEAU)return SCEAU;
   const r=await fetch("/documents/sceau-dn-made.png");
@@ -7458,35 +7461,11 @@ async function chargerSceau(){
   for(let i=0;i<b.length;i+=0x8000)t+=String.fromCharCode(...b.subarray(i,i+0x8000));
   return SCEAU=btoa(t);
 }
-function casesLargeurPx(N){return N*CASE_PX+Math.max(0,N-1)*CASE_ECART}
-function casesPng(N,coche){
-  const sc=4,w=casesLargeurPx(N),c=document.createElement("canvas");c.width=w*sc;c.height=CASE_PX*sc;
-  const g=c.getContext("2d");g.scale(sc,sc);g.strokeStyle="#"+ENCRE_DOC;
-  for(let i=0;i<N;i++){const x=i*(CASE_PX+CASE_ECART);
-    g.lineWidth=1.2;g.strokeRect(x+0.6,0.6,CASE_PX-1.2,CASE_PX-1.2);
-    if(i===coche){g.lineWidth=1.6;g.beginPath();g.moveTo(x+4,4);g.lineTo(x+CASE_PX-4,CASE_PX-4);
-      g.moveTo(x+CASE_PX-4,4);g.lineTo(x+4,CASE_PX-4);g.stroke()}}
-  return c.toDataURL("image/png").split(",")[1];
-}
-/* images des documents (cases, sceau), chacune écrite une fois et partagée entre lignes et fiches */
-function imageDoc(cle,produire){
+function imageSceau(){
   if(!WIMG)WIMG={list:[],map:{}};
-  let im=WIMG.map[cle];
-  if(!im){im={rid:"rIdG"+(WIMG.list.length+1),file:"g"+(WIMG.list.length+1)+".png",data:produire()};WIMG.list.push(im);WIMG.map[cle]=im}
+  let im=WIMG.map.sceau;
+  if(!im){im={rid:"rIdG"+(WIMG.list.length+1),file:"g"+(WIMG.list.length+1)+".png",data:SCEAU};WIMG.list.push(im);WIMG.map.sceau=im}
   return im;
-}
-function imageCases(N,coche){return imageDoc("c"+N+"_"+(coche==null?"v":coche),()=>casesPng(N,coche))}
-function imageSceau(){return imageDoc("sceau",()=>SCEAU)}
-function niveauCoche(res,key){
-  if(!res)return null;const N=(F.niveaux||[]).length,p=pctOf(res,key);
-  return p==null||N<2?null:pctLvl(p,N);
-}
-function legendeNiveaux(res){
-  const niv=F.niveaux||[];if(niv.length<2)return "";
-  return "Niveaux, de gauche à droite : "+niv.join(" · ")+(res?". La case cochée indique le niveau atteint.":". Cocher la case du niveau atteint.");
-}
-function lignesEntete(who){
-  return [F.titre||"Évaluation",[ligneContexte(),REF.meta.mention?"Mention "+REF.meta.mention:""].filter(Boolean).join(" — "),ligneEnseignant(who)].filter(Boolean);
 }
 function wImage(im,wpx,hpx,align){
   const id=1000+(WIMG.n=(WIMG.n||0)+1), cx=Math.round(wpx*EMU_PX), cy=Math.round(hpx*EMU_PX);
@@ -7495,18 +7474,54 @@ function wImage(im,wpx,hpx,align){
     +`<pic:nvPicPr><pic:cNvPr id="${id}" name="${im.file}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${im.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>`
     +`<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
 }
-function wCases(res,key){
-  const N=(F.niveaux||[]).length;
-  if(N<2)return wp("",{after:0});
-  return wImage(imageCases(N,niveauCoche(res,key)),casesLargeurPx(N),CASE_PX,"left");
+/* en-tête avec sceau : le contenu de l'en-tête à gauche, le sceau à droite, sans bordure */
+function wAvecSceau(entete,TOT){
+  const nil=["top","left","bottom","right","insideH","insideV"].map(x=>`<w:${x} w:val="nil"/>`).join("");
+  return `<w:tbl><w:tblPr><w:tblW w:w="${TOT}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders>${nil}</w:tblBorders>`
+    +`<w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="${TOT-SCEAU_TW}"/><w:gridCol w:w="${SCEAU_TW}"/></w:tblGrid>`
+    +`<w:tr>${wtc(entete,{w:TOT-SCEAU_TW,v:"top"})}${wtc(wImage(imageSceau(),SCEAU_PX,SCEAU_PX,"right"),{w:SCEAU_TW,v:"top"})}</w:tr></w:tbl>`;
 }
-function wEntete(who,TOT){
-  const wS=1600, lignes=lignesEntete(who);
-  const gauche=wp("Fiche d'évaluation",{b:true,sz:16,after:60})+lignes.map((l,i)=>wp(l,{sz:i?10:11,b:!i,after:30})).join("");
-  const nil=["top","left","right","insideH","insideV"].map(x=>`<w:${x} w:val="nil"/>`).join("");
-  return `<w:tbl><w:tblPr><w:tblW w:w="${TOT}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders>${nil}<w:bottom w:val="single" w:sz="8" w:space="0" w:color="${ENCRE_DOC}"/></w:tblBorders>`
-    +`<w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/><w:bottom w:w="160" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="${TOT-wS}"/><w:gridCol w:w="${wS}"/></w:tblGrid>`
-    +`<w:tr>${wtc(gauche,{w:TOT-wS,v:"bottom"})}${wtc(wImage(imageSceau(),SCEAU_PX,SCEAU_PX,"right"),{w:wS,v:"bottom"})}</w:tr></w:tbl>`+wp("",{after:120});
+/* Jauge de l'export Word : image (piste arrondie, remplie jusqu'au niveau atteint, sans traits
+   intermédiaires), comme la saisie du module Étudiants. Une image par valeur, partagée entre lignes. */
+let WIMG=null;
+function gaugePng(p,wpx,hpx){
+  const N=(F.niveaux||[]).length, sc=3, c=document.createElement("canvas");
+  c.width=wpx*sc;c.height=hpx*sc;const g=c.getContext("2d");g.scale(sc,sc);
+  const r=hpx/2, rr=(x,y,w,h,rad)=>{g.beginPath();g.moveTo(x+rad,y);g.arcTo(x+w,y,x+w,y+h,rad);g.arcTo(x+w,y+h,x,y+h,rad);g.arcTo(x,y+h,x,y,rad);g.arcTo(x,y,x+w,y,rad);g.closePath()};
+  rr(0.75,0.75,wpx-1.5,hpx-1.5,r-0.75);g.fillStyle="#FFFFFF";g.fill();
+  if(p!=null){
+    const fw=p===0?Math.max(hpx,7):Math.max(hpx,(wpx-1.5)*p/100);
+    g.save();rr(0.75,0.75,wpx-1.5,hpx-1.5,r-0.75);g.clip();
+    rr(0.75,0.75,fw,hpx-1.5,r-0.75);g.fillStyle=nivColor(pctLvl(p,N),N);g.fill();g.restore();
+  }
+  // séparateurs discrets entre niveaux, pour situer l'étudiant d'une jauge à l'autre
+  pctBounds(N).slice(1,-1).forEach(tp=>{const x=0.75+(wpx-1.5)*tp/100;
+    g.beginPath();g.moveTo(x,2.5);g.lineTo(x,hpx-2.5);g.lineWidth=0.8;
+    g.strokeStyle=p!=null&&p>tp?"rgba(255,255,255,.85)":"#D6CDB9";g.stroke()});
+  rr(0.75,0.75,wpx-1.5,hpx-1.5,r-0.75);g.lineWidth=1.2;g.strokeStyle="#8C8270";g.stroke();
+  return c.toDataURL("image/png").split(",")[1];
+}
+function wGauge(p,w,head){
+  const niv=F.niveaux||[],N=niv.length,t=pctBounds(N),W=w-200;
+  if(head){
+    const cells=niv.map((n,i)=>{const ww=Math.max(80,Math.round(W*(t[i+1]-t[i])/100));
+      return `<w:tc><w:tcPr><w:tcW w:w="${ww}" w:type="dxa"/><w:vAlign w:val="bottom"/></w:tcPr>${wp(n,{sz:7,align:"center",after:0,color:"5A5345"})}</w:tc>`});
+    const ws=niv.map((n,i)=>Math.max(80,Math.round(W*(t[i+1]-t[i])/100)));
+    return `<w:tbl><w:tblPr><w:tblW w:w="${ws.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/><w:tblBorders>`
+      +["top","bottom","right","left","insideV","insideH"].map(x=>`<w:${x} w:val="nil"/>`).join("")
+      +`</w:tblBorders><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr>`
+      +`<w:tblGrid>${ws.map(x=>`<w:gridCol w:w="${x}"/>`).join("")}</w:tblGrid><w:tr>${cells.join("")}</w:tr></w:tbl>`+wp("",{after:0,sz:2});
+  }
+  const cx=W*635, cy=280*635, key=(p==null?"v":"p"+p)+"_"+W;
+  if(!WIMG)WIMG={list:[],map:{}};
+  let im=WIMG.map[key];
+  if(!im){const wpx=Math.round(W/8), hpx=Math.max(10,Math.round(wpx*280/W));
+    im={rid:"rIdG"+(WIMG.list.length+1),file:"g"+(WIMG.list.length+1)+".png",data:gaugePng(p,wpx,hpx)};WIMG.list.push(im);WIMG.map[key]=im}
+  const id=1000+(WIMG.n=(WIMG.n||0)+1);
+  return `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="40" w:after="40"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="Jauge ${id}"/>`
+    +`<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">`
+    +`<pic:nvPicPr><pic:cNvPr id="${id}" name="${im.file}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${im.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>`
+    +`<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
 }
 function ficheXml(el){
   const who=typeof el==="string"?el:(el&&el.nom)||"";
@@ -7515,20 +7530,24 @@ function ficheXml(el){
   const TOT=10500;   // A4 portrait, marges de 1,2 cm
   const sum=cols.reduce((a,c)=>a+c.w,0);
   const widths=cols.map(c=>Math.round(TOT*c.w/sum));
-  let x="";
-  x+=wEntete(who,TOT);
+  let entete="";
+  entete+=wp(REF.meta.diplome||"",{sz:8.5,caps:true,color:"5A5345",after:20});
+  entete+=wp(F.titre||"Évaluation",{b:true,sz:16,after:40});
+  entete+=wp(ligneContexte(),{sz:10,color:"10555F",after:40,border:true});
+  const ens=ligneEnseignant(who);
+  if(ens)entete+=wp(ens,{sz:10,after:120});
+  let x=sceauActif()?wAvecSceau(entete,TOT)+wp("",{after:60}):entete;
   if(MOD.consignes&&F.consignes){
-    x+=wp("Consignes et attendus",{b:true,sz:10,caps:true,before:120,after:30});
+    x+=wp("Consignes et attendus",{b:true,sz:10,caps:true,color:"5A5345",before:120,after:30});
     x+=wp(F.consignes,{sz:10,after:120});
   }
-  x+=wp("Compétences évaluées",{b:true,sz:10,caps:true,before:120,after:20});
-  const leg=legendeNiveaux(res);
-  if(leg)x+=wp(leg,{sz:8.5,i:true,after:60});
-  let tr=wtr(cols.map((c,i)=>wtc(wp(c.lv&&(F.niveaux||[]).length<2?(F.niveaux||[])[0]||c.t:c.t,{b:true,sz:8.5,caps:true,after:0}),{w:widths[i]})).join(""),{head:true});
+  x+=wp("Compétences évaluées",{b:true,sz:10,caps:true,color:"5A5345",before:120,after:20});
+  x+=wp("Niveau d'acquisition : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.",{sz:8.5,i:true,color:"5A5345",after:60});
+  let tr=wtr(cols.map((c,i)=>wtc(wp(c.t,{b:true,sz:8.5,caps:true,after:c.lv?30:0,align:c.lv?"center":"left"})+(c.lv?wGauge(null,widths[i],true):""),{w:widths[i],shd:"F1ECE0"})).join(""),{head:true});
   if(!rs.length) tr+=wtr(wtc(wp("Aucune compétence sélectionnée.",{sz:10,i:true,after:0}),{w:TOT,span:cols.length}));
   rs.forEach(r=>{
     tr+=wtr(cols.map((c,i)=>{
-      if(c.lv)return wtc(wCases(res,r.key),{w:widths[i],v:"center"});
+      if(c.lv)return wtc(wGauge(res?pctOf(res,r.key):null,widths[i],false),{w:widths[i],v:"center"});
       if(c.k==="code")return wtc(wp(r.code,{mono:true,sz:9,b:true,after:0}),{w:widths[i]});
       if(c.k==="bloc")return wtc(wp(r.bloc,{mono:true,sz:9,align:"center",after:0}),{w:widths[i]});
       if(c.k==="lib")return wtc(wp(r.lib,{sz:9,b:r.op,after:0}),{w:widths[i]});
@@ -7538,15 +7557,15 @@ function ficheXml(el){
     }).join(""));
   });
   x+=wtable(tr,widths);
-  x+=wp("Appréciation générale",{b:true,sz:10,caps:true,before:200,after:40});
+  x+=wp("Appréciation générale",{b:true,sz:10,caps:true,color:"5A5345",before:200,after:40});
   const ap=res&&res.appr?res.appr:"";
   x+=wtable(wtr(wtc(ap?wp(ap,{sz:10,after:0}):(wp("",{after:0})+wp("",{after:0})+wp("",{after:0})+wp("",{after:0})),{w:TOT})),[TOT]);
   return x;
 }
 async function buildDocx(only){
   const els=only||eleveList();
-  await chargerSceau();
-  const SECT=`<w:sectPr><w:footerReference w:type="default" r:id="rIdPied"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="680" w:right="680" w:bottom="680" w:left="680" w:header="340" w:footer="340" w:gutter="0"/></w:sectPr>`;
+  if(sceauActif())await chargerSceau();
+  const SECT=`<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="680" w:right="680" w:bottom="680" w:left="680" w:header="340" w:footer="340" w:gutter="0"/></w:sectPr>`;
   WIMG={list:[],map:{}};
   const parts = els.length? els.map(e=>ficheXml(e)) : [ficheXml("")];
   const body = parts.map((p,i)=> i<parts.length-1 ? p+`<w:p><w:r><w:br w:type="page"/></w:r></w:p>` : p).join("");
@@ -7563,23 +7582,18 @@ async function buildDocx(only){
 <Default Extension="xml" ContentType="application/xml"/>
 <Default Extension="png" ContentType="image/png"/>
 <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
-<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`;
-  // pied de page : intitulé à gauche, numéro de page à droite
-  const champ=nom=>`<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> ${nom} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>`;
-  const pied=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="10500"/></w:tabs><w:spacing w:after="0"/></w:pPr><w:r><w:rPr><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">${X("Fiche d'évaluation · "+(F.titre||"Évaluation"))}</w:t></w:r><w:r><w:tab/></w:r>${champ("PAGE")}<w:r><w:t xml:space="preserve"> / </w:t></w:r>${champ("NUMPAGES")}</w:p></w:ftr>`;
+<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
   const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
   const drels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rIdPied" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>${WIMG.list.map(im=>`<Relationship Id="${im.rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${im.file}"/>`).join("")}</Relationships>`;
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${WIMG.list.map(im=>`<Relationship Id="${im.rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${im.file}"/>`).join("")}</Relationships>`;
   const zip=new JSZip();
   zip.file("[Content_Types].xml",ct);
   zip.folder("_rels").file(".rels",rels);
   const w=zip.folder("word");
-  w.file("document.xml",doc); w.file("styles.xml",styles); w.file("footer1.xml",pied);
+  w.file("document.xml",doc); w.file("styles.xml",styles);
   w.folder("_rels").file("document.xml.rels",drels);
   const md=w.folder("media");WIMG.list.forEach(im=>md.file(im.file,im.data,{base64:true}));
   return zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",compression:"DEFLATE"});
@@ -7588,7 +7602,7 @@ async function buildDocx(only){
 /* ---------- export OpenDocument (.odt, LibreOffice / OpenOffice) ---------- */
 async function buildOdt(only){
   const els=only||eleveList();
-  await chargerSceau();
+  if(sceauActif())await chargerSceau();
   WIMG={list:[],map:{}};
   let nT=0;const colSt=[];
   const cm=tw=>(tw/567).toFixed(3)+"cm";
@@ -7599,25 +7613,28 @@ async function buildOdt(only){
     colSt.push(`<style:style style:name="T${n}" style:family="table"><style:table-properties style:width="${cm(widths.reduce((a,b)=>a+b,0))}" table:align="${st==="center"?"center":"left"}" fo:margin-top="0cm" fo:margin-bottom="0cm"/></style:style>`);
     return `<table:table table:name="Tableau${n}" table:style-name="T${n}">${widths.map((w,i)=>`<table:table-column table:style-name="T${n}C${i}"/>`).join("")}${rowsXml}</table:table>`};
   const row=(cells,head)=>head?`<table:table-header-rows><table:table-row>${cells}</table:table-row></table:table-header-rows>`:`<table:table-row>${cells}</table:table-row>`;
+  const gauge=(p,w)=>{wGauge(p,w,false);const im=WIMG.list[WIMG.list.length-1]&&WIMG.map[(p==null?"v":"p"+p)+"_"+(w-200)];
+    return `<text:p text:style-name="Pc"><draw:frame draw:name="j${++nT}" text:anchor-type="as-char" svg:width="${cm(w-200)}" svg:height="${cm(280)}" draw:z-index="0"><draw:image xlink:href="Pictures/${im.file}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame></text:p>`};
+  const gaugeHead=w=>{const niv=F.niveaux||[],t=pctBounds(niv.length),W=w-200;
+    const ws=niv.map((n,i)=>Math.max(80,Math.round(W*(t[i+1]-t[i])/100)));
+    return table(ws,row(niv.map(n=>cell(tp(n,"Pg"),"CellN")).join("")),"center")};
   const image=(im,wpx,hpx,st)=>`<text:p text:style-name="${st||"Pc"}"><draw:frame draw:name="i${++nT}" text:anchor-type="as-char" svg:width="${(wpx*2.54/96).toFixed(3)}cm" svg:height="${(hpx*2.54/96).toFixed(3)}cm" draw:z-index="0"><draw:image xlink:href="Pictures/${im.file}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame></text:p>`;
-  const cases=(res,key)=>{const N=(F.niveaux||[]).length;
-    return N<2?"<text:p/>":image(imageCases(N,niveauCoche(res,key)),casesLargeurPx(N),CASE_PX,"PcG")};
-  const entete=(who,TOT)=>{const wS=1600,lignes=lignesEntete(who);
-    const gauche=tp("Fiche d'évaluation","Ph")+lignes.map((l,i)=>tp(l,i?"Pe":"Pt")).join("");
-    return table([TOT-wS,wS],row(cell(gauche,"CellE")+cell(image(imageSceau(),SCEAU_PX,SCEAU_PX,"PcD"),"CellE")))+tp("","P")};
+  const avecSceau=(entete,TOT)=>table([TOT-SCEAU_TW,SCEAU_TW],row(cell(entete,"CellE")+cell(image(imageSceau(),SCEAU_PX,SCEAU_PX,"PcD"),"CellE")));
   const fiche=el=>{
     const who=typeof el==="string"?el:(el&&el.nom)||"";
     const res=(el&&el.id)?((F.res||{})[el.id]||{n:{},obs:{},appr:""}):null;
     const cols=columns(), rs=rows(), TOT=10500, sum=cols.reduce((a,c)=>a+c.w,0), widths=cols.map(c=>Math.round(TOT*c.w/sum));   // A4 portrait
-    let x=entete(who,TOT);
+    let entete=tp(REF.meta.diplome||"","Pk")+tp(F.titre||"Évaluation","Ph")
+      +tp(ligneContexte(),"Pa");
+    const ens=ligneEnseignant(who);
+    if(ens)entete+=tp(ens);
+    let x=sceauActif()?avecSceau(entete,TOT):entete;
     if(MOD.consignes&&F.consignes)x+=tp("Consignes et attendus","Ps")+tp(F.consignes);
-    x+=tp("Compétences évaluées","Ps");
-    const leg=legendeNiveaux(res);
-    if(leg)x+=tp(leg,"Pi");
-    let tr=row(cols.map(c=>cell(tp(c.lv&&(F.niveaux||[]).length<2?(F.niveaux||[])[0]||c.t:c.t,"PhT"),"CellH")).join(""),true);
+    x+=tp("Compétences évaluées","Ps")+tp("Niveau d'acquisition : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.","Pi");
+    let tr=row(cols.map((c,i)=>cell(tp(c.t,c.lv?"PhC":"PhT")+(c.lv?gaugeHead(widths[i]):""),"CellH")).join(""),true);
     if(!rs.length)tr+=row(`<table:table-cell table:style-name="Cell" table:number-columns-spanned="${cols.length}" office:value-type="string">${tp("Aucune compétence sélectionnée.","Pi")}</table:table-cell>`+cols.slice(1).map(()=>"<table:covered-table-cell/>").join(""));
     rs.forEach(r=>{tr+=row(cols.map((c,i)=>{
-      if(c.lv)return cell(cases(res,r.key),"CellM");
+      if(c.lv)return cell(gauge(res?pctOf(res,r.key):null,widths[i]),"CellM");
       if(c.k==="lib")return cell(tp(r.lib,r.op?"Pb":"P9"));
       if(c.k==="obs")return cell(tp(res?((res.obs||{})[r.key]||""):"","P9"));
       return cell(tp(r[c.k]||"","P9"))}).join(""))});
@@ -7630,26 +7647,26 @@ async function buildOdt(only){
   const body=parts.map((q,i)=>i?`<text:p text:style-name="PB"/>`+q:q).join("");
   const ns=`xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" office:version="1.3"`;
   const ps=(n,props,tprops)=>`<style:style style:name="${n}" style:family="paragraph"><style:paragraph-properties ${props||'fo:margin-top="0cm" fo:margin-bottom="0.05cm"'}/><style:text-properties ${tprops||""}/></style:style>`;
-  const cellSt=(n,bg,va)=>`<style:style style:name="${n}" style:family="table-cell"><style:table-cell-properties fo:padding="0.08cm" fo:border="0.5pt solid #${ENCRE_DOC}" ${bg?`fo:background-color="${bg}"`:""} style:vertical-align="${va||"top"}"/></style:style>`;
+  const cellSt=(n,bg,va)=>`<style:style style:name="${n}" style:family="table-cell"><style:table-cell-properties fo:padding="0.08cm" fo:border="0.5pt solid #C4BAA3" ${bg?`fo:background-color="${bg}"`:""} style:vertical-align="${va||"top"}"/></style:style>`;
   const auto=ps("P","",'fo:font-size="10pt"')+ps("P9","",'fo:font-size="9pt"')+ps("Pb","",'fo:font-size="9pt" fo:font-weight="bold"')
-    +ps("Ph",'fo:margin-top="0cm" fo:margin-bottom="0.1cm"','fo:font-size="16pt" fo:font-weight="bold"')
-    +ps("Pt",'fo:margin-top="0cm" fo:margin-bottom="0.05cm"','fo:font-size="11pt" fo:font-weight="bold"')
-    +ps("Pe",'fo:margin-top="0cm" fo:margin-bottom="0.05cm"','fo:font-size="10pt"')
-    +ps("Ps",'fo:margin-top="0.3cm" fo:margin-bottom="0.05cm"','fo:font-size="10pt" fo:font-weight="bold" fo:text-transform="uppercase"')
-    +ps("Pi",'fo:margin-bottom="0.1cm"','fo:font-size="8.5pt" fo:font-style="italic"')
+    +ps("Pk","",'fo:font-size="8pt" fo:font-weight="bold" fo:color="#5A5345" fo:text-transform="uppercase"')
+    +ps("Ph",'fo:margin-top="0.05cm" fo:margin-bottom="0.1cm"','fo:font-size="16pt" fo:font-weight="bold"')
+    +ps("Pa",'fo:margin-bottom="0.25cm" fo:border-bottom="0.5pt solid #D6CDB9" fo:padding-bottom="0.05cm"','fo:font-size="10pt" fo:color="#10555F"')
+    +ps("Ps",'fo:margin-top="0.3cm" fo:margin-bottom="0.05cm"','fo:font-size="10pt" fo:font-weight="bold" fo:color="#5A5345" fo:text-transform="uppercase"')
+    +ps("Pi",'fo:margin-bottom="0.1cm"','fo:font-size="8.5pt" fo:font-style="italic" fo:color="#5A5345"')
     +ps("PhT","",'fo:font-size="8.5pt" fo:font-weight="bold" fo:text-transform="uppercase"')
     +ps("PhC",'fo:text-align="center" fo:margin-bottom="0.05cm"','fo:font-size="8.5pt" fo:font-weight="bold" fo:text-transform="uppercase"')
     +ps("Pc",'fo:text-align="center" fo:margin="0cm"','')
-    +ps("PcG",'fo:text-align="start" fo:margin="0cm"','')
-    +ps("PcD",'fo:text-align="end" fo:margin="0cm"','')
-    +ps("Pg",'fo:text-align="center" fo:margin="0cm"','fo:font-size="7pt"')
+    +ps("Pg",'fo:text-align="center" fo:margin="0cm"','fo:font-size="7pt" fo:color="#5A5345"')
+    +ps("Pg2",'fo:margin-top="0.45cm"','fo:font-size="9pt" fo:color="#5A5345"')
     +`<style:style style:name="PB" style:family="paragraph"><style:paragraph-properties fo:break-before="page"/></style:style>`
-    +cellSt("Cell")+cellSt("CellH")+cellSt("CellM","","middle")
-    +`<style:style style:name="CellE" style:family="table-cell"><style:table-cell-properties fo:padding-top="0cm" fo:padding-left="0cm" fo:padding-right="0cm" fo:padding-bottom="0.3cm" fo:border="none" fo:border-bottom="0.75pt solid #${ENCRE_DOC}" style:vertical-align="bottom"/></style:style>`
+    +cellSt("Cell")+cellSt("CellK","#F8F4EA")+cellSt("CellH","#F1ECE0")+cellSt("CellM","","middle")
+    +ps("PcD",'fo:text-align="end" fo:margin="0cm"','')
+    +`<style:style style:name="CellE" style:family="table-cell"><style:table-cell-properties fo:padding="0cm" fo:border="none" style:vertical-align="top"/></style:style>`
     +`<style:style style:name="CellN" style:family="table-cell"><style:table-cell-properties fo:padding="0cm" fo:border="none" style:vertical-align="bottom"/></style:style>`
     +colSt.join("");
   const content=`<?xml version="1.0" encoding="UTF-8"?><office:document-content ${ns}><office:automatic-styles>${auto}</office:automatic-styles><office:body><office:text>${body}</office:text></office:body></office:document-content>`;
-  const styles=`<?xml version="1.0" encoding="UTF-8"?><office:document-styles ${ns}><office:styles><style:default-style style:family="paragraph"><style:text-properties style:font-name="Calibri" fo:font-family="Calibri, Carlito, sans-serif" fo:font-size="10pt" fo:language="fr" fo:country="FR"/></style:default-style><style:style style:name="Pied" style:family="paragraph"><style:paragraph-properties><style:tab-stops><style:tab-stop style:position="18.6cm" style:type="right"/></style:tab-stops></style:paragraph-properties><style:text-properties fo:font-size="9pt"/></style:style></office:styles><office:automatic-styles><style:page-layout style:name="pm1"><style:page-layout-properties fo:page-width="21cm" fo:page-height="29.7cm" style:print-orientation="portrait" fo:margin-top="1.2cm" fo:margin-bottom="1.2cm" fo:margin-left="1.2cm" fo:margin-right="1.2cm"/><style:footer-style><style:header-footer-properties fo:min-height="0cm" fo:margin-top="0.3cm"/></style:footer-style></style:page-layout></office:automatic-styles><office:master-styles><style:master-page style:name="Standard" style:page-layout-name="pm1"><style:footer><text:p text:style-name="Pied">${X("Fiche d'évaluation · "+(F.titre||"Évaluation"))}<text:tab/><text:page-number text:select-page="current">1</text:page-number> / <text:page-count>1</text:page-count></text:p></style:footer></style:master-page></office:master-styles></office:document-styles>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8"?><office:document-styles ${ns}><office:styles><style:default-style style:family="paragraph"><style:text-properties style:font-name="Calibri" fo:font-family="Calibri, Carlito, sans-serif" fo:font-size="10pt" fo:language="fr" fo:country="FR"/></style:default-style></office:styles><office:automatic-styles><style:page-layout style:name="pm1"><style:page-layout-properties fo:page-width="21cm" fo:page-height="29.7cm" style:print-orientation="portrait" fo:margin-top="1.2cm" fo:margin-bottom="1.2cm" fo:margin-left="1.2cm" fo:margin-right="1.2cm"/></style:page-layout></office:automatic-styles><office:master-styles><style:master-page style:name="Standard" style:page-layout-name="pm1"/></office:master-styles></office:document-styles>`;
   const manifest=`<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.3"><manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/><manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>${WIMG.list.map(im=>`<manifest:file-entry manifest:full-path="Pictures/${im.file}" manifest:media-type="image/png"/>`).join("")}</manifest:manifest>`;
   const zip=new JSZip();
   zip.file("mimetype","application/vnd.oasis.opendocument.text",{compression:"STORE"});
