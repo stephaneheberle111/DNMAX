@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 /*
  * Dessin de l'icône de l'application : le signe X « plein & délié », blanc et
- * pétrole clair, sur un pavé pétrole arrondi. Le signe a trois niveaux de détail
- * selon la taille d'affichage. Calculs seuls, sans accès aux fichiers.
+ * pétrole clair, sur un pavé pétrole arrondi. Le plein s'effile vers le bas
+ * (tracé « intermédiaire 2 », entre l'ancien plein et le coup de gouge) ; il est
+ * le même à toutes les tailles. Le délié a trois niveaux de détail selon la
+ * taille d'affichage, son écart à la croisée gardant le même dégagement autour
+ * du plein. Calculs seuls, sans accès aux fichiers.
  */
 
 export type NiveauDetail = "fin" | "moyen" | "simple";
@@ -24,25 +27,28 @@ interface DessinSigne {
   readonly echelle: number;
 }
 
+/** Plein du signe, effilé vers le bas, identique à tous les niveaux de détail. */
+export const PLEIN = "M15 26.5 42.5 13C59.5 33 72.5 55.5 81 82.5L74 86C56.5 66.5 38.5 45.5 15 26.5Z";
+
 export const SIGNES: Readonly<Record<NiveauDetail, DessinSigne>> = {
   fin: {
-    delie: "M12 88 42.1 57.9M63.4 36.6 88 12M7.4 83.4l9.2 9.2M83.4 7.4l9.2 9.2",
+    delie: "M12 88 43 57M63.6 36.4 88 12M7.4 83.4l9.2 9.2M83.4 7.4l9.2 9.2",
     epaisseurDelie: 2.6,
-    plein: "M17 25 41 14C58.5 34 73 55 85.5 77L66 87C53 65.5 37.5 44.5 17 25Z",
+    plein: PLEIN,
     decalage: 14,
     echelle: 0.72,
   },
   moyen: {
-    delie: "M13 87 40.9 59.1M64.7 35.3 87 13M8 82l10 10M82 8l10 10",
+    delie: "M13 87 42.1 57.9M64.5 35.5 87 13M8 82l10 10M82 8l10 10",
     epaisseurDelie: 4.6,
-    plein: "M16 25 42 14C59 34 74 55 87 77L65 87C52.5 65.5 37 44.5 16 25Z",
+    plein: PLEIN,
     decalage: 13,
     echelle: 0.74,
   },
   simple: {
-    delie: "M17 85 35.6 66.4M66.5 35.5 85 17",
+    delie: "M17 85 40.6 59.4M67.7 32.3 85 17",
     epaisseurDelie: 8.5,
-    plein: "M12 23 40 12C56 34.3 72 56.7 88 79L64 90C46.7 67.7 29.3 45.3 12 23Z",
+    plein: PLEIN,
     decalage: 12,
     echelle: 0.76,
   },
