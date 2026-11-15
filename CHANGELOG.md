@@ -17,6 +17,8 @@
 
 ### Ajouté
 
+- Paramètres > Règles d'évaluation : les règles appliquées à tous (échelle, seuils de la jauge, enregistrement, acquisition, suivi), et une case pour ne plus situer l'étudiant par rapport à sa promotion dans Progression.
+- Mon établissement > Établissement : mois de la rentrée et début du second semestre, qui servent à proposer le semestre d'une nouvelle évaluation (septembre et février par défaut).
 - Paramètres > Mises à jour : rechercher une mise à jour à la demande. DNMAX ne se connecte jamais à Internet sans votre accord.
 - Mon compte > Préférences > Documents exportés : choix du dossier dans lequel s'ouvre la boîte « Enregistrer sous » (Documents par défaut). S'il n'existe plus, elle s'ouvre dans Documents.
 - Mon compte > Préférences > Documents exportés : afficher ou non le sceau DN MADE en tête des documents Word et OpenDocument (désactivé par défaut).

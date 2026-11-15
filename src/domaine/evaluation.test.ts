@@ -13,6 +13,7 @@ import {
   ecsRetenus,
   etatEnregistrement,
   lignesDe,
+  lireCalendrier,
   manquesPourEnregistrer,
   nettoyerRegroupements,
   normaliserEvaluation,
@@ -116,6 +117,19 @@ describe("calendrier", () => {
     expect(semestresDeLAnnee(2)).toEqual(["S3", "S4"]);
     expect(semestreSuggere(2, new Date(2026, 10, 16))).toBe("S3");
     expect(semestreSuggere(3, new Date(2027, 3, 1))).toBe("S6");
+  });
+
+  it("suit le calendrier de l'établissement : rentrée en août, bascule fin janvier", () => {
+    const calendrier = { rentree: 8, bascule: 1 };
+    expect(anneeScolaire(new Date(2026, 7, 20), calendrier)).toBe("2026-2027");
+    expect(rangSemestre(new Date(2027, 0, 5), calendrier)).toBe(2);
+    expect(rangSemestre(new Date(2026, 11, 15), calendrier)).toBe(1);
+  });
+
+  it("lit le calendrier de l'établissement, avec septembre et février à défaut", () => {
+    expect(lireCalendrier({ moisRentree: 8, moisBascule: "3" })).toEqual({ rentree: 8, bascule: 3 });
+    expect(lireCalendrier({ moisRentree: 13, moisBascule: 0 })).toEqual({ rentree: 9, bascule: 2 });
+    expect(lireCalendrier(undefined)).toEqual({ rentree: 9, bascule: 2 });
   });
 
   it("ne suggère rien sans année connue", () => {
