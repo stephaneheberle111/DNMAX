@@ -10,6 +10,10 @@
 
 - Mon compte > Préférences > Documents exportés : afficher ou non le sceau DN MADE en tête des documents Word et OpenDocument (désactivé par défaut).
 
+### Corrigé
+
+- Documents Word et OpenDocument : les noms des niveaux au-dessus de la jauge ne sont plus coupés au milieu d'un mot (« Non acqui-s ») ; chacun a la place de son mot le plus long, et le texte se réduit un peu si la colonne est étroite.
+
 ## 0.8.0 — 2026-11-15
 
 ### Ajouté

@@ -5,6 +5,7 @@
 const STOCKAGE = window.dnmaxPont.stockage;
 /* Règles de la saisie des résultats : écrites et testées dans src/domaine/saisie-resultats.ts. */
 const SAISIE = window.dnmaxPont.saisie;
+const JAUGE = window.dnmaxPont.jauge;
 /* Téléphone ou ordinateur : on croise plusieurs indices plutôt que la seule largeur d'écran —
    indication « mobile » du navigateur, type d'appareil annoncé, pointeur tactile sans survol
    et petite taille physique d'écran (le plus petit côté). Une tablette (tactile, grand écran)
@@ -7504,9 +7505,10 @@ function gaugePng(p,wpx,hpx){
 function wGauge(p,w,head){
   const niv=F.niveaux||[],N=niv.length,t=pctBounds(N),W=w-200;
   if(head){
-    const cells=niv.map((n,i)=>{const ww=Math.max(80,Math.round(W*(t[i+1]-t[i])/100));
-      return `<w:tc><w:tcPr><w:tcW w:w="${ww}" w:type="dxa"/><w:vAlign w:val="bottom"/></w:tcPr>${wp(n,{sz:7,align:"center",after:0,color:"5A5345"})}</w:tc>`});
-    const ws=niv.map((n,i)=>Math.max(80,Math.round(W*(t[i+1]-t[i])/100)));
+    // chaque libellé a la place de son mot le plus long, pour qu'aucun mot ne soit coupé (domaine/jauge-export)
+    const {taille,largeurs:ws}=JAUGE.dispositionLibellesNiveaux(niv,t,W);
+    const cells=niv.map((n,i)=>
+      `<w:tc><w:tcPr><w:tcW w:w="${ws[i]}" w:type="dxa"/><w:vAlign w:val="bottom"/></w:tcPr>${wp(n,{sz:taille,align:"center",after:0,color:"5A5345"})}</w:tc>`);
     return `<w:tbl><w:tblPr><w:tblW w:w="${ws.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/><w:tblBorders>`
       +["top","bottom","right","left","insideV","insideH"].map(x=>`<w:${x} w:val="nil"/>`).join("")
       +`</w:tblBorders><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr>`
@@ -7616,8 +7618,8 @@ async function buildOdt(only){
   const gauge=(p,w)=>{wGauge(p,w,false);const im=WIMG.list[WIMG.list.length-1]&&WIMG.map[(p==null?"v":"p"+p)+"_"+(w-200)];
     return `<text:p text:style-name="Pc"><draw:frame draw:name="j${++nT}" text:anchor-type="as-char" svg:width="${cm(w-200)}" svg:height="${cm(280)}" draw:z-index="0"><draw:image xlink:href="Pictures/${im.file}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame></text:p>`};
   const gaugeHead=w=>{const niv=F.niveaux||[],t=pctBounds(niv.length),W=w-200;
-    const ws=niv.map((n,i)=>Math.max(80,Math.round(W*(t[i+1]-t[i])/100)));
-    return table(ws,row(niv.map(n=>cell(tp(n,"Pg"),"CellN")).join("")),"center")};
+    const {taille,largeurs:ws}=JAUGE.dispositionLibellesNiveaux(niv,t,W);
+    return table(ws,row(niv.map(n=>cell(tp(n,"Pg"+String(taille).replace(".","_")),"CellN")).join("")),"center")};
   const image=(im,wpx,hpx,st)=>`<text:p text:style-name="${st||"Pc"}"><draw:frame draw:name="i${++nT}" text:anchor-type="as-char" svg:width="${(wpx*2.54/96).toFixed(3)}cm" svg:height="${(hpx*2.54/96).toFixed(3)}cm" draw:z-index="0"><draw:image xlink:href="Pictures/${im.file}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame></text:p>`;
   const avecSceau=(entete,TOT)=>table([TOT-SCEAU_TW,SCEAU_TW],row(cell(entete,"CellE")+cell(image(imageSceau(),SCEAU_PX,SCEAU_PX,"PcD"),"CellE")));
   const fiche=el=>{
@@ -7657,7 +7659,7 @@ async function buildOdt(only){
     +ps("PhT","",'fo:font-size="8.5pt" fo:font-weight="bold" fo:text-transform="uppercase"')
     +ps("PhC",'fo:text-align="center" fo:margin-bottom="0.05cm"','fo:font-size="8.5pt" fo:font-weight="bold" fo:text-transform="uppercase"')
     +ps("Pc",'fo:text-align="center" fo:margin="0cm"','')
-    +ps("Pg",'fo:text-align="center" fo:margin="0cm"','fo:font-size="7pt" fo:color="#5A5345"')
+    +JAUGE.TAILLES_LIBELLES.map(t=>ps("Pg"+String(t).replace(".","_"),'fo:text-align="center" fo:margin="0cm"',`fo:font-size="${t}pt" fo:color="#5A5345"`)).join("")
     +ps("Pg2",'fo:margin-top="0.45cm"','fo:font-size="9pt" fo:color="#5A5345"')
     +`<style:style style:name="PB" style:family="paragraph"><style:paragraph-properties fo:break-before="page"/></style:style>`
     +cellSt("Cell")+cellSt("CellK","#F8F4EA")+cellSt("CellH","#F1ECE0")+cellSt("CellM","","middle")
