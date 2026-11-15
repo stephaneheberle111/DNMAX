@@ -7261,6 +7261,21 @@ function paintSceau(){
   const cb=document.getElementById("p-sceau");if(!cb)return;
   cb.checked=sceauActif();
   cb.onchange=()=>{PREFS.sceau=cb.checked;savePrefs()};
+  paintDossierExports();
+}
+/* dossier proposé par « Enregistrer sous » : choisi et retenu par l'enveloppe de bureau, qui seule enregistre ;
+   la page n'en reçoit le chemin que pour l'afficher */
+function paintDossierExports(){
+  const api=window.dnmaxPont.dossierExports, bloc=document.getElementById("p-dossier");
+  if(!bloc)return;
+  bloc.hidden=!api;document.getElementById("p-dossier-aide").hidden=!api;
+  if(!api)return;
+  const chemin=document.getElementById("p-dossier-chemin"), oublier=document.getElementById("p-dossier-oublier");
+  const afficher=d=>{chemin.textContent=d||"Documents (par défaut)";oublier.hidden=!d};
+  api.lire().then(afficher).catch(()=>afficher(null));
+  document.getElementById("p-dossier-choisir").onclick=()=>api.choisir()
+    .then(d=>{if(d)afficher(d)}).catch(e=>toast("Dossier non retenu : "+(e&&e.message||e)));
+  oublier.onclick=()=>api.oublier().then(()=>afficher(null)).catch(e=>toast("Dossier non oublié : "+(e&&e.message||e)));
 }
 function paintVocab(){
   const sel=document.getElementById("p-critsel"), inp=document.getElementById("p-critlab");

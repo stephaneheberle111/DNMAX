@@ -3,6 +3,7 @@
 mod coffre;
 mod depot;
 mod direct;
+mod dossier_exports;
 mod export;
 mod import;
 mod voisinage;
@@ -77,17 +78,74 @@ fn ouvrir_dernier_export(
         .map_err(|erreur| format!("ouverture impossible : {erreur}"))
 }
 
-/// Ouvre la boîte « Enregistrer sous », dans le dossier Documents de
+/// Ouvre la boîte « Enregistrer sous », dans le dossier choisi dans
+/// Préférences s'il existe encore, sinon dans le dossier Documents de
 /// l'enseignant quand le système en indique un, et rend l'emplacement choisi.
 fn demander_emplacement(application: &AppHandle, nom_propose: &str) -> Option<PathBuf> {
     let mut boite = application
         .dialog()
         .file()
         .set_file_name(export::nettoyer_nom_fichier(nom_propose));
-    if let Ok(documents) = application.path().document_dir() {
-        boite = boite.set_directory(documents);
+    let choisi =
+        fichier_dossier_exports(application).and_then(|fichier| dossier_exports::lire(&fichier));
+    if let Some(dossier) =
+        dossier_exports::dossier_initial(choisi, application.path().document_dir().ok())
+    {
+        boite = boite.set_directory(dossier);
     }
     boite.blocking_save_file()?.into_path().ok()
+}
+
+/// Fichier où l'enveloppe retient le dossier des exports ; `None` si le système n'indique pas de dossier de configuration.
+fn fichier_dossier_exports(application: &AppHandle) -> Option<PathBuf> {
+    application
+        .path()
+        .app_config_dir()
+        .ok()
+        .map(|dossier| dossier.join(dossier_exports::NOM_FICHIER))
+}
+
+/// Dossier des exports retenu, tel qu'à afficher dans Préférences ; `None` : le dossier Documents.
+#[tauri::command(async)]
+fn lire_dossier_exports(application: AppHandle) -> Option<String> {
+    fichier_dossier_exports(&application)
+        .and_then(|fichier| dossier_exports::lire(&fichier))
+        .map(|dossier| dossier.to_string_lossy().into_owned())
+}
+
+/// Fait choisir le dossier des exports dans la boîte du système et le retient.
+///
+/// Rend le dossier choisi, ou `None` si l'enseignant a annulé (rien n'est alors changé).
+#[tauri::command(async)]
+fn choisir_dossier_exports(application: AppHandle) -> Result<Option<String>, String> {
+    let mut boite = application.dialog().file();
+    if let Some(actuel) = dossier_exports::dossier_initial(
+        fichier_dossier_exports(&application).and_then(|fichier| dossier_exports::lire(&fichier)),
+        application.path().document_dir().ok(),
+    ) {
+        boite = boite.set_directory(actuel);
+    }
+    let Some(dossier) = boite
+        .blocking_pick_folder()
+        .and_then(|choix| choix.into_path().ok())
+    else {
+        return Ok(None);
+    };
+    let fichier = fichier_dossier_exports(&application)
+        .ok_or_else(|| "dossier de configuration introuvable".to_owned())?;
+    dossier_exports::enregistrer(&fichier, Some(&dossier))
+        .map_err(|erreur| format!("enregistrement impossible : {erreur}"))?;
+    Ok(Some(dossier.to_string_lossy().into_owned()))
+}
+
+/// Oublie le dossier des exports : la boîte « Enregistrer sous » revient au dossier Documents.
+#[tauri::command(async)]
+fn oublier_dossier_exports(application: AppHandle) -> Result<(), String> {
+    let Some(fichier) = fichier_dossier_exports(&application) else {
+        return Ok(());
+    };
+    dossier_exports::enregistrer(&fichier, None)
+        .map_err(|erreur| format!("enregistrement impossible : {erreur}"))
 }
 
 /// Coffre déverrouillé pour la session en cours ; `None` tant que l'enseignant n'a pas saisi son mot de passe.
@@ -707,6 +765,9 @@ pub fn lancer() {
         .invoke_handler(tauri::generate_handler![
             enregistrer_fichier,
             ouvrir_dernier_export,
+            lire_dossier_exports,
+            choisir_dossier_exports,
+            oublier_dossier_exports,
             etat_coffre,
             creer_coffre,
             ouvrir_coffre,

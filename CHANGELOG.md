@@ -8,6 +8,7 @@
 
 ### Ajouté
 
+- Mon compte > Préférences > Documents exportés : choix du dossier dans lequel s'ouvre la boîte « Enregistrer sous » (Documents par défaut). S'il n'existe plus, elle s'ouvre dans Documents.
 - Mon compte > Préférences > Documents exportés : afficher ou non le sceau DN MADE en tête des documents Word et OpenDocument (désactivé par défaut).
 
 ### Corrigé
