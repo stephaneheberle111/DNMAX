@@ -329,10 +329,10 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "5. L'évaluation",
       texte:
-        "Donnez un intitulé, cochez la ou les promotions concernées et les livrables attendus. Passez ensuite à l'étape 2, « Compétences ».",
+        "Donnez un intitulé et une consigne, cochez la ou les promotions concernées, les livrables attendus et au moins un EC (ou une UE). Tout cela est nécessaire pour enregistrer. Passez ensuite à l'étape 2, « Compétences ».",
       cibles: ["#step1"],
-      // Le curseur passe de l'intitulé aux livrables, aux promotions et au semestre, puis au bouton de l'étape 2.
-      pointe: '#f-titre, #f-livr, #f-classes, #f-sem, [data-go="2"]',
+      // Le curseur passe de l'intitulé à la consigne, aux livrables, aux promotions, au semestre et aux EC, puis au bouton de l'étape 2.
+      pointe: '#f-titre, #f-consignes, #f-livr, #f-classes, #f-sem, #row-ec, [data-go="2"]',
       aDegager: '[data-go="2"]',
       geste: "parcourir",
       atteinte: () => visible("#step2") || visible("#step3"),
@@ -397,9 +397,9 @@ const PRISE_EN_MAIN: Parcours = {
       ouvrir: () => window.dnmaxPont?.ouvrirPreferences?.(),
     },
     {
-      titre: "6. Apparence et échelles",
+      titre: "6. Apparence et vocabulaire",
       texte:
-        "Thème clair ou sombre, fond et couleur du papier ; plus bas, les échelles d'évaluation, le vocabulaire et les livrables proposés. Ces réglages valent pour cet ordinateur.",
+        "Thème clair ou sombre, fond et couleur du papier ; plus bas, le vocabulaire et les livrables proposés. Ces réglages valent pour cet ordinateur.",
       cibles: ["#v-pref .panel"],
       geste: "regarder",
     },

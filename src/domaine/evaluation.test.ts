@@ -7,6 +7,9 @@ import {
   classesNettoyees,
   cleLigne,
   detacher,
+  ECHELLE,
+  enumerer,
+  estAcquis,
   ecsRetenus,
   etatEnregistrement,
   lignesDe,
@@ -25,7 +28,16 @@ const idFixe = (): string => "r9";
 
 describe("normaliserEvaluation", () => {
   it("complète les listes absentes et garde les champs inconnus", () => {
-    expect(normaliserEvaluation({ id: "e1", suivi: { x: 1 } })).toEqual({ id: "e1", suivi: { x: 1 }, ues: [], classes: [], classe: "", res: {} });
+    expect(normaliserEvaluation({ id: "e1", suivi: { x: 1 } })).toEqual({
+      id: "e1",
+      suivi: { x: 1 },
+      ues: [],
+      classes: [],
+      classe: "",
+      res: {},
+      preset: "maitrise",
+      niveaux: [...ECHELLE.niveaux],
+    });
   });
 
   it("recalcule l'intitulé des classes, sans vide ni doublon", () => {
@@ -34,7 +46,22 @@ describe("normaliserEvaluation", () => {
 
   it("remplace des résultats illisibles par un objet vide, et accepte une valeur qui n'est pas un objet", () => {
     expect(normaliserEvaluation({ res: "abîmé" }).res).toEqual({});
-    expect(normaliserEvaluation(null)).toEqual({ ues: [], classes: [], classe: "", res: {} });
+    expect(normaliserEvaluation(null)).toMatchObject({ ues: [], classes: [], classe: "", res: {} });
+  });
+
+  it("ramène toute évaluation à l'échelle unique des niveaux de maîtrise", () => {
+    expect(normaliserEvaluation({ preset: "note", niveaux: ["Note / 20"] })).toMatchObject({
+      preset: "maitrise",
+      niveaux: ["Insuffisant", "Fragile", "Satisfaisant", "Très bonne maîtrise"],
+    });
+  });
+});
+
+describe("estAcquis", () => {
+  it("vaut acquis à partir de « Satisfaisant », pas en dessous", () => {
+    expect(estAcquis(2)).toBe(true);
+    expect(estAcquis(3)).toBe(true);
+    expect(estAcquis(1)).toBe(false);
   });
 });
 
@@ -252,12 +279,37 @@ describe("changerLivrableDeLigne", () => {
 });
 
 describe("manquesPourEnregistrer", () => {
-  it("demande un intitulé et une compétence", () => {
-    expect(manquesPourEnregistrer({ titre: "  ", items: [] })).toEqual(["un intitulé", "au moins une compétence"]);
+  const complete = { titre: "Projet", classes: ["DN2"], consignes: "Rendre le carnet", ecCodes: ["EC 1.1"], ues: [], items: [competence("C1")] };
+
+  it("demande intitulé, promotion, consigne, EC et compétence à une évaluation vide", () => {
+    expect(manquesPourEnregistrer({ titre: "  ", items: [] })).toEqual([
+      "un intitulé",
+      "une promotion",
+      "une consigne",
+      "au moins un EC",
+      "au moins une compétence",
+    ]);
   });
 
   it("ne demande rien à une évaluation complète", () => {
-    expect(manquesPourEnregistrer({ titre: "Projet", items: [competence("C1")] })).toEqual([]);
+    expect(manquesPourEnregistrer(complete)).toEqual([]);
+  });
+
+  it("accepte une UE retenue à la place d'un EC, et une promotion liée par son identifiant", () => {
+    expect(manquesPourEnregistrer({ ...complete, ecCodes: [], ues: ["UE 1"] })).toEqual([]);
+    expect(manquesPourEnregistrer({ ...complete, classes: [], promoId: "p1" })).toEqual([]);
+  });
+
+  it("refuse une consigne faite d'espaces", () => {
+    expect(manquesPourEnregistrer({ ...complete, consignes: "   " })).toEqual(["une consigne"]);
+  });
+});
+
+describe("enumerer", () => {
+  it("relie les éléments par des virgules et un « et » final", () => {
+    expect(enumerer(["a"])).toBe("a");
+    expect(enumerer(["a", "b", "c"])).toBe("a, b et c");
+    expect(enumerer([])).toBe("");
   });
 });
 

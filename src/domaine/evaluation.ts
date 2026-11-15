@@ -34,6 +34,25 @@ export type Ligne =
   | { regroupement: Regroupement; competences: CompetenceRetenue[] }
   | { regroupement: null; competence: CompetenceRetenue };
 
+/**
+ * L'échelle d'évaluation, la même pour tous : celle des niveaux de maîtrise,
+ * officielle pour les DN MADE. Une compétence est acquise à partir de
+ * « Satisfaisant ».
+ */
+export const ECHELLE = {
+  cle: "maitrise",
+  nom: "Niveaux de maîtrise",
+  niveaux: ["Insuffisant", "Fragile", "Satisfaisant", "Très bonne maîtrise"],
+} as const;
+
+/** Rang (à partir de 0) du premier niveau qui vaut compétence acquise : « Satisfaisant ». */
+export const RANG_ACQUIS = 2;
+
+/** Vrai si ce niveau (rang à partir de 0) vaut compétence acquise. */
+export function estAcquis(rang: number): boolean {
+  return rang >= RANG_ACQUIS;
+}
+
 const MOIS_RENTREE = 9;
 const SEMESTRES = ["S1", "S2", "S3", "S4", "S5", "S6"] as const;
 
@@ -76,7 +95,7 @@ export function classesNettoyees(classes: readonly unknown[]): { classes: string
 
 /**
  * Évaluation prête à être affichée : listes présentes, intitulé des classes
- * recalculé, résultats sous forme d'objet. Rien n'est retiré.
+ * recalculé, résultats sous forme d'objet, échelle unique. Rien d'autre n'est retiré.
  */
 export function normaliserEvaluation(brut: unknown): ObjetJson {
   const evaluation = estObjet(brut) ? brut : {};
@@ -87,6 +106,8 @@ export function normaliserEvaluation(brut: unknown): ObjetJson {
     classes,
     classe,
     res: estObjet(evaluation.res) ? evaluation.res : {},
+    preset: ECHELLE.cle,
+    niveaux: [...ECHELLE.niveaux],
   };
 }
 
@@ -338,17 +359,38 @@ export function reunir(
   return { items, ops, regroupement: id };
 }
 
-/** Ce qui manque pour enregistrer l'évaluation, à citer à l'enseignant ; vide si rien ne manque. */
+/**
+ * Ce qui manque pour enregistrer l'évaluation, à citer à l'enseignant ; vide
+ * si rien ne manque. Il faut un intitulé, une promotion, une consigne, au
+ * moins un EC (une UE retenue vaut tous ses EC) et au moins une compétence.
+ */
 export function manquesPourEnregistrer(brut: unknown): string[] {
   const evaluation = estObjet(brut) ? brut : {};
   const manques: string[] = [];
   if (texte(evaluation.titre).trim() === "") {
     manques.push("un intitulé");
   }
+  if (textes(evaluation.classes).every((classe) => classe.trim() === "") && texte(evaluation.promoId) === "") {
+    manques.push("une promotion");
+  }
+  if (texte(evaluation.consignes).trim() === "") {
+    manques.push("une consigne");
+  }
+  if (textes(evaluation.ecCodes).length === 0 && textes(evaluation.ues).length === 0) {
+    manques.push("au moins un EC");
+  }
   if (competencesDe(evaluation).length === 0) {
     manques.push("au moins une compétence");
   }
   return manques;
+}
+
+/** « a », « a et b », « a, b et c » : pour citer une liste dans une phrase. */
+export function enumerer(elements: readonly string[]): string {
+  if (elements.length <= 1) {
+    return elements.join("");
+  }
+  return `${elements.slice(0, -1).join(", ")} et ${elements.at(-1) ?? ""}`;
 }
 
 /**

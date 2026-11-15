@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { THEME_PAR_DEFAUT, attributTheme, estTheme, lireTheme, type Theme } from "./domaine/theme";
-import { creer, creerBouton, ouvrirBoite } from "./ecran-echange";
 
 /**
  * Le thème est rangé dans le stockage de la vue web, pas dans le coffre : il
@@ -10,9 +9,6 @@ import { creer, creerBouton, ouvrirBoite } from "./ecran-echange";
 const CLE_THEME = "dnmax.theme";
 
 const IDENTIFIANT_CHOIX_THEME = "choix-theme";
-
-export const MESSAGE_ECHELLE_OFFICIELLE =
-  "L'échelle d'évaluation officielle pour les DN MADE est celle des niveaux de maîtrise.";
 
 function lireThemeEnregistre(): Theme {
   try {
@@ -61,28 +57,4 @@ export function installerChoixTheme(): void {
       }
     });
   }
-}
-
-/**
- * Rappelle l'échelle officielle avant tout changement d'échelle d'évaluation
- * dans Préférences. Fermer la boîte (croix, fond, Échap) vaut « Annuler ».
- *
- * @returns `true` si l'enseignant confirme le changement.
- */
-export function confirmerChangementEchelle(): Promise<boolean> {
-  return new Promise((resoudre) => {
-    let confirme = false;
-    const { boite, fermer } = ouvrirBoite("Échelle d'évaluation", () => {
-      resoudre(confirme);
-    });
-    const actions = creer("div", "echange-actions");
-    const confirmer = creerBouton("Confirmer", "btn primary", () => {
-      confirme = true;
-      fermer();
-    });
-    actions.append(creerBouton("Annuler", "btn ghost", fermer), confirmer);
-    boite.classList.add("boite-etroite");
-    boite.append(creer("p", "", MESSAGE_ECHELLE_OFFICIELLE), actions);
-    confirmer.focus();
-  });
 }
