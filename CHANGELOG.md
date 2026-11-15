@@ -15,7 +15,7 @@
 
 ### Ajouté
 
-- Paramètres > Mises à jour : rechercher une mise à jour à la demande. DNMAX ne se connecte toujours pas seul à Internet.
+- Paramètres > Mises à jour : rechercher une mise à jour à la demande. DNMAX ne se connecte jamais à Internet sans votre accord.
 - Mon compte > Préférences > Documents exportés : choix du dossier dans lequel s'ouvre la boîte « Enregistrer sous » (Documents par défaut). S'il n'existe plus, elle s'ouvre dans Documents.
 - Mon compte > Préférences > Documents exportés : afficher ou non le sceau DN MADE en tête des documents Word et OpenDocument (désactivé par défaut).
 
