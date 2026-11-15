@@ -182,9 +182,20 @@ async function verifier(page: Page): Promise<string[]> {
     ecarts.push("une évaluation sans compétence a pu sortir des brouillons");
   }
 
-  // 7. Avec une compétence, « Enregistrer l'évaluation » la sort des brouillons : elle retrouve ses actions.
+  // 7. Une compétence ne suffit pas : il faut aussi une promotion, une consigne et un EC (décision 36).
   await page.locator('#steps [data-step="2"]').click();
   await page.locator("#step2 input[data-code]").first().check();
+  await page.locator('#steps [data-step="3"]').click();
+  await page.locator("#bSave3").click();
+  if ((await lireEvaluations(page)).find((lue) => lue.id === idNouvelle)?.brouillon !== true) {
+    ecarts.push("une évaluation sans promotion, consigne ni EC a pu sortir des brouillons");
+  }
+
+  // 8. Complète, « Enregistrer l'évaluation » la sort des brouillons : elle retrouve ses actions.
+  await page.locator('#steps [data-step="1"]').click();
+  await page.locator("#f-consignes").fill("Présenter le carnet de projet.");
+  await page.locator("#f-classes [data-classe]:not([disabled])").first().click();
+  await page.locator("#f-ecsel [data-ecc]").first().click();
   await page.locator('#steps [data-step="3"]').click();
   await page.locator("#bSave3").click();
   await page.locator("tr[data-open]").first().waitFor();
@@ -196,7 +207,7 @@ async function verifier(page: Page): Promise<string[]> {
     ecarts.push("une évaluation enregistrée ne retrouve pas son bouton « Actions… »");
   }
 
-  // 8. Une évaluation supprimée ne revient pas : l'évaluation en cours d'édition ne la garde pas.
+  // 9. Une évaluation supprimée ne revient pas : l'évaluation en cours d'édition ne la garde pas.
   await page.locator("tr[data-open]", { hasText: NOUVEL_INTITULE }).first().locator("[data-xm]").click();
   await page.locator('[data-act="annul"]').click();
   await page.locator("[data-del]").first().click();
