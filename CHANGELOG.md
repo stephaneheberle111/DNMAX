@@ -2,6 +2,8 @@
 
 ## Non publié
 
+## 0.8.0 — 2026-11-15
+
 ### Ajouté
 
 - Page de bienvenue au premier lancement, en quatre étapes : conseils, prénom, nom et établissement, mot de passe et code de secours, puis mention. Pour Objet ou Espace, DNMAX installe le référentiel livré et crée les trois promotions en cours ; pour une autre mention, on continue sans référentiel. Elle remplace l'encart « Pour commencer, il vous faut un référentiel ».
