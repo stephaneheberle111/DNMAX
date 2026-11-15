@@ -4,6 +4,7 @@
 
 ### Modifié
 
+- DNMAX est désormais distribué sous licence CeCILL v2.1, licence libre de droit français, à lire depuis « Licence » en bas de la fenêtre. Vos droits ne changent pas : utiliser, étudier, modifier et redistribuer DNMAX restent libres. Les versions jusqu'à la 0.8.0 restent sous AGPL.
 - Bas de page centré : la version de DNMAX (un clic lance la recherche de mise à jour, et un indicateur dit ensuite si DNMAX est à jour ou si une nouvelle version est disponible), puis Licence, À propos, Confidentialité, Documentation et Proposer une idée. La licence, la page Confidentialité et la documentation s'affichent dans l'application, sans connexion. « À propos » présente davantage DNMAX et renvoie à la licence.
 - Visite guidée : la page défile d'elle-même jusqu'à la zone à cliquer ; le curseur passe d'une étape à l'autre de « Constituer » ; la case d'attestation puis « Valider cette version » sont montrées tour à tour, et la réussite n'est saluée qu'une fois la version validée ; dans « Échanger », la bulle dit de fermer la boîte pour continuer ; à la création d'une évaluation, le curseur montre chaque champ, des confettis saluent chaque passage d'étape, et la formulation montre le glisser-déposer d'un livrable.
 - Nouveau signe X : son plein s'effile vers le bas. Il remplace l'ancien partout : icône de l'application et de la barre des tâches, en-tête, X en creux du fond de page, favicon, site.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Page de bienvenue : ce que le premier lancement met en place pour
  * l'enseignant (nom de l'établissement, promotions en cours de sa mention).

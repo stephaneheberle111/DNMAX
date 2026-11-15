@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import "./ecran-echange.css";
 import { CLE_EVALUATIONS, lireEvaluations, type Evaluation } from "./domaine/echange/modele";
 import {

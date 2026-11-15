@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import "./ecran-fond.css";
 import { FOND_PAR_DEFAUT, attributsFond, estForce, estTeinte, estTrame, lireFond, type Fond } from "./domaine/fond";
 

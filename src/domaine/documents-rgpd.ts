@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Documents à remettre quand l'enseignant active le module Étudiants : la note
  * d'information aux étudiants (avec un accusé de réception à signer) et la
@@ -304,7 +304,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
       type: "paragraphe",
       contenu: [
         texte(
-          "DNMAX est un logiciel libre (licence AGPL-3.0-or-later) : son code source est public et peut être vérifié par l'établissement ou par toute personne qu'il mandate.",
+          "DNMAX est un logiciel libre (licence CeCILL v2.1) : son code source est public et peut être vérifié par l'établissement ou par toute personne qu'il mandate.",
         ),
       ],
     },

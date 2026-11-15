@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it, vi } from "vitest";
 import { EnregistreurDiffere, type Minuteur, type ResultatEnregistrement } from "./enregistrement-differe";
 import type { Entrees } from "./magasin-memoire";

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { CLE_DONNEES, lireDonneesEtablissement } from "../domaine/echange/modele";
 import { calculerEmpreinteReferentiel, type ReferentielLocal } from "../domaine/echange/referentiel";
 import type { Entrees } from "../domaine/magasin-memoire";

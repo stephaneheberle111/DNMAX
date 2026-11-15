@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 //! Lecture d'un fichier d'échange choisi par l'enseignant.
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * pdfmake 0.3 n'est pas livré avec ses types : seule la part utilisée par
  * `generer-pdf.ts` est décrite ici.

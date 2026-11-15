@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { estObjet, type ObjetJson } from "./echange/modele";
 import { PARTIES, lireListes } from "./echange/referentiel-echange";
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /** Systèmes que le formulaire « Idées et bugs » du site sait présélectionner. */
 export const SYSTEMES_RECONNUS = ["Windows", "macOS", "Linux"] as const;

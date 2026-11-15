@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /** Entrées du magasin : une valeur texte par clé, comme le stockage d'un navigateur. */
 export type Entrees = Readonly<Record<string, string>>;

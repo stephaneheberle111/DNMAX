@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 //! Enregistrement d'un fichier produit par l'interface (Word, Excel, OpenDocument…).
 //!

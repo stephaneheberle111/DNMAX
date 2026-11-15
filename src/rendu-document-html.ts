@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import type { Bloc, Contenu, DocumentImprimable, LigneTableau } from "./domaine/document-imprimable";
 
 const ENTITES: Readonly<Record<string, string>> = {

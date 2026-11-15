@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import "./ecran-avertissement-eleves.css";
 import {
   LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES,

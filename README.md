@@ -171,4 +171,4 @@ flowchart LR
 
 ## Licence
 
-[AGPL-3.0-or-later](LICENSE).
+[CeCILL v2.1](LICENSE) (identifiant SPDX `CECILL-2.1`), licence libre de droit français, compatible avec la GNU GPL. Les versions jusqu'à la 0.8.0 ont été publiées sous AGPL-3.0-or-later.

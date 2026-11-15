@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
 import { CATALOGUE, DONNEES, EMPREINTE_VERSION, creerEntrees, creerEvaluation } from "./jeu-essai";
 import { CLE_DONNEES, CLE_EVALUATIONS, lireEvaluations } from "./modele";

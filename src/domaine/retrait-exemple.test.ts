@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
 import { CLE_EVALUATIONS, CLE_PROMOTIONS } from "./echange/modele";
 import { CLE_DATES_MODIFICATION } from "./echange/suivi-modifications";

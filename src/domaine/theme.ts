@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /** Apparence choisie dans « Préférences ». « systeme » suit le réglage clair ou sombre de l'ordinateur. */
 export type Theme = "clair" | "sombre" | "systeme";
