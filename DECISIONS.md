@@ -53,7 +53,7 @@ La consigne est de préférer, à fonction égale, un outil référencé au [SIL
 
 **Fond de page** : trame PNG transparente répétée (feutre 256 px, toile 40 px, vergé 78 px) et X en creux en bas à droite, réglés dans Préférences (lisse par défaut, couleur du papier de Pâle à Soutenue) et rangés, comme le thème, dans le stockage de la vue web (propre au compte de l'utilisateur sur l'ordinateur), pour habiller déjà l'écran du mot de passe. En thème sombre, la trame est inversée et atténuée. Jamais imprimé ni exporté.
 
-**Exports** : aucune mention de l'application, aucun aplat, tout au trait noir ; un niveau = une case vide. Le sceau est une image : Word et LibreOffice n'ont pas la police.
+**Exports** : ceux de la 0.6.0 (jauge d'acquisition à griser, nom des niveaux au-dessus, remplie jusqu'au niveau atteint dans les restitutions), aux couleurs de l'identité : jauge en nuances de pétrole, titres en pétrole, traits et gris chauds. La 0.7.0 les avait passés au trait noir avec une case par niveau ; jugé moins lisible, ce choix a été abandonné après la 0.8.0. Seul ajout : le sceau DN MADE en tête, facultatif (Préférences > Documents exportés, désactivé par défaut). Le sceau est une image : Word et LibreOffice n'ont pas la police.
 
 **Largeur** : Paramètres et Préférences sont centrés sur 900 px ; « Mes évaluations », Progression, Référentiel et Mon établissement gardent leur largeur, leurs tableaux ne tenant pas dans 900 px.
 
