@@ -1,0 +1,73 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Page de bienvenue : les étapes 1 à 3 sont l'écran du coffre (src/ecran-coffre.css), la 4e passe par-dessus l'interface. */
+
+.ecran-coffre .bienvenue-etape {
+  font-family: var(--fm);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.ecran-bienvenue {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  overflow-y: auto;
+  background: var(--paper);
+}
+
+.bienvenue-mentions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.ecran-coffre label.bienvenue-mention {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ecran-coffre label.bienvenue-mention:has(input:checked) {
+  padding: 9px 11px;
+  border: 2px solid var(--accent);
+}
+
+.bienvenue-mention input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+
+.bienvenue-mention span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.bienvenue-mention b {
+  font-size: 15px;
+}
+
+.bienvenue-mention small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.ecran-coffre .bienvenue-resume {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--ink);
+}

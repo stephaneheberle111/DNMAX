@@ -10,7 +10,7 @@ import "@fontsource/public-sans/500.css";
 import "@fontsource/public-sans/600.css";
 import "./identite.css";
 import { EnregistreurDiffere, type Minuteur } from "./domaine/enregistrement-differe";
-import { MagasinMemoire, type Entrees } from "./domaine/magasin-memoire";
+import { MagasinMemoire } from "./domaine/magasin-memoire";
 import { CLE_EVALUATIONS } from "./domaine/echange/modele";
 import {
   CLE_DATES_MODIFICATION,
@@ -18,8 +18,8 @@ import {
   mettreAJourDates,
 } from "./domaine/echange/suivi-modifications";
 import { provisionnerEnseignantMoi } from "./domaine/enseignant-moi";
-import { CLE_IDENTITE, identiteRenommee, lireIdentite } from "./domaine/identite";
-import { proposerPremiersPas } from "./ecran-accueil";
+import { CLE_IDENTITE, creerIdentite, identiteRenommee, lireIdentite } from "./domaine/identite";
+import { proposerBienvenue } from "./ecran-bienvenue";
 import { installerCompte } from "./ecran-compte";
 import { suivreHauteurBarre } from "./ecran-entetes";
 import { installerParcours } from "./ecran-parcours";
@@ -28,7 +28,7 @@ import { montrerNouveautesAuLancement } from "./ecran-nouveautes";
 import { appliquerFondEnregistre, installerChoixFond } from "./ecran-fond";
 import { appliquerThemeEnregistre, installerChoixTheme } from "./ecran-preferences";
 import { installerDonneesEleves, rappelerConservation } from "./ecran-droits-eleves";
-import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement } from "./ecran-coffre";
+import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement, type OuvertureCoffre } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
 import { proposerOuvertureExport } from "./ecran-export";
@@ -63,11 +63,11 @@ const MINUTEUR_NAVIGATEUR: Minuteur = {
   },
 };
 
-async function ouvrirDonnees(): Promise<Entrees> {
+async function ouvrirDonnees(): Promise<OuvertureCoffre> {
   const etat = await lireEtatCoffre();
   // Déjà ouvert : la page a été rechargée en cours de session, inutile de redemander le mot de passe.
   return etat === "ouvert"
-    ? await lireCoffre()
+    ? { entrees: await lireCoffre(), profil: null }
     : await demanderOuvertureCoffre(etat === "verrouille", lireVerrouillageParInactivite());
 }
 
@@ -81,8 +81,10 @@ async function creerMagasinProtege(): Promise<{
   ecrireEnAttente: () => Promise<boolean>;
   /** Vrai si des données existaient avant ce lancement (mise à jour, pas première installation). */
   installationExistante: boolean;
+  /** Nom de l'établissement saisi à la bienvenue ; texte vide hors création. */
+  etablissementSaisi: string;
 }> {
-  const entrees = await ouvrirDonnees();
+  const { entrees, profil } = await ouvrirDonnees();
   const enregistreur = new EnregistreurDiffere(
     enregistrerCoffre,
     DELAI_ENREGISTREMENT_MS,
@@ -95,7 +97,9 @@ async function creerMagasinProtege(): Promise<{
 
   // Un coffre créé avant l'identification des enseignants n'a pas encore d'identité.
   const identiteConnue = lireIdentite(entrees[CLE_IDENTITE]);
-  let identite = identiteConnue ?? (await demanderIdentite(() => crypto.randomUUID()));
+  // À la création, la page de bienvenue a déjà demandé le nom : on ne le redemande pas.
+  const identiteSaisie = profil === null ? null : creerIdentite(profil.prenom, profil.nom, crypto.randomUUID());
+  let identite = identiteConnue ?? identiteSaisie ?? (await demanderIdentite(() => crypto.randomUUID()));
 
   let evaluationsConnues = entrees[CLE_EVALUATIONS];
   const magasin: MagasinMemoire = new MagasinMemoire(entrees, (entreesAJour) => {
@@ -163,7 +167,14 @@ async function creerMagasinProtege(): Promise<{
     await enregistreur.vider();
     return !enregistreur.aDesModificationsEnAttente;
   };
-  return { magasin, acces, reprendreNom, ecrireEnAttente, installationExistante: identiteConnue !== null };
+  return {
+    magasin,
+    acces,
+    reprendreNom,
+    ecrireEnAttente,
+    installationExistante: identiteConnue !== null,
+    etablissementSaisi: profil?.etablissement ?? "",
+  };
 }
 
 async function demarrer(): Promise<void> {
@@ -182,7 +193,7 @@ async function demarrer(): Promise<void> {
     installerCompte(null);
     return;
   }
-  const { magasin, acces, reprendreNom, ecrireEnAttente, installationExistante } = await creerMagasinProtege();
+  const { magasin, acces, reprendreNom, ecrireEnAttente, installationExistante, etablissementSaisi } = await creerMagasinProtege();
   surveillerInactivite({ verrouillageExige: () => moduleElevesActif(magasin.entrees()), ecrireEnAttente });
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
   await chargerInterfaceHistorique(magasin, proposerOuvertureExport, () =>
@@ -200,7 +211,10 @@ async function demarrer(): Promise<void> {
   rappelerConservation(acces);
   installerCompte(acces);
   installerPiedDePage(acces);
-  await proposerPremiersPas(acces);
+  // Dernière étape de la bienvenue (la mention) ; elle recharge la page une fois faite, et la visite démarre alors.
+  if (await proposerBienvenue(acces, etablissementSaisi)) {
+    return;
+  }
   // La visite guidée attend que l'enseignant ait lu les nouveautés : les deux ne se superposent pas.
   await montrerNouveautesAuLancement(installationExistante);
   installerParcours(acces);
