@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from "vitest";
-import { SIGNES, assemblerIcns, assemblerIco, niveauDetail, svgIcone } from "./icones";
+import { PLEIN, SIGNES, assemblerIcns, assemblerIco, niveauDetail, svgIcone } from "./icones";
 
 describe("niveauDetail", () => {
   it("dessine le signe fin à partir de 88 px", () => {
@@ -20,11 +20,17 @@ describe("niveauDetail", () => {
 });
 
 describe("svgIcone", () => {
-  it("pose le signe du niveau de la taille sur le pavé pétrole", () => {
+  it("pose le délié du niveau de la taille sur le pavé pétrole", () => {
     const svg = svgIcone(32);
     expect(svg).toContain('fill="#10555F"');
-    expect(svg).toContain(SIGNES.simple.plein);
-    expect(svg).not.toContain(SIGNES.fin.plein);
+    expect(svg).toContain(SIGNES.simple.delie);
+    expect(svg).not.toContain(SIGNES.fin.delie);
+  });
+
+  it("dessine le même plein, effilé vers le bas, à toutes les tailles", () => {
+    for (const taille of [16, 64, 1024]) {
+      expect(svgIcone(taille)).toContain(PLEIN);
+    }
   });
 });
 

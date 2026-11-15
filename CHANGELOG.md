@@ -5,6 +5,7 @@
 ### Modifié
 
 - Visite guidée : la page défile d'elle-même jusqu'à la zone à cliquer ; le curseur passe d'une étape à l'autre de « Constituer » ; la case d'attestation puis « Valider cette version » sont montrées tour à tour, et la réussite n'est saluée qu'une fois la version validée ; dans « Échanger », la bulle dit de fermer la boîte pour continuer ; à la création d'une évaluation, le curseur montre chaque champ, des confettis saluent chaque passage d'étape, et la formulation montre le glisser-déposer d'un livrable.
+- Nouveau signe X : son plein s'effile vers le bas. Il remplace l'ancien partout : icône de l'application et de la barre des tâches, en-tête, X en creux du fond de page, favicon, site.
 - Mon établissement : le volet « Promotions » passe avant « Enseignants ».
 - La barre de titre de la fenêtre affiche « DNMAX », sans numéro de version.
 - Documents Word et OpenDocument : retour à la jauge d'acquisition de la version 0.6.0, avec le nom des niveaux au-dessus, désormais en nuances de pétrole ; vide dans la grille à remplir, remplie jusqu'au niveau atteint dans les restitutions. L'en-tête et la mise en page reviennent eux aussi à ceux de la 0.6.0.
