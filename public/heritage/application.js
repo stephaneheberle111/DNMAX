@@ -3724,9 +3724,11 @@ function dnLabel(sem){if(!MOD.dn)return "";const d=(REF.meta.niveaux||[]).find(n
 function anneeLabel(a){return "Année "+a+(MOD.dn?" — "+anneeCode(a):"")}
 function semsOfAnnee(a){return EVAL.semestresDeLAnnee(a)}
 function dateFiche(d){const t=new Date(d||F.distribPrev||F.date||Date.now());return isNaN(t)?new Date():t}
-function anneeScolaire(d){return EVAL.anneeScolaire(dateFiche(d))}
-function rangSemestre(d){return EVAL.rangSemestre(dateFiche(d))}
-function semSuggere(d){return EVAL.semestreSuggere(anneeFiche(),dateFiche(d))}
+/* calendrier de l'établissement (Mon établissement > Établissement) */
+function calendrier(){return EVAL.lireCalendrier(DATA.etab)}
+function anneeScolaire(d){return EVAL.anneeScolaire(dateFiche(d),calendrier())}
+function rangSemestre(d){return EVAL.rangSemestre(dateFiche(d),calendrier())}
+function semSuggere(d){return EVAL.semestreSuggere(anneeFiche(),dateFiche(d),calendrier())}
 function applySemDate(){
   if(F.semManuel)return false;
   const sug=semSuggere();
@@ -5950,13 +5952,18 @@ function paintEtab(host){
   const D=DATA;D.etab=D.etab||{nom:"",uai:"",ville:"",academie:"",contactDpo:""};
   const E=D.etab, f=(k,l,ph,cls,style)=>`<div class="field"${style?` style="${style}"`:""}><label for="et-${k}">${l}</label>
     <input type="text" id="et-${k}" data-et="${k}" value="${esc(E[k]||"")}" placeholder="${esc(ph)}" ${cls?`class="${cls}"`:""}></div>`;
+  const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"], cal=calendrier();
+  const mois=(k,l,v)=>`<div class="field"><label for="et-${k}">${l}</label><select id="et-${k}" data-etmois="${k}">${MOIS.map((m,i)=>`<option value="${i+1}" ${i+1===v?"selected":""}>${m}</option>`).join("")}</select></div>`;
   host.innerHTML=`<div class="panel"><div class="pick-head"><h3>Établissement${help("Le nom de l'établissement figure en tête des documents Word et Excel exportés. Avec le contact du délégué à la protection des données, il est repris dans les documents RGPD proposés à l'activation du module Étudiants.")}</h3></div>
     <div style="padding:14px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:13px">
       ${f("nom","Nom de l'établissement","Lycée …")}${f("uai","Code UAI (RNE)","0000000A","mono")}
       ${f("ville","Ville","")}${f("academie","Académie","")}
       ${f("contactDpo","Contact du délégué à la protection des données","Adresse électronique, téléphone ou service","","grid-column:1/-1")}
+      ${mois("moisRentree","Mois de la rentrée",cal.rentree)}${mois("moisBascule","Début du second semestre",cal.bascule)}
+      <div class="hint" style="grid-column:1/-1">Le calendrier sert à proposer le semestre d'une nouvelle évaluation et à dater l'année scolaire ; le semestre choisi reste celui de l'évaluation.</div>
     </div></div>`;
   host.querySelectorAll("[data-et]").forEach(inp=>inp.oninput=()=>{E[inp.dataset.et]=inp.value;persistData()});
+  host.querySelectorAll("[data-etmois]").forEach(sel=>sel.onchange=()=>{E[sel.dataset.etmois]=+sel.value;persistData()});
 }
 /* Répartition de service : pour chaque promotion, les EC de son année (dans le référentiel de sa mention)
    et le ou les enseignants qui les assurent. rangés par année scolaire dans DATA.affectH (voir affH). */
@@ -7494,7 +7501,9 @@ function paintProgEleve(host,c){
           (l.k==="op"?l.its.map(i=>i.code):[l.it.code]).forEach(code=>{m[code]=lv})})});
     return m};
   const classe=els.map(lastOf);
-  const posCl=r=>{const vs=classe.map(m=>m[r.c.code]).filter(v=>v!=null);if(vs.length<2)return "";
+  // la comparaison à la promotion se masque dans Paramètres > Règles d'évaluation
+  const masquer=!!LS.get("dnmade.reglages",{}).masquerComparaison;
+  const posCl=r=>{if(masquer)return "";const vs=classe.map(m=>m[r.c.code]).filter(v=>v!=null);if(vs.length<2)return "";
     const moyLv=Math.round(vs.reduce((a,b)=>a+b,0)/vs.length), d=r.last.lv-moyLv;
     return `<div class="pgpos" style="margin-top:4px"><span class="hint">Classe : en moyenne « ${esc(LV[moyLv]||"")} » (${vs.length} étudiants)</span>
       <span class="pp ${d>0?"up":d<0?"dn":"eq"}">${d>0?"▲ au-dessus":d<0?"▼ en dessous":"= dans la moyenne"}</span></div>`};
