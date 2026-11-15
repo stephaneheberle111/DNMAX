@@ -484,3 +484,17 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Vérifié** : le témoin déterministe (installation, exemple, écrans, exports) et quatorze gestes de composition rejoués sur l'ancien et le nouveau code donnent le même résultat. Seul le champ `critere`, toujours vide et lu nulle part, n'est plus écrit.
 
 **Suite** : l'affichage de l'éditeur reste dans l'interface historique ; il sera repris à son tour, en appelant ces règles, une fois arbitrées les règles à rendre visibles ou réglables.
+
+## 36. Règles métier arbitrées : visibles, réglables ou invisibles
+
+Arbitrées par l'auteur le 15 novembre 2026, règle par règle, avec un principe : aucune règle qui change un calcul ne doit différer d'un enseignant à l'autre, pour que deux collègues lisent de la même façon une évaluation qu'ils s'échangent.
+
+**Affichées dans Paramètres, non modifiables (section transparence)** : seuils des niveaux sur la jauge ; un niveau saisi vaut « Rendu » ; « non rendu » ou « dispensé » efface une saisie commencée ; pour enregistrer une évaluation, il faut un intitulé, une promotion, une consigne, au moins un EC (une UE retenue vaut tous ses EC) et au moins une compétence ; une seule échelle, les niveaux de maîtrise, une compétence étant acquise à partir de « Satisfaisant » (dernier niveau obtenu) ; le niveau DN MADE suit cette même règle ; statuts de suivi.
+
+**Réglables** : calendrier (mois de rentrée, bascule au second semestre), par établissement ; comparaison à la promotion, masquable ; suivi simplifié « À faire / Faite » (Faite dès la distribution), affichage seul, par poste, désactivé par défaut ; conservation des données d'étudiants, par établissement, de 3 mois à 5 ans, 1 an par défaut ; sauvegardes à deux paliers (hebdomadaires gardées 1 à 6 mois, 3 par défaut ; mensuelles gardées 0 à 24 mois, 12 par défaut) ; chiffrement des fichiers d'échange sans étudiants, désactivé par défaut (ceux qui contiennent des étudiants restent toujours chiffrés) ; recherche automatique des mises à jour, désactivée par défaut, une fois par jour au premier lancement, auprès de dnmax.fr.
+
+**Invisibles** : mot de passe (8 caractères sans contrainte ; avec le module Étudiants, 12 caractères, trois types de caractères, ni suite triviale, ni mot évident, ni mot de passe courant) ; verrouillage après 15 minutes avec le module Étudiants ; échange en direct ; validation du référentiel avant d'évaluer ; garanties à la réception d'un fichier.
+
+**Retirés** : coefficients des lignes ; échelles « Degrés d'acquisition », « Note chiffrée » et personnalisée, et leur réglage dans Préférences.
+
+**Conséquence** : les évaluations existantes passent à l'échelle unique ; leurs niveaux saisis (rangs de 0 à 3) gardent leur sens. Aucune donnée d'enseignant n'existe encore.

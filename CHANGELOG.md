@@ -4,6 +4,8 @@
 
 ### Modifié
 
+- Une seule échelle d'évaluation pour tous, officielle pour les DN MADE : les niveaux de maîtrise (Insuffisant, Fragile, Satisfaisant, Très bonne maîtrise). Une compétence est acquise à partir de « Satisfaisant ». Les degrés d'acquisition, la note chiffrée, l'échelle personnalisée et les coefficients disparaissent ; vos évaluations passent à cette échelle.
+- Pour enregistrer une évaluation, il faut désormais aussi une promotion, une consigne et au moins un EC (une UE cochée vaut tous ses EC).
 - Ménage interne : DNMAX ne reprend plus les formats de données de ses toutes premières versions d'essai, et n'a plus de mise en page pour téléphone (il ne s'installe que sur ordinateur). Vos données de la 0.8 s'ouvrent comme avant.
 - DNMAX est désormais distribué sous licence CeCILL v2.1, licence libre de droit français, à lire depuis « Licence » en bas de la fenêtre. Vos droits ne changent pas : utiliser, étudier, modifier et redistribuer DNMAX restent libres. Les versions jusqu'à la 0.8.0 restent sous AGPL.
 - Bas de page centré : la version de DNMAX (un clic lance la recherche de mise à jour, et un indicateur dit ensuite si DNMAX est à jour ou si une nouvelle version est disponible), puis Licence, À propos, Confidentialité, Documentation et Proposer une idée. La licence, la page Confidentialité et la documentation s'affichent dans l'application, sans connexion. « À propos » présente davantage DNMAX et renvoie à la licence.
