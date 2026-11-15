@@ -426,3 +426,16 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Comportement inchangé** : les règles rendent un nouveau résultat au lieu de modifier celui qu'on leur passe ; l'interface historique le verse dans l'objet existant, que des champs déjà affichés (observations, appréciation) tiennent encore.
 
 **Reste dans l'interface historique** : l'affichage de la grille et de la fiche, la lecture d'anciens résultats à décimales (`resOf`), les observations, l'appréciation et la restitution, ainsi que tout le reste de la composition d'une évaluation.
+
+## 31. L'obligatoire à la page de bienvenue, l'exploratoire à la visite guidée
+
+**Constat** : la visite de prise en main mêlait ce qui doit être fait avant toute chose (installer un référentiel, déclarer ses promotions) et la découverte de l'application. Rejouée, elle repassait par des étapes déjà faites ; à la première ouverture, l'enseignant suivait vingt-six étapes avant de savoir s'en servir.
+
+**Retenu** : une page de bienvenue en quatre étapes, au premier lancement, hors visite : conseils (et transfert depuis un autre ordinateur), prénom, nom et établissement, mot de passe et code de secours, puis mention. Pour une mention dont le référentiel est livré (Objet, Espace), la dernière étape l'installe par le même circuit qu'un fichier reçu, tout accepté, crée les promotions en cours du diplôme (une par année, sans étudiants) et inscrit le nom de l'établissement. Pour une autre mention, on continue sans référentiel. La visite guidée ne fait plus qu'explorer.
+
+**Conséquences** :
+
+- les trois premières étapes précèdent l'ouverture des données (le mot de passe crée le coffre) ; la quatrième passe par-dessus l'interface, qui doit être chargée pour lire les référentiels, et recharge la page une fois faite ;
+- `dnmax.bienvenue` note la bienvenue faite ; elle ne s'affiche que sur une installation sans référentiel ni évaluation, si bien qu'une installation déjà utilisée ne la voit jamais ;
+- la validation du référentiel reste dans la visite : attester avoir vérifié un référentiel suppose de l'avoir lu ;
+- l'encart « Pour commencer, il vous faut un référentiel » disparaît : la bienvenue le remplace.
