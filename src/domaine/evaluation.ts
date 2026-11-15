@@ -53,7 +53,27 @@ export function estAcquis(rang: number): boolean {
   return rang >= RANG_ACQUIS;
 }
 
-const MOIS_RENTREE = 9;
+/** Calendrier de l'établissement : mois (1 à 12) de la rentrée et de la bascule au second semestre. */
+export interface Calendrier {
+  rentree: number;
+  bascule: number;
+}
+
+/** Calendrier par défaut : rentrée en septembre, second semestre à partir de février. */
+export const CALENDRIER_PAR_DEFAUT: Calendrier = { rentree: 9, bascule: 2 };
+
+/** Calendrier lu dans les données de l'établissement ; un mois absent ou hors de 1 à 12 prend sa valeur par défaut. */
+export function lireCalendrier(etablissement: unknown): Calendrier {
+  const donnees = estObjet(etablissement) ? etablissement : {};
+  const mois = (valeur: unknown, defaut: number): number => {
+    const nombre = Number(valeur);
+    return Number.isInteger(nombre) && nombre >= 1 && nombre <= 12 ? nombre : defaut;
+  };
+  return {
+    rentree: mois(donnees.moisRentree, CALENDRIER_PAR_DEFAUT.rentree),
+    bascule: mois(donnees.moisBascule, CALENDRIER_PAR_DEFAUT.bascule),
+  };
+}
 const SEMESTRES = ["S1", "S2", "S3", "S4", "S5", "S6"] as const;
 
 function texte(valeur: unknown): string {
@@ -145,16 +165,22 @@ export function ecsRetenus(ecsDeLaCompetence: readonly string[], ecsDeLEvaluatio
   return retenus.length > 0 ? retenus : [...ecsDeLaCompetence];
 }
 
-/** Année scolaire d'une date, « 2026-2027 » : elle commence au mois de la rentrée (septembre). */
-export function anneeScolaire(date: Date): string {
-  const annee = date.getMonth() + 1 >= MOIS_RENTREE ? date.getFullYear() : date.getFullYear() - 1;
+/** Année scolaire d'une date, « 2026-2027 » : elle commence au mois de la rentrée. */
+export function anneeScolaire(date: Date, calendrier: Calendrier = CALENDRIER_PAR_DEFAUT): string {
+  const annee = date.getMonth() + 1 >= calendrier.rentree ? date.getFullYear() : date.getFullYear() - 1;
   return `${String(annee)}-${String(annee + 1)}`;
 }
 
-/** Premier ou second semestre de l'année scolaire : le premier va de septembre à janvier. */
-export function rangSemestre(date: Date): 1 | 2 {
+/**
+ * Premier ou second semestre de l'année scolaire : le premier va du mois de
+ * la rentrée au mois qui précède la bascule (de septembre à janvier par défaut).
+ */
+export function rangSemestre(date: Date, calendrier: Calendrier = CALENDRIER_PAR_DEFAUT): 1 | 2 {
   const mois = date.getMonth() + 1;
-  return mois >= MOIS_RENTREE || mois <= 1 ? 1 : 2;
+  // Mois écoulés depuis la rentrée, de 0 à 11 : la bascule tombe au même décompte.
+  const depuisRentree = (mois - calendrier.rentree + 12) % 12;
+  const basculeDepuisRentree = (calendrier.bascule - calendrier.rentree + 12) % 12;
+  return depuisRentree < basculeDepuisRentree ? 1 : 2;
 }
 
 /** Semestres d'une année du diplôme : S1 et S2 en année 1, S3 et S4 en année 2… */
@@ -163,12 +189,12 @@ export function semestresDeLAnnee(annee: number): string[] {
 }
 
 /** Semestre que la date suggère pour une année du diplôme, ou `""` si l'année est inconnue (0). */
-export function semestreSuggere(annee: number, date: Date): string {
+export function semestreSuggere(annee: number, date: Date, calendrier: Calendrier = CALENDRIER_PAR_DEFAUT): string {
   if (annee <= 0) {
     return "";
   }
   const semestres = semestresDeLAnnee(annee);
-  return semestres[rangSemestre(date) - 1] ?? semestres[0] ?? "";
+  return semestres[rangSemestre(date, calendrier) - 1] ?? semestres[0] ?? "";
 }
 
 /**
