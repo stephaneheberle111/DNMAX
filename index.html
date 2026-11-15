@@ -247,6 +247,14 @@
       </div>
       <div id="modList"></div>
     </div>
+    <!-- Ajout à l'interface historique : recherche de mise à jour à la demande, branchée par src/ecran-pied.ts, qui rend ce panneau visible -->
+    <div class="panel" id="panneau-mises-a-jour" hidden>
+      <div class="pick-head"><h3>Mises à jour</h3></div>
+      <div class="panel-body">
+        <div class="hint">DNMAX ne se connecte jamais seul à Internet. Lancez ici une recherche, ou d'un clic sur la version en bas de la fenêtre : DNMAX interroge alors le dépôt du projet sur GitHub, sans rien transmettre de vos données.</div>
+        <div class="maj-ligne"><button type="button" class="btn" id="bMiseAJour">Rechercher une mise à jour</button><span class="hint" id="etatMiseAJour"></span></div>
+      </div>
+    </div>
     <!-- Ajout à l'interface historique : visites guidées, lancées par src/ecran-parcours.ts, qui rend ce panneau visible -->
     <div class="panel" id="panneau-visites" hidden>
       <div class="pick-head"><h3>Visites guidées</h3></div>

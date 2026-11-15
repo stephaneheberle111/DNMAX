@@ -1,0 +1,144 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Documentation, Confidentialité et licence, affichées dans l'application sans connexion. */
+
+.echange-boite.doc-boite {
+  width: min(980px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-corps {
+  display: grid;
+  grid-template-columns: minmax(180px, 230px) minmax(0, 1fr);
+  gap: 18px;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+@media (max-width: 720px) {
+  .doc-corps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.doc-sommaire {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
+}
+
+.doc-entree {
+  text-align: left;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.doc-entree:hover {
+  background: var(--surface-2);
+}
+
+.doc-entree[aria-current="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.doc-texte {
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
+  padding-right: 6px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.doc-texte.doc-seul {
+  max-height: calc(100vh - 200px);
+}
+
+.doc-texte h1,
+.doc-texte h2,
+.doc-texte h3 {
+  font-family: var(--fd);
+  line-height: 1.2;
+}
+
+.doc-texte h3 {
+  margin-top: 0;
+}
+
+.doc-texte table {
+  border-collapse: collapse;
+}
+
+.doc-texte td,
+.doc-texte th {
+  padding: 4px 10px 4px 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.doc-texte code {
+  font-family: var(--fm);
+  font-size: 12.5px;
+}
+
+.doc-texte a[href] {
+  color: var(--accent);
+}
+
+.doc-texte .alerte {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--signal-soft);
+  color: var(--signal);
+}
+
+.doc-message {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.doc-resume {
+  margin: 0 0 10px;
+}
+
+.doc-licence {
+  overflow: auto;
+  max-height: calc(100vh - 260px);
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-family: var(--fm);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.doc-texte h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+}
+
+.doc-texte h2 {
+  margin: 22px 0 6px;
+  font-size: 18px;
+}
+
+.doc-texte h3 {
+  margin: 14px 0 4px;
+  font-size: 15px;
+}

@@ -23,7 +23,7 @@ import { proposerBienvenue } from "./ecran-bienvenue";
 import { installerCompte } from "./ecran-compte";
 import { suivreHauteurBarre } from "./ecran-entetes";
 import { installerParcours } from "./ecran-parcours";
-import { installerPiedDePage } from "./ecran-pied";
+import { installerMisesAJourParametres, installerPiedDePage } from "./ecran-pied";
 import { montrerNouveautesAuLancement } from "./ecran-nouveautes";
 import { appliquerFondEnregistre, installerChoixFond } from "./ecran-fond";
 import { appliquerThemeEnregistre, installerChoixTheme } from "./ecran-preferences";
@@ -211,6 +211,7 @@ async function demarrer(): Promise<void> {
   rappelerConservation(acces);
   installerCompte(acces);
   installerPiedDePage(acces);
+  installerMisesAJourParametres(acces);
   // Dernière étape de la bienvenue (la mention) ; elle recharge la page une fois faite, et la visite démarre alors.
   if (await proposerBienvenue(acces, etablissementSaisi)) {
     return;
