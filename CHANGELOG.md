@@ -8,6 +8,7 @@
 
 ### Corrigé
 
+- Thème sombre, carte radiale du référentiel : plus de contours blancs entre les portions, un disque central sombre et des libellés d'année lisibles.
 - Windows : après la mise à jour, la barre des tâches, le menu Démarrer et le raccourci du bureau montrent la nouvelle icône de DNMAX au lieu de l'ancienne. Si l'ancienne reste affichée sur une épingle, désépinglez puis réépinglez DNMAX.
 - Visite guidée rejouée : elle ne reste plus bloquée sur « Paramètres ». Elle repasse par chaque écran (Référentiel, Mon établissement et ses volets, Mes évaluations) et y coche ce qui est déjà fait, au lieu d'afficher « déjà fait… ici » sans rien montrer. Elle ne fait pas créer de nouvelle évaluation.
 - Visite guidée : « Suivant » referme la fenêtre d'actions d'une évaluation, qui cachait l'étape suivante.
