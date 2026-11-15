@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-mise-a-jour.css";
 import { resumerNotes, type IssueSansMiseAJour } from "./domaine/annonce-mise-a-jour";
+import type { EtatMiseAJour } from "./domaine/pied-de-page";
 import { lireRubriques } from "./domaine/nouveautes";
 import { creerListeNouveautes } from "./ecran-nouveautes";
 import { chercherMiseAJour, type MiseAJour } from "./enveloppe";
@@ -42,7 +43,7 @@ function annoncer(miseAJour: MiseAJour, avantInstallation: () => Promise<void>):
       .then(() => miseAJour.installer())
       .catch(() => {
         erreur.textContent =
-          "La mise à jour n'a pas pu être installée. Vérifiez votre connexion, puis réessayez ; « Rechercher une mise à jour », en bas de la fenêtre, la proposera de nouveau.";
+          "La mise à jour n'a pas pu être installée. Vérifiez votre connexion, puis réessayez ; un clic sur la version, en bas de la fenêtre, la proposera de nouveau.";
         erreur.hidden = false;
         installer.disabled = false;
         installer.textContent = "Réessayer";
@@ -75,4 +76,35 @@ export async function verifierMiseAJour(avantInstallation: () => Promise<void>):
   document.querySelector(".annonce-mise-a-jour")?.remove();
   annoncer(recherche.miseAJour, avantInstallation);
   return null;
+}
+
+let etat: EtatMiseAJour = "inconnu";
+const abonnes = new Set<(etat: EtatMiseAJour) => void>();
+
+/** Suit l'état de la recherche de mise à jour (bas de page, Paramètres) ; appelé tout de suite avec l'état actuel. */
+export function suivreMiseAJour(surChangement: (etat: EtatMiseAJour) => void): void {
+  abonnes.add(surChangement);
+  surChangement(etat);
+}
+
+function changerEtat(nouvel: EtatMiseAJour): void {
+  etat = nouvel;
+  abonnes.forEach((abonne) => {
+    abonne(etat);
+  });
+}
+
+/**
+ * Lance une recherche de mise à jour, à la demande de l'enseignant (bas de page
+ * ou Paramètres), et tient tous les affichages au courant de son issue.
+ * Une recherche déjà en cours n'en relance pas une autre.
+ */
+export async function rechercherMiseAJour(avantInstallation: () => Promise<void>): Promise<EtatMiseAJour> {
+  if (etat === "en-cours") {
+    return etat;
+  }
+  changerEtat("en-cours");
+  const issue = await verifierMiseAJour(avantInstallation);
+  changerEtat(issue === null ? "disponible" : issue);
+  return etat;
 }
