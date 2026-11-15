@@ -4,6 +4,8 @@
 
 ### Modifié
 
+- Mon établissement : le volet « Promotions » passe avant « Enseignants ».
+- La barre de titre de la fenêtre affiche « DNMAX », sans numéro de version.
 - Documents Word et OpenDocument : retour à la jauge d'acquisition de la version 0.6.0, avec le nom des niveaux au-dessus, désormais en nuances de pétrole ; vide dans la grille à remplir, remplie jusqu'au niveau atteint dans les restitutions. L'en-tête et la mise en page reviennent eux aussi à ceux de la 0.6.0.
 
 ### Ajouté
