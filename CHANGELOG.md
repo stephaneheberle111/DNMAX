@@ -8,6 +8,7 @@
 
 ### Modifié
 
+- La visite de prise en main ne fait plus qu'explorer, en six temps : le référentiel (l'explorer, le constituer et le valider, en ajouter un autre), les promotions, les collègues, la répartition de service, une première évaluation, puis les préférences et les modules de Paramètres. Sans référentiel validé, elle le dit au lieu d'ouvrir « Nouvelle évaluation », que l'application refuserait ; sans évaluation enregistrée, elle ne propose pas d'exporter.
 - Le fond de page est désormais « Lisse » par défaut. Un fond déjà choisi dans Mon compte > Préférences > Apparence est conservé.
 
 ### Corrigé

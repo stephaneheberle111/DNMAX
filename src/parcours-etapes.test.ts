@@ -101,10 +101,26 @@ describe("visite rejouée quand tout est déjà fait", () => {
     }
   });
 
-  it("sans rien de fait, aucune étape n'est sautée pour cause d'objectif atteint", () => {
-    for (const identifiant of PARCOURS) {
+  it("sans rien de fait, les visites des modules jouent toutes leurs étapes", () => {
+    for (const identifiant of ["eleves", "niveaux"] as const) {
       expect(etapesRejouees(identifiant, RIEN_FAIT)).toHaveLength(PARCOURS_DEFINIS[identifiant].etapes.length);
     }
+  });
+
+  it("sans référentiel validé, ne clique pas « Nouvelle évaluation », que l'application refuserait", () => {
+    const etapes = etapesRejouees("prise-en-main", { ...RIEN_FAIT, referentiel: true });
+    expect(etapes.some((etape) => etape.avanceAuClic === true && etape.cibles?.includes("#bNew") === true)).toBe(false);
+    expect(etapes.some((etape) => etape.cibles?.includes("#bNew") === true)).toBe(true);
+  });
+
+  it("avec un référentiel validé et sans évaluation, fait créer la première", () => {
+    const etapes = etapesRejouees("prise-en-main", { ...RIEN_FAIT, referentiel: true, referentielValide: true });
+    expect(etapes.some((etape) => etape.avanceAuClic === true && etape.cibles?.includes("#bNew") === true)).toBe(true);
+  });
+
+  it("sans évaluation enregistrée, ne propose pas d'en exporter une", () => {
+    const cibles = etapesRejouees("prise-en-main", RIEN_FAIT).flatMap((etape) => etape.cibles ?? []);
+    expect(cibles.some((cible) => cible.includes("[data-xm]"))).toBe(false);
   });
 });
 
@@ -119,5 +135,43 @@ describe("boîte d'actions ouverte pendant la visite", () => {
         }
       });
     }
+  });
+});
+
+describe("prise en main exploratoire", () => {
+  const etapes = PARCOURS_DEFINIS["prise-en-main"].etapes;
+  const cibles = etapes.flatMap((etape) => etape.cibles ?? []);
+
+  it("n'installe plus de référentiel : la page de bienvenue s'en charge", () => {
+    expect(cibles.some((cible) => cible.includes("accueil-vide"))).toBe(false);
+    expect(cibles).not.toContain(".echange-boite .echange-actions .btn.primary");
+  });
+
+  it("suit l'ordre demandé : référentiel, promotions, collègues, répartition, évaluation, réglages", () => {
+    expect(PARCOURS_DEFINIS["prise-en-main"].chapitres).toEqual([
+      "Référentiel",
+      "Promotions",
+      "Collègues",
+      "Répartition",
+      "Évaluation",
+      "Réglages",
+    ]);
+  });
+
+  it("fait explorer le référentiel avant de le constituer, et montre comment en ajouter un", () => {
+    const rang = (selecteur: string): number => etapes.findIndex((etape) => etape.cibles?.includes(selecteur) === true);
+    expect(rang("#refExplore")).toBeLessThan(rang('#refNav [data-pane="constituer"]'));
+    expect(rang("#bouton-echange")).toBeGreaterThan(rang('#refPane .steps [data-cp="valider"]'));
+  });
+
+  it("mène aux préférences et au module Étudiants des Paramètres", () => {
+    expect(cibles).toContain("#bouton-compte");
+    expect(cibles).toContain('#modList .mod:has([data-mod="eleves"])');
+  });
+
+  it("ouvre les préférences à la place de l'enseignant, faute de zone à cliquer", () => {
+    const preferences = etapes.find((etape) => etape.cibles?.includes("#bouton-compte") === true);
+    expect(preferences?.ouvrir).toBeTypeOf("function");
+    expect(preferences?.atteinte).toBeTypeOf("function");
   });
 });
