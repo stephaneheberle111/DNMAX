@@ -27,6 +27,10 @@
 - Visite guidée : à l'étape « Compétences », le curseur invitait à écrire au lieu de cocher une case ; à l'étape « Vos préférences », la bulle cachait le menu « Mon compte ».
 - Documents Word et OpenDocument : les noms des niveaux au-dessus de la jauge ne sont plus coupés au milieu d'un mot (« Non acqui-s ») ; chacun a la place de son mot le plus long, et le texte se réduit un peu si la colonne est étroite.
 
+### Sécurité
+
+- Module Étudiants : le mot de passe doit désormais compter au moins 12 caractères, trois types de caractères (minuscules, majuscules, chiffres, symboles), sans suite toute faite, sans DNMAX ni votre nom ni celui de l'établissement, et ne pas être parmi les plus courants. Un mot de passe qui ne convient plus est à changer à la prochaine ouverture.
+
 ## 0.8.0 — 2026-11-15
 
 ### Ajouté

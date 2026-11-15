@@ -2,9 +2,9 @@
 import "./ecran-avertissement-eleves.css";
 import {
   LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES,
-  estAssezLong,
   verifierNouveauMotDePasse,
 } from "./domaine/saisie-coffre";
+import { defautsRobustesse, expliquerDefauts } from "./domaine/robustesse-mot-de-passe";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite } from "./ecran-echange";
 import { changerMotDePasse, verifierMotDePasse } from "./enveloppe";
@@ -22,8 +22,8 @@ function creerChampMotDePasse(libelle: string, completion: AutoFill): { ligne: H
 
 /**
  * Dernière étape de l'activation du module Étudiants : l'enseignant confirme son
- * mot de passe et, s'il compte moins de `LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES`
- * caractères, en choisit un plus long. Le mot de passe ne sort pas de cette
+ * mot de passe et, s'il ne répond pas aux exigences du module (voir
+ * `domaine/robustesse-mot-de-passe`), en choisit un plus solide. Le mot de passe ne sort pas de cette
  * boîte : il n'est ni conservé ni écrit.
  *
  * @param enregistrerMaintenant écrit ce qui est en attente, avant que le
@@ -31,7 +31,10 @@ function creerChampMotDePasse(libelle: string, completion: AutoFill): { ligne: H
  * @returns `true` si le mot de passe convient (vérifié, et changé s'il le
  *   fallait), `false` si l'enseignant renonce
  */
-export function confirmerMotDePasseEleves(enregistrerMaintenant: () => Promise<void>): Promise<boolean> {
+export function confirmerMotDePasseEleves(
+  enregistrerMaintenant: () => Promise<void>,
+  motsInterdits: () => readonly string[],
+): Promise<boolean> {
   return new Promise((resoudre) => {
     let confirme = false;
     const { boite, fermer } = ouvrirBoite("Module Étudiants : votre mot de passe", () => {
@@ -52,7 +55,7 @@ export function confirmerMotDePasseEleves(enregistrerMaintenant: () => Promise<v
     actions.append(creerBouton("Annuler", "btn", fermer), valider);
 
     const actuel = creerChampMotDePasse("Mot de passe actuel", "current-password");
-    const nouveau = creerChampMotDePasse(`Nouveau mot de passe (${LONGUEUR} caractères au moins)`, "new-password");
+    const nouveau = creerChampMotDePasse("Nouveau mot de passe", "new-password");
     const confirmation = creerChampMotDePasse("Nouveau mot de passe, une seconde fois", "new-password");
     /** Vrai une fois l'ancien mot de passe vérifié et jugé trop court : place au choix du nouveau. */
     let choixDuNouveau = false;
@@ -63,7 +66,7 @@ export function confirmerMotDePasseEleves(enregistrerMaintenant: () => Promise<v
         creer(
           "p",
           "",
-          `Votre mot de passe compte moins de ${LONGUEUR} caractères. Choisissez-en un plus long : une courte phrase facile à retenir convient très bien. Votre code de secours reste le même.`,
+          `Avec le module Étudiants, il faut un mot de passe plus solide. ${expliquerDefauts(defautsRobustesse(actuel.champ.value, motsInterdits()))} Une courte phrase avec un chiffre convient très bien. Votre code de secours reste le même.`,
         ),
         nouveau.ligne,
         confirmation.ligne,
@@ -83,7 +86,7 @@ export function confirmerMotDePasseEleves(enregistrerMaintenant: () => Promise<v
     const etape = async (): Promise<void> => {
       if (!choixDuNouveau) {
         await verifierMotDePasse(actuel.champ.value);
-        if (estAssezLong(actuel.champ.value, LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)) {
+        if (defautsRobustesse(actuel.champ.value, motsInterdits()).length === 0) {
           terminer();
         } else {
           montrerChoixDuNouveau();
@@ -97,6 +100,11 @@ export function confirmerMotDePasseEleves(enregistrerMaintenant: () => Promise<v
             ? `Le nouveau mot de passe doit compter au moins ${LONGUEUR} caractères.`
             : "Les deux saisies du nouveau mot de passe ne sont pas identiques.",
         );
+        return;
+      }
+      const defauts = defautsRobustesse(nouveau.champ.value, motsInterdits());
+      if (defauts.length > 0) {
+        dire(expliquerDefauts(defauts));
         return;
       }
       await enregistrerMaintenant();

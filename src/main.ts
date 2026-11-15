@@ -33,6 +33,7 @@ import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
 import { proposerOuvertureExport } from "./ecran-export";
 import { confirmerMotDePasseEleves } from "./ecran-mot-de-passe-eleves";
+import { motsInterditsDe } from "./domaine/robustesse-mot-de-passe";
 import { lireVerrouillageParInactivite, surveillerInactivite } from "./ecran-verrouillage";
 import { moduleElevesActif } from "./domaine/securite";
 import { installerSauvegardes } from "./ecran-sauvegardes";
@@ -197,7 +198,10 @@ async function demarrer(): Promise<void> {
   surveillerInactivite({ verrouillageExige: () => moduleElevesActif(magasin.entrees()), ecrireEnAttente });
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
   await chargerInterfaceHistorique(magasin, proposerOuvertureExport, () =>
-    confirmerMotDePasseEleves(() => acces.enregistrerMaintenant()),
+    confirmerMotDePasseEleves(
+      () => acces.enregistrerMaintenant(),
+      () => motsInterditsDe(magasin.entrees()),
+    ),
   );
   // L'enseignant qui a donné son nom figure d'office parmi les enseignants de l'établissement, marqué « C'est moi ».
   ajusterEnseignants((donnees) => provisionnerEnseignantMoi(donnees, acces.identite));
