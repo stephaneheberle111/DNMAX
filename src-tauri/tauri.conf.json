@@ -39,7 +39,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "license": "AGPL-3.0-or-later",
+    "license": "CECILL-2.1",
     "shortDescription": "Évaluations par compétences en DN MADE",
     "category": "Education",
     "macOS": {

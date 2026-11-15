@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* SPDX-License-Identifier: CECILL-2.1 */
 
 /* Opaque et au-dessus de tout : plus rien des données ne reste visible pendant le verrouillage. */
 .voile-verrouillage {

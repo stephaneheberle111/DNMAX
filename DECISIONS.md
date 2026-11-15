@@ -447,3 +447,22 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Retenu** : la documentation (rubriques `data-doc` du site), la page Confidentialité et le fichier `LICENSE` sont intégrés à l'application au moment de la construction et affichés dans une boîte. Le site reste la seule source : une correction de la documentation vaut pour les deux. Les scripts et gestionnaires d'évènements du site sont retirés de la copie ; un lien vers une autre rubrique reste dans l'application, un lien externe s'ouvre dans le navigateur, seulement si l'enseignant clique.
 
 **Conséquence** : le texte affiché est celui de la version installée ; une page du site modifiée après la publication n'apparaît qu'à la version suivante.
+
+## 33. Licence CeCILL v2.1 à partir de la 0.8.1
+
+**Retenu** : DNMAX passe de l'AGPL-3.0-or-later à la licence CeCILL v2.1 (identifiant SPDX `CECILL-2.1`), en français dans `LICENSE`. Seul titulaire des droits sur le code de DNMAX, l'auteur peut en changer la licence.
+
+**Pourquoi** :
+
+- licence libre rédigée en droit français, avec une version française qui fait foi, plus lisible pour des enseignants et des établissements français que l'AGPL ;
+- elle figure parmi les licences retenues pour les logiciels que publie l'administration française (liste tenue sur code.gouv.fr), ce qui facilite son examen par un établissement ou un rectorat ;
+- copyleft équivalent pour une application de bureau : un logiciel modifié et redistribué reste sous CeCILL, code source compris. La clause « réseau » de l'AGPL ne servait pas, DNMAX n'étant pas un service en ligne ;
+- compatible avec la GNU GPL et l'AGPL (article 5.3.4) : rien n'empêche une reprise dans un projet sous GPL.
+
+**Dépendances** : toutes celles livrées sont sous licences permissives (MIT, Apache-2.0, BSD, ISC, OFL pour les polices) ; jszip, sous double licence MIT ou GPL-3.0, est pris sous MIT. Aucune n'impose la GPL à l'ensemble.
+
+**Conséquences** :
+
+- les versions publiées jusqu'à la 0.8.0 restent sous AGPL-3.0-or-later : une licence accordée ne se retire pas ;
+- chaque fichier source porte l'en-tête `SPDX-License-Identifier: CECILL-2.1` ;
+- le texte de la licence est livré avec l'application et lisible depuis le pied de page (« Licence »), comme l'exige l'article 5.3.1, avec l'avertissement sur l'absence de garantie.

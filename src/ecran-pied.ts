@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import "./ecran-pied.css";
 import { ADRESSE_CODE_SOURCE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./configuration";
 import { construireAdresseRetours, deduireSysteme } from "./domaine/adresse-retours";

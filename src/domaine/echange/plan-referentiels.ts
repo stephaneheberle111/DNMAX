@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import type { Entrees } from "../magasin-memoire";
 import { lirePromotionsBrutes } from "./donnees-eleves";
 import { CLE_DONNEES, CLE_PROMOTIONS, analyserJson, estObjet } from "./modele";

@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: CECILL-2.1
 # Réglages du serveur Apache de l'hébergement OVH.
 
 # Toujours en HTTPS, et sur dnmax.fr plutôt que www.dnmax.fr.

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import "./ecran-avertissement-eleves.css";
 import { ADRESSE_CODE_SOURCE, ANNEES_CONSERVATION_ELEVES, DELAI_VERROUILLAGE_INACTIVITE_MS } from "./configuration";
 import { LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES } from "./domaine/saisie-coffre";

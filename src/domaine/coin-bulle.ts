@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /** Rectangle à l'écran, en pixels. */
 export interface Rectangle {

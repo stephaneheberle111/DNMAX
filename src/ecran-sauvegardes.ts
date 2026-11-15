@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import "./ecran-sauvegardes.css";
 import { decrireSauvegarde, ecrireDateSauvegarde, ecrireTaille, type Sauvegarde } from "./domaine/sauvegardes";
 import { messagePourErreur } from "./ecran-coffre";

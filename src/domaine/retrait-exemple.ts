@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 import { CLE_EVALUATIONS, CLE_PROMOTIONS, analyserJson, estEvaluation, estObjet } from "./echange/modele";
 import { CLE_DATES_MODIFICATION, lireDatesModification } from "./echange/suivi-modifications";
 import { ecrireJsonCanonique } from "./empreinte";

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Petit sceau « DN MADE » de l'en-tête des exports texte : bord festonné, deux
  * filets, l'intitulé du diplôme en couronne, « DN » et « MADE » au centre.

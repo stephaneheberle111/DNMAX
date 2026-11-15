@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /** Issue d'une vérification de mise à jour demandée par l'enseignant, quand rien n'est à installer. */
 export type IssueSansMiseAJour = "a-jour" | "impossible";

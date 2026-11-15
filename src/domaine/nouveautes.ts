@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Nouveautés d'une version, tirées du journal des modifications (CHANGELOG.md) :
  * montrées à l'enseignant dans l'annonce d'une mise à jour, puis au premier

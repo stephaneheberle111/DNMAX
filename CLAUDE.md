@@ -9,7 +9,7 @@ Marques : 🔒 à respecter toujours · ⚠️ à respecter sauf raison écrite 
 ## 0. À remplir au démarrage du projet
 
 - Objet du projet, en deux phrases : DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs évaluations par compétences à partir du référentiel du diplôme. C'est une application de bureau autonome (Windows, Linux, macOS), sans serveur central : les contenus s'échangent par fichiers et les mises à jour sont poussées par l'auteur.
-- Licence : `AGPL-3.0-or-later`
+- Licence : `CECILL-2.1` (CeCILL v2.1 ; AGPL-3.0-or-later jusqu'à la 0.8.0)
 - Langage et version : TypeScript 6 sur Node.js 22 (interface, Vite) et Rust 1.97 (enveloppe de bureau Tauri 2). Versions exactes dans `package-lock.json`, `rust-toolchain.toml` et `src-tauri/Cargo.lock`.
 - Commandes : lancer `npm run dev` · tests `npm test` · linter `npm run lint` · typage `npm run typecheck` · côté Rust, dans `src-tauri/` : `cargo test --locked`, `cargo fmt --check` et `cargo clippy --all-targets --locked -- -D warnings`
 - Branche principale : `main`

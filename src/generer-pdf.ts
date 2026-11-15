@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Production du PDF d'un document imprimable, avec pdfmake (voir DECISIONS.md,
  * « Documents RGPD : aperçu, PDF et impression »). Ce module est chargé à la

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /* Interface historique de DNMAX, reprise telle quelle depuis la maquette d'origine.
    Seules différences : le stockage et l'enregistrement de fichiers passent par
    `window.dnmaxPont`, fourni par l'application avant le chargement de ce script. */

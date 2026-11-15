@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 
 /**
  * Code de l'échange en direct : 8 chiffres, que l'expéditeur dicte à son

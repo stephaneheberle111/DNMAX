@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: CECILL-2.1
 /*
  * Fond de page choisi dans « Préférences » : une trame de papier, la force de
  * son relief, l'intensité de sa couleur et le X en creux. Calculs seuls : lecture d'un réglage enregistré
