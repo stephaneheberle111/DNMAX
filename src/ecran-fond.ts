@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "./ecran-fond.css";
-import { FOND_PAR_DEFAUT, attributsFond, estForce, estTrame, lireFond, type Fond } from "./domaine/fond";
+import { FOND_PAR_DEFAUT, attributsFond, estForce, estTeinte, estTrame, lireFond, type Fond } from "./domaine/fond";
 
 /**
  * Comme le thème, le fond est rangé dans le stockage de la vue web, propre au
@@ -45,11 +45,13 @@ export function installerChoixFond(): void {
   let fond = lireFondEnregistre();
   const trames = [...bloc.querySelectorAll<HTMLInputElement>('input[name="fond"]')];
   const forces = [...bloc.querySelectorAll<HTMLButtonElement>("button[data-force]")];
+  const teintes = [...bloc.querySelectorAll<HTMLButtonElement>("button[data-teinte]")];
   const caseX = bloc.querySelector<HTMLInputElement>("#fond-x-creux");
 
   const afficher = (): void => {
     for (const bouton of trames) bouton.checked = bouton.value === fond.trame;
     for (const bouton of forces) bouton.setAttribute("aria-pressed", String(bouton.dataset.force === fond.force));
+    for (const bouton of teintes) bouton.setAttribute("aria-pressed", String(bouton.dataset.teinte === fond.teinte));
     if (caseX !== null) caseX.checked = fond.xEnCreux;
   };
   const changer = (modification: Partial<Fond>): void => {
@@ -68,6 +70,12 @@ export function installerChoixFond(): void {
     bouton.addEventListener("click", () => {
       const force = bouton.dataset.force;
       if (estForce(force)) changer({ force });
+    });
+  }
+  for (const bouton of teintes) {
+    bouton.addEventListener("click", () => {
+      const teinte = bouton.dataset.teinte;
+      if (estTeinte(teinte)) changer({ teinte });
     });
   }
   caseX?.addEventListener("change", () => {

@@ -38,6 +38,19 @@ html[data-fond="verge"] .fond-page::before {
 html[data-relief="peine"] .fond-page {
   opacity: 0.5;
 }
+/* Couleur du papier (Préférences) : « normale » garde la teinte de application.css.
+   Sélecteurs à deux attributs pour passer devant les thèmes de application.css. */
+:root[data-teinte="pale"] { --paper: #faf8f2; }
+:root[data-teinte="douce"] { --paper: #f6f2e9; }
+:root[data-teinte="soutenue"] { --paper: #e8dfcb; }
+@media (prefers-color-scheme: dark) {
+  :root[data-teinte="pale"]:not([data-theme="light"]) { --paper: #191919; }
+  :root[data-teinte="douce"]:not([data-theme="light"]) { --paper: #1a1a18; }
+  :root[data-teinte="soutenue"]:not([data-theme="light"]) { --paper: #231f18; }
+}
+:root[data-teinte="pale"][data-theme="dark"] { --paper: #191919; }
+:root[data-teinte="douce"][data-theme="dark"] { --paper: #1a1a18; }
+:root[data-teinte="soutenue"][data-theme="dark"] { --paper: #231f18; }
 .fond-x {
   position: absolute;
   right: 26px;
