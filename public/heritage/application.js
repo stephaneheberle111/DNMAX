@@ -6267,7 +6267,7 @@ const REF_PANES={constituer:"Constituer",explorer:"Explorer"};
    intitulés restent rangés dans le dictionnaire commun à toutes les mentions (DATA.dico). */
 const CON_PANES={ues:"Unités d'enseignement",ecs:"Enseignements constitutifs",blocs:"Blocs et compétences",tableau:"Planification par semestre",valider:"Validation"};
 /* les livrables proposés se règlent dans Mon compte > Préférences */
-const ORG_PANES={etab:"Établissement",diplome:"Diplômes et mentions",enseignants:"Enseignants",promos:"Promotions",affect:"Répartition de service"};
+const ORG_PANES={etab:"Établissement",diplome:"Diplômes et mentions",promos:"Promotions",enseignants:"Enseignants",affect:"Répartition de service"};
 let edArm=null;
 function paintOrg(){
   const pane=ORG_PANES[ui.org.pane]?ui.org.pane:"diplome";
