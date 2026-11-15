@@ -476,3 +476,11 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 **Vérifié** : une installation neuve, l'exemple, les écrans de l'éditeur et les exports Word, OpenDocument et Excel donnent exactement le même résultat qu'avant ; des données enregistrées par la 0.8 s'ouvrent à l'identique.
 
 **Conséquence** : des données antérieures à la 0.8 ne seraient plus reprises. Aucune n'existe chez un enseignant.
+
+## 35. Les règles de composition d'une évaluation sortent de l'interface historique
+
+**Retenu** : deuxième reprise, après la saisie des résultats (décision 30). Les règles de la composition d'une évaluation sont écrites en TypeScript dans `src/domaine/evaluation.ts`, sans accès à l'écran ni au stockage, et testées : forme d'une évaluation, lignes de la grille, EC retenus pour une compétence, regroupements (réunir, rejoindre, détacher, défaire un regroupement réduit à une compétence, fusionner une sélection), livrables d'une ligne, calendrier (année scolaire, semestre suggéré par la date, année lue dans un nom de classe), ce qui manque pour enregistrer et l'état d'enregistrement. L'interface historique les appelle par le pont (`window.dnmaxPont.evaluation`) ; ses fonctions (`migF`, `lignesOf`, `attachTo`, `detachCode`, `linkSelection`, `semSuggere`…) ne font plus que déléguer et redessiner.
+
+**Vérifié** : le témoin déterministe (installation, exemple, écrans, exports) et quatorze gestes de composition rejoués sur l'ancien et le nouveau code donnent le même résultat. Seul le champ `critere`, toujours vide et lu nulle part, n'est plus écrit.
+
+**Suite** : l'affichage de l'éditeur reste dans l'interface historique ; il sera repris à son tour, en appelant ces règles, une fois arbitrées les règles à rendre visibles ou réglables.
