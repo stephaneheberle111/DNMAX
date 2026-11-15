@@ -5,6 +5,8 @@
 const STOCKAGE = window.dnmaxPont.stockage;
 /* Règles de la saisie des résultats : écrites et testées dans src/domaine/saisie-resultats.ts. */
 const SAISIE = window.dnmaxPont.saisie;
+/* Règles de la composition d'une évaluation : écrites et testées dans src/domaine/evaluation.ts. */
+const EVAL = window.dnmaxPont.evaluation;
 const JAUGE = window.dnmaxPont.jauge;
 const REF_DEFAULT = {
  "meta": {
@@ -3580,21 +3582,7 @@ syncItemEcs();
 let ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"diplome"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
 let dl = window.dnmaxPont.telechargements;
 
-function demo(){
-  const codes=["C4.1","C4.3","C10.3","C10.6","C11.2"];
-  const items=codes.map(c=>{const k=REF.competences.find(x=>x.code===c);if(!k)return null;
-    return {code:c,ecs:ecsOf(k,"S3").map(e=>e.ec),critere:"",op:"",coef:1,libelle:"",livrables:[]}}).filter(Boolean);
-  return {id:uid(),promoId:"",titre:"Évaluation de projet — mobilier modulaire",livrables:["Carnet de projet","Maquettes de recherches"],
-    semestre:"S3",classe:"DN MADE 2 Objet",date:new Date().toISOString().slice(0,10),prof:"",ues:["UE ATELIERS DE CREATION"],ecCodes:["EC 11.2","EC 11.1"],compCode:"C10.6",
-    consignes:"Présentation du projet en cours : intentions, références, expérimentations matériaux, prototype à l'échelle 1/2.",
-    ops:[],preset:"acq",niveaux:PRESETS.acq.niveaux.slice(),opts:{crit:true,obs:true,coef:false},
-    eleves:"",items};
-}
-function migF(f){if(!Array.isArray(f.ues))f.ues=[];
-  if(!Array.isArray(f.classes))f.classes=String(f.classe||"").trim()?[String(f.classe).trim()]:[];
-  f.classe=f.classes.join(", ");
-  if(!f.res||typeof f.res!=="object")f.res={};
-  return f}
+function migF(f){return Object.assign(f,EVAL.normaliserEvaluation(f))}
 /* Prénom et nom se saisissent à part (prenom, nomFam) ; « nom » reste le nom affiché
    « Prénom Nom », utilisé partout ailleurs (listes, exports, échanges, rapprochements). */
 function separerPrenomNom(s){
@@ -3660,11 +3648,12 @@ function paintEleveField(){
   const ab=host.querySelector("#elvAll");if(ab)ab.onclick=()=>{F.eleveIds=[];save();paintEleveField();paintSteps()};
 }
 
+/* lignes de la grille, sous la forme qu'attend l'affichage : {k:"op",o,its} ou {k:"one",it} ;
+   ce sont les objets mêmes de l'évaluation, que la saisie de la formulation modifie */
 function lignesOf(f){
-  const L=[];
-  (f.ops||[]).forEach(o=>{const its=(f.items||[]).filter(i=>i.op===o.id);if(its.length)L.push({k:"op",o,its})});
-  (f.items||[]).filter(i=>!i.op).forEach(it=>L.push({k:"one",it}));
-  return L;
+  const parCode=new Map((f.items||[]).map(i=>[i.code,i])), parId=new Map((f.ops||[]).map(o=>[o.id,o]));
+  return EVAL.lignesDe(f).map(l=>l.regroupement?{k:"op",o:parId.get(l.regroupement.id),its:l.competences.map(c=>parCode.get(c.code))}
+    :{k:"one",it:parCode.get(l.competence.code)});
 }
 function ligKey(l){return l.k==="op"?"op:"+l.o.id:"one:"+l.it.code}
 function ligTitre(l){
@@ -3684,10 +3673,7 @@ function evalStats(f){
   const ff=f||F, els=studentsOf(ff), keys=lignesOf(ff).map(ligKey);
   return {els:els.length,lignes:keys.length,...SAISIE.bilanSaisie(ff.res,els.map(e=>e.id),keys)};
 }
-function setClasses(list){
-  F.classes=[...new Set((list||[]).map(x=>String(x||"").trim()).filter(Boolean))];
-  F.classe=F.classes.join(", ");
-}
+function setClasses(list){Object.assign(F,EVAL.classesNettoyees(list||[]))}
 function uid(){return Math.random().toString(36).slice(2,9)}
 function asStart(as){const m=String(as||"").match(/(\d{4})/);return m?+m[1]:null}
 function dipDuree(id){return +((DATA.diplomes.find(d=>d.id===id)||{}).duree)||3}
@@ -3728,11 +3714,7 @@ function refreshPromoOption(){const pr=curPromo();if(!pr)return;
 function setSemestre(sem){F.semestre=sem;syncItemEcs()}
 function ecsOf(c,sem){return (c.ecs||[]).filter(e=>e.sem===sem)}
 function compsFor(sem){return REF.competences.filter(c=>ecsOf(c,sem).length>0)}
-function itemEcs(c,sem){
-  const all=ecsOf(c,sem).map(e=>e.ec);
-  const keep=all.filter(x=>F.ecCodes.includes(x));
-  return keep.length?keep:all;
-}
+function itemEcs(c,sem){return EVAL.ecsRetenus(ecsOf(c,sem).map(e=>e.ec),F.ecCodes)}
 function syncItemEcs(){F.items.forEach(it=>{const c=REF.competences.find(x=>x.code===it.code);it.ecs=c?itemEcs(c,F.semestre):[]})}
 function ecsOfSem(sem){
   const m=new Map();
@@ -3751,15 +3733,11 @@ function blocName(n){const b=REF.blocs.find(b=>b.num===String(n));return b?b.nom
 function dnOf(sem){const i=SEMS.indexOf(sem);return i<0?"":anneeCode(Math.floor(i/2)+1)}
 function dnLabel(sem){if(!MOD.dn)return "";const d=(REF.meta.niveaux||[]).find(n=>+n.annee===anneeOf(sem));return d&&d.label?dnOf(sem)+" · "+d.label:dnOf(sem)}
 function anneeLabel(a){return "Année "+a+(MOD.dn?" — "+anneeCode(a):"")}
-function semsOfAnnee(a){return SEMS.slice((a-1)*2,a*2)}
+function semsOfAnnee(a){return EVAL.semestresDeLAnnee(a)}
 function dateFiche(d){const t=new Date(d||F.distribPrev||F.date||Date.now());return isNaN(t)?new Date():t}
-function anneeScolaire(d){const t=dateFiche(d), y=t.getFullYear(), a=(t.getMonth()+1>=9)?y:y-1;
-  return a+"-"+(a+1)}
-function rangSemestre(d){const m=dateFiche(d).getMonth()+1;return (m>=9||m<=1)?1:2}
-function semSuggere(d){
-  const an=anneeFiche();if(!an)return "";
-  const sems=semsOfAnnee(an);return sems[rangSemestre(d)-1]||sems[0];
-}
+function anneeScolaire(d){return EVAL.anneeScolaire(dateFiche(d))}
+function rangSemestre(d){return EVAL.rangSemestre(dateFiche(d))}
+function semSuggere(d){return EVAL.semestreSuggere(anneeFiche(),dateFiche(d))}
 function applySemDate(){
   if(F.semManuel)return false;
   const sug=semSuggere();
@@ -3796,8 +3774,7 @@ function evaluationCommencee(f){return SAISIE.evaluationCommencee(f)}
 /* Rend "liste" si l'évaluation en cours est dans « Mes évaluations », "bloquee" si son référentiel
    non validé l'empêche d'y entrer, "vide" si elle n'est pas encore commencée. */
 function etatEnregistrement(){
-  if(fiches.some(f=>f.id===F.id))return dipBloquant(F)?"bloquee":"liste";
-  return evaluationCommencee(F)&&dipBloquant(F)?"bloquee":"vide";
+  return EVAL.etatEnregistrement({dansLaListe:fiches.some(f=>f.id===F.id),commencee:evaluationCommencee(F),referentielBloquant:dipBloquant(F)});
 }
 function enregistrerDansListe(valide){
   if(dipBloquant(F))return;
@@ -3930,11 +3907,7 @@ function paintForm(){
   {const one=g("f-preset").options.length<=1;["fgroup-ech","fld-preset","lvRead"].forEach(id=>{const x=g(id);if(x)x.hidden=one})}
   paintSteps();
 }
-function anneeOfClasse(t){
-  t=String(t||"");
-  let m=t.match(/-\s*([1-3])\s*$/);if(m)return +m[1];
-  m=t.match(/(?:^|[^\d])([1-3])(?:[^\d]|$)/);return m?+m[1]:0;
-}
+function anneeOfClasse(t){return EVAL.anneeDeClasse(t)}
 function anneeFiche(){
   const pr=curPromo();if(pr&&pr.annee)return +pr.annee;
   const ofC=c=>{const p2=promos.find(x=>x.nom===c);if(p2){const a=promoAnneeAt(p2,anneeScolaire());return a>=1&&a<=promoDuree(p2)?a:0}
@@ -4225,49 +4198,12 @@ function magnetDrag(e,src,payload){
   document.addEventListener("pointerup",up);
   document.addEventListener("pointercancel",up);
 }
-function removeLivrFrom(key,v){
-  const t=lineOf(key);if(!t)return;
-  t.livrables=(t.livrables||[]).filter(x=>x!==v);save();paintLignes();
-}
-function cleanOps(){
-  F.ops=F.ops.filter(o=>{
-    const its=F.items.filter(i=>i.op===o.id);
-    if(its.length>=2)return true;
-    if(its.length===1){const it=its[0];
-      it.livrables=[...new Set([...(it.livrables||[]),...(o.livrables||[])])];
-      if(!String(it.libelle||"").trim()&&String(o.libelle||"").trim())it.libelle=o.libelle;
-      it.op="";}
-    return false;
-  });
-}
+function removeLivrFrom(key,v){Object.assign(F,EVAL.changerLivrableDeLigne(F,key,v,false));save();paintLignes()}
+function cleanOps(){Object.assign(F,EVAL.nettoyerRegroupements(F))}
 function lineOf(key){return key.startsWith("op:")?F.ops.find(o=>o.id===key.slice(3)):F.items.find(i=>i.code===key.slice(4))}
-function attachTo(key,code){
-  const it=F.items.find(i=>i.code===code);if(!it)return;
-  if(key.startsWith("op:")){
-    const id=key.slice(3);if(it.op===id)return;it.op=id;
-    const op=F.ops.find(o=>o.id===id);
-    if(op)(it.livrables||[]).forEach(l=>{if(!op.livrables.includes(l))op.livrables.push(l)});
-  }else{
-    const tcode=key.slice(4);if(tcode===code)return;
-    const t=F.items.find(i=>i.code===tcode);if(!t)return;
-    const op={id:uid(),libelle:t.libelle||"",critere:t.critere||"",
-      livrables:[...new Set([...(t.livrables||[]),...(it.livrables||[])])]};
-    F.ops.push(op);t.op=op.id;it.op=op.id;
-  }
-  cleanOps();save();paintLignes();paintSteps();
-}
-function detachCode(code){
-  const it=F.items.find(i=>i.code===code);if(!it||!it.op)return;
-  const op=F.ops.find(o=>o.id===it.op);
-  if(op){it.libelle=it.libelle||"";it.livrables=[...new Set([...(it.livrables||[]),...(op.livrables||[])])]}
-  it.op="";cleanOps();save();paintLignes();paintSteps();
-}
-function addLivrTo(key,v){
-  const t=lineOf(key);if(!t)return;
-  if(!F.livrables.includes(v))return;
-  if(!t.livrables.includes(v))t.livrables.push(v);
-  save();paintLignes();
-}
+function attachTo(key,code){Object.assign(F,EVAL.rattacher(F,key,code,uid));save();paintLignes();paintSteps()}
+function detachCode(code){Object.assign(F,EVAL.detacher(F,code));save();paintLignes();paintSteps()}
+function addLivrTo(key,v){Object.assign(F,EVAL.changerLivrableDeLigne(F,key,v,true));save();paintLignes()}
 function paintPalette(){
   const hd=document.getElementById("helpDrag");
   if(hd&&!hd.innerHTML)hd.innerHTML=help("Tout se fait à l'aimant : en approchant une pastille d'une ligne, celle-ci s'allume et la pastille vient s'y coller. <b>Un code de compétence</b> déposé sur une autre ligne réunit les deux en compétence opérationnelle ; lâché à l'écart, il se détache de son groupe. <b>Un livrable</b> déposé sur une ligne s'y associe ; sorti de la ligne, il s'en retire.");
@@ -4526,17 +4462,9 @@ function paintEleves(){
 }
 function linkSelection(){
   if(ui.sel.length<2)return;
-  const opKeys=ui.sel.filter(k=>k.startsWith("op:")).map(k=>k.slice(3));
-  const codes=ui.sel.filter(k=>k.startsWith("one:")).map(k=>k.slice(4));
-  let op;
-  if(opKeys.length){op=F.ops.find(o=>o.id===opKeys[0]);
-    opKeys.slice(1).forEach(id=>{F.items.forEach(i=>{if(i.op===id)i.op=op.id});F.ops=F.ops.filter(o=>o.id!==id)});
-  } else {op={id:uid(),libelle:"",critere:"",livrables:[]};F.ops.push(op)}
-  codes.forEach(c=>{const it=F.items.find(i=>i.code===c);if(it){it.op=op.id;
-    it.livrables.forEach(l=>{if(!op.livrables.includes(l))op.livrables.push(l)});
-    if(!op.libelle&&it.libelle)op.libelle=it.libelle}});
+  const {items,ops,regroupement}=EVAL.reunir(F,ui.sel,uid);Object.assign(F,{items,ops});
   ui.sel=[];save();paintLignes();paintSteps();
-  const el=document.querySelector(`[data-lib="op:${op.id}"]`);if(el){el.focus();el.scrollIntoView({block:"center"})}
+  const el=document.querySelector(`[data-lib="op:${regroupement}"]`);if(el){el.focus();el.scrollIntoView({block:"center"})}
 }
 /* progression des promotions de l'évaluation en cours, pour chaque compétence du semestre
    (les autres évaluations enregistrées de ces promotions, hors celle-ci) */
@@ -4604,7 +4532,7 @@ function paintPick(){
   host.querySelectorAll("[data-pkf]").forEach(b=>b.onclick=()=>{ui.pf=b.dataset.pkf;paintPick()});
   host.querySelectorAll(".cbox").forEach(cb=>cb.onchange=()=>{
     const code=cb.dataset.code, c=REF.competences.find(x=>x.code===code);
-    if(cb.checked)F.items.push({code,ecs:itemEcs(c,sem),critere:"",coef:1,op:"",libelle:"",livrables:[]});
+    if(cb.checked)F.items.push({code,ecs:itemEcs(c,sem),coef:1,op:"",libelle:"",livrables:[]});
     else F.items=F.items.filter(i=>i.code!==code);
     save();paintPick();paintSteps()});
 
@@ -6943,7 +6871,7 @@ function demoMass(){
         for(let e=0;e<nev;e++){
           const [typ,liv0]=pick(TYPES), liv=LIV.includes(liv0)?liv0:pick(LIV);
           const comps=shuffle(dispo).slice(0,3+Math.floor(rnd()*4));
-          const items=comps.map(c=>({code:c.code,ecs:itemEcs(c,sem),critere:"",coef:1,op:"",libelle:"",livrables:[liv]}));
+          const items=comps.map(c=>({code:c.code,ecs:itemEcs(c,sem),coef:1,op:"",libelle:"",livrables:[liv]}));
           const mo=first?[9,10,11,12,0][Math.min(4,Math.floor((e+0.5)*5/nev))]:[1,2,3,4,5][Math.min(4,Math.floor((e+0.5)*5/nev))];
           const dt=new Date(mo>=8?yr:yr+1,mo,3+Math.floor(rnd()*24));
           const now=new Date(), future=dt>now;
@@ -7808,7 +7736,7 @@ bind("bSave3","click",()=>{
   if(refBloque(F,"Impossible d'enregistrer cette évaluation"))return;
   const brouillon=!!F.brouillon||!fiches.some(f=>f.id===F.id);
   if(brouillon){
-    const manque=[!String(F.titre||"").trim()&&"un intitulé",!(F.items||[]).length&&"au moins une compétence"].filter(Boolean);
+    const manque=EVAL.manquesPourEnregistrer(F);
     if(manque.length){toast("Pour enregistrer l'évaluation, il lui manque "+manque.join(" et ")+".");return}
   }
   save(true);
