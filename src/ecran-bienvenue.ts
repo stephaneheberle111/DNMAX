@@ -143,7 +143,7 @@ function afficher(acces: AccesDonnees, etablissementSaisi: string): void {
   saisie.autocomplete = "organization";
   saisie.value = etablissementSaisi || nomEtablissementEnregistre(acces.lireEntrees());
   champ.append(saisie);
-  // Saisi à l'étape 2 : inutile de le redemander. Le champ ne sert qu'aux installations plus anciennes, sans ce nom.
+  // Saisi à l'étape 2 : inutile de le redemander. Le champ ne revient que si la bienvenue reprend après une fermeture de DNMAX.
   champ.hidden = etablissementSaisi.trim() !== "";
 
   const resume = creer("p", "bienvenue-resume");

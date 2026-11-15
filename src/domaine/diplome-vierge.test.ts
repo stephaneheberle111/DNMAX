@@ -5,7 +5,6 @@ import { estCadreVierge, nettoyerDiplomesVierges } from "./diplome-vierge";
 const VIDE = { ues: [], ecs: [], blocs: [], competences: [] };
 const REMPLI = { ...VIDE, competences: [{ id: "c0" }] };
 const OBJET = { id: "d1", nom: "DN MADE", mention: "Objet", code: "" };
-const ANCIEN_CADRE = { id: "d0", nom: "Diplôme", mention: "" };
 const CADRE = { id: "d0", nom: "", mention: "", cadre: true };
 
 function donnees(diplomes: object[], complement: object = {}): Record<string, unknown> {
@@ -22,8 +21,8 @@ function donnees(diplomes: object[], complement: object = {}): Record<string, un
 }
 
 describe("nettoyerDiplomesVierges", () => {
-  it("retire l'ancien cadre « Diplôme » vierge resté à côté d'un vrai diplôme", () => {
-    const resultat = nettoyerDiplomesVierges(donnees([ANCIEN_CADRE, OBJET]), []);
+  it("retire le cadre vierge resté à côté d'un vrai diplôme", () => {
+    const resultat = nettoyerDiplomesVierges(donnees([CADRE, OBJET]), []);
     expect(resultat?.retires).toEqual(["d0"]);
     expect(resultat?.donnees).toEqual({
       diplomes: [OBJET],
@@ -43,14 +42,14 @@ describe("nettoyerDiplomesVierges", () => {
   });
 
   it("garde le cadre auquel une promotion est rattachée", () => {
-    const resultat = nettoyerDiplomesVierges(donnees([ANCIEN_CADRE, OBJET]), [{ id: "p1", diplomeId: "d0" }]);
+    const resultat = nettoyerDiplomesVierges(donnees([CADRE, OBJET]), [{ id: "p1", diplomeId: "d0" }]);
     expect(resultat).toMatchObject({ retires: [], modifie: false });
   });
 
   it("garde le cadre dont le référentiel ou une version n'est pas vide", () => {
-    expect(nettoyerDiplomesVierges(donnees([ANCIEN_CADRE, OBJET], { refs: { d0: REMPLI, d1: REMPLI } }), [])?.modifie).toBe(false);
-    expect(nettoyerDiplomesVierges(donnees([ANCIEN_CADRE, OBJET], { versions: { d0: [{ id: "v0" }] } }), [])?.modifie).toBe(false);
-    expect(nettoyerDiplomesVierges(donnees([ANCIEN_CADRE, OBJET], { refs: { d0: "illisible" } }), [])?.modifie).toBe(false);
+    expect(nettoyerDiplomesVierges(donnees([CADRE, OBJET], { refs: { d0: REMPLI, d1: REMPLI } }), [])?.modifie).toBe(false);
+    expect(nettoyerDiplomesVierges(donnees([CADRE, OBJET], { versions: { d0: [{ id: "v0" }] } }), [])?.modifie).toBe(false);
+    expect(nettoyerDiplomesVierges(donnees([CADRE, OBJET], { refs: { d0: "illisible" } }), [])?.modifie).toBe(false);
   });
 
   it("garde un diplôme créé à la main même s'il est encore vide", () => {
@@ -58,11 +57,14 @@ describe("nettoyerDiplomesVierges", () => {
     expect(nettoyerDiplomesVierges(donnees([OBJET, nouveau]), [])?.modifie).toBe(false);
   });
 
-  it("garde le cadre seul, en le marquant et en effaçant l'ancien nom « Diplôme »", () => {
-    const resultat = nettoyerDiplomesVierges(donnees([ANCIEN_CADRE], { refs: { d0: VIDE } }), []);
-    expect(resultat?.retires).toEqual([]);
-    expect(resultat?.donnees.diplomes).toEqual([CADRE]);
-    expect(resultat?.donnees.activeDiplome).toBe("d0");
+  it("garde le cadre seul, sans rien changer", () => {
+    const resultat = nettoyerDiplomesVierges(donnees([CADRE], { refs: { d0: VIDE } }), []);
+    expect(resultat).toMatchObject({ retires: [], modifie: false });
+  });
+
+  it("ne prend pas pour un cadre un diplôme sans marque, même nommé « Diplôme »", () => {
+    const nomme = { id: "d0", nom: "Diplôme", mention: "" };
+    expect(nettoyerDiplomesVierges(donnees([nomme, OBJET]), [])?.modifie).toBe(false);
   });
 
   it("ne garde qu'un cadre quand il n'y a que des cadres vierges", () => {
@@ -73,7 +75,7 @@ describe("nettoyerDiplomesVierges", () => {
   });
 
   it("ne change rien à un second passage", () => {
-    const premier = nettoyerDiplomesVierges(donnees([ANCIEN_CADRE, OBJET]), []);
+    const premier = nettoyerDiplomesVierges(donnees([CADRE, OBJET]), []);
     const second = nettoyerDiplomesVierges(premier?.donnees, []);
     expect(second).toEqual({ donnees: premier?.donnees, retires: [], modifie: false });
   });
@@ -81,7 +83,7 @@ describe("nettoyerDiplomesVierges", () => {
   it("rend null pour des données ou des promotions illisibles", () => {
     expect(nettoyerDiplomesVierges(null, [])).toBeNull();
     expect(nettoyerDiplomesVierges({ diplomes: "d0" }, [])).toBeNull();
-    expect(nettoyerDiplomesVierges(donnees([ANCIEN_CADRE, OBJET]), "illisible")).toBeNull();
+    expect(nettoyerDiplomesVierges(donnees([CADRE, OBJET]), "illisible")).toBeNull();
   });
 });
 
