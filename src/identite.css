@@ -342,3 +342,24 @@ html[data-device="phone"] .vue-reglages #modList,
 html[data-device="phone"] .vue-reglages #echList {
   padding: 4px 16px 8px;
 }
+
+/* ---------- Carte radiale du référentiel, thème sombre ----------
+   En clair, les séparations blanches se fondent dans le papier et se lisent comme des interstices ;
+   en sombre, elles prennent la couleur de la carte pour garder cet effet, au lieu de tracer des contours blancs.
+   Le disque central et les libellés d'année suivent eux aussi le thème. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) svg.radial .seg,
+  :root:not([data-theme="light"]) svg.radial .sg.hot .seg,
+  :root:not([data-theme="light"]) svg.radial .sg.trail .seg { stroke: var(--surface); }
+  :root:not([data-theme="light"]) svg.radial .hub { fill: var(--surface-2); stroke: var(--line); }
+  :root:not([data-theme="light"]) svg.radial .lhub { fill: var(--ink); }
+  :root:not([data-theme="light"]) svg.radial .lmen,
+  :root:not([data-theme="light"]) svg.radial .lan { fill: var(--muted); }
+}
+:root[data-theme="dark"] svg.radial .seg,
+:root[data-theme="dark"] svg.radial .sg.hot .seg,
+:root[data-theme="dark"] svg.radial .sg.trail .seg { stroke: var(--surface); }
+:root[data-theme="dark"] svg.radial .hub { fill: var(--surface-2); stroke: var(--line); }
+:root[data-theme="dark"] svg.radial .lhub { fill: var(--ink); }
+:root[data-theme="dark"] svg.radial .lmen,
+:root[data-theme="dark"] svg.radial .lan { fill: var(--muted); }
