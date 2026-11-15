@@ -7,6 +7,7 @@ import { estCadreVierge, nettoyerDiplomesVierges } from "../domaine/diplome-vier
 import * as zoomCarte from "../domaine/zoom-carte";
 import { renumeroterBloc } from "../domaine/numero-bloc";
 import * as saisieResultats from "../domaine/saisie-resultats";
+import * as reglesEvaluation from "../domaine/evaluation";
 import * as jaugeExport from "../domaine/jauge-export";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
@@ -107,6 +108,8 @@ interface Pont {
   readonly renumeroterBloc: typeof renumeroterBloc;
   /** Règles de la saisie des résultats des étudiants (voir `domaine/saisie-resultats`). */
   readonly saisie: typeof saisieResultats;
+  /** Règles de la composition d'une évaluation (voir `domaine/evaluation`). */
+  readonly evaluation: typeof reglesEvaluation;
   /** Libellés de niveaux au-dessus de la jauge des exports Word et OpenDocument (voir `domaine/jauge-export`). */
   readonly jauge: typeof jaugeExport;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
@@ -172,6 +175,7 @@ export async function chargerInterfaceHistorique(
     zoomCarte,
     renumeroterBloc,
     saisie: saisieResultats,
+    evaluation: reglesEvaluation,
     jauge: jaugeExport,
     confirmerChangementEchelle,
     ...(estDansEnveloppe()
