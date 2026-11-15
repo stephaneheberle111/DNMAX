@@ -23,11 +23,6 @@ use time::OffsetDateTime;
 
 use coffre::{CoffreOuvert, Entrees, ErreurCoffre};
 
-const NOM_APPLICATION: &str = "DNMAX";
-
-/// Étiquette que Tauri donne à la fenêtre déclarée dans `tauri.conf.json`.
-const ETIQUETTE_FENETRE_PRINCIPALE: &str = "main";
-
 /// En-tête par lequel l'interface transmet le nom de fichier proposé, encodé en pourcents.
 const ENTETE_NOM_FICHIER: &str = "x-nom-fichier";
 
@@ -728,14 +723,6 @@ pub fn lancer() {
             recevoir_direct,
             annuler_echange_direct
         ])
-        .setup(|application| {
-            // Le titre de la page ne remonte pas jusqu'à la fenêtre : la version y est donc inscrite ici.
-            if let Some(fenetre) = application.get_webview_window(ETIQUETTE_FENETRE_PRINCIPALE) {
-                let version = &application.package_info().version;
-                fenetre.set_title(&format!("{NOM_APPLICATION} {version}"))?;
-            }
-            Ok(())
-        })
         .run(tauri::generate_context!())
         .expect("impossible de démarrer l'application DNMAX");
 }
