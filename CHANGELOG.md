@@ -5,6 +5,7 @@
 ### Ajouté
 
 - Page de bienvenue au premier lancement, en quatre étapes : conseils, prénom, nom et établissement, mot de passe et code de secours, puis mention. Pour Objet ou Espace, DNMAX installe le référentiel livré et crée les trois promotions en cours ; pour une autre mention, on continue sans référentiel. Elle remplace l'encart « Pour commencer, il vous faut un référentiel ».
+- Mon compte > Préférences > Apparence : « Couleur du papier » règle l'intensité de la couleur de fond, de Pâle à Soutenue, en thème clair comme en sombre. Normale reste la teinte habituelle.
 
 ### Modifié
 
