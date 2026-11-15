@@ -14,7 +14,13 @@ import type { MagasinMemoire } from "../domaine/magasin-memoire";
 import { lireSaisieEtablissement } from "../domaine/documents-rgpd";
 import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
 import { confirmerChangementEchelle } from "../ecran-preferences";
-import { enregistrerFichier } from "../enveloppe";
+import {
+  choisirDossierExports,
+  enregistrerFichier,
+  estDansEnveloppe,
+  lireDossierExports,
+  oublierDossierExports,
+} from "../enveloppe";
 
 /** Adresse du script de l'interface historique, servi depuis `public/`. */
 const ADRESSE_SCRIPT_HISTORIQUE = "/heritage/application.js";
@@ -60,6 +66,15 @@ interface Pont {
    * Rend `true` si l'enseignant confirme.
    */
   readonly confirmerChangementEchelle: () => Promise<boolean>;
+  /**
+   * Préférences > Documents exportés : dossier proposé par « Enregistrer sous ».
+   * Absent hors de l'enveloppe de bureau, qui seule enregistre des fichiers.
+   */
+  readonly dossierExports?: {
+    lire(): Promise<string | null>;
+    choisir(): Promise<string | null>;
+    oublier(): Promise<void>;
+  };
   /**
    * Posée par l'interface historique à son chargement : ouvre Mon établissement > Établissement
    * et place le curseur sur le premier champ utile aux documents RGPD qui est vide.
@@ -159,6 +174,9 @@ export async function chargerInterfaceHistorique(
     saisie: saisieResultats,
     jauge: jaugeExport,
     confirmerChangementEchelle,
+    ...(estDansEnveloppe()
+      ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
+      : {}),
     // L'interface historique n'est pas typée : les champs reçus sont vérifiés.
     confirmerModuleEleves: async (etablissement) =>
       (await confirmerActivationEleves({

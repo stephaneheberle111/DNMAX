@@ -5,6 +5,7 @@
 ### Modifié
 
 - Bas de page centré : la version de DNMAX (un clic lance la recherche de mise à jour, et un indicateur dit ensuite si DNMAX est à jour ou si une nouvelle version est disponible), puis Licence, À propos, Confidentialité, Documentation et Proposer une idée. La licence, la page Confidentialité et la documentation s'affichent dans l'application, sans connexion. « À propos » présente davantage DNMAX et renvoie à la licence.
+- Visite guidée : la page défile d'elle-même jusqu'à la zone à cliquer ; le curseur passe d'une étape à l'autre de « Constituer » ; la case d'attestation puis « Valider cette version » sont montrées tour à tour, et la réussite n'est saluée qu'une fois la version validée ; dans « Échanger », la bulle dit de fermer la boîte pour continuer ; à la création d'une évaluation, le curseur montre chaque champ, des confettis saluent chaque passage d'étape, et la formulation montre le glisser-déposer d'un livrable.
 - Nouveau signe X : son plein s'effile vers le bas. Il remplace l'ancien partout : icône de l'application et de la barre des tâches, en-tête, X en creux du fond de page, favicon, site.
 - Mon établissement : le volet « Promotions » passe avant « Enseignants ».
 - La barre de titre de la fenêtre affiche « DNMAX », sans numéro de version.
@@ -13,10 +14,12 @@
 ### Ajouté
 
 - Paramètres > Mises à jour : rechercher une mise à jour à la demande. DNMAX ne se connecte toujours pas seul à Internet.
+- Mon compte > Préférences > Documents exportés : choix du dossier dans lequel s'ouvre la boîte « Enregistrer sous » (Documents par défaut). S'il n'existe plus, elle s'ouvre dans Documents.
 - Mon compte > Préférences > Documents exportés : afficher ou non le sceau DN MADE en tête des documents Word et OpenDocument (désactivé par défaut).
 
 ### Corrigé
 
+- Visite guidée : à l'étape « Compétences », le curseur invitait à écrire au lieu de cocher une case ; à l'étape « Vos préférences », la bulle cachait le menu « Mon compte ».
 - Documents Word et OpenDocument : les noms des niveaux au-dessus de la jauge ne sont plus coupés au milieu d'un mot (« Non acqui-s ») ; chacun a la place de son mot le plus long, et le texte se réduit un peu si la colonne est étroite.
 
 ## 0.8.0 — 2026-11-15

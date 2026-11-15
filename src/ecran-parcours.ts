@@ -13,7 +13,23 @@ import {
 } from "./domaine/parcours";
 import { choisirCoin, type Rectangle } from "./domaine/coin-bulle";
 import type { AccesDonnees } from "./ecran-echange";
-import { chapitreDe, PARCOURS_DEFINIS, type Etape, type Parcours } from "./parcours-etapes";
+import { chapitreDe, PARCOURS_DEFINIS, type Etape, type Geste, type Parcours, type Selon } from "./parcours-etapes";
+
+/** Lit une valeur d'étape, fixe ou relue sur l'écran. */
+function lire<T>(valeur: Selon<T>): T {
+  return typeof valeur === "function" ? (valeur as () => T)() : valeur;
+}
+
+function pointeDe(etape: Etape): string | undefined {
+  return etape.pointe === undefined ? undefined : lire(etape.pointe);
+}
+
+function gesteDe(etape: Etape): Geste | undefined {
+  return etape.geste === undefined ? undefined : lire(etape.geste);
+}
+
+/** Durée de la halte du curseur sur chaque élément, pour le geste « parcourir ». */
+const DUREE_HALTE_PARCOURS = 1300;
 
 /** Marge autour de la zone éclairée, en pixels. */
 const MARGE = 8;
@@ -54,6 +70,10 @@ let zoneAffichee: DOMRect | null = null;
 let glissement: { depart: DOMRect; debut: number } | null = null;
 /** La bulle n'apparaît qu'une fois la zone arrivée, directement à sa place. */
 let bulleRevelee = false;
+/** Éléments vers lesquels la page a déjà défilé pour l'étape en cours : on ne défile qu'une fois vers chacun. */
+const defilesEtape = new Set<Element>();
+/** Une boîte de l'application était ouverte à l'image précédente : la bulle change de texte quand cela change. */
+let boiteVue = false;
 
 function centreEcran(): DOMRect {
   return new DOMRect(window.innerWidth / 2, window.innerHeight / 2, 0, 0);
@@ -187,6 +207,8 @@ function demonter(): void {
   }
   elements.voiles = [];
   zoneAffichee = null;
+  boiteVue = false;
+  defilesEtape.clear();
   glissement = null;
   elements.anneau = null;
   elements.curseur = null;
@@ -276,10 +298,7 @@ function aller(index: number): void {
   visite.salut = null;
   detacherClic();
   afficherBulle();
-  const cible = trouverCible(etape);
-  if (cible instanceof HTMLElement) {
-    cible.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }
+  defilesEtape.clear();
 }
 
 function suivante(): void {
@@ -405,7 +424,8 @@ function afficherBulle(): void {
   const titre = creer("h2", "parcours-titre", etape.titre);
   titre.id = "parcours-titre";
   bulle.setAttribute("aria-labelledby", titre.id);
-  const texte = creer("p", "parcours-texte", fait && etape.texteFait !== undefined ? etape.texteFait : etape.texte);
+  const texteEtape = fait && etape.texteFait !== undefined ? etape.texteFait : etape.texte;
+  const texte = creer("p", "parcours-texte", boiteVue && etape.siBoite !== undefined ? etape.siBoite.texte : texteEtape);
   if (fait) {
     texte.prepend(creer("span", "parcours-coche", "✓"));
   }
@@ -473,7 +493,8 @@ function afficherBulle(): void {
  */
 function cliquerPourLEnseignant(etape: Etape): void {
   const cible = trouverCible(etape);
-  const visee = etape.pointe === undefined ? null : (cible?.querySelector<HTMLElement>(etape.pointe) ?? null);
+  const pointe = pointeDe(etape);
+  const visee = pointe === undefined ? null : (cible?.querySelector<HTMLElement>(pointe) ?? null);
   const aCliquer = visee ?? (cible instanceof HTMLElement ? cible : null);
   if (aCliquer === null) {
     suivante();
@@ -634,12 +655,45 @@ function placerBulle(trou: DOMRect | null, enCoin: boolean, evite: readonly Rect
 
 /** Éléments que la bulle rangée dans un coin ne doit pas cacher ; à défaut, la zone éclairée. */
 function zonesADegager(etape: Etape, visee: DOMRect | null): DOMRect[] {
-  const selecteurs = [etape.pointe, etape.aDegager].filter((selecteur) => selecteur !== undefined);
+  const selecteurs = [pointeDe(etape), etape.aDegager].filter((selecteur) => selecteur !== undefined);
   const zones = selecteurs
     .flatMap((selecteur) => [...document.querySelectorAll(selecteur)])
     .filter((element) => estVisible(element))
     .map((element) => element.getBoundingClientRect());
   return zones.length > 0 || visee === null ? zones : [visee];
+}
+
+/**
+ * Fait défiler la page jusqu'à la zone à éclairer quand elle est hors de
+ * l'écran, une seule fois par zone : l'enseignant n'a pas à chercher où cliquer
+ * avec l'ascenseur, et peut ensuite faire défiler librement.
+ */
+/** Bande de l'écran où l'on voit le contenu, entre la barre d'onglets et le bas de page. */
+function bandeVisible(): { haut: number; bas: number } {
+  const haut = document.querySelector("header.bar")?.getBoundingClientRect().bottom ?? 0;
+  const pied = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hauteur-pied")) || 0;
+  return { haut, bas: window.innerHeight - pied };
+}
+
+function dansLaBande(element: Element): boolean {
+  const cadre = element.getBoundingClientRect();
+  const { haut, bas } = bandeVisible();
+  return cadre.top >= haut && cadre.bottom <= bas;
+}
+
+function defilerVers(cible: Element | null): void {
+  if (cible === null || defilesEtape.has(cible) || !(cible instanceof HTMLElement)) {
+    return;
+  }
+  defilesEtape.add(cible);
+  const cadreCible = cible.getBoundingClientRect();
+  const { haut, bas } = bandeVisible();
+  const horsEcran = cadreCible.top < haut || cadreCible.bottom > bas;
+  if (horsEcran) {
+    const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Une zone plus haute que l'écran se cale par le haut, pour qu'on en voie le début.
+    cible.scrollIntoView({ block: cadreCible.height > bas - haut ? "start" : "center", behavior: reduit ? "auto" : "smooth" });
+  }
 }
 
 /** Fait glisser le curseur animé de la bulle vers la zone éclairée. */
@@ -649,16 +703,37 @@ function placerCurseur(trou: DOMRect | null, etape: Etape): void {
   if (curseur === null || bulle === null) {
     return;
   }
-  const geste = visite !== null && (visite.dejaFait || visite.salut !== null) ? undefined : etape.geste;
+  const geste = visite !== null && (visite.dejaFait || visite.salut !== null) ? undefined : gesteDe(etape);
   curseur.hidden = trou === null || geste === undefined;
   if (trou === null || geste === undefined) {
     return;
   }
-  const depart = bulle.getBoundingClientRect();
-  const visee = (etape.pointe === undefined ? null : cibleCourante?.querySelector(etape.pointe)) ?? null;
-  const zone = visee !== null && estVisible(visee) ? visee.getBoundingClientRect() : trou;
-  const arriveeX = geste === "cliquer" ? zone.left + zone.width / 2 : zone.left + Math.min(48, zone.width / 2);
-  const arriveeY = geste === "cliquer" ? zone.top + zone.height / 2 : zone.top + Math.min(36, zone.height / 2);
+  const pointe = pointeDe(etape);
+  const candidats = pointe === undefined ? [] : [...(cibleCourante?.querySelectorAll(pointe) ?? [])].filter((element) => estVisible(element));
+  if (geste === "parcourir" && candidats.length > 0) {
+    // Le curseur se pose tour à tour sur chaque élément visible à l'écran (la transition CSS le fait glisser
+    // de l'un à l'autre) ; il ne part pas hors de l'écran, l'enseignant fait défiler à son rythme.
+    const visibles = candidats.filter((element) => dansLaBande(element));
+    const etapes = visibles.length > 0 ? visibles : candidats;
+    const rang = Math.floor(performance.now() / DUREE_HALTE_PARCOURS) % etapes.length;
+    const halte = (etapes[rang] ?? etapes[0])?.getBoundingClientRect();
+    if (halte !== undefined) {
+      curseur.dataset.geste = geste;
+      curseur.style.left = `${String(Math.round(halte.left + Math.min(40, halte.width / 2)))}px`;
+      curseur.style.top = `${String(Math.round(halte.top + Math.min(24, halte.height / 2)))}px`;
+      return;
+    }
+  }
+  const source = geste === "glisser" && etape.depuis !== undefined ? lire(etape.depuis) : undefined;
+  const elementSource = source === undefined ? null : document.querySelector(source);
+  const depart = elementSource !== null && estVisible(elementSource) ? elementSource.getBoundingClientRect() : bulle.getBoundingClientRect();
+  const visee = candidats[0] ?? null;
+  // L'élément à cliquer ou à remplir est hors de l'écran (bas d'une longue étape) : la page défile jusqu'à lui.
+  defilerVers(visee);
+  const zone = visee !== null ? visee.getBoundingClientRect() : trou;
+  const auCentre = geste === "cliquer" || geste === "glisser";
+  const arriveeX = auCentre ? zone.left + zone.width / 2 : zone.left + Math.min(48, zone.width / 2);
+  const arriveeY = auCentre ? zone.top + zone.height / 2 : zone.top + Math.min(36, zone.height / 2);
   curseur.dataset.geste = geste;
   curseur.style.left = `${String(Math.round(arriveeX))}px`;
   curseur.style.top = `${String(Math.round(arriveeY))}px`;
@@ -676,9 +751,16 @@ function redessiner(): void {
   if (etape === null) {
     return;
   }
-  const cible = trouverCible(etape);
-  cibleCourante = cible;
   const boiteOuverte = document.querySelector(SELECTEUR_BOITES);
+  // Boîte ouverte pendant une étape qui la prévoit : la bulle dit quoi y faire, et la zone éclairée passe dans la boîte.
+  const avecBoite = boiteOuverte !== null && etape.siBoite !== undefined;
+  if (avecBoite !== boiteVue) {
+    boiteVue = avecBoite;
+    afficherBulle();
+  }
+  const cible = avecBoite && etape.siBoite !== undefined ? trouverCible({ ...etape, cibles: etape.siBoite.cibles }) : trouverCible(etape);
+  cibleCourante = cible;
+  defilerVers(cible);
   const cibleDansBoite = cible !== null && boiteOuverte !== null && boiteOuverte.contains(cible);
   const brut = cible?.getBoundingClientRect() ?? null;
   const visee = brut === null ? null : new DOMRect(brut.left - MARGE, brut.top - MARGE, brut.width + MARGE * 2, brut.height + MARGE * 2);
@@ -703,7 +785,7 @@ function redessiner(): void {
       width: `${String(trou.width)}px`,
       height: `${String(trou.height)}px`,
     });
-    anneau.dataset.geste = etape.geste ?? "regarder";
+    anneau.dataset.geste = gesteDe(etape) ?? "regarder";
     anneau.classList.toggle("parcours-anneau-reussi", visite.salut !== null || visite.dejaFait);
   }
   const tropGrande = visee !== null && (visee.width * visee.height) / (window.innerWidth * window.innerHeight) > PART_ECRAN_MAX;
@@ -770,6 +852,10 @@ function suivre(): void {
     return;
   }
   if (visite.salut === null && etape.atteinte?.() === true) {
+    if (etape.celebrer === true) {
+      const bulle = elements.bulle?.getBoundingClientRect();
+      eclater(...departEclats(bulle === undefined ? window.innerWidth / 2 : bulle.left + bulle.width / 2, bulle?.top ?? window.innerHeight / 2), 16);
+    }
     avancerDepuis(visite.index);
   }
 }

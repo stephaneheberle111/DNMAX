@@ -25,6 +25,27 @@ export async function enregistrerFichier(nomPropose: string, octets: Uint8Array)
   });
 }
 
+/**
+ * Dossier proposé par la boîte « Enregistrer sous », choisi dans Préférences.
+ * L'enveloppe le choisit, le retient et s'en sert elle-même : la page ne reçoit
+ * le chemin que pour l'afficher. `null` : le dossier Documents.
+ */
+export async function lireDossierExports(): Promise<string | null> {
+  const dossier = await invoke<unknown>("lire_dossier_exports");
+  return typeof dossier === "string" ? dossier : null;
+}
+
+/** Fait choisir le dossier des exports ; rend le dossier retenu, ou `null` si l'enseignant a annulé. */
+export async function choisirDossierExports(): Promise<string | null> {
+  const dossier = await invoke<unknown>("choisir_dossier_exports");
+  return typeof dossier === "string" ? dossier : null;
+}
+
+/** Revient au dossier Documents pour les exports. */
+export async function oublierDossierExports(): Promise<void> {
+  await invoke("oublier_dossier_exports");
+}
+
 export type EtatCoffre = "absent" | "verrouille" | "ouvert";
 
 /** Codes d'erreur rendus par les commandes du coffre (voir `ErreurCommande` côté enveloppe). */
