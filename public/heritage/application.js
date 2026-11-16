@@ -5960,6 +5960,9 @@ function paintEtab(host){
       ${f("ville","Ville","")}${f("academie","Académie","")}
       ${f("contactDpo","Contact du délégué à la protection des données","Adresse électronique, téléphone ou service","","grid-column:1/-1")}
       ${mois("moisRentree","Mois de la rentrée",cal.rentree)}${mois("moisBascule","Début du second semestre",cal.bascule)}
+      <div class="field" style="grid-column:1/-1"><label for="et-moisConservation">Conservation des données d'étudiants après la sortie d'une promotion</label>
+        <select id="et-moisConservation" data-etmois="moisConservation">${[3,6,9,12,18,24,36,48,60].map(m=>`<option value="${m}" ${m===(+E.moisConservation||12)?"selected":""}>${m%12?m+" mois":m===12?"1 an":(m/12)+" ans"}</option>`).join("")}</select>
+        <div class="hint">À valider avec le délégué à la protection des données ; les documents RGPD reprennent cette durée. 1 an par défaut.</div></div>
       <div class="hint" style="grid-column:1/-1">Le calendrier sert à proposer le semestre d'une nouvelle évaluation et à dater l'année scolaire ; le semestre choisi reste celui de l'évaluation.</div>
     </div></div>`;
   host.querySelectorAll("[data-et]").forEach(inp=>inp.oninput=()=>{E[inp.dataset.et]=inp.value;persistData()});

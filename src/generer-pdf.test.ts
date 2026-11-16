@@ -7,7 +7,7 @@ import { genererPdf } from "./generer-pdf";
 const CHAMPS: ChampsDocumentsRgpd = {
   nom: "Lycée des Arts appliqués",
   contactDelegue: "dpd@exemple.fr",
-  anneesConservation: 1,
+  moisConservation: 12,
   date: new Date(2026, 10, 13),
   adresseCodeSource: ADRESSE_CODE_SOURCE,
   minutesVerrouillage: 15,
