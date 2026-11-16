@@ -4557,9 +4557,18 @@ function stepEditor(f,i,k){
    à moitié pleine si elle est commencée ; dessous, le statut et la prochaine chose à faire. */
 const ST_STEPS=["Préparée","Distribuée","Rendue","Évaluée","Restituée"];
 const ST_POS={prep:[0,0],distrib:[1,0],rendu:[2,0],evalcours:[3,1],eval:[3,0],restpart:[4,1],restit:[4,0],annulee:[-1,0]};
+/* suivi simplifié (Paramètres > Règles d'évaluation) : affichage seul, le statut détaillé reste celui de l'évaluation */
+function suiviSimple(){return !!LS.get("dnmade.reglages",{}).suiviSimplifie}
+function suiviCellSimple(f,i){
+  const SS=window.dnmaxPont.suiviSimplifie, st=statutOf(f), ss=SS.statutSimplifie(st), act=SS.actionSimplifiee(st);
+  const btn=act==="marquer-faite"?`<button type="button" class="lnk" data-ssimple="${i}">Marquer faite</button>`
+    :act==="remettre-a-faire"?`<button type="button" class="lnk" data-ssimple="${i}">Remettre à faire</button>`:"";
+  return `<div class="stw st-${ss}"><div class="stl">${esc(SS.LIBELLES_SIMPLIFIES[ss])}</div><div class="stn">${btn}</div></div>`;
+}
 function suiviCell(f,i){
   /* un brouillon n'a pas de suivi : il ne se distribue ni ne s'évalue avant d'être enregistré */
   if(f.brouillon)return `<div class="stl">Brouillon</div><div class="stn">→ à terminer : ouvrez-la, puis « Enregistrer l'évaluation »</div>`;
+  if(suiviSimple())return suiviCellSimple(f,i);
   const st=statutOf(f), s=suiviOf(f), t=isoToday();
   const dist=f.distribPrev||s.distrib, rend=f.renduPrev||s.butoir||s.rendu, re=restEleves(f);
   const [idx,half]=ST_POS[st]||[0,0];
@@ -4787,6 +4796,10 @@ function paintSaved(){
       if(F&&F.id===f.id){if(f[k2])F[k2]=f[k2];else delete F[k2];save()}syncF(f);paintSaved()});
     pop.querySelectorAll("[data-stset]").forEach(x=>x.onclick=()=>{const s=suiviOf(f), k2=x.dataset.stset;s[k2]=isoToday();
       if(k2==="evalue")s.mode=s.mode||(MOD.eleves?"dnmax":"main");syncF(f);paintSaved()})};
+  h.querySelectorAll("[data-ssimple]").forEach(b=>b.onclick=e=>{e.stopPropagation();const f=fiches[+b.dataset.ssimple];if(!f)return;
+    const s=suiviOf(f), act=window.dnmaxPont.suiviSimplifie.actionSimplifiee(statutOf(f));
+    if(act==="marquer-faite")s.distrib=isoToday();else if(act==="remettre-a-faire")delete s.distrib;
+    syncF(f);paintSaved()});
   h.querySelectorAll("[data-sts]").forEach(b=>b.onclick=e=>{e.stopPropagation();const key=b.dataset.sts, was=ui.stOpen===key;
     document.querySelectorAll(".xpop").forEach(x=>{if(!x.hidden){x.hidden=true;x.previousElementSibling&&x.previousElementSibling.setAttribute("aria-expanded","false")}});
     h.querySelectorAll(".sd.open").forEach(x=>x.classList.remove("open"));
