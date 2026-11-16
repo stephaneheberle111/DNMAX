@@ -44,6 +44,13 @@ describe("lirePaquet", () => {
     expect(lirePaquet(JSON.stringify(paquet))).toEqual(paquet);
   });
 
+  it("relit un paquet protégé qui ne contient pas d'étudiants, sans données d'étudiants", () => {
+    const paquet = construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand", CATALOGUE);
+    const relu = lirePaquet(JSON.stringify(paquet), true);
+    expect(typeof relu).toBe("object");
+    expect(typeof relu === "object" ? relu.evaluations.map((evaluation) => evaluation.donneesEleves ?? null) : []).toEqual([null]);
+  });
+
   it("refuse un texte qui n'est pas du JSON ou pas un objet", () => {
     expect(lirePaquet("pas du json")).toBe("illisible");
     expect(lirePaquet("[]")).toBe("illisible");
