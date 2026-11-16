@@ -1,6 +1,6 @@
 # Journal des modifications
 
-## Non publié
+## 0.9.0 — 2026-11-16
 
 ### Modifié
 
