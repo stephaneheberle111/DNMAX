@@ -3,7 +3,7 @@ import "./ecran-sauvegardes.css";
 import { decrireSauvegarde, ecrireDateSauvegarde, ecrireTaille, type Sauvegarde } from "./domaine/sauvegardes";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
-import { listerSauvegardes, restaurerSauvegarde } from "./enveloppe";
+import { enregistrerPolitiqueSauvegardes, lirePolitiqueSauvegardes, listerSauvegardes, restaurerSauvegarde } from "./enveloppe";
 
 const IDENTIFIANT_PANNEAU = "panneau-sauvegardes";
 const IDENTIFIANT_LISTE = "liste-sauvegardes";
@@ -82,6 +82,7 @@ export function installerSauvegardes(acces: AccesDonnees): void {
     return;
   }
   panneau.hidden = false;
+  installerPolitique();
   const actualiser = (): void => {
     listerSauvegardes()
       .then((sauvegardes) => {
@@ -96,4 +97,59 @@ export function installerSauvegardes(acces: AccesDonnees): void {
       });
   };
   actualiser();
+}
+
+const DUREES_HEBDOMADAIRES = [1, 2, 3, 4, 5, 6];
+const DUREES_MENSUELLES = [0, 3, 6, 9, 12, 18, 24];
+
+function libelleMois(mois: number): string {
+  if (mois === 0) {
+    return "jamais";
+  }
+  if (mois % 12 === 0) {
+    return mois === 12 ? "1 an" : `${String(mois / 12)} ans`;
+  }
+  return `${String(mois)} mois`;
+}
+
+/** Paramètres > Sauvegardes : durées de conservation des copies hebdomadaires et mensuelles, appliquées à la prochaine ouverture. */
+function installerPolitique(): void {
+  const zone = document.getElementById("politique-sauvegardes");
+  const hebdo = document.getElementById("sv-hebdo");
+  const mensuel = document.getElementById("sv-mensuel");
+  const message = document.getElementById("sv-message");
+  if (zone === null || !(hebdo instanceof HTMLSelectElement) || !(mensuel instanceof HTMLSelectElement) || message === null) {
+    return;
+  }
+  const remplir = (liste: HTMLSelectElement, durees: readonly number[], choisie: number): void => {
+    liste.replaceChildren(
+      ...durees.map((mois) => {
+        const option = document.createElement("option");
+        option.value = String(mois);
+        option.textContent = libelleMois(mois);
+        option.selected = mois === choisie;
+        return option;
+      }),
+    );
+  };
+  lirePolitiqueSauvegardes()
+    .then((politique) => {
+      remplir(hebdo, DUREES_HEBDOMADAIRES, politique.moisHebdomadaires);
+      remplir(mensuel, DUREES_MENSUELLES, politique.moisMensuelles);
+      zone.hidden = false;
+    })
+    .catch(() => {
+      zone.hidden = true;
+    });
+  const enregistrer = (): void => {
+    enregistrerPolitiqueSauvegardes({ moisHebdomadaires: Number(hebdo.value), moisMensuelles: Number(mensuel.value) })
+      .then(() => {
+        message.textContent = "Retenu : s'applique à la prochaine ouverture.";
+      })
+      .catch(() => {
+        message.textContent = "Le réglage n'a pas pu être enregistré.";
+      });
+  };
+  hebdo.addEventListener("change", enregistrer);
+  mensuel.addEventListener("change", enregistrer);
 }

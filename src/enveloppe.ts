@@ -300,6 +300,41 @@ export async function ouvrirDernierExport(): Promise<void> {
 }
 
 /** Liste les sauvegardes du coffre, de la plus récente à la plus ancienne. */
+/** Durées de conservation des sauvegardes, en mois (Paramètres > Sauvegardes). */
+export interface PolitiqueSauvegardes {
+  moisHebdomadaires: number;
+  moisMensuelles: number;
+}
+
+function estPolitique(valeur: unknown): valeur is PolitiqueSauvegardes {
+  return (
+    typeof valeur === "object" &&
+    valeur !== null &&
+    "moisHebdomadaires" in valeur &&
+    "moisMensuelles" in valeur &&
+    typeof valeur.moisHebdomadaires === "number" &&
+    typeof valeur.moisMensuelles === "number"
+  );
+}
+
+/** Politique de sauvegarde de ce poste. */
+export async function lirePolitiqueSauvegardes(): Promise<PolitiqueSauvegardes> {
+  const politique = await invoke("lire_politique_sauvegardes");
+  if (!estPolitique(politique)) {
+    throw new ErreurCoffre("interne");
+  }
+  return politique;
+}
+
+/** Retient une politique de sauvegarde ; l'enveloppe la borne et rend celle retenue. */
+export async function enregistrerPolitiqueSauvegardes(politique: PolitiqueSauvegardes): Promise<PolitiqueSauvegardes> {
+  const retenue = await invoke("enregistrer_politique_sauvegardes", { politique });
+  if (!estPolitique(retenue)) {
+    throw new ErreurCoffre("interne");
+  }
+  return retenue;
+}
+
 export async function listerSauvegardes(): Promise<Sauvegarde[]> {
   const liste = await appelerCoffre("lister_sauvegardes");
   if (!estListeSauvegardes(liste)) {
