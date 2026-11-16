@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: CECILL-2.1
+import { defautsRobustesse, expliquerDefauts, motsInterditsDe } from "./domaine/robustesse-mot-de-passe";
 import "./ecran-coffre.css";
 import { LONGUEUR_MAXIMALE_NOM, creerIdentite, type Identite } from "./domaine/identite";
 import type { Entrees } from "./domaine/magasin-memoire";
 import {
   LONGUEUR_MINIMALE_MOT_DE_PASSE,
   LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES,
-  estAssezLong,
   verifierNouveauMotDePasse,
   type DefautMotDePasse,
 } from "./domaine/saisie-coffre";
@@ -150,11 +150,12 @@ const GABARIT_SECOURS = `
     <button type="submit" class="btn primary">Ouvrir et changer le mot de passe</button></div>`;
 
 const GABARIT_RENFORCEMENT = `
-  <h1>Un mot de passe plus long</h1>
+  <h1>Un mot de passe plus solide</h1>
   <p>Le module Étudiants est actif : vos données contiennent les noms et les résultats de vos étudiants.
-     Il faut désormais un mot de passe de ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères au moins.
-     Une courte phrase facile à retenir convient très bien.</p>
-  <label>Nouveau mot de passe (${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères au moins)
+     Il faut un mot de passe de ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères au moins, avec trois types de caractères
+     (minuscules, majuscules, chiffres, symboles), sans suite toute faite, sans DNMAX ni votre nom ni celui de l'établissement.
+     Une courte phrase avec un chiffre convient très bien.</p>
+  <label>Nouveau mot de passe
     <input type="password" name="motDePasse" autocomplete="new-password" required></label>
   <label>Nouveau mot de passe, une seconde fois
     <input type="password" name="confirmation" autocomplete="new-password" required></label>
@@ -315,13 +316,19 @@ function terminerOuverture(
   entrees: Entrees,
   terminer: (entrees: Entrees) => void,
 ): void {
-  if (!moduleElevesActif(entrees) || estAssezLong(motDePasse, LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)) {
+  const motsInterdits = motsInterditsDe(entrees);
+  if (!moduleElevesActif(entrees) || defautsRobustesse(motDePasse, motsInterdits).length === 0) {
     terminer(entrees);
     return;
   }
   const formulaire = afficherFormulaire(ecran, GABARIT_RENFORCEMENT);
   brancherSoumission(formulaire, async () => {
     if (signalerDefautMotDePasse(formulaire, LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)) {
+      return;
+    }
+    const defauts = defautsRobustesse(lireChamp(formulaire, "motDePasse"), motsInterdits);
+    if (defauts.length > 0) {
+      afficherErreur(formulaire, expliquerDefauts(defauts));
       return;
     }
     await changerMotDePasse(motDePasse, lireChamp(formulaire, "motDePasse"));
