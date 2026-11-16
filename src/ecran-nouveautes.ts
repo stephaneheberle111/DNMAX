@@ -54,6 +54,15 @@ function noterVersionVue(version: string): void {
 }
 
 /**
+ * Première ouverture de l'outil : la version installée compte comme vue, pour
+ * que ses nouveautés ne s'affichent pas au rechargement qui suit la bienvenue.
+ */
+export async function noterNouveautesVues(): Promise<void> {
+  const version = await lireVersion();
+  if (version !== "") noterVersionVue(version);
+}
+
+/**
  * Au premier lancement d'une nouvelle version, montre ce qui a changé depuis la
  * dernière version utilisée sur ce poste, classé par type de changement.
  *
