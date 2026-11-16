@@ -30,6 +30,7 @@
 
 ### Corrigé
 
+- Première ouverture : les nouveautés de la version ne s'affichent plus après la page de bienvenue (elles retenaient la visite guidée). Elles restent montrées après une mise à jour.
 - Paramètres > Exemple : l'aide décrit ce que l'exemple ajoute vraiment (un établissement fictif complet), et non plus une seule évaluation.
 - Visite guidée : à l'étape « Compétences », le curseur invitait à écrire au lieu de cocher une case ; à l'étape « Vos préférences », la bulle cachait le menu « Mon compte ».
 - Documents Word et OpenDocument : les noms des niveaux au-dessus de la jauge ne sont plus coupés au milieu d'un mot (« Non acqui-s ») ; chacun a la place de son mot le plus long, et le texte se réduit un peu si la colonne est étroite.

@@ -136,11 +136,10 @@ export function nouveautesAMontrer(
   versionCourante: string,
   installationExistante: boolean,
 ): { depuis: string | null } | null {
-  if (versionCourante === "") return null;
-  if (versionVue === null) {
-    // Première installation : rien n'a changé pour l'enseignant. Mise à jour depuis une
-    // version qui ne notait pas encore ce qui a été vu : on montre la version installée.
-    return installationExistante ? { depuis: null } : null;
-  }
+  // Première ouverture de l'outil (aucune donnée avant ce lancement) : rien n'a changé pour
+  // l'enseignant, même si une ancienne installation a noté sur ce poste la version qu'elle avait vue.
+  if (versionCourante === "" || !installationExistante) return null;
+  // Mise à jour depuis une version qui ne notait pas encore ce qui a été vu : on montre la version installée.
+  if (versionVue === null) return { depuis: null };
   return comparerVersions(versionCourante, versionVue) > 0 ? { depuis: versionVue } : null;
 }
