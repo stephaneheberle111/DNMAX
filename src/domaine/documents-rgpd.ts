@@ -255,7 +255,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Lieu de stockage",
           contenu: [
             texte(
-              "Uniquement l'ordinateur de l'enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l'Union européenne des données d'étudiants.",
+              "Uniquement l'ordinateur de l'enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec des sauvegardes chiffrées elles aussi (une par semaine récente, puis une par mois). Aucun stockage en ligne, aucun transfert hors de l'Union européenne des données d'étudiants.",
             ),
           ],
         },

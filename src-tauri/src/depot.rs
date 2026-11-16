@@ -20,8 +20,97 @@ const PREFIXE_SAUVEGARDE: &str = "coffre-";
 const SUFFIXE_SAUVEGARDE: &str = ".dnmax";
 const PREFIXE_MISE_DE_COTE: &str = "avant-restauration-";
 
-/// Nombre de sauvegardes quotidiennes conservées.
-pub const NOMBRE_SAUVEGARDES_CONSERVEES: usize = 10;
+/// Durées de conservation des sauvegardes, en mois, choisies dans Paramètres :
+/// une par semaine sur les `mois_hebdomadaires` derniers mois, une par mois
+/// sur les `mois_mensuelles` derniers mois. La plus récente est toujours gardée.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PolitiqueSauvegardes {
+    pub mois_hebdomadaires: u8,
+    pub mois_mensuelles: u8,
+}
+
+impl PolitiqueSauvegardes {
+    pub const PAR_DEFAUT: Self = Self {
+        mois_hebdomadaires: 3,
+        mois_mensuelles: 12,
+    };
+
+    /// Ramène chaque durée entre ses bornes : 1 à 6 mois pour les hebdomadaires, 0 à 24 pour les mensuelles.
+    #[must_use]
+    pub fn bornee(self) -> Self {
+        Self {
+            mois_hebdomadaires: self.mois_hebdomadaires.clamp(1, 6),
+            mois_mensuelles: self.mois_mensuelles.min(24),
+        }
+    }
+}
+
+/// Nom du fichier de réglage des sauvegardes, dans le dossier de configuration
+/// (hors du coffre : l'enveloppe en a besoin avant de l'ouvrir).
+pub const NOM_FICHIER_POLITIQUE: &str = "politique-sauvegardes.json";
+
+/// Lit la politique retenue ; un fichier absent ou illisible vaut la politique par défaut.
+pub fn lire_politique(fichier: &Path) -> PolitiqueSauvegardes {
+    fs::read_to_string(fichier)
+        .ok()
+        .and_then(|texte| serde_json::from_str::<PolitiqueSauvegardes>(&texte).ok())
+        .map_or(
+            PolitiqueSauvegardes::PAR_DEFAUT,
+            PolitiqueSauvegardes::bornee,
+        )
+}
+
+/// Retient la politique choisie, bornée.
+///
+/// # Errors
+/// Si le dossier de configuration ne peut pas être créé ou le fichier écrit.
+pub fn enregistrer_politique(fichier: &Path, politique: PolitiqueSauvegardes) -> io::Result<()> {
+    if let Some(parent) = fichier.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    let texte = serde_json::to_string(&politique.bornee()).map_err(io::Error::other)?;
+    fs::write(fichier, texte)
+}
+
+/// `jour` reculé de `mois` mois ; le jour du mois est ramené au 28 au plus.
+fn reculer_de_mois(jour: Date, mois: u8) -> Date {
+    let rang = i32::from(u8::from(jour.month())) - 1 + jour.year() * 12 - i32::from(mois);
+    let annee = rang.div_euclid(12);
+    let numero = u8::try_from(rang.rem_euclid(12) + 1).unwrap_or(1);
+    let mois_cible = Month::try_from(numero).unwrap_or(Month::January);
+    Date::from_calendar_date(annee, mois_cible, jour.day().min(28)).unwrap_or(jour)
+}
+
+/// Jours des sauvegardes à garder parmi `jours` : la plus récente, la dernière
+/// de chaque semaine récente et la dernière de chaque mois récent.
+pub fn jours_a_garder(
+    jours: &[Date],
+    aujourd_hui: Date,
+    politique: PolitiqueSauvegardes,
+) -> Vec<Date> {
+    let politique = politique.bornee();
+    let mut tries = jours.to_vec();
+    tries.sort_unstable();
+    tries.dedup();
+    let horizon_semaines = reculer_de_mois(aujourd_hui, politique.mois_hebdomadaires);
+    let horizon_mois = reculer_de_mois(aujourd_hui, politique.mois_mensuelles);
+    let mut gardes: Vec<Date> = Vec::new();
+    for (rang, jour) in tries.iter().enumerate() {
+        let suivant = tries.get(rang + 1);
+        let derniere = suivant.is_none();
+        let fin_de_semaine = suivant
+            .is_none_or(|autre| autre.iso_week() != jour.iso_week() || autre.year() != jour.year());
+        let fin_de_mois = suivant
+            .is_none_or(|autre| autre.month() != jour.month() || autre.year() != jour.year());
+        let hebdomadaire = *jour >= horizon_semaines && fin_de_semaine;
+        let mensuelle = politique.mois_mensuelles > 0 && *jour >= horizon_mois && fin_de_mois;
+        if derniere || hebdomadaire || mensuelle {
+            gardes.push(*jour);
+        }
+    }
+    gardes
+}
 
 pub fn chemin_coffre(dossier: &Path) -> PathBuf {
     dossier.join(NOM_FICHIER_COFFRE)
@@ -88,7 +177,11 @@ pub fn creer(dossier: &Path, octets: &[u8]) -> io::Result<()> {
 /// # Errors
 ///
 /// Rend l'erreur du système. Une sauvegarde manquée n'altère pas le coffre.
-pub fn sauvegarder_du_jour(dossier: &Path, jour: Date, nombre_conserve: usize) -> io::Result<bool> {
+pub fn sauvegarder_du_jour(
+    dossier: &Path,
+    jour: Date,
+    politique: PolitiqueSauvegardes,
+) -> io::Result<bool> {
     let Some(octets) = lire(dossier)? else {
         return Ok(false);
     };
@@ -109,41 +202,37 @@ pub fn sauvegarder_du_jour(dossier: &Path, jour: Date, nombre_conserve: usize) -
         fichier.sync_all()?;
         true
     };
-    supprimer_les_plus_anciennes(&sauvegardes, nombre_conserve)?;
+    supprimer_les_perimees(&sauvegardes, jour, politique)?;
     Ok(cree)
 }
 
-/// Supprime les sauvegardes quotidiennes au-delà de `nombre_conserve`, puis,
-/// une fois la rotation pleine, les copies mises de côté avant une
-/// restauration qui sont plus anciennes que la plus ancienne sauvegarde
-/// quotidienne gardée.
-///
-/// Les copies mises de côté ne comptent pas dans les `nombre_conserve` : une
-/// restauration ne doit pas chasser une sauvegarde quotidienne. Elles suivent
-/// en revanche le même horizon, pour qu'une donnée effacée (un élève, par
-/// exemple) ne survive pas indéfiniment dans une copie oubliée.
-fn supprimer_les_plus_anciennes(sauvegardes: &Path, nombre_conserve: usize) -> io::Result<()> {
-    let mut noms: Vec<String> = fs::read_dir(sauvegardes)?
+/// Supprime les sauvegardes que la politique ne garde plus, puis les copies
+/// mises de côté avant une restauration plus anciennes que la plus ancienne
+/// sauvegarde gardée, pour qu'une donnée effacée (un étudiant, par exemple)
+/// ne survive pas indéfiniment dans une copie oubliée.
+fn supprimer_les_perimees(
+    sauvegardes: &Path,
+    aujourd_hui: Date,
+    politique: PolitiqueSauvegardes,
+) -> io::Result<()> {
+    let noms: Vec<(String, Date)> = fs::read_dir(sauvegardes)?
         .filter_map(Result::ok)
         .filter_map(|entree| entree.file_name().into_string().ok())
         // Ne toucher qu'aux fichiers que ce module a lui-même créés.
-        .filter(|nom| nom.starts_with(PREFIXE_SAUVEGARDE) && nom.ends_with(SUFFIXE_SAUVEGARDE))
+        .filter_map(|nom| {
+            analyser_nom(&nom)
+                .filter(|analyse| analyse.nature == NatureSauvegarde::Quotidienne)
+                .map(|analyse| (nom, analyse.jour))
+        })
         .collect();
-    // La date AAAA-MM-JJ dans le nom fait coïncider l'ordre alphabétique et l'ordre chronologique.
-    noms.sort_unstable();
-    let en_trop = noms.len().saturating_sub(nombre_conserve);
-    for nom in noms.iter().take(en_trop) {
-        fs::remove_file(sauvegardes.join(nom))?;
+    let jours: Vec<Date> = noms.iter().map(|(_, jour)| *jour).collect();
+    let gardes = jours_a_garder(&jours, aujourd_hui, politique);
+    for (nom, jour) in &noms {
+        if !gardes.contains(jour) {
+            fs::remove_file(sauvegardes.join(nom))?;
+        }
     }
-    // Tant que la rotation n'est pas pleine, rien ne presse : les copies mises de côté restent.
-    if nombre_conserve == 0 || noms.len() < nombre_conserve {
-        return Ok(());
-    }
-    let Some(plus_ancien_jour_garde) = noms
-        .get(en_trop)
-        .and_then(|nom| analyser_nom(nom))
-        .map(|analyse| analyse.jour)
-    else {
+    let Some(plus_ancien_jour_garde) = gardes.first().copied() else {
         return Ok(());
     };
     for entree in fs::read_dir(sauvegardes)?.filter_map(Result::ok) {
@@ -402,6 +491,32 @@ mod tests {
     use super::*;
     use time::Month;
 
+    const DEFAUT: PolitiqueSauvegardes = PolitiqueSauvegardes::PAR_DEFAUT;
+
+    #[test]
+    fn la_politique_se_relit_bornee_et_vaut_le_defaut_sans_fichier() {
+        let dossier = tempfile::tempdir().expect("dossier temporaire");
+        let fichier = dossier.path().join("config").join(NOM_FICHIER_POLITIQUE);
+        assert_eq!(lire_politique(&fichier), DEFAUT);
+        enregistrer_politique(
+            &fichier,
+            PolitiqueSauvegardes {
+                mois_hebdomadaires: 2,
+                mois_mensuelles: 30,
+            },
+        )
+        .expect("écriture");
+        assert_eq!(
+            lire_politique(&fichier),
+            PolitiqueSauvegardes {
+                mois_hebdomadaires: 2,
+                mois_mensuelles: 24
+            }
+        );
+        fs::write(&fichier, "abîmé").expect("écriture");
+        assert_eq!(lire_politique(&fichier), DEFAUT);
+    }
+
     fn jour(numero: u8) -> Date {
         Date::from_calendar_date(2026, Month::March, numero).expect("date valide")
     }
@@ -499,14 +614,14 @@ mod tests {
     #[test]
     fn ne_sauvegarde_rien_sans_coffre() {
         let dossier = tempfile::tempdir().expect("dossier temporaire");
-        assert!(!sauvegarder_du_jour(dossier.path(), jour(1), 3).expect("sauvegarde"));
+        assert!(!sauvegarder_du_jour(dossier.path(), jour(1), DEFAUT).expect("sauvegarde"));
     }
 
     #[test]
     fn cree_une_sauvegarde_datee() {
         let dossier = tempfile::tempdir().expect("dossier temporaire");
         ecrire(dossier.path(), b"contenu").expect("écriture");
-        assert!(sauvegarder_du_jour(dossier.path(), jour(9), 3).expect("sauvegarde"));
+        assert!(sauvegarder_du_jour(dossier.path(), jour(9), DEFAUT).expect("sauvegarde"));
         assert_eq!(
             noms_des_sauvegardes(dossier.path()),
             ["coffre-2026-03-09.dnmax"]
@@ -522,9 +637,9 @@ mod tests {
     fn ne_refait_pas_la_sauvegarde_du_jour() {
         let dossier = tempfile::tempdir().expect("dossier temporaire");
         ecrire(dossier.path(), b"matin").expect("écriture");
-        assert!(sauvegarder_du_jour(dossier.path(), jour(9), 3).expect("sauvegarde"));
+        assert!(sauvegarder_du_jour(dossier.path(), jour(9), DEFAUT).expect("sauvegarde"));
         ecrire(dossier.path(), b"soir").expect("écriture");
-        assert!(!sauvegarder_du_jour(dossier.path(), jour(9), 3).expect("sauvegarde"));
+        assert!(!sauvegarder_du_jour(dossier.path(), jour(9), DEFAUT).expect("sauvegarde"));
         let copie = dossier
             .path()
             .join(NOM_DOSSIER_SAUVEGARDES)
@@ -533,19 +648,66 @@ mod tests {
     }
 
     #[test]
-    fn ne_garde_que_les_plus_recentes() {
+    fn ne_garde_que_la_derniere_sauvegarde_de_chaque_semaine() {
+        // Le 1er mars 2026 est un dimanche : du 2 au 5, c'est la semaine suivante.
         let dossier = tempfile::tempdir().expect("dossier temporaire");
         ecrire(dossier.path(), b"contenu").expect("écriture");
         for numero in [1, 2, 3, 4, 5] {
-            sauvegarder_du_jour(dossier.path(), jour(numero), 3).expect("sauvegarde");
+            sauvegarder_du_jour(dossier.path(), jour(numero), DEFAUT).expect("sauvegarde");
         }
         assert_eq!(
             noms_des_sauvegardes(dossier.path()),
+            ["coffre-2026-03-01.dnmax", "coffre-2026-03-05.dnmax"]
+        );
+    }
+
+    #[test]
+    fn au_dela_des_semaines_garde_une_sauvegarde_par_mois_puis_plus_rien() {
+        let date = |annee: i32, mois: Month, jour: u8| {
+            Date::from_calendar_date(annee, mois, jour).expect("date valide")
+        };
+        let jours = [
+            date(2025, Month::January, 10),
+            date(2025, Month::June, 3),
+            date(2025, Month::June, 24),
+            date(2026, Month::January, 5),
+            date(2026, Month::January, 7),
+            date(2026, Month::March, 2),
+        ];
+        let gardes = jours_a_garder(&jours, date(2026, Month::March, 2), DEFAUT);
+        // Janvier 2025 dépasse les 12 mois ; en juin 2025, seule la dernière du mois reste ;
+        // janvier 2026 a plus de 3 mois mais garde sa dernière du mois.
+        assert_eq!(
+            gardes,
             [
-                "coffre-2026-03-03.dnmax",
-                "coffre-2026-03-04.dnmax",
-                "coffre-2026-03-05.dnmax"
+                date(2025, Month::June, 24),
+                date(2026, Month::January, 7),
+                date(2026, Month::March, 2)
             ]
+        );
+    }
+
+    #[test]
+    fn garde_toujours_la_plus_recente_et_borne_la_politique() {
+        let gardes = jours_a_garder(
+            &[jour(1)],
+            Date::from_calendar_date(2030, Month::March, 1).expect("date valide"),
+            PolitiqueSauvegardes {
+                mois_hebdomadaires: 0,
+                mois_mensuelles: 0,
+            },
+        );
+        assert_eq!(gardes, [jour(1)]);
+        assert_eq!(
+            PolitiqueSauvegardes {
+                mois_hebdomadaires: 9,
+                mois_mensuelles: 40
+            }
+            .bornee(),
+            PolitiqueSauvegardes {
+                mois_hebdomadaires: 6,
+                mois_mensuelles: 24
+            }
         );
     }
 
@@ -557,11 +719,15 @@ mod tests {
         fs::create_dir_all(&sauvegardes).expect("dossier");
         fs::write(sauvegardes.join("notes-personnelles.txt"), b"a garder").expect("écriture");
         for numero in [1, 2, 3] {
-            sauvegarder_du_jour(dossier.path(), jour(numero), 1).expect("sauvegarde");
+            sauvegarder_du_jour(dossier.path(), jour(numero), DEFAUT).expect("sauvegarde");
         }
         assert_eq!(
             noms_des_sauvegardes(dossier.path()),
-            ["coffre-2026-03-03.dnmax", "notes-personnelles.txt"]
+            [
+                "coffre-2026-03-01.dnmax",
+                "coffre-2026-03-03.dnmax",
+                "notes-personnelles.txt"
+            ]
         );
     }
 
@@ -793,9 +959,9 @@ mod tests {
     fn les_copies_mises_de_cote_ne_comptent_pas_dans_la_rotation() {
         let dossier = tempfile::tempdir().expect("dossier temporaire");
         ecrire(dossier.path(), b"contenu").expect("écriture");
-        sauvegarder_du_jour(dossier.path(), jour(1), 2).expect("sauvegarde");
+        sauvegarder_du_jour(dossier.path(), jour(1), DEFAUT).expect("sauvegarde");
         restaurer(dossier.path(), b"contenu", instant(1, 10, 0, 0)).expect("restauration");
-        sauvegarder_du_jour(dossier.path(), jour(2), 2).expect("sauvegarde");
+        sauvegarder_du_jour(dossier.path(), jour(2), DEFAUT).expect("sauvegarde");
         assert_eq!(
             noms_des_sauvegardes(dossier.path()),
             [
@@ -807,21 +973,20 @@ mod tests {
     }
 
     #[test]
-    fn une_copie_mise_de_cote_part_avec_la_sauvegarde_quotidienne_de_son_jour() {
+    fn une_copie_mise_de_cote_part_quand_sa_periode_n_est_plus_gardee() {
         let dossier = tempfile::tempdir().expect("dossier temporaire");
         ecrire(dossier.path(), b"contenu").expect("écriture");
-        sauvegarder_du_jour(dossier.path(), jour(1), 2).expect("sauvegarde");
+        let courte = PolitiqueSauvegardes {
+            mois_hebdomadaires: 1,
+            mois_mensuelles: 0,
+        };
+        sauvegarder_du_jour(dossier.path(), jour(1), courte).expect("sauvegarde");
         restaurer(dossier.path(), b"contenu", instant(1, 10, 0, 0)).expect("restauration");
-        restaurer(dossier.path(), b"contenu", instant(2, 10, 0, 0)).expect("restauration");
-        sauvegarder_du_jour(dossier.path(), jour(2), 2).expect("sauvegarde");
-        sauvegarder_du_jour(dossier.path(), jour(3), 2).expect("sauvegarde");
+        let mai = Date::from_calendar_date(2026, Month::May, 10).expect("date valide");
+        sauvegarder_du_jour(dossier.path(), mai, courte).expect("sauvegarde");
         assert_eq!(
             noms_des_sauvegardes(dossier.path()),
-            [
-                "avant-restauration-2026-03-02-100000.dnmax",
-                "coffre-2026-03-02.dnmax",
-                "coffre-2026-03-03.dnmax"
-            ]
+            ["coffre-2026-05-10.dnmax"]
         );
     }
 }
