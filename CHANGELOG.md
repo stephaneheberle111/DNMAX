@@ -17,6 +17,7 @@
 
 ### Ajouté
 
+- Paramètres > Mises à jour : recherche automatique, une fois par jour à l'ouverture, désactivée par défaut. La recherche interroge désormais dnmax.fr, hébergé en France, et non plus GitHub ; la mise à jour Windows s'y télécharge aussi.
 - Mon établissement > Établissement : durée de conservation des données d'étudiants après la sortie d'une promotion, de 3 mois à 5 ans (1 an par défaut). Les rappels et les documents RGPD la reprennent.
 - Paramètres > Règles d'évaluation : les règles appliquées à tous (échelle, seuils de la jauge, enregistrement, acquisition, suivi), et une case pour ne plus situer l'étudiant par rapport à sa promotion dans Progression.
 - Mon établissement > Établissement : mois de la rentrée et début du second semestre, qui servent à proposer le semestre d'une nouvelle évaluation (septembre et février par défaut).

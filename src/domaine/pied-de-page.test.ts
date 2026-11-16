@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { aideMiseAJour, classerLien, indicationMiseAJour } from "./pied-de-page";
+import { aideMiseAJour, classerLien, indicationMiseAJour, rechercheAutomatiqueDue } from "./pied-de-page";
 
 describe("indicationMiseAJour", () => {
   it("ne dit rien tant qu'aucune recherche n'a été lancée", () => {
@@ -41,5 +41,17 @@ describe("classerLien", () => {
     expect(classerLien("#", undefined)).toEqual({ type: "inerte" });
     expect(classerLien("http://exemple.fr", undefined)).toEqual({ type: "inerte" });
     expect(classerLien("javascript:alert(1)", undefined)).toEqual({ type: "inerte" });
+  });
+});
+
+describe("rechercheAutomatiqueDue", () => {
+  it("part une fois par jour quand elle est activée", () => {
+    expect(rechercheAutomatiqueDue(true, "2026-11-15", "2026-11-16")).toBe(true);
+    expect(rechercheAutomatiqueDue(true, "", "2026-11-16")).toBe(true);
+  });
+
+  it("ne part pas deux fois le même jour, ni si elle est désactivée", () => {
+    expect(rechercheAutomatiqueDue(true, "2026-11-16", "2026-11-16")).toBe(false);
+    expect(rechercheAutomatiqueDue(false, "", "2026-11-16")).toBe(false);
   });
 });
