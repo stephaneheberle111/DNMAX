@@ -1038,7 +1038,7 @@ footer a{color:var(--ink-2)}
 <tr><th>Personnes concernées</th><td>Les étudiants des promotions suivies par l’enseignant.</td></tr>
 <tr><th>Données</th><td>Prénom, nom, promotion ; niveaux atteints par compétence ; observations et appréciations ; dates de rendu et de restitution ; mentions «&nbsp;non rendu&nbsp;» ou «&nbsp;dispensé&nbsp;». Aucune donnée sensible ne doit être saisie dans les champs de texte libre (santé, situation familiale…).</td></tr>
 <tr><th>Destinataires</th><td>L’enseignant ; les collègues de l’équipe pédagogique à qui il transmet volontairement une évaluation (fichier chiffré par mot de passe, ou échange direct d’ordinateur à ordinateur) ; l’étudiant pour ses propres résultats. L’éditeur de DNMAX et l’hébergeur du site n’y ont jamais accès.</td></tr>
-<tr><th>Lieu de stockage</th><td>Uniquement l’ordinateur de l’enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec dix sauvegardes quotidiennes chiffrées elles aussi. Aucun stockage en ligne, aucun transfert hors de l’Union européenne des données d’étudiants.</td></tr>
+<tr><th>Lieu de stockage</th><td>Uniquement l’ordinateur de l’enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec des sauvegardes chiffrées elles aussi (une par semaine récente, puis une par mois). Aucun stockage en ligne, aucun transfert hors de l’Union européenne des données d’étudiants.</td></tr>
 <tr><th>Durée de conservation</th><td>Fixée par l’établissement dans Mon établissement, de 3 mois à 5 ans après la sortie de la promotion (fin de l’année scolaire où s’achève le diplôme) ; un an par défaut. DNMAX le rappelle ensuite et propose d’anonymiser ou d’effacer les données ; une promotion peut aussi l’être plus tôt.</td></tr>
 <tr><th>Droits des étudiants</th><td>Accès, rectification, effacement et limitation, à exercer auprès de l’enseignant ou du délégué à la protection des données. Dans DNMAX, Paramètres &gt; Données des étudiants permet d’exporter toutes les données d’un étudiant, de l’effacer partout, et d’anonymiser ou d’effacer une promotion.</td></tr>
 <tr><th>Sécurité</th><td>Chiffrement de toutes les données saisies ; mot de passe d’au moins 12 caractères, demandé à chaque ouverture ; verrouillage après 15 minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des étudiants.</td></tr>
@@ -1116,7 +1116,7 @@ footer a{color:var(--ink-2)}
 
 <div data-doc="donnees" data-titre="Données et sauvegardes">
 <h3>Données et sauvegardes</h3>
-<p>Toutes vos données sont dans le fichier chiffré <code>coffre.dnmax</code>. À côté, le dossier <code>sauvegardes/</code> garde une copie chiffrée par jour d’utilisation, dix au plus.</p>
+<p>Toutes vos données sont dans le fichier chiffré <code>coffre.dnmax</code>. À côté, le dossier <code>sauvegardes/</code> garde des copies chiffrées&nbsp;: la dernière de chaque semaine pendant trois mois, puis la dernière de chaque mois pendant un an (réglable dans Paramètres &gt; Sauvegardes).</p>
 <div class="tbl"><table>
 <thead><tr><th>Système</th><th>Dossier</th></tr></thead>
 <tbody>

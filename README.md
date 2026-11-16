@@ -8,7 +8,7 @@ C'est une application de bureau autonome pour Windows, Linux et macOS : pas de s
 
 ## Où sont les données
 
-Tout est enregistré dans un fichier chiffré, `coffre.dnmax`, protégé par le mot de passe choisi au premier lancement. Un dossier `sauvegardes/` voisin garde une copie chiffrée par jour d'utilisation (dix au plus).
+Tout est enregistré dans un fichier chiffré, `coffre.dnmax`, protégé par le mot de passe choisi au premier lancement. Un dossier `sauvegardes/` voisin garde des copies chiffrées : la dernière de chaque semaine pendant trois mois, puis de chaque mois pendant un an (réglable).
 
 | Système | Dossier |
 | --- | --- |

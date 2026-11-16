@@ -4,6 +4,7 @@
 
 ### Modifié
 
+- Sauvegardes : DNMAX garde désormais la dernière copie de chaque semaine pendant trois mois, puis la dernière de chaque mois pendant un an, au lieu des dix derniers jours d'utilisation. Les deux durées se règlent dans Paramètres > Sauvegardes.
 - Une seule échelle d'évaluation pour tous, officielle pour les DN MADE : les niveaux de maîtrise (Insuffisant, Fragile, Satisfaisant, Très bonne maîtrise). Une compétence est acquise à partir de « Satisfaisant ». Les degrés d'acquisition, la note chiffrée, l'échelle personnalisée et les coefficients disparaissent ; vos évaluations passent à cette échelle.
 - Pour enregistrer une évaluation, il faut désormais aussi une promotion, une consigne et au moins un EC (une UE cochée vaut tous ses EC).
 - Ménage interne : DNMAX ne reprend plus les formats de données de ses toutes premières versions d'essai, et n'a plus de mise en page pour téléphone (il ne s'installe que sur ordinateur). Vos données de la 0.8 s'ouvrent comme avant.

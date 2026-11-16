@@ -287,7 +287,12 @@
     <div class="panel" id="panneau-sauvegardes" hidden>
       <div class="pick-head"><h3>Sauvegardes</h3><span class="count" id="nombre-sauvegardes">0</span></div>
       <div class="panel-body">
-        <div class="hint">DNMAX garde une copie chiffrée de vos données par jour d'utilisation, dix au plus, faite à la première ouverture de la journée. Vous pouvez revenir à l'une d'elles : l'état actuel est d'abord mis de côté.</div>
+        <div class="hint">À l'ouverture, DNMAX fait une copie chiffrée de vos données, puis ne garde que la dernière de chaque semaine récente et la dernière de chaque mois plus ancien. Vous pouvez revenir à l'une d'elles : l'état actuel est d'abord mis de côté.</div>
+        <div class="sauvegardes-politique" id="politique-sauvegardes" hidden>
+          <label>Une par semaine, gardée <select id="sv-hebdo"></select></label>
+          <label>puis une par mois, gardée <select id="sv-mensuel"></select></label>
+          <span class="hint" id="sv-message" role="status"></span>
+        </div>
         <ul class="sauvegardes-liste" id="liste-sauvegardes"></ul>
         <p class="sauvegardes-message" id="message-sauvegardes" role="status" hidden></p>
       </div>
