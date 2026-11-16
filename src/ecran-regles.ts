@@ -40,6 +40,13 @@ export function installerReglesParametres(acces: AccesDonnees): void {
       return element;
     }),
   );
+  const caseSuivi = document.getElementById("r-suivi-simplifie");
+  if (caseSuivi instanceof HTMLInputElement) {
+    caseSuivi.checked = lireReglagesBruts(acces).suiviSimplifie === true;
+    caseSuivi.addEventListener("change", () => {
+      ecrireReglage(acces, "suiviSimplifie", caseSuivi.checked);
+    });
+  }
   caseComparaison.checked = lireReglagesBruts(acces).masquerComparaison === true;
   caseComparaison.addEventListener("change", () => {
     ecrireReglage(acces, "masquerComparaison", caseComparaison.checked);
