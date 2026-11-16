@@ -210,7 +210,8 @@ function listerDiplomes(catalogue: readonly ReferentielLocal[]): ReferentielLoca
 export type DestinationEnvoi = "fichier" | "direct";
 
 /**
- * Écrit le contenu choisi, chiffré sous `motDePasse` s'il comprend des étudiants, et
+ * Écrit le contenu choisi, chiffré sous `motDePasse` s'il y en a un (toujours quand il
+ * comprend des étudiants, sur demande sinon), et
  * le fait partir vers sa destination. Le texte est le même pour les deux
  * destinations : celui d'un fichier `.dnmax`.
  *
@@ -265,7 +266,9 @@ export function montrerExport(
   const boutonCreer = creerBouton("", "btn primary", () => {
     boutonCreer.disabled = true;
     const avecEleves = caseEleves.checked;
-    if (avecEleves && verifierNouveauMotDePasse(motDePasse.value, confirmation.value) !== null) {
+    // Avec des étudiants, la protection est obligatoire ; sans, elle est au choix (décision 36).
+    const protege = avecEleves || caseProteger.checked;
+    if (protege && verifierNouveauMotDePasse(motDePasse.value, confirmation.value) !== null) {
       erreur.textContent = `Choisissez un mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères et saisissez-le deux fois à l'identique.`;
       erreur.hidden = false;
       boutonCreer.disabled = false;
@@ -275,7 +278,7 @@ export function montrerExport(
     const texte = JSON.stringify(
       construirePaquet(entrees, choisies, new Date(), acces.identite.nom, catalogue, diplomesChoisis, avecEleves),
     );
-    expedier(destination, texte, avecEleves ? motDePasse.value : null)
+    expedier(destination, texte, protege ? motDePasse.value : null)
       .then((parti) => {
         if (parti) {
           fermer();
@@ -311,12 +314,26 @@ export function montrerExport(
         : "Inclure les étudiants et leurs résultats. Le fichier est alors chiffré : communiquez son mot de passe par un autre moyen que le fichier.",
     ),
   );
+  const caseProteger = creer("input");
+  caseProteger.type = "checkbox";
+  const optionProteger = creer("label", "echange-option");
+  optionProteger.append(
+    caseProteger,
+    creer("span", "", "Protéger par un mot de passe, même sans étudiants : votre collègue le saisira à la réception."),
+  );
   const zoneMotDePasse = creer("div", "echange-outils");
   zoneMotDePasse.hidden = true;
   zoneMotDePasse.append(motDePasse, confirmation);
-  caseEleves.addEventListener("change", () => {
-    zoneMotDePasse.hidden = !caseEleves.checked;
-  });
+  const actualiserProtection = (): void => {
+    // Des étudiants imposent la protection : la case est cochée d'office et ne se décoche pas.
+    if (caseEleves.checked) {
+      caseProteger.checked = true;
+    }
+    caseProteger.disabled = caseEleves.checked;
+    zoneMotDePasse.hidden = !caseProteger.checked;
+  };
+  caseEleves.addEventListener("change", actualiserProtection);
+  caseProteger.addEventListener("change", actualiserProtection);
 
   for (const diplome of diplomes) {
     const ligne = creer("label", "echange-ligne");
@@ -408,7 +425,7 @@ export function montrerExport(
   );
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Annuler", "btn ghost", fermer), boutonCreer);
-  boite.append(outils, liste, optionEleves, zoneMotDePasse, erreur, actions);
+  boite.append(outils, liste, optionEleves, optionProteger, zoneMotDePasse, erreur, actions);
   actualiser();
 }
 
@@ -725,7 +742,7 @@ function demanderMotDePasseFichier(fichier: string): Promise<string | null> {
       creer(
         "p",
         "",
-        "Ce fichier contient des étudiants et leurs résultats. Saisissez le mot de passe que son expéditeur vous a communiqué.",
+        "Ce fichier est protégé par un mot de passe (c'est toujours le cas s'il contient des étudiants). Saisissez celui que son expéditeur vous a communiqué.",
       ),
     );
     const formulaire = creer("form", "echange-outils");
