@@ -93,6 +93,27 @@ function texte(valeur: unknown): string {
   return typeof valeur === "string" ? valeur : "";
 }
 
+/** Date AAAA-MM-JJ, `mois` mois après le jour de sortie (1er juillet) de l'année `anneeSortie`. */
+export function ajouterMois(anneeSortie: number, mois: number): string {
+  const [moisSortie, jour] = JOUR_DE_SORTIE.split("-").map(Number);
+  const total = (moisSortie ?? 7) - 1 + mois;
+  const annee = anneeSortie + Math.floor(total / 12);
+  const rang = (total % 12) + 1;
+  return `${String(annee)}-${String(rang).padStart(2, "0")}-${String(jour ?? 1).padStart(2, "0")}`;
+}
+
+/**
+ * Durée de conservation choisie par l'établissement (Mon établissement), en
+ * mois, ramenée entre les bornes ; la durée par défaut à défaut de choix.
+ */
+export function lireMoisConservation(etablissement: unknown, bornes: { minimum: number; maximum: number; parDefaut: number }): number {
+  const valeur = estObjet(etablissement) ? Number(etablissement.moisConservation) : Number.NaN;
+  if (!Number.isInteger(valeur)) {
+    return bornes.parDefaut;
+  }
+  return Math.min(bornes.maximum, Math.max(bornes.minimum, valeur));
+}
+
 /** Une promotion qui compte encore des étudiants identifiables, échue ou non. */
 export interface EtatPromotion extends PromotionEchue {
   /** Vrai si sa durée de conservation est dépassée. */
@@ -109,9 +130,9 @@ export interface EtatPromotion extends PromotionEchue {
  * (texte vide) ni redoublants, et n'est jamais échue.
  *
  * @param aujourdHui date du jour, AAAA-MM-JJ
- * @param anneesConservation années de conservation après la sortie
+ * @param moisConservation mois de conservation après la sortie
  */
-export function etatPromotions(entrees: Entrees, aujourdHui: string, anneesConservation: number): EtatPromotion[] {
+export function etatPromotions(entrees: Entrees, aujourdHui: string, moisConservation: number): EtatPromotion[] {
   const durees = dureesDiplomes(entrees);
   const promotions = lireListe(entrees[CLE_PROMOTIONS])
     .filter(estObjet)
@@ -126,7 +147,7 @@ export function etatPromotions(entrees: Entrees, aujourdHui: string, anneesConse
     const connue = Number.isInteger(debut) && promotion.debut !== null && promotion.debut !== undefined && promotion.debut !== "";
     const duree = durees.get(texte(promotion.diplomeId)) ?? DUREE_DIPLOME_PAR_DEFAUT;
     const sortie = connue ? `${String(debut + duree)}-${JOUR_DE_SORTIE}` : "";
-    const echeance = connue ? `${String(debut + duree + anneesConservation)}-${JOUR_DE_SORTIE}` : "";
+    const echeance = connue ? ajouterMois(debut + duree, moisConservation) : "";
     const plusRecentes = connue ? promotions.filter((autre) => autre.id !== promotion.id && Number(autre.debut) > debut) : [];
     const redoublants = identifiables.flatMap((eleve) => {
       const nom = normaliserNom(eleve.nom);
@@ -154,8 +175,8 @@ export function etatPromotions(entrees: Entrees, aujourdHui: string, anneesConse
  * Promotions dont les données d'étudiants ont dépassé la durée de conservation,
  * avec leurs redoublants probables.
  */
-export function promotionsEchues(entrees: Entrees, aujourdHui: string, anneesConservation: number): PromotionEchue[] {
-  return etatPromotions(entrees, aujourdHui, anneesConservation)
+export function promotionsEchues(entrees: Entrees, aujourdHui: string, moisConservation: number): PromotionEchue[] {
+  return etatPromotions(entrees, aujourdHui, moisConservation)
     .filter((promotion) => promotion.echue)
     .map((promotion) => ({
       id: promotion.id,

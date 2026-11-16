@@ -14,7 +14,7 @@ import {
 const CHAMPS: ChampsDocumentsRgpd = {
   nom: "Lycée des Arts appliqués",
   contactDelegue: "dpd@exemple.fr",
-  anneesConservation: 1,
+  moisConservation: 12,
   date: new Date(2026, 10, 13),
   adresseCodeSource: "https://exemple.org/dnmax",
   minutesVerrouillage: 15,
@@ -56,11 +56,13 @@ function texteDe(document: DocumentImprimable): string {
 
 describe("ecrireDuree", () => {
   it("écrit une année en toutes lettres", () => {
-    expect(ecrireDuree(1)).toBe("un an");
+    expect(ecrireDuree(12)).toBe("un an");
   });
 
-  it("écrit plusieurs années en chiffres", () => {
-    expect(ecrireDuree(3)).toBe("3 ans");
+  it("écrit des années entières en années, le reste en mois", () => {
+    expect(ecrireDuree(36)).toBe("3 ans");
+    expect(ecrireDuree(3)).toBe("3 mois");
+    expect(ecrireDuree(18)).toBe("18 mois");
   });
 
   it("revient à un an pour une durée nulle ou invalide", () => {
@@ -136,7 +138,7 @@ describe("composerFicheEleves", () => {
   });
 
   it("reprend la durée de conservation réglée", () => {
-    expect(texteDe(composerFicheEleves({ ...CHAMPS, anneesConservation: 2 }))).toContain("jusqu'à 2 ans après la fin");
+    expect(texteDe(composerFicheEleves({ ...CHAMPS, moisConservation: 24 }))).toContain("jusqu'à 2 ans après la fin");
   });
 
   it("ramène les espaces et retours à la ligne saisis à une seule espace", () => {
