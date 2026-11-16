@@ -18,6 +18,7 @@
 
 ### Ajouté
 
+- Paramètres > Règles d'évaluation : suivi simplifié dans Mes évaluations, « À faire » puis « Faite » une fois la fiche distribuée. Ce n'est qu'un affichage : le suivi détaillé reste enregistré, et se retrouve en décochant la case.
 - Paramètres > Mises à jour : recherche automatique, une fois par jour à l'ouverture, désactivée par défaut. La recherche interroge désormais dnmax.fr, hébergé en France, et non plus GitHub ; la mise à jour Windows s'y télécharge aussi.
 - Mon établissement > Établissement : durée de conservation des données d'étudiants après la sortie d'une promotion, de 3 mois à 5 ans (1 an par défaut). Les rappels et les documents RGPD la reprennent.
 - Paramètres > Règles d'évaluation : les règles appliquées à tous (échelle, seuils de la jauge, enregistrement, acquisition, suivi), et une case pour ne plus situer l'étudiant par rapport à sa promotion dans Progression.

@@ -8,6 +8,7 @@ import * as zoomCarte from "../domaine/zoom-carte";
 import { renumeroterBloc } from "../domaine/numero-bloc";
 import * as saisieResultats from "../domaine/saisie-resultats";
 import * as reglesEvaluation from "../domaine/evaluation";
+import * as suiviSimplifie from "../domaine/suivi-simplifie";
 import { lireMoisConservation } from "../domaine/conservation";
 import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION_PAR_DEFAUT } from "../configuration";
 import * as jaugeExport from "../domaine/jauge-export";
@@ -110,6 +111,8 @@ interface Pont {
   readonly saisie: typeof saisieResultats;
   /** Règles de la composition d'une évaluation (voir `domaine/evaluation`). */
   readonly evaluation: typeof reglesEvaluation;
+  /** Suivi simplifié « À faire / Faite » (voir `domaine/suivi-simplifie`). */
+  readonly suiviSimplifie: typeof suiviSimplifie;
   /** Libellés de niveaux au-dessus de la jauge des exports Word et OpenDocument (voir `domaine/jauge-export`). */
   readonly jauge: typeof jaugeExport;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
@@ -176,6 +179,7 @@ export async function chargerInterfaceHistorique(
     renumeroterBloc,
     saisie: saisieResultats,
     evaluation: reglesEvaluation,
+    suiviSimplifie,
     jauge: jaugeExport,
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
