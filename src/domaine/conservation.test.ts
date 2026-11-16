@@ -2,8 +2,10 @@
 import { describe, expect, it } from "vitest";
 import {
   NOM_ANONYME,
+  ajouterMois,
   etatPromotions,
   identifiantsOrphelins,
+  lireMoisConservation,
   promotionsEchues,
   traiterDonneesEchues,
   type ChoixConservation,
@@ -72,27 +74,27 @@ function lire(entrees: Entrees, cle: string): Record<string, unknown>[] {
 
 describe("promotionsEchues", () => {
   it("propose une promotion sortie depuis plus longtemps que la durée de conservation", () => {
-    expect(promotionsEchues(donnees(), "2026-11-12", 1).map((promotion) => promotion.id)).toEqual(["pA", "pC"]);
+    expect(promotionsEchues(donnees(), "2026-11-12", 12).map((promotion) => promotion.id)).toEqual(["pA", "pC"]);
   });
 
   it("indique les dates de sortie et d'échéance", () => {
-    const [ancienne] = promotionsEchues(donnees(), "2026-11-12", 1);
+    const [ancienne] = promotionsEchues(donnees(), "2026-11-12", 12);
     expect(ancienne).toEqual({ id: "pA", nom: "DNO-2020-2023", sortie: "2023-07-01", echeance: "2024-07-01", eleves: 1, redoublants: [] });
   });
 
   it("ne propose pas une promotion encore dans sa durée de conservation", () => {
     // La promotion d'un an est échue le 1er juillet 2026, pas la veille.
-    expect(promotionsEchues(donnees(), "2026-06-30", 1).map((promotion) => promotion.id)).toEqual(["pA"]);
-    expect(promotionsEchues(donnees(), "2024-06-30", 1).map((promotion) => promotion.id)).toEqual([]);
+    expect(promotionsEchues(donnees(), "2026-06-30", 12).map((promotion) => promotion.id)).toEqual(["pA"]);
+    expect(promotionsEchues(donnees(), "2024-06-30", 12).map((promotion) => promotion.id)).toEqual([]);
   });
 
   it("rend une promotion échue le jour même de son échéance", () => {
-    expect(promotionsEchues(donnees(), "2024-07-01", 1).map((promotion) => promotion.id)).toEqual(["pA"]);
+    expect(promotionsEchues(donnees(), "2024-07-01", 12).map((promotion) => promotion.id)).toEqual(["pA"]);
   });
 
   it("prend trois ans pour un diplôme dont la durée n'est pas renseignée", () => {
     const sansDuree = { ...donnees(), [CLE_DONNEES]: "{}" };
-    expect(promotionsEchues(sansDuree, "2026-11-12", 1).map((promotion) => promotion.id)).toEqual(["pA"]);
+    expect(promotionsEchues(sansDuree, "2026-11-12", 12).map((promotion) => promotion.id)).toEqual(["pA"]);
   });
 
   it("ne propose ni une promotion sans étudiant ni une promotion sans année d'entrée", () => {
@@ -102,11 +104,11 @@ describe("promotionsEchues", () => {
         { ...ANCIENNE, id: "pX", debut: undefined },
       ]),
     };
-    expect(promotionsEchues(vides, "2030-01-01", 1)).toEqual([]);
+    expect(promotionsEchues(vides, "2030-01-01", 12)).toEqual([]);
   });
 
   it("supporte des données vides", () => {
-    expect(promotionsEchues({}, "2026-11-12", 1)).toEqual([]);
+    expect(promotionsEchues({}, "2026-11-12", 12)).toEqual([]);
   });
 });
 
@@ -202,12 +204,12 @@ describe("redoublement", () => {
   const avecRedoublant = (): Entrees => ({ ...donnees(), [CLE_PROMOTIONS]: JSON.stringify([ANCIENNE, RESSAISI, COURTE]) });
 
   it("signale un étudiant d'une promotion échue dont le nom figure dans une promotion en cours", () => {
-    const [ancienne] = promotionsEchues(avecRedoublant(), "2026-11-12", 1);
+    const [ancienne] = promotionsEchues(avecRedoublant(), "2026-11-12", 12);
     expect(ancienne?.redoublants).toEqual([{ id: "sAncien", nom: "Ancien Étudiant", autrePromotion: "DNO-2024-2027" }]);
   });
 
   it("ne signale personne quand aucun nom ne se retrouve dans une promotion en cours", () => {
-    expect(promotionsEchues(donnees(), "2026-11-12", 1).flatMap((promotion) => promotion.redoublants)).toEqual([]);
+    expect(promotionsEchues(donnees(), "2026-11-12", 12).flatMap((promotion) => promotion.redoublants)).toEqual([]);
   });
 
   it("garde l'étudiant choisi : il reste dans sa promotion avec ses résultats", () => {
@@ -267,7 +269,7 @@ describe("traiterDonneesEchues : anonymiser", () => {
 describe("après un premier traitement", () => {
   it("ne propose plus une promotion dont les étudiants sont tous anonymisés", () => {
     const { entrees } = traiterDonneesEchues(donnees(), { promotions: ["pA"], gardes: [], orphelins: false, traitement: "anonymiser" });
-    expect(promotionsEchues(entrees, "2026-11-12", 1).map((promotion) => promotion.id)).toEqual(["pC"]);
+    expect(promotionsEchues(entrees, "2026-11-12", 12).map((promotion) => promotion.id)).toEqual(["pC"]);
   });
 
   it("ne compte que les étudiants encore identifiables", () => {
@@ -275,7 +277,7 @@ describe("après un premier traitement", () => {
       ...donnees(),
       [CLE_PROMOTIONS]: JSON.stringify([{ ...ANCIENNE, liste: [...ANCIENNE.liste, { id: "sX", nom: `${NOM_ANONYME} 1` }] }]),
     };
-    expect(promotionsEchues(melangee, "2026-11-12", 1)[0]?.eleves).toBe(1);
+    expect(promotionsEchues(melangee, "2026-11-12", 12)[0]?.eleves).toBe(1);
   });
 
   it("ne renomme pas un étudiant déjà anonymisé et numérote les suivants sans doublon", () => {
@@ -296,7 +298,7 @@ describe("après un premier traitement", () => {
       ...donnees(),
       [CLE_PROMOTIONS]: JSON.stringify([{ ...ANCIENNE, liste: [{ id: "sX", nom: ancienNom }, ...ANCIENNE.liste] }]),
     };
-    expect(promotionsEchues(deja, "2026-11-12", 1)[0]?.eleves).toBe(1);
+    expect(promotionsEchues(deja, "2026-11-12", 12)[0]?.eleves).toBe(1);
     const { entrees } = traiterDonneesEchues(deja, { promotions: ["pA"], gardes: [], orphelins: false, traitement: "anonymiser" });
     expect(lire(entrees, CLE_PROMOTIONS)[0]?.liste).toEqual([
       { id: "sX", nom: ancienNom },
@@ -307,7 +309,7 @@ describe("après un premier traitement", () => {
 
 describe("etatPromotions", () => {
   it("liste aussi les promotions en cours, pour les traiter à tout moment", () => {
-    const etats = etatPromotions(donnees(), "2026-11-12", 1);
+    const etats = etatPromotions(donnees(), "2026-11-12", 12);
     expect(etats.map((promotion) => [promotion.id, promotion.echue])).toEqual([
       ["pA", true],
       ["pR", false],
@@ -317,19 +319,19 @@ describe("etatPromotions", () => {
 
   it("donne des dates vides et n'est jamais échue sans année d'entrée", () => {
     const sansDebut = { [CLE_PROMOTIONS]: JSON.stringify([{ ...RECENTE, debut: undefined }]) };
-    expect(etatPromotions(sansDebut, "2040-01-01", 1)[0]).toMatchObject({ sortie: "", echeance: "", echue: false });
+    expect(etatPromotions(sansDebut, "2040-01-01", 12)[0]).toMatchObject({ sortie: "", echeance: "", echue: false });
   });
 
   it("signale un redoublant d'une promotion en cours retrouvé dans une promotion entrée plus tard", () => {
     const suivante = { id: "pS", nom: "DNO-2025-2028", debut: 2025, diplomeId: "d3", liste: [{ id: "sR2", nom: "Récent Étudiant" }] };
     const avecSuivante = { ...donnees(), [CLE_PROMOTIONS]: JSON.stringify([ANCIENNE, RECENTE, suivante]) };
-    const recente = etatPromotions(avecSuivante, "2026-11-12", 1).find((promotion) => promotion.id === "pR");
+    const recente = etatPromotions(avecSuivante, "2026-11-12", 12).find((promotion) => promotion.id === "pR");
     expect(recente?.redoublants).toEqual([{ id: "sRecent", nom: "Récent Étudiant", autrePromotion: "DNO-2025-2028" }]);
   });
 
   it("ne liste pas une promotion sans étudiant identifiable", () => {
     const vide = { [CLE_PROMOTIONS]: JSON.stringify([{ ...RECENTE, liste: [{ id: "sX", nom: `${NOM_ANONYME} 1` }] }]) };
-    expect(etatPromotions(vide, "2026-11-12", 1)).toEqual([]);
+    expect(etatPromotions(vide, "2026-11-12", 12)).toEqual([]);
   });
 });
 
@@ -347,5 +349,26 @@ describe("anonymisation des prénoms et noms saisis à part", () => {
     ]);
     expect(entrees[CLE_PROMOTIONS]).not.toContain("Ancien Étudiant");
     expect(entrees[CLE_PROMOTIONS]).not.toContain('"Ancien"');
+  });
+});
+
+describe("durée de conservation en mois", () => {
+  const bornes = { minimum: 3, maximum: 60, parDefaut: 12 };
+
+  it("ajoute des mois au jour de sortie, en passant d'une année à l'autre", () => {
+    expect(ajouterMois(2026, 3)).toBe("2026-10-01");
+    expect(ajouterMois(2026, 12)).toBe("2027-07-01");
+    expect(ajouterMois(2026, 6)).toBe("2027-01-01");
+  });
+
+  it("lit la durée choisie par l'établissement, ramenée entre 3 mois et 5 ans", () => {
+    expect(lireMoisConservation({ moisConservation: 18 }, bornes)).toBe(18);
+    expect(lireMoisConservation({ moisConservation: 1 }, bornes)).toBe(3);
+    expect(lireMoisConservation({ moisConservation: 120 }, bornes)).toBe(60);
+  });
+
+  it("prend un an sans choix lisible", () => {
+    expect(lireMoisConservation({}, bornes)).toBe(12);
+    expect(lireMoisConservation({ moisConservation: "abc" }, bornes)).toBe(12);
   });
 });

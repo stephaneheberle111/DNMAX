@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import "./ecran-avertissement-eleves.css";
-import { ADRESSE_CODE_SOURCE, ANNEES_CONSERVATION_ELEVES, DELAI_VERROUILLAGE_INACTIVITE_MS } from "./configuration";
+import { ADRESSE_CODE_SOURCE, DELAI_VERROUILLAGE_INACTIVITE_MS } from "./configuration";
 import { LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES } from "./domaine/saisie-coffre";
 import {
   champsManquants,
@@ -21,6 +21,8 @@ export interface ContexteAvertissement {
   allerSaisirEtablissement: () => void;
   /** Date imprimée sur les documents. */
   date: Date;
+  /** Durée de conservation choisie par l'établissement, en mois. */
+  moisConservation: number;
 }
 
 const MINUTES_VERROUILLAGE = Math.round(DELAI_VERROUILLAGE_INACTIVITE_MS / 60_000);
@@ -65,7 +67,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
     for (const obligation of [
       "informez-les\u00a0: remettez-leur la note d'information, avec son accusé de réception à signer\u00a0;",
       "prévenez votre chef d'établissement ou le délégué à la protection des données, avec la note prévue pour eux\u00a0;",
-      `gardez leurs données au plus ${ecrireDuree(ANNEES_CONSERVATION_ELEVES)} après la sortie de leur promotion\u00a0: DNMAX vous le rappellera\u00a0;`,
+      `gardez leurs données au plus ${ecrireDuree(contexte.moisConservation)} après la sortie de leur promotion\u00a0: DNMAX vous le rappellera\u00a0;`,
       "une demande d'accès ou d'effacement se traite dans Paramètres > Données des étudiants.",
     ]) {
       obligations.append(creer("li", "", obligation));
@@ -103,7 +105,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
     } else {
       const champs: ChampsDocumentsRgpd = {
         ...contexte.etablissement,
-        anneesConservation: ANNEES_CONSERVATION_ELEVES,
+        moisConservation: contexte.moisConservation,
         date: contexte.date,
         adresseCodeSource: ADRESSE_CODE_SOURCE,
         minutesVerrouillage: MINUTES_VERROUILLAGE,

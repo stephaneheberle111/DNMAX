@@ -29,8 +29,8 @@ export type ChampManquant = keyof SaisieEtablissement;
 
 /** Tout ce qui remplit les documents. */
 export interface ChampsDocumentsRgpd extends SaisieEtablissement {
-  /** Années de conservation après la sortie de la promotion. */
-  anneesConservation: number;
+  /** Mois de conservation après la sortie de la promotion. */
+  moisConservation: number;
   /** Date imprimée sur les documents. */
   date: Date;
   /** Adresse du code source de DNMAX, citée dans la note au chef d'établissement. */
@@ -78,10 +78,13 @@ function exigerChamps(champs: ChampsDocumentsRgpd): { etablissement: string; del
   return { etablissement: nettoyer(champs.nom), delegue: nettoyer(champs.contactDelegue), date: ecrireDateLongue(champs.date) };
 }
 
-/** « un an », « 2 ans » ; une durée invalide revient à la durée par défaut d'un an. */
-export function ecrireDuree(annees: number): string {
-  const entier = Number.isInteger(annees) && annees > 0 ? annees : 1;
-  return entier === 1 ? "un an" : `${String(entier)} ans`;
+/** « 3 mois », « un an », « 18 mois », « 2 ans » ; une durée invalide revient à la durée par défaut d'un an. */
+export function ecrireDuree(mois: number): string {
+  const entier = Number.isInteger(mois) && mois > 0 ? mois : 12;
+  if (entier % 12 !== 0) {
+    return `${String(entier)} mois`;
+  }
+  return entier === 12 ? "un an" : `${String(entier / 12)} ans`;
 }
 
 function majuscule(valeur: string): string {
@@ -130,7 +133,7 @@ export function composerFicheEleves(champs: ChampsDocumentsRgpd): DocumentImprim
       type: "paragraphe",
       contenu: [
         texte(
-          `Elles sont conservées jusqu'à ${ecrireDuree(champs.anneesConservation)} après la fin de votre diplôme, puis anonymisées ou effacées.`,
+          `Elles sont conservées jusqu'à ${ecrireDuree(champs.moisConservation)} après la fin de votre diplôme, puis anonymisées ou effacées.`,
         ),
       ],
     },
@@ -263,7 +266,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Durée de conservation",
           contenu: [
             texte(
-              `${majuscule(ecrireDuree(champs.anneesConservation))} après la sortie de la promotion (fin de l'année scolaire où s'achève le diplôme). DNMAX le rappelle ensuite et propose d'anonymiser ou d'effacer les données ; une promotion peut aussi l'être plus tôt. La durée est réglable avec l'établissement.`,
+              `${majuscule(ecrireDuree(champs.moisConservation))} après la sortie de la promotion (fin de l'année scolaire où s'achève le diplôme). DNMAX le rappelle ensuite et propose d'anonymiser ou d'effacer les données ; une promotion peut aussi l'être plus tôt. La durée est réglable avec l'établissement.`,
             ),
           ],
         },
