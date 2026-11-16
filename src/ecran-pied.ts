@@ -2,7 +2,8 @@
 import "./ecran-pied.css";
 import { ADRESSE_CODE_SOURCE, ADRESSE_RETOURS, ADRESSE_SITE, LICENCE } from "./configuration";
 import { construireAdresseRetours, deduireSysteme } from "./domaine/adresse-retours";
-import { aideMiseAJour, indicationMiseAJour } from "./domaine/pied-de-page";
+import { aideMiseAJour, indicationMiseAJour, rechercheAutomatiqueDue } from "./domaine/pied-de-page";
+import { ecrireReglage, lireReglagesBruts } from "./ecran-regles";
 import { montrerConfidentialite, montrerDocumentation, montrerLicence } from "./ecran-documentation";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { rechercherMiseAJour, suivreMiseAJour } from "./ecran-mise-a-jour";
@@ -67,8 +68,9 @@ function montrerAPropos(versionInstallee: Promise<string>, adresseRetours: Promi
  * « Proposer une idée ou signaler un bug ». Licence, Confidentialité et
  * Documentation s'affichent dans l'application, sans connexion.
  *
- * DNMAX ne se connecte qu'à la demande : l'indicateur reste muet tant que
- * l'enseignant n'a pas lancé de recherche (ici ou dans Paramètres).
+ * DNMAX ne se connecte jamais sans l'accord de l'enseignant : l'indicateur reste
+ * muet tant qu'il n'a pas lancé de recherche (ici ou dans Paramètres), ou activé
+ * la recherche automatique.
  */
 export function installerPiedDePage(acces: AccesDonnees): void {
   const pied = creer("footer", "pied-app");
@@ -140,6 +142,21 @@ export function installerMisesAJourParametres(acces: AccesDonnees): void {
   bouton.addEventListener("click", () => {
     void rechercherMiseAJour(() => acces.enregistrerMaintenant());
   });
+  // Recherche automatique : activée seulement par l'enseignant, une fois par jour au plus (décision 36).
+  const caseAuto = document.getElementById("r-recherche-auto");
+  if (caseAuto instanceof HTMLInputElement) {
+    caseAuto.checked = lireReglagesBruts(acces).rechercheAutomatique === true;
+    caseAuto.addEventListener("change", () => {
+      ecrireReglage(acces, "rechercheAutomatique", caseAuto.checked);
+    });
+  }
+  const reglages = lireReglagesBruts(acces);
+  const aujourdHui = new Date().toISOString().slice(0, 10);
+  const derniere = typeof reglages.derniereRechercheAutomatique === "string" ? reglages.derniereRechercheAutomatique : "";
+  if (rechercheAutomatiqueDue(reglages.rechercheAutomatique === true, derniere, aujourdHui)) {
+    ecrireReglage(acces, "derniereRechercheAutomatique", aujourdHui);
+    void rechercherMiseAJour(() => acces.enregistrerMaintenant());
+  }
   suivreMiseAJour((etat) => {
     bouton.disabled = etat === "en-cours";
     etatAffiche.textContent =
