@@ -229,13 +229,44 @@ fn dossier_donnees(application: &AppHandle) -> Result<PathBuf, ErreurCommande> {
         .map_err(|_| ErreurCommande::DisqueInaccessible)
 }
 
+fn fichier_politique_sauvegardes(application: &AppHandle) -> Option<PathBuf> {
+    application
+        .path()
+        .app_config_dir()
+        .ok()
+        .map(|dossier| dossier.join(depot::NOM_FICHIER_POLITIQUE))
+}
+
+/// Politique de sauvegarde retenue sur ce poste (Paramètres > Sauvegardes).
+#[tauri::command(async)]
+fn lire_politique_sauvegardes(application: AppHandle) -> depot::PolitiqueSauvegardes {
+    fichier_politique_sauvegardes(&application)
+        .map_or(depot::PolitiqueSauvegardes::PAR_DEFAUT, |fichier| {
+            depot::lire_politique(&fichier)
+        })
+}
+
+/// Retient la politique de sauvegarde choisie ; elle s'applique à la prochaine ouverture.
+#[tauri::command(async)]
+fn enregistrer_politique_sauvegardes(
+    application: AppHandle,
+    politique: depot::PolitiqueSauvegardes,
+) -> Result<depot::PolitiqueSauvegardes, String> {
+    let fichier = fichier_politique_sauvegardes(&application)
+        .ok_or("dossier de configuration introuvable")?;
+    depot::enregistrer_politique(&fichier, politique).map_err(|erreur| erreur.to_string())?;
+    Ok(politique.bornee())
+}
+
 /// Fait la sauvegarde du jour. Un échec ne doit pas empêcher l'enseignant de
 /// travailler : le coffre vient d'être ouvert et il est sain.
-fn sauvegarder_apres_ouverture(dossier: &std::path::Path) {
+fn sauvegarder_apres_ouverture(application: &AppHandle, dossier: &std::path::Path) {
     let aujourd_hui = OffsetDateTime::now_utc().date();
-    if let Err(erreur) =
-        depot::sauvegarder_du_jour(dossier, aujourd_hui, depot::NOMBRE_SAUVEGARDES_CONSERVEES)
-    {
+    let politique = fichier_politique_sauvegardes(application)
+        .map_or(depot::PolitiqueSauvegardes::PAR_DEFAUT, |fichier| {
+            depot::lire_politique(&fichier)
+        });
+    if let Err(erreur) = depot::sauvegarder_du_jour(dossier, aujourd_hui, politique) {
         eprintln!("sauvegarde quotidienne impossible : {erreur}");
     }
 }
@@ -284,7 +315,7 @@ fn ouvrir_coffre(
     let mut session = session.verrou();
     let fichier = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
     let (coffre, entrees) = coffre::ouvrir(&fichier, &mot_de_passe)?;
-    sauvegarder_apres_ouverture(&dossier);
+    sauvegarder_apres_ouverture(&application, &dossier);
     *session = Some(coffre);
     Ok(entrees)
 }
@@ -303,7 +334,7 @@ fn ouvrir_coffre_par_secours(
     let (coffre, entrees) =
         coffre::ouvrir_par_secours(&fichier, &code_secours, &nouveau_mot_de_passe, &mut OsRng)?;
     // La sauvegarde précède la réécriture : elle garde le coffre tel qu'il était avant le changement.
-    sauvegarder_apres_ouverture(&dossier);
+    sauvegarder_apres_ouverture(&application, &dossier);
     depot::ecrire(&dossier, &coffre.sceller(&entrees, &mut OsRng)?)?;
     *session = Some(coffre);
     Ok(entrees)
@@ -778,6 +809,8 @@ pub fn lancer() {
             changer_mot_de_passe,
             lister_sauvegardes,
             restaurer_sauvegarde,
+            lire_politique_sauvegardes,
+            enregistrer_politique_sauvegardes,
             verifier_mot_de_passe,
             verrouiller_coffre,
             envoyer_direct,
