@@ -138,3 +138,21 @@ export function lireManifeste(texte: string): Manifeste | null {
   }
   return { version, notes, pub_date: date, platforms: plateformes };
 }
+
+/**
+ * Manifeste à servir depuis dnmax.fr : les plateformes dont le fichier de mise
+ * à jour est aussi déposé chez OVH, sous un autre nom mais à l'identique (la
+ * signature porte sur le contenu), y sont téléchargées ; les autres (fichier
+ * trop lourd pour l'hébergement) gardent leur adresse d'origine.
+ *
+ * @param adresse dossier des téléchargements sur dnmax.fr, sans barre finale
+ * @param deposes pour chaque plateforme servie par dnmax.fr, le nom du fichier déposé
+ */
+export function relocaliserManifeste(manifeste: Manifeste, adresse: string, deposes: Readonly<Record<string, string>>): Manifeste {
+  const platforms: Manifeste["platforms"] = {};
+  for (const [plateforme, entree] of Object.entries(manifeste.platforms)) {
+    const nom = deposes[plateforme];
+    platforms[plateforme] = nom === undefined ? entree : { ...entree, url: `${adresse}/${encodeURIComponent(nom)}` };
+  }
+  return { ...manifeste, platforms };
+}

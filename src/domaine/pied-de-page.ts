@@ -58,3 +58,14 @@ export function classerLien(href: string, rubrique: string | undefined): Destina
   }
   return { type: "inerte" };
 }
+
+/**
+ * Vrai si la recherche automatique, activée par l'enseignant, doit partir
+ * maintenant : une fois par jour au plus, à la première ouverture.
+ *
+ * @param derniere date (AAAA-MM-JJ) de la dernière recherche automatique, texte vide si aucune
+ * @param aujourdHui date du jour, AAAA-MM-JJ
+ */
+export function rechercheAutomatiqueDue(activee: boolean, derniere: string, aujourdHui: string): boolean {
+  return activee && derniere !== aujourdHui;
+}

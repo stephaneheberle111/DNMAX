@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { completerManifeste, composerManifeste, lireManifeste, lireSystemes, type FichierConstruit } from "./manifeste";
+import { completerManifeste, composerManifeste, lireManifeste, lireSystemes, relocaliserManifeste, type FichierConstruit } from "./manifeste";
 
 const DATE = new Date("2026-03-09T10:00:00.000Z");
 const ADRESSE = "https://exemple.invalid/releases/download/v1.2.3";
@@ -102,5 +102,27 @@ describe("lireManifeste", () => {
     expect(lireManifeste("pas du json")).toBeNull();
     expect(lireManifeste('{"version":"1.2.3"}')).toBeNull();
     expect(lireManifeste('{"version":"1.2.3","notes":"","pub_date":"x","platforms":{"linux-x86_64":{"url":3}}}')).toBeNull();
+  });
+});
+
+describe("relocaliserManifeste", () => {
+  const manifeste = {
+    version: "0.9.0",
+    notes: "",
+    pub_date: "2026-11-16T00:00:00.000Z",
+    platforms: {
+      "windows-x86_64": { signature: "s1", url: "https://github.com/x/releases/download/v0.9.0/DNMAX_0.9.0_x64-setup.exe" },
+      "linux-x86_64": { signature: "s2", url: "https://github.com/x/releases/download/v0.9.0/DNMAX_0.9.0_amd64.AppImage" },
+    },
+  };
+
+  it("sert depuis dnmax.fr les fichiers qui y sont déposés, et garde les autres sur GitHub", () => {
+    const relocalise = relocaliserManifeste(manifeste, "https://dnmax.fr/telechargements", { "windows-x86_64": "DNMAX-windows.exe" });
+    expect(relocalise.platforms["windows-x86_64"]).toEqual({ signature: "s1", url: "https://dnmax.fr/telechargements/DNMAX-windows.exe" });
+    expect(relocalise.platforms["linux-x86_64"]?.url).toContain("github.com");
+  });
+
+  it("ne touche à rien sans fichier déposé", () => {
+    expect(relocaliserManifeste(manifeste, "https://dnmax.fr/telechargements", {})).toEqual(manifeste);
   });
 });

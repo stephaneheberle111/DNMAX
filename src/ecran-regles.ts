@@ -9,18 +9,19 @@ import type { AccesDonnees } from "./ecran-echange";
  */
 export const CLE_REGLAGES = "dnmade.reglages";
 
-export interface Reglages {
-  /** Progression étudiant : ne pas situer l'étudiant par rapport à sa promotion. */
-  masquerComparaison: boolean;
+/** Tous les réglages du poste rangés sous `dnmade.reglages`, tels quels ; un objet vide s'ils sont illisibles. */
+export function lireReglagesBruts(acces: Pick<AccesDonnees, "lireEntrees">): Record<string, unknown> {
+  try {
+    const lu: unknown = JSON.parse(acces.lireEntrees()[CLE_REGLAGES] ?? "{}");
+    return typeof lu === "object" && lu !== null && !Array.isArray(lu) ? (lu as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
 }
 
-export function lireReglages(texte: string | undefined): Reglages {
-  try {
-    const lu: unknown = JSON.parse(texte ?? "{}");
-    return { masquerComparaison: typeof lu === "object" && lu !== null && "masquerComparaison" in lu && lu.masquerComparaison === true };
-  } catch {
-    return { masquerComparaison: false };
-  }
+/** Change un seul réglage du poste, sans toucher aux autres. */
+export function ecrireReglage(acces: Pick<AccesDonnees, "lireEntrees" | "ecrireEntree">, cle: string, valeur: unknown): void {
+  acces.ecrireEntree(CLE_REGLAGES, JSON.stringify({ ...lireReglagesBruts(acces), [cle]: valeur }));
 }
 
 /** Paramètres > Règles d'évaluation : les règles fixes, puis les réglages d'affichage de ce poste. */
@@ -39,9 +40,8 @@ export function installerReglesParametres(acces: AccesDonnees): void {
       return element;
     }),
   );
-  caseComparaison.checked = lireReglages(acces.lireEntrees()[CLE_REGLAGES]).masquerComparaison;
+  caseComparaison.checked = lireReglagesBruts(acces).masquerComparaison === true;
   caseComparaison.addEventListener("change", () => {
-    const reglages: Reglages = { ...lireReglages(acces.lireEntrees()[CLE_REGLAGES]), masquerComparaison: caseComparaison.checked };
-    acces.ecrireEntree(CLE_REGLAGES, JSON.stringify(reglages));
+    ecrireReglage(acces, "masquerComparaison", caseComparaison.checked);
   });
 }
