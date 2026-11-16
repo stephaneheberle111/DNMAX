@@ -13,11 +13,14 @@ export const ADRESSE_CODE_SOURCE = "https://github.com/stephaneheberle111/DNMAX"
 export const LICENCE = "CeCILL v2.1";
 
 /**
- * Années pendant lesquelles les données d'étudiants d'une promotion sont gardées
- * après sa sortie (fin de l'année scolaire où s'achève son diplôme). Au-delà,
- * DNMAX propose de les effacer. Voir DECISIONS.md, « Durée de conservation ».
+ * Mois pendant lesquels les données d'étudiants d'une promotion sont gardées
+ * après sa sortie (fin de l'année scolaire où s'achève son diplôme), si
+ * l'établissement n'a rien choisi. Au-delà, DNMAX propose de les effacer.
+ * L'établissement choisit entre les bornes (décisions 20 et 36).
  */
-export const ANNEES_CONSERVATION_ELEVES = 1;
+export const MOIS_CONSERVATION_PAR_DEFAUT = 12;
+export const MOIS_CONSERVATION_MINIMUM = 3;
+export const MOIS_CONSERVATION_MAXIMUM = 60;
 
 /**
  * Verrouillage après inactivité, quand le module Étudiants est actif : au-delà de

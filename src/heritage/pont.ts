@@ -8,6 +8,8 @@ import * as zoomCarte from "../domaine/zoom-carte";
 import { renumeroterBloc } from "../domaine/numero-bloc";
 import * as saisieResultats from "../domaine/saisie-resultats";
 import * as reglesEvaluation from "../domaine/evaluation";
+import { lireMoisConservation } from "../domaine/conservation";
+import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION_PAR_DEFAUT } from "../configuration";
 import * as jaugeExport from "../domaine/jauge-export";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
@@ -182,6 +184,11 @@ export async function chargerInterfaceHistorique(
     confirmerModuleEleves: async (etablissement) =>
       (await confirmerActivationEleves({
         etablissement: lireSaisieEtablissement(etablissement),
+        moisConservation: lireMoisConservation(etablissement, {
+          minimum: MOIS_CONSERVATION_MINIMUM,
+          maximum: MOIS_CONSERVATION_MAXIMUM,
+          parDefaut: MOIS_CONSERVATION_PAR_DEFAUT,
+        }),
         allerSaisirEtablissement: () => {
           window.dnmaxPont?.ouvrirEtablissement?.();
         },

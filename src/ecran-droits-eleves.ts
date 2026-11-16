@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: CECILL-2.1
 import "./ecran-droits-eleves.css";
-import { ANNEES_CONSERVATION_ELEVES } from "./configuration";
+import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION_PAR_DEFAUT } from "./configuration";
+import { ecrireDuree } from "./domaine/documents-rgpd";
 import {
   etatPromotions,
   identifiantsOrphelins,
+  lireMoisConservation,
   promotionsEchues,
   traiterDonneesEchues,
   type EtatPromotion,
@@ -13,6 +15,22 @@ import { effacerEleve, extraireEleve, listerEleves, type BilanEffacement, type E
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { enregistrerFichier } from "./enveloppe";
+
+/** Durée de conservation choisie dans Mon établissement, en mois. */
+function moisConservationDe(entrees: Readonly<Record<string, string>>): number {
+  let etablissement: unknown;
+  try {
+    const donnees: unknown = JSON.parse(entrees["dnmade.data"] ?? "null");
+    etablissement = typeof donnees === "object" && donnees !== null ? (donnees as Record<string, unknown>).etab : undefined;
+  } catch {
+    etablissement = undefined;
+  }
+  return lireMoisConservation(etablissement, {
+    minimum: MOIS_CONSERVATION_MINIMUM,
+    maximum: MOIS_CONSERVATION_MAXIMUM,
+    parDefaut: MOIS_CONSERVATION_PAR_DEFAUT,
+  });
+}
 
 function decrireEleve(eleve: EleveRepere): string {
   return eleve.promotions.length === 0 ? `${eleve.nom} (liste saisie à la main)` : `${eleve.nom} (${eleve.promotions.join(", ")})`;
@@ -163,14 +181,14 @@ function decrirePromotion(promotion: EtatPromotion): string {
  */
 export function ouvrirConservation(acces: AccesDonnees): void {
   const entrees = acces.lireEntrees();
-  const promotions = etatPromotions(entrees, aujourdHui(), ANNEES_CONSERVATION_ELEVES);
+  const promotions = etatPromotions(entrees, aujourdHui(), moisConservationDe(entrees));
   const orphelins = identifiantsOrphelins(entrees);
   const { boite, fermer } = ouvrirBoite("Anonymiser ou effacer des promotions");
   boite.append(
     creer(
       "p",
       "",
-      `Les données d'étudiants sont gardées ${String(ANNEES_CONSERVATION_ELEVES)} an(s) après la sortie de leur promotion ; DNMAX le rappelle ensuite. Vous pouvez aussi anonymiser ou effacer une promotion plus tôt. Les évaluations elles-mêmes (grilles, consignes) sont conservées.`,
+      `Les données d'étudiants sont gardées ${ecrireDuree(moisConservationDe(entrees))} après la sortie de leur promotion ; DNMAX le rappelle ensuite. Vous pouvez aussi anonymiser ou effacer une promotion plus tôt. Les évaluations elles-mêmes (grilles, consignes) sont conservées.`,
     ),
   );
   const actions = creer("div", "echange-actions");
@@ -270,7 +288,7 @@ export function ouvrirConservation(acces: AccesDonnees): void {
  */
 export function rappelerConservation(acces: AccesDonnees): void {
   // Une promotion dont il ne reste que des redoublants gardés ne fait plus l'objet d'un rappel.
-  const echues = promotionsEchues(acces.lireEntrees(), aujourdHui(), ANNEES_CONSERVATION_ELEVES).filter(
+  const echues = promotionsEchues(acces.lireEntrees(), aujourdHui(), moisConservationDe(acces.lireEntrees())).filter(
     (promotion) => promotion.eleves > promotion.redoublants.length,
   );
   if (echues.length === 0) {
@@ -291,7 +309,7 @@ export function rappelerConservation(acces: AccesDonnees): void {
     creer(
       "p",
       "",
-      `${String(echues.length)} promotion(s) sont sorties depuis plus de ${String(ANNEES_CONSERVATION_ELEVES)} an(s) : leurs données d'étudiants sont à effacer ou à anonymiser.`,
+      `${String(echues.length)} promotion(s) sont sorties depuis plus de ${ecrireDuree(moisConservationDe(acces.lireEntrees()))} : leurs données d'étudiants sont à effacer ou à anonymiser.`,
     ),
     boutons,
   );
