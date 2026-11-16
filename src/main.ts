@@ -25,7 +25,7 @@ import { suivreHauteurBarre } from "./ecran-entetes";
 import { installerParcours } from "./ecran-parcours";
 import { installerMisesAJourParametres, installerPiedDePage } from "./ecran-pied";
 import { installerReglesParametres } from "./ecran-regles";
-import { montrerNouveautesAuLancement } from "./ecran-nouveautes";
+import { montrerNouveautesAuLancement, noterNouveautesVues } from "./ecran-nouveautes";
 import { appliquerFondEnregistre, installerChoixFond } from "./ecran-fond";
 import { appliquerThemeEnregistre, installerChoixTheme } from "./ecran-preferences";
 import { installerDonneesEleves, rappelerConservation } from "./ecran-droits-eleves";
@@ -219,7 +219,9 @@ async function demarrer(): Promise<void> {
   installerMisesAJourParametres(acces);
   installerReglesParametres(acces);
   // Dernière étape de la bienvenue (la mention) ; elle recharge la page une fois faite, et la visite démarre alors.
+  // C'est la première ouverture de l'outil : rien de nouveau à montrer, ni maintenant ni après le rechargement.
   if (await proposerBienvenue(acces, etablissementSaisi)) {
+    await noterNouveautesVues();
     return;
   }
   // La visite guidée attend que l'enseignant ait lu les nouveautés : les deux ne se superposent pas.

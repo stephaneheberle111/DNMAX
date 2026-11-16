@@ -88,6 +88,10 @@ describe("nouveautesAMontrer", () => {
   it("ne montre rien à une première installation", () => {
     expect(nouveautesAMontrer(null, "0.5.1", false)).toBeNull();
   });
+  it("ne montre rien à la première ouverture, même si une version plus ancienne a été vue sur ce poste", () => {
+    // Données neuves (première ouverture de l'outil) sur un poste où une ancienne installation avait noté sa version.
+    expect(nouveautesAMontrer("0.8.0", "0.9.0", false)).toBeNull();
+  });
   it("montre la version installée après une mise à jour depuis une version qui ne notait rien", () => {
     expect(nouveautesAMontrer(null, "0.5.1", true)).toEqual({ depuis: null });
   });
