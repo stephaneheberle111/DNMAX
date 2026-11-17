@@ -26,11 +26,12 @@
   font-size: 13px;
 }
 
-.mot-de-passe-eleves {
-  max-width: 520px;
+.avertissement-eleves .avertissement-mot-de-passe {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
 }
 
-.mot-de-passe-eleves .compte-formulaire > .echange-actions {
+.avertissement-eleves .avertissement-mot-de-passe > .echange-actions {
   align-self: stretch;
 }
 
