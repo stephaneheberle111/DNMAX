@@ -25,7 +25,8 @@
 | #156 | Volet Diplômes et mentions ; code et libellé d'un diplôme | `src/etablissement/diplomes.ts`, `src/domaine/diplomes.ts` |
 | #157 | Constituer : outils communs aux étapes 1 à 3 et étape 1 (UE) ; règles des éléments (libellé, élément neuf, codes en double, semestres, retrait) | `src/referentiel/etapes.ts`, `src/domaine/constituer.ts` |
 | #158 | Constituer, étape 2 (EC) : codes par année, ordre, filtre | `src/referentiel/etapes.ts`, `src/domaine/constituer.ts` |
-| (cette demande) | Constituer, étape 3 (blocs et compétences) : ordre, filtre, rattachements lus ; fin de l'éditeur commun historique (`edPanel`, `delBtn`) | `src/referentiel/etapes.ts`, `src/domaine/constituer.ts` |
+| #159 | Constituer, étape 3 (blocs et compétences) : ordre, filtre, rattachements lus ; fin de l'éditeur commun historique (`edPanel`, `delBtn`) | `src/referentiel/etapes.ts`, `src/domaine/constituer.ts` |
+| (cette demande) | Constituer, étape 4 (planification par semestre) : colonnes, rattachements | `src/referentiel/planification.ts`, `src/domaine/planification.ts` |
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
 
@@ -34,7 +35,7 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 **À fusionner avec la publication de la 0.9, pas avant** : la branche `docs/site-niveaux` (textes du site et de la documentation lue dans l'application sur les niveaux d'acquisition ; niveau de 3e année « Autonome » dans les deux référentiels livrés, empreinte recalculée). Toute fusion qui touche `site/` publie dnmax.fr (`.github/workflows/site.yml`).
 
 1. **L'éditeur commun** : fait. Tous ses volets sont dans `src/etablissement/` et `src/referentiel/etapes.ts` ; le fichier historique ne garde que la suppression en deux temps (`edArm`, `armDel`), partagée avec la liste des versions de la validation.
-2. **Référentiel > Constituer** : planification par semestre (`paintMatrice`), validation, page d'étape (`paintEtape`, `paintConstituer`).
+2. **Référentiel > Constituer** : validation et page d'étape (`paintConstituer`). La planification par semestre est faite.
 3. **Référentiel > Explorer** : la recherche et l'habillage autour de la carte.
 
 **Consigne de l'auteur, à respecter strictement : aucun risque sur la carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) ni sur la chaîne (`paintChain`, `chainModel`, `chainWire`).** Leur dessin reste tel quel. Au plus, un calcul déjà isolé peut en sortir, avec une comparaison d'images avant et après.
@@ -71,7 +72,7 @@ Chaque morceau suit la décision 37 :
 ### Pièges déjà rencontrés
 
 - **Serveur Vite arrêté** après un redémarrage de l'environnement : relancer `npx vite --port 1420 --strictPort` avant tout essai dans le navigateur.
-- **Copie de `main` sans polices** : servie depuis un autre dossier, elle ne charge pas les polices, d'où des écarts d'un pixel sur les captures. Comparer le balisage et les données, pas les pixels.
+- **Copie de `main` sans polices** : servie depuis un autre dossier, elle ne charge pas les polices (Vite refuse de servir `node_modules` par le lien symbolique, hors de sa liste autorisée), d'où des écarts d'un pixel sur les captures. Comparer le balisage et les données, pas les pixels. La planification par semestre mesure la hauteur de son en-tête (`--h1`, `--h2`) : ces deux valeurs peuvent différer pour la même raison et se neutralisent avant de comparer.
 - **Base de comparaison décalée** : quand des demandes sont empilées, comparer à la branche précédente de la pile, pas à `main`. Sinon les identifiants tirés au hasard diffèrent.
 - **Localisateurs Playwright qui se déplacent** : `.first()` sur « la première case non cochée » change de cible après chaque clic. Viser un attribut précis (`[data-code="…"]`).
 - **Bulle « Exemple chargé »** : elle recouvre une partie de la grille pendant quelques secondes et intercepte la souris.
