@@ -483,7 +483,7 @@ const PRISE_EN_MAIN: Parcours = {
       titre: "6. Le module Étudiants",
       texte:
         "Pour saisir les résultats de chaque étudiant, activez ici le module Étudiants : il demande quelques précautions (information des étudiants, mot de passe plus long) " +
-        "et a sa propre visite, comme le module Niveaux DN MADE qui s'appuie sur lui.",
+        "et a sa propre visite, comme le module Niveaux d'acquisition qui s'appuie sur lui.",
       texteFait: "Le module Étudiants est actif. Sa visite se lance avec « Visite guidée », juste en dessous.",
       cibles: ['#modList .mod:has([data-mod="eleves"])'],
       pointe: ".tg",
@@ -499,7 +499,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "C'est prêt",
       texte:
-        "Vous avez fait le tour de l'essentiel. Le module Étudiants et le module Niveaux DN MADE ont chacun leur visite, et celle-ci se relance depuis « Paramètres », panneau « Visites guidées ».",
+        "Vous avez fait le tour de l'essentiel. Le module Étudiants et le module Niveaux d'acquisition ont chacun leur visite, et celle-ci se relance depuis « Paramètres », panneau « Visites guidées ».",
     },
   ],
 };
@@ -564,17 +564,17 @@ const MODULE_ELEVES: Parcours = {
 };
 
 const MODULE_NIVEAUX: Parcours = {
-  titre: "Module Niveaux DN MADE",
+  titre: "Module Niveaux d'acquisition",
   etapes: [
     {
-      titre: "Le module Niveaux DN MADE",
+      titre: "Le module Niveaux d'acquisition",
       texte:
-        "Il attribue à chaque étudiant le niveau atteint sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec une maîtrise suffisante. Il s'appuie sur le module Étudiants.",
+        "Il attribue à chaque étudiant son niveau d'acquisition sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec une maîtrise suffisante. Ces niveaux sont facultatifs : le référentiel du diplôme ne les prévoit pas. Le module s'appuie sur le module Étudiants.",
     },
     ALLER_PARAMETRES,
     {
       titre: "Activer le module Étudiants",
-      texte: "Le module Niveaux DN MADE a besoin du module Étudiants : activez d'abord celui-ci.",
+      texte: "Le module Niveaux d'acquisition a besoin du module Étudiants : activez d'abord celui-ci.",
       texteFait: "Le module Étudiants est actif.",
       cibles: ['#modList .mod:has([data-mod="eleves"])'],
       pointe: ".tg",
@@ -583,8 +583,8 @@ const MODULE_NIVEAUX: Parcours = {
     },
     {
       titre: "Activer les niveaux",
-      texte: "Activez maintenant l'interrupteur « Niveaux DN MADE ».",
-      texteFait: "Le module Niveaux DN MADE est actif.",
+      texte: "Activez maintenant l'interrupteur « Niveaux d'acquisition ». Sa carte rappelle à partir de quel niveau de maîtrise le niveau de l'année est validé.",
+      texteFait: "Le module Niveaux d'acquisition est actif.",
       cibles: ['#modList .mod:has([data-mod="dn"])'],
       pointe: ".tg",
       geste: "cliquer",

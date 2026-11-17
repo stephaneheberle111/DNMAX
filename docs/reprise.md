@@ -25,6 +25,8 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 
 ## Ce qui reste, dans l'ordre convenu avec l'auteur
 
+**À fusionner avec la publication de la 0.9, pas avant** : la branche `docs/site-niveaux` (textes du site et de la documentation lue dans l'application sur les niveaux d'acquisition ; niveau de 3e année « Autonome » dans les deux référentiels livrés, empreinte recalculée). Toute fusion qui touche `site/` publie dnmax.fr (`.github/workflows/site.yml`).
+
 1. **L'éditeur commun** (`paintEditor`, `edPanel`, `delBtn`, `armDel`) et les volets qui s'en servent : Mon établissement > Promotions, Diplômes et mentions, Enseignants, ainsi que les pages UE, EC, Blocs et compétences de Référentiel > Constituer.
 2. **Référentiel > Constituer** : planification par semestre (`paintMatrice`), validation, page d'étape (`paintEtape`, `paintConstituer`).
 3. **Référentiel > Explorer** : la recherche et l'habillage autour de la carte.
@@ -33,7 +35,7 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 
 ## Questions en attente de l'auteur
 
-- **« Autonome » ou « Autonomie »** : le niveau DN MADE de 3e année s'appelle « Autonomie » dans les deux référentiels livrés (`site/referentiels/dn-made-objet.dnmax` et `dn-made-espace.dnmax`) et « Autonome » dans les textes de l'application (`src/parcours-etapes.ts`, `src/domaine/regles-affichees.ts`, `site/index.html`, valeur par défaut `dnPalier` dans le fichier historique). Aligner l'un sur l'autre une fois tranché.
+Aucune pour le moment.
 
 ## Méthode : réécrire sans rien changer
 

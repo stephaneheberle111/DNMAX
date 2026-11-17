@@ -8,6 +8,7 @@ import * as zoomCarte from "../domaine/zoom-carte";
 import { renumeroterBloc } from "../domaine/numero-bloc";
 import * as saisieResultats from "../domaine/saisie-resultats";
 import * as reglesEvaluation from "../domaine/evaluation";
+import { NIVEAUX_ACQUISITION, regleNiveauxAcquisition } from "../domaine/regles-affichees";
 import * as suiviSimplifie from "../domaine/suivi-simplifie";
 import { lireMoisConservation } from "../domaine/conservation";
 import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION_PAR_DEFAUT } from "../configuration";
@@ -139,6 +140,8 @@ interface Pont {
   readonly saisie: typeof saisieResultats;
   /** Règles de la composition d'une évaluation (voir `domaine/evaluation`). */
   readonly evaluation: typeof reglesEvaluation;
+  /** Niveaux d'acquisition du DN MADE et leur règle, montrée dans la carte du module (voir `domaine/regles-affichees`). */
+  readonly niveauxAcquisition: { noms: typeof NIVEAUX_ACQUISITION; regle: typeof regleNiveauxAcquisition };
   /** Suivi simplifié « À faire / Faite » (voir `domaine/suivi-simplifie`). */
   readonly suiviSimplifie: typeof suiviSimplifie;
   /** Libellés de niveaux au-dessus de la jauge des exports Word et OpenDocument (voir `domaine/jauge-export`). */
@@ -270,6 +273,7 @@ export async function chargerInterfaceHistorique(
     renumeroterBloc,
     saisie: saisieResultats,
     evaluation: reglesEvaluation,
+    niveauxAcquisition: { noms: NIVEAUX_ACQUISITION, regle: regleNiveauxAcquisition },
     suiviSimplifie,
     jauge: jaugeExport,
     teintes: { couleurNiveau, encreNiveau },

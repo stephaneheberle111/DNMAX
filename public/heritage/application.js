@@ -18,8 +18,9 @@ const MODULES = {
     d:"Toujours actif. Composer une évaluation (livrables, compétences, regroupements, consignes et attendus, rattachement aux UE et EC), l'enregistrer dans Mes évaluations avec son suivi, l'exporter en Word, Excel ou OpenDocument ; explorer et importer le référentiel ; décrire l'établissement (mentions, enseignants, promotions, répartition de service) et suivre la progression des promotions."},
   eleves:{nom:"Étudiants",def:false,
     d:"Gestion nominative des évaluations directement dans l'application, étudiant par étudiant : promotions nominatives, saisie de chaque étudiant ligne par ligne (grille de la promo ou fiche individuelle, observations, appréciation), non-rendus, restitution par étudiant, un document Word par étudiant, et la page « Progression étudiant » pour savoir où en est chacun dans le semestre et dans l'acquisition des compétences."},
-  dn:{nom:"Niveaux DN MADE",def:false,req:"eleves",
-    d:"Attribue à chaque étudiant le niveau DN MADE atteint sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec un niveau de maîtrise suffisant. Affiché dans « Progression étudiant », dans les intitulés d'année et dans les exports."}
+  dn:{nom:"Niveaux d'acquisition",def:false,req:"eleves",
+    d:"Attribue à chaque étudiant son niveau d'acquisition sur chaque compétence, selon l'année et le niveau de maîtrise obtenu. Affiché dans « Progression étudiant », dans les intitulés d'année et dans les exports.",
+    regle:()=>window.dnmaxPont.niveauxAcquisition.regle()}
 };
 /* visite guidée de chaque module (voir src/parcours-etapes.ts) */
 const VISITE_MODULE={eleves:"eleves",dn:"niveaux"};
@@ -32,7 +33,7 @@ const LS = {
   set(k,v){try{STOCKAGE.setItem(k,JSON.stringify(v))}catch(e){}}
 };
 let MOD = Object.assign(modDefaults(), LS.get("dnmade.modules",{}));
-// un module qui en requiert un autre ne reste pas actif sans lui (Niveaux DN MADE → Étudiants)
+// un module qui en requiert un autre ne reste pas actif sans lui (Niveaux d'acquisition → Étudiants)
 function modDeps(){Object.entries(MODULES).forEach(([k,v])=>{if(v.req&&!MOD[v.req])MOD[k]=false})}
 modDeps();
 MOD.base=true;
@@ -746,7 +747,7 @@ function contexteFormulation(){
 }
 function paintLignes(){window.dnmaxPont.editeur.peindreFormulation(contexteFormulation())}
 /* ---------- étape 4 : évaluation des étudiants ---------- */
-/* Niveau d'acquisition en pourcentage continu (0 à 100, sans crans visibles).
+/* Niveau de maîtrise en pourcentage continu (0 à 100, sans crans visibles).
    Règle quel que soit le nombre N de niveaux : les deux niveaux extrêmes occupent chacun 60/N %
    (15 % pour 4 niveaux), les niveaux intermédiaires se partagent le reste à parts égales.
    Dans le premier et le dernier niveau, la jauge ne se remplit pas progressivement :
@@ -2878,11 +2879,11 @@ function paintEditor(pane,host){
       "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments, pour que vous n'ayez qu'à ajuster les variations (Référentiel > Constituer, une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laissez-le vide pour qu'il suive, ou écrivez le vôtre.")
       +(dvs.length?`<div class="panel" style="max-width:720px;margin-top:18px"><div class="pick-head"><h3>Réglages du référentiel</h3>${dvs.length>1?`<select id="edDipAct" aria-label="Mention dont on règle le référentiel" style="width:auto;margin-left:auto">${dvs.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>`:`<span class="hint" style="margin-left:auto">${esc(dipLabel(dvs[0]))}</span>`}</div>
         <div class="panel-body">
-          <div class="field"><label>Années et niveaux</label>
+          <div class="field"><label>Années et niveaux d'acquisition</label>
             <div class="hint" style="margin:0 0 6px">L'identifiant d'une année suit le code du diplôme (DNO1, DNO2…) — laissez-le vide pour qu'il suive, ou écrivez le vôtre.</div>
             ${(D.niveaux||[]).map((n,i)=>`<div class="lv"><span class="num" style="width:62px">Année ${n.annee}</span>
               <input type="text" data-nvc="${i}" value="${esc(n.code||"")}" placeholder="${esc(dipCode(D.diplomes.find(x=>x.id===D.activeDiplome)||{})+n.annee)}" style="flex:0 1 90px" aria-label="Identifiant de l'année" class="mono">
-              <input type="text" data-nvl="${i}" value="${esc(n.label)}" aria-label="Libellé du niveau"></div>`).join("")}
+              <input type="text" data-nvl="${i}" value="${esc(n.label)}" aria-label="Libellé du niveau d'acquisition"></div>`).join("")}
             </div>
         </div></div>`:"");
     host.querySelector("#edAdd").onclick=()=>{
@@ -3243,7 +3244,7 @@ function paintSet(){
   const host=document.getElementById("modList");
   host.innerHTML=Object.entries(MODULES).map(([k,v])=>`
     <div class="mod${v.req&&!MOD[v.req]?" modoff":""}"><label class="tg"><input type="checkbox" data-mod="${k}" ${MOD[k]?"checked":""} ${v.locked||(v.req&&!MOD[v.req])?"disabled":""} aria-label="${esc(v.nom)}"><span></span></label>
-    <div><b>${esc(v.nom)}</b>${v.req?`<span class="hint" style="margin-left:8px;font-size:11.5px">nécessite le module ${esc(MODULES[v.req].nom)}</span>`:""}<div class="d">${esc(v.d)}</div>
+    <div><b>${esc(v.nom)}</b>${v.req?`<span class="hint" style="margin-left:8px;font-size:11.5px">nécessite le module ${esc(MODULES[v.req].nom)}</span>`:""}<div class="d">${esc(v.d)}</div>${v.regle?`<div class="d modregle">${esc(v.regle())}</div>`:""}
     ${v.locked?`<div class="off" style="color:var(--accent)">toujours actif</div>`:v.req&&!MOD[v.req]?`<div class="off">activez d'abord le module ${esc(MODULES[v.req].nom)}</div>`:v.def===false?`<div class="off">désactivé par défaut</div>`:""}<div class="modactions">${k==="eleves"&&MOD.eleves?`<button type="button" class="btn ghost modvisite" data-docs-eleves>Documents à remettre</button>`:""}${VISITE_MODULE[k]?`<button type="button" class="btn ghost modvisite" data-parcours="${VISITE_MODULE[k]}">Visite guidée</button>`:""}</div></div></div>`).join("");
   // Les documents RGPD restent disponibles une fois le module Étudiants activé.
   const docs=host.querySelector("[data-docs-eleves]");
@@ -3261,7 +3262,7 @@ function paintSet(){
 }
 function appliquerModule(cb){
   if(!cb.checked&&Object.entries(MODULES).some(([k,v])=>v.req===cb.dataset.mod&&MOD[k]))
-    toast("Niveaux DN MADE désactivé aussi : il nécessite le module "+MODULES[cb.dataset.mod].nom+".");
+    toast("Niveaux d'acquisition désactivé aussi : il nécessite le module "+MODULES[cb.dataset.mod].nom+".");
   MOD[cb.dataset.mod]=cb.checked;modDeps();LS.set("dnmade.modules",MOD);
   paintSet();paintTabs();paintForm();paintPick();paintLignes();paintVocab();paintRef();
   toast(MODULES[cb.dataset.mod].nom+(cb.checked?" : activé":" : désactivé"));
@@ -3465,8 +3466,8 @@ function paintProg(){
 /* ---------- Progression étudiant (module Étudiants) ----------
    Pour un étudiant d'une promotion en cours : où il en est dans les évaluations du semestre, comparé aux autres
    (évalué, partiel, non rendu, oublié alors que les autres l'ont été), et ce qu'il a acquis sur les compétences
-   jusqu'à ce semestre (dernier niveau connu ; palier DN MADE atteint avec le module Niveaux DN MADE). */
-function dnPalier(a){const n=(REF.meta.niveaux||[]).find(x=>+x.annee===+a);return (n&&n.label)||["Initié","Guidé","Autonome"][a-1]||("Année "+a)}
+   jusqu'à ce semestre (dernier niveau connu ; niveau d'acquisition atteint avec le module Niveaux d'acquisition). */
+function dnPalier(a){const n=(REF.meta.niveaux||[]).find(x=>+x.annee===+a);return (n&&n.label)||window.dnmaxPont.niveauxAcquisition.noms[a-1]||("Année "+a)}
 function paintProgEleve(host,c){
   const {ps,pr,sem,semsAll,semCur,els,fs,me,nMine,onlyMine,viewSeg}=c;
   // acquise à partir de « Satisfaisant » (voir src/domaine/evaluation.ts)
@@ -3515,7 +3516,7 @@ function paintProgEleve(host,c){
   const palCount=[1,2,3].map(a=>rowsB.filter(r=>r.pal===a).length);
   const i0=els.findIndex(e=>el&&e.id===el.id), anCur=anneeOf(sem);
   host.innerHTML=`<div class="panel">
-    <div class="pick-head"><h3>Progression étudiant${help("Pour un étudiant : les évaluations du semestre et ce qu'il y a obtenu, comparé au reste de la promotion — « Non évalué » signale une évaluation où les autres étudiants ont déjà été saisis mais pas lui. « Non rendu » et « Dispensé » se renseignent dans l'évaluation elle-même (étape Étudiants) et comptent comme traités. En dessous, toutes les compétences sur lesquelles il a été évalué jusqu'à ce semestre, avec l'évolution de son niveau de maîtrise d'une évaluation à l'autre"+(MOD.dn?" et sa progression dans les niveaux DN MADE : Initié (année 1) → Guidé (année 2) → Autonome (année 3), chaque niveau étant atteint dès qu'il est évalué avec une maîtrise suffisante dans l'année correspondante.":"."))}</h3>
+    <div class="pick-head"><h3>Progression étudiant${help("Pour un étudiant : les évaluations du semestre et ce qu'il y a obtenu, comparé au reste de la promotion — « Non évalué » signale une évaluation où les autres étudiants ont déjà été saisis mais pas lui. « Non rendu » et « Dispensé » se renseignent dans l'évaluation elle-même (étape Étudiants) et comptent comme traités. En dessous, toutes les compétences sur lesquelles il a été évalué jusqu'à ce semestre, avec l'évolution de son niveau de maîtrise d'une évaluation à l'autre"+(MOD.dn?" et sa progression dans les niveaux d'acquisition : Initié (année 1) → Guidé (année 2) → Autonome (année 3), chaque niveau étant atteint dès qu'il est évalué avec une maîtrise suffisante dans l'année correspondante.":"."))}</h3>
       <div style="margin-left:auto">${viewSeg}</div></div>
     ${progFiltres(ps,pr,sem,semsAll,semCur,el?`<label><span class="sfl2">Étudiant</span>
         <button type="button" class="btn ghost" id="pgElPrev" ${i0<=0?"disabled":""} aria-label="Étudiant précédent">‹</button>
@@ -3536,7 +3537,7 @@ function paintProgEleve(host,c){
         <div class="pgev"><span class="hint">${x.r.nr||x.r.disp?"—":x.n+" / "+x.keys.length+" ligne"+(x.keys.length>1?"s":"")}</span><div class="hint">Promo : ${x.st.full}/${x.st.tot} évalués</div></div>
         <div class="pgst"></div></div>`).join("")||`<div class="empty">Aucune évaluation de ${esc(pr.nom)} au ${esc(sem)}.</div>`}
     </div>
-    <div class="pgbloc"><div class="pgbh">Acquisition des compétences <span class="hint" style="font-weight:400">— ${nAcq} / ${rowsB.length} acquises (dernier niveau ≥ « ${esc(LV[thr]||"")} »), jusqu'au ${esc(sem)}${MOD.dn&&rowsB.length?" · niveaux DN MADE : "+[1,2,3].map(a=>palCount[a-1]+" "+esc(dnPalier(a))).join(", "):""}</span></div>
+    <div class="pgbloc"><div class="pgbh">Acquisition des compétences <span class="hint" style="font-weight:400">— ${nAcq} / ${rowsB.length} acquises (dernier niveau ≥ « ${esc(LV[thr]||"")} »), jusqu'au ${esc(sem)}${MOD.dn&&rowsB.length?" · niveaux d'acquisition : "+[1,2,3].map(a=>palCount[a-1]+" "+esc(dnPalier(a))).join(", "):""}</span></div>
       ${blocs.map(b=>`<div class="pgbh" style="font-weight:500;border-top:0;padding-top:8px">${esc(b)} - ${esc(blocNom(b))}</div>
         ${rowsB.filter(r=>String(r.c.bloc)===b).sort((x,y)=>String(x.c.code).localeCompare(String(y.c.code),undefined,{numeric:true})).map(r=>`<div class="pgrow">
           <span class="pill" style="background:${nivColor(r.last.lv,NL)};color:${nivEncre(r.last.lv,NL)};border-color:transparent;justify-self:start">${esc(LV[r.last.lv]||"")}</span>

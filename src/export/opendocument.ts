@@ -20,7 +20,7 @@ import { imageJauge, SCEAU_LARGEUR, SCEAU_PX } from "./word";
 
 const LARGEUR_PAGE = 10500;
 const CONSIGNE_JAUGE =
-  "Niveau d'acquisition : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.";
+  "Niveau de maîtrise : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.";
 
 /** Vingtièmes de point en centimètres. */
 function cm(vingtiemes: number): string {

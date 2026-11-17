@@ -36,7 +36,7 @@ Compter environ une heure et demie. Cocher chaque ligne ; noter le système, la 
 
 ## C. Paramètres et Mon établissement
 
-- [ ] **C1. Règles d'évaluation.** Paramètres : panneau « Règles d'évaluation » avec échelle, enregistrement, seuils de la jauge (0–15 / 15–50 / 50–85 / 85–100 %, sans justification), Rendu, « efface une saisie commencée », acquisition à partir de « Satisfaisant », niveaux DN MADE, suivi.
+- [ ] **C1. Règles d'évaluation.** Paramètres : panneau « Règles d'évaluation » avec échelle, enregistrement, seuils de la jauge (0–15 / 15–50 / 50–85 / 85–100 %, sans justification), Rendu, « efface une saisie commencée », acquisition à partir de « Satisfaisant », suivi (la règle des niveaux d'acquisition n'y figure plus : elle est dans la carte du module).
 - [ ] **C2. Comparaison masquable.** Charger l'exemple. Cocher « ne pas situer l'étudiant par rapport à sa promotion », puis ouvrir Progression étudiant : plus de « au-dessus / en dessous / dans la moyenne ». Décocher : la comparaison revient.
 - [ ] **C3. Suivi simplifié.** Cocher « Suivi simplifié » : dans Mes évaluations, « À faire » ou « Faite » à la place de la frise. « Marquer faite » sur une évaluation « À faire » la fait passer à « Faite ». Décocher : la frise détaillée revient, avec l'étape « Distribuée » cochée à la date du jour.
 - [ ] **C4. Calendrier.** Mon établissement > Établissement : mettre la rentrée en août et le second semestre en janvier. Nouvelle évaluation, promotion de 2e année, « Distribution prévue » le 15 janvier : le semestre proposé est S4 (S3 avec le calendrier par défaut).

@@ -45,13 +45,22 @@ export function reglesAffichees(): RegleAffichee[] {
       texte: `Une compétence est acquise quand le dernier niveau obtenu est « ${acquis} » ou mieux.`,
     },
     {
-      titre: "Niveaux DN MADE",
-      texte: `Initié, Guidé ou Autonome est atteint dans l'année dès qu'une évaluation de cette année donne « ${acquis} » ou mieux.`,
-    },
-    {
       titre: "Suivi d'une évaluation",
       texte:
         "Préparée, Distribuée, Rendus à évaluer, Évaluation en cours, Évaluée, Restituée en partie, Restituée ; ou Annulée.",
     },
   ];
+}
+
+/** Niveaux d'acquisition du DN MADE, de la 1re à la 3e année. */
+export const NIVEAUX_ACQUISITION = ["Initié", "Guidé", "Autonome"] as const;
+
+/**
+ * Règle du module Niveaux d'acquisition, montrée dans sa carte de
+ * Paramètres > Modules, sans réglage possible (décision 36).
+ */
+export function regleNiveauxAcquisition(): string {
+  const acquis = ECHELLE.niveaux[RANG_ACQUIS];
+  const parAnnee = NIVEAUX_ACQUISITION.map((niveau, rang) => `${niveau} en ${String(rang + 1)}${rang === 0 ? "re" : "e"} année`);
+  return `Facultatifs, absents du référentiel du diplôme : ${parAnnee.join(", ")}. Le niveau de l'année est validé dès qu'une évaluation de cette année donne « ${acquis} » ou mieux.`;
 }
