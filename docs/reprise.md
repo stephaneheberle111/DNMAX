@@ -38,6 +38,7 @@
 | #170 | L'exemple : noms, répartition, évaluations détaillées et jeu étendu, résultats | `src/domaine/exemple.ts` |
 | (cette demande) | Barre des onglets, vues affichées et titre de la fenêtre | `src/interface/onglets.ts`, `src/domaine/onglets.ts` |
 | (cette demande) | Paramètres > Modules : catalogue, dépendances, cartes et activation du module Étudiants | `src/parametres/modules.ts`, `src/domaine/modules.ts` |
+| (cette demande) | Préférences : nom du champ d'évaluation, sceau, dossier des exports | `src/preferences/preferences.ts`, `src/domaine/preferences.ts` |
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
 
@@ -48,7 +49,7 @@ L'éditeur commun, Référentiel > Constituer et Référentiel > Explorer sont f
 1. **Mes évaluations** : fait. Restent dans le fichier historique l'export d'une évaluation (`exportFiche`) et l'avertissement avant de restituer (`askRestitWarn`), que la fenêtre des actions appelle.
 2. **Progression** : fait. Le fichier historique ne garde que la préparation des données (`paintProg`, `paintProgEleve`).
 3. **L'exemple** : fait. Le fichier historique garde l'enchaînement (`loadDemo`, `demoMass`, `validerExemple`), qui écrit dans le modèle de données ; son contenu et ses tirages sont dans `src/domaine/exemple.ts`.
-4. **Le reste de l'interface** : onglets et Paramètres > Modules faits ; restent Préférences, formulaire de l'étape 1, branchements au chargement.
+4. **Le reste de l'interface** : onglets, Paramètres > Modules et Préférences faits ; restent le formulaire de l'étape 1 et les branchements au chargement.
 5. **Le modèle de données** (dictionnaire, référentiels, vue active), en dernier, avec une vérification renforcée sur des données réelles exportées puis rechargées.
 
 La carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) et la chaîne (`paintChain`, `chainModel`, `chainWire`, `chainBind`) restent dans le fichier historique, inchangées. Pour comparer, ces deux vues ne sont pas reproductibles d'une exécution à l'autre (positions animées, hauteurs mesurées selon les polices) : neutraliser nombres, `transform` et `style` avant de comparer.
@@ -93,6 +94,7 @@ Chaque morceau suit la décision 37 :
 - **Bulle « Exemple chargé »** : elle recouvre une partie de la grille pendant quelques secondes et intercepte la souris.
 - **Différences de sérialisation sans effet** : `class=""` posé par `creer`, `selected` posé par propriété, `0px` au lieu de `0`. Normaliser avant de comparer, ou éviter (`document.createElement` quand l'attribut doit rester absent).
 - **Identifiants tirés de l'horloge** (`newId`, identifiants des mentions et des étudiants) : le banc avance l'heure d'une milliseconde à chaque `Date.now`. Une réécriture qui appelle l'horloge un nombre de fois différent change ces identifiants sans rien changer d'autre. Pour l'exemple, rejouer avec l'heure figée (et plusieurs dates) ; ailleurs, neutraliser ces identifiants avant de comparer.
+- **Focus après un redessin** : quand le champ qui a le focus est masqué par le redessin, l'élément actif relevé varie d'une exécution à l'autre, sur `main` aussi. Comparer sans le focus à cette étape.
 - **CHANGELOG** : il entre en conflit à presque chaque fusion ; garder les deux entrées.
 - **Demandes empilées puis fusionnées par écrasement** : en intégrant `main` dans la branche suivante, les conflits se règlent par la version de la branche, qui contient déjà le contenu fusionné.
 
