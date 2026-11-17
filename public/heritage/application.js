@@ -216,11 +216,8 @@ function assocFor(dpId,kind,id){
   if(kind==="competences"){r.ecs=(r.ecs||[]).filter(x=>x&&has("ecs",x.id));if(r.bloc==null)r.bloc=""}
   return r;
 }
-function refRemove(R,kind,id){
-  R[kind]=R[kind].filter(r=>r.id!==id);
-  if(kind==="ues")R.ecs.forEach(e=>{if(e.ueId===id)e.ueId=""});
-  if(kind==="ecs")R.competences.forEach(c=>c.ecs=(c.ecs||[]).filter(x=>x.id!==id));
-}
+/* retirer un élément du référentiel d'une mention : règle écrite et testée dans src/domaine/constituer.ts */
+function refRemove(R,kind,id){window.dnmaxPont.constituer.retirerDuReferentiel(R,kind,id)}
 /* Données complètes à partir de buildData (installation neuve, exemple) : un diplôme, le dictionnaire
    et le référentiel de ce diplôme, puis la vue fusionnée du référentiel actif. */
 function construireDonnees(d){
@@ -2621,7 +2618,7 @@ function paintConstituer(host){
    l'UE d'un EC se choisit à l'étape 2 mais ne s'y renomme pas, l'EC d'une compétence se rattache à
    l'étape 4. Noms, codes et intitulés passent par la vue fusionnée (DATA.ues…) et rejoignent le
    dictionnaire commun à l'enregistrement (absorb). */
-const ETAPE_NOTE="Noms, codes et intitulés sont communs aux mentions qui retiennent l'élément : les modifier ici les modifie dans chacune. « Retirer » enlève l'élément de ce référentiel seulement ; il reste proposé dans la liste d'ajout, parmi les éléments déjà connus.";
+const ETAPE_NOTE=window.dnmaxPont.referentiel.NOTE_ETAPE;
 function etapeLbl(kind,x){
   return kind==="ues"?((x.code?x.code+" · ":"")+(x.nom||"UE sans nom")):kind==="ecs"?(x.nom||"EC sans intitulé")
     :kind==="blocs"?("Bloc "+x.num+(x.nom?" · "+x.nom:"")):((x.code||"C")+" · "+String(x.libelle||"").slice(0,70));
@@ -2653,27 +2650,15 @@ function etapeDoublons(list,key){
 }
 function paintEtape(kind,host){
   const D=DATA, dipL=REF.meta.diplome||"—", q=norm((ui.ref.cq||"").trim());
+  /* Étape 1 : écran écrit en TypeScript (src/referentiel/etapes.ts) ; règles dans src/domaine/constituer.ts */
+  if(kind==="ues")return window.dnmaxPont.referentiel.peindreEtapeUes(host,contexteEtape(D,dipL));
   const txt=(k,i,f,v,ph,lbl,extra)=>`<input type="text" value="${esc(v||"")}" data-cf="${k}|${i}|${f}" placeholder="${esc(ph||"")}" aria-label="${esc(lbl)}"${extra||""}>`;
   const col=(k,i,v)=>`<input type="color" value="${esc(v||"#9aa2ae")}" data-cf="${k}|${i}|couleur" aria-label="Couleur">`;
   const semChips=(attr,i,cur,ok)=>`<div class="chips sems">${SEMS.map(x=>`<button type="button" data-${attr}="${i}" data-v="${x}" aria-pressed="${(cur||[]).includes(x)}" ${ok&&!ok.includes(x)?'disabled title="Hors des semestres de l\'UE"':""}>${x}</button>`).join("")}</div>`;
   const filtre=`<input type="text" id="cq" value="${esc(ui.ref.cq||"")}" placeholder="Filtrer…" aria-label="Filtrer" style="width:auto">`;
   const toggleSem=(o,v)=>{o.sems=(o.sems||[]).includes(v)?o.sems.filter(x=>x!==v):[...(o.sems||[]),v].sort((x,y)=>SEMS.indexOf(x)-SEMS.indexOf(y))};
   const invalide=t=>` aria-invalid="true" title="${esc(t)}"`;
-  if(kind==="ues"){
-    const css="grid-template-columns:44px 96px minmax(0,1fr) 216px 64px 92px", dbl=etapeDoublons(D.ues,"code");
-    host.innerHTML=edPanel("Étape 1 · Unités d'enseignement · "+dipL,D.ues.length,etapeAddSel("ues","Ajouter une UE","Nouvelle UE"),
-      {css,cells:["","Code","Nom","Semestres","EC",""]},
-      D.ues.map((u,i)=>{const n=D.ecs.filter(e=>e.ueId===u.id).length;
-        return `<div class="ed" style="${css}" data-row="${esc(u.id)}">${col("ues",i,u.couleur)}
-        ${txt("ues",i,"code",u.code,"Code","Code de l'UE",' class="mono"'+(dbl(u)?invalide("Code déjà porté par une autre UE"):""))}
-        ${txt("ues",i,"nom",u.nom,"Nom de l'unité","Nom de l'UE")}
-        ${semChips("us",i,u.sems)}
-        <span class="num" title="Enseignements constitutifs rattachés (étape 2)">${n} EC</span>
-        ${delBtn("cr:ues:"+u.id,"Retirer")}</div>`}).join(""),
-      "À cette étape, seules les UE se créent, se renomment et se retirent. Les semestres ouverts ici bornent ceux de leurs EC. "+ETAPE_NOTE);
-    host.querySelectorAll("[data-us]").forEach(b=>b.onclick=()=>{toggleSem(D.ues[+b.dataset.us],b.dataset.v);saveData()});
-  }
-  else if(kind==="ecs"){
+  if(kind==="ecs"){
     const css="grid-template-columns:44px 228px minmax(0,1fr) 190px 216px 54px 92px";
     const list=D.ecs.slice().sort((a,b)=>ecOrd(a)-ecOrd(b)).filter(e=>!q||norm([ecCodesList(e).join(" "),e.nom].join(" ")).includes(q));
     host.innerHTML=edPanel("Étape 2 · Enseignements constitutifs · "+dipL,list.length+(q?" / "+D.ecs.length:""),filtre+etapeAddSel("ecs","Ajouter un EC","Nouvel enseignement constitutif"),
@@ -2766,6 +2751,14 @@ function paintEtape(kind,host){
     const r=b.dataset.eddel.slice(3), j=r.indexOf(":"), k=r.slice(0,j), id=r.slice(j+1);
     absorb(D);refRemove(refOf(D,D.activeDiplome),k,id);saveData(true,true);
     toast(k==="blocs"?"Bloc retiré du référentiel ; ses compétences restent, sans bloc.":"Retiré du référentiel "+dipL+".")}));
+}
+/* contexte des étapes de Constituer écrites en TypeScript : la vue du référentiel actif et de quoi l'enregistrer */
+function contexteEtape(D,dipL){
+  return {vue:D,diplome:dipL,nouvelIdentifiant:newId,enregistrer:redessiner=>saveData(redessiner?undefined:false),
+    viderFiltre:()=>{ui.ref.cq=""},
+    reprendre:(k,v)=>{const R=refOf(D,D.activeDiplome);if(!R[k].some(r=>r.id===v))R[k].push(assocFor(D.activeDiplome,k,v));saveData(true,true)},
+    retirer:(k,id)=>{absorb(D);refRemove(refOf(D,D.activeDiplome),k,id);saveData(true,true)},
+    armement:{arme:edArm,armer:(id,fn)=>armDel(id,fn)},annoncer:toast};
 }
 function edPanel(titre,count,actions,head,rowsHtml,note){
   return `<div class="panel">
