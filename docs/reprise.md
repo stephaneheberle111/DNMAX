@@ -21,7 +21,8 @@
 | #147 | La copie du référentiel Objet (3 250 lignes) : l'exemple installe le fichier livré | `src/heritage/exemple.ts` |
 | #148 | Volets Établissement et Répartition de service de Mon établissement | `src/etablissement/volets.ts`, `src/domaine/etablissement.ts` |
 | #154 | Éditeur commun (panneau, suppression en deux temps), volets Enseignants et Livrables (Préférences), règles des noms | `src/etablissement/editeur-commun.ts`, `enseignants.ts`, `livrables.ts`, `src/domaine/personnes.ts` |
-| (cette demande) | Volet Promotions de Mon établissement : ordre, état, liste des étudiants | `src/etablissement/promotions.ts`, `src/domaine/promotions.ts` |
+| #155 | Volet Promotions de Mon établissement : ordre, état, liste des étudiants | `src/etablissement/promotions.ts`, `src/domaine/promotions.ts` |
+| (cette demande) | Volet Diplômes et mentions ; code et libellé d'un diplôme | `src/etablissement/diplomes.ts`, `src/domaine/diplomes.ts` |
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
 
@@ -29,7 +30,7 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 
 **À fusionner avec la publication de la 0.9, pas avant** : la branche `docs/site-niveaux` (textes du site et de la documentation lue dans l'application sur les niveaux d'acquisition ; niveau de 3e année « Autonome » dans les deux référentiels livrés, empreinte recalculée). Toute fusion qui touche `site/` publie dnmax.fr (`.github/workflows/site.yml`).
 
-1. **Les volets qui restent sur l'éditeur commun** : Mon établissement > Diplômes et mentions, ainsi que les pages UE, EC, Blocs et compétences de Référentiel > Constituer. L'éditeur commun est dans `src/etablissement/editeur-commun.ts` ; `edPanel`, `delBtn` et `armDel` restent dans le fichier historique tant que ces volets s'en servent.
+1. **Les pages de Référentiel > Constituer qui restent sur l'éditeur commun** : UE, EC, Blocs et compétences (`paintEtape`). L'éditeur commun est dans `src/etablissement/editeur-commun.ts` ; `edPanel`, `delBtn` et `armDel` restent dans le fichier historique tant que ces volets s'en servent.
 2. **Référentiel > Constituer** : planification par semestre (`paintMatrice`), validation, page d'étape (`paintEtape`, `paintConstituer`).
 3. **Référentiel > Explorer** : la recherche et l'habillage autour de la carte.
 
