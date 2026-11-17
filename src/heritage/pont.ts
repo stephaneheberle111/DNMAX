@@ -24,6 +24,7 @@ import * as etapesEditeur from "../domaine/etapes-editeur";
 import * as suiviEvaluation from "../domaine/suivi-evaluation";
 import * as progression from "../domaine/progression";
 import { installerReferentielExemple } from "./exemple";
+import { peindreRepartition, peindreVoletEtablissement } from "../etablissement/volets";
 import { peindreEnseignants, peindreLivrables, peindrePromotions, peindreSemestres, peindreUesEtEcs } from "../editeur/etape-evaluation";
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { progressionDesCompetences } from "../domaine/progression-competences";
@@ -162,6 +163,8 @@ interface Pont {
    * dans le magasin et rend l'identifiant du diplôme installé.
    */
   installerReferentielExemple(): Promise<string | null>;
+  /** Volets de Mon établissement écrits en TypeScript (voir `etablissement/`). */
+  readonly etablissement: { peindreVoletEtablissement: typeof peindreVoletEtablissement; peindreRepartition: typeof peindreRepartition };
   /** Calculs de la page Progression (voir `domaine/progression`). */
   readonly progression: typeof progression;
   /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
@@ -248,6 +251,7 @@ export async function chargerInterfaceHistorique(
     etapesEditeur,
     suivi: suiviEvaluation,
     progression,
+    etablissement: { peindreVoletEtablissement, peindreRepartition },
     installerReferentielExemple: () => installerReferentielExemple(magasin, new Date()),
     exports: { colonnesExport, construireDocx, construireOdt, construireTableur, dessinateurJauge },
     ...(estDansEnveloppe()
