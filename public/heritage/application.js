@@ -2457,85 +2457,23 @@ function paintMatrice(host){
 /* Constituer le référentiel d'une mention, en 5 étapes comme une évaluation : 1. les UE retenues, 2. les EC,
    3. les blocs et leurs compétences, 4. la planification par semestre (tableau compétences × EC), 5. la validation datée. */
 function paintConstituer(host){
-  const D=DATA, k=ui.ref.cp, keys=Object.keys(CON_PANES), si=keys.indexOf(k);
-  const dipNoms=[];D.diplomes.forEach(dp=>{const n=(dp.nom||"").trim();
-    if(!dipNoms.some(x=>norm(x)===norm(n)))dipNoms.push(n)});
-  const curDip=D.diplomes.find(x=>x.id===D.activeDiplome)||{};
-  const ments=D.diplomes.filter(dp=>norm(dp.nom||"")===norm(curDip.nom||""));
-  const vs=versionsOf(D.activeDiplome), va=versionActive(D.activeDiplome), ajour=refAJour(D.activeDiplome);
-  const etat=!va?`<span class="vst draft">Jamais validé — brouillon</span>`
-    :!va.attestation?`<span class="vst mod" style="white-space:nowrap">À vérifier et valider</span>`
-    :ajour?`<span class="vst ok">À jour · version du ${esc(frDate(va.date))}</span>`
-    :`<span class="vst mod">Modifié depuis la version du ${esc(frDate(va.date))}</span>`;
-  const plan=D.competences.filter(c=>(c.ecs||[]).some(x=>(x.sems||[]).length)).length;
-  const sums={ues:`${D.ues.length} <em>UE retenue${D.ues.length>1?"s":""}</em>`,
-    ecs:`${D.ecs.length} <em>EC</em>${D.ecs.filter(e=>!e.ueId).length?` <em>· ${D.ecs.filter(e=>!e.ueId).length} sans UE</em>`:""}`,
-    blocs:`${D.blocs.length} <em>bloc${D.blocs.length>1?"s":""} ·</em> ${D.competences.length} <em>compétence${D.competences.length>1?"s":""}</em>`,
-    tableau:`${plan} <em>/ ${D.competences.length} compétences planifiées</em>`,
-    valider:!va?`<em>jamais validé</em>`:!va.attestation?`<em>à vérifier et valider</em>`:ajour?`<em>à jour · ${esc(frDate(va.date))}</em>`:`<em>modifié depuis le ${esc(frDate(va.date))}</em>`};
-  const steps=`<ol class="steps">${keys.map((x,j)=>`<li><button type="button" data-cp="${x}" ${x===k?'aria-current="true"':""}><span class="hd"><b>${j+1}</b><span class="l">${esc(CON_PANES[x])}</span></span><span class="s">${sums[x]}</span></button></li>`).join("")}</ol>`;
-  const nav=`<div style="display:flex;gap:8px;justify-content:space-between;margin:16px 0 4px">
-    ${si>0?`<button type="button" class="btn ghost" data-cp="${keys[si-1]}">← ${esc(CON_PANES[keys[si-1]])}</button>`:"<span></span>"}
-    ${si<keys.length-1?`<button type="button" class="btn primary" data-cp="${keys[si+1]}">${si+2}. ${esc(CON_PANES[keys[si+1]])} →</button>`:""}</div>`;
-  const valider=`<div class="panel"><div class="pick-head"><h3>Valider le référentiel · ${esc(dipLabel(curDip))}</h3>${etat}</div>
-      <div class="panel-body" style="display:flex;flex-direction:column;gap:12px">
-        <div class="hint">Valider fige l'état du référentiel de cette mention à une date. À la validation, vous choisissez les promotions en cours qui passent à cette version ; les autres gardent la leur, et les évaluations déjà enregistrées restent sur le référentiel sur lequel elles ont été faites.</div>
-        <div class="hint">Aucune évaluation ne peut être créée pour une promotion tant que son référentiel n'a pas été vérifié et validé ici. C'est l'enseignant qui est responsable du référentiel, y compris quand il est livré avec DNMAX ou reçu d'un collègue.</div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px"><span><b>${D.ues.length}</b> UE</span><span><b>${D.ecs.length}</b> EC</span><span><b>${D.blocs.length}</b> blocs</span><span><b>${D.competences.length}</b> compétences</span><span><b>${plan}</b> planifiées sur un semestre</span></div>
-        ${D.competences.length-plan?`<div class="hint" style="color:var(--signal)">${D.competences.length-plan} compétence${D.competences.length-plan>1?"s ne sont rattachées":" n'est rattachée"} à aucun semestre (étape 4).</div>`:""}
-        <label class="sw" style="align-items:flex-start;font-size:13px"><input type="checkbox" id="cAtteste" aria-describedby="cAttErr">
-          <span>J'ai vérifié ce référentiel et j'en assume le contenu : l'hébergeur et le développeur de DNMAX n'en sont pas responsables.</span></label>
-        <div class="hint" id="cAttErr" role="alert" style="color:var(--signal)"></div>
-        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
-          <input type="date" id="cDate" value="${esc(new Date().toISOString().slice(0,10))}" aria-label="Date de la version" style="width:auto">
-          <input type="text" id="cNote" placeholder="Note (facultatif)" style="width:auto;flex:1 1 200px" aria-label="Note de version">
-          <button class="btn primary" id="cValid">Valider cette version</button></div>
-      </div></div>`
-    +(vs.length?`<div class="panel vpanel" style="margin-top:18px"><div class="pick-head"><h3>Versions du référentiel</h3><span class="count">${vs.length}</span></div>
-      <div>${vs.map((v,i)=>`<div class="vrow${v.id===(va||{}).id?" on":""}">
-        <b>${esc(frDate(v.date))}</b>
-        <span class="n">${v.snap.ues.length} UE · ${v.snap.ecs.length} EC · ${v.snap.blocs.length} blocs · ${v.snap.competences.length} compétences</span>
-        <span class="note">${esc(v.note||"")}</span>
-        ${v.id===(va||{}).id?`<span class="vst ok">en vigueur</span>`:""}
-        ${v.attestation?`<span class="hint" style="font-size:11.5px">validée par vous le ${esc(frDate(v.attestation))}</span>`
-          :`<span class="vst draft" style="white-space:nowrap">non validée par vous</span><button class="btn ghost" data-vatt="${esc(v.id)}" title="Cochez d'abord l'attestation ci-dessus">Valider</button>`}
-        ${(()=>{const u=versionUsage(D.activeDiplome,v.id);return (u.ps.length||u.fs.length)?`<span class="hint" style="font-size:11.5px;flex-basis:100%">Utilisée par ${u.ps.length?u.ps.map(p=>esc(p.nom||"promo")).join(", "):"aucune promotion"}${u.fs.length?` · ${u.fs.length} évaluation${u.fs.length>1?"s":""}`:""}</span>`:""})()}
-        ${(v.id!==(va||{}).id||!ajour)?`<button class="btn ghost" data-vres="${v.id}">Rétablir</button>`:""}
-        ${(()=>{const u=versionUsage(D.activeDiplome,v.id);return (u.ps.length||u.fs.length)?"":`<button class="btn ghost ${edArm==="v"+i?"danger":""}" data-eddel="v${i}">${edArm==="v"+i?"Confirmer":"Supprimer"}</button>`})()}
-      </div>`).join("")}</div></div>`:"");
-  host.innerHTML=`<div class="cbar">
-      <label class="cf"><span>Diplôme</span>
-        <select id="cDip" aria-label="Diplôme">${dipNoms.map(n=>`<option value="${esc(n)}" ${norm(n)===norm(curDip.nom||"")?"selected":""}>${esc(n||"—")}</option>`).join("")}</select></label>
-      <label class="cf"><span>Mention</span>
-        <select id="cMen" aria-label="Mention">${ments.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dp.mention||"sans mention")}</option>`).join("")}</select></label>
-      ${etat}
-    </div>`+steps+`<div id="cpMain"></div>`+nav;
-  host.querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>{ui.ref.cp=b.dataset.cp;ui.ref.cq="";edArm=null;paintRef();window.scrollTo({top:0,behavior:"smooth"})});
-  host.querySelector("#cDip").onchange=e=>{
-    const dp=D.diplomes.find(x=>norm(x.nom||"")===norm(e.target.value));
-    if(dp){D.activeDiplome=dp.id;ui.ref.filter={kind:"",value:""};saveData()}};
-  host.querySelector("#cMen").onchange=e=>{D.activeDiplome=e.target.value;ui.ref.filter={kind:"",value:""};saveData()};
-  const main=host.querySelector("#cpMain");
-  if(k==="valider"){main.innerHTML=valider;
-    // sans l'attestation cochée, rien n'est validé
-    const atteste=()=>{const c=main.querySelector("#cAtteste"), err=main.querySelector("#cAttErr");
-      if(c.checked){err.textContent="";c.removeAttribute("aria-invalid");return true}
-      err.textContent="Cochez d'abord la case : vous attestez avoir vérifié ce référentiel et en assumer le contenu.";
-      c.setAttribute("aria-invalid","true");c.focus();return false};
-    main.querySelector("#cAtteste").onchange=e=>{if(e.target.checked)atteste()};
-    main.querySelector("#cValid").onclick=()=>{if(atteste())validerVersion(main.querySelector("#cDate").value,main.querySelector("#cNote").value)};
-    main.querySelectorAll("[data-vatt]").forEach(b=>b.onclick=()=>{if(!atteste())return;
-      const v=versionsOf(D.activeDiplome).find(x=>x.id===b.dataset.vatt);if(!v)return;
-      v.attestation=new Date().toISOString().slice(0,10);persistData();REF=computeREF();paintRef();
-      toast("Version du "+frDate(v.date)+" validée par vous.")});
-    main.querySelectorAll("[data-vres]").forEach(b=>b.onclick=()=>restaurerVersion(b.dataset.vres));
-    main.querySelectorAll(".vpanel [data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-      const i=+b.dataset.eddel.slice(1), v=versionsOf(D.activeDiplome).splice(i,1)[0];
-      if(v&&(D.valide||{})[D.activeDiplome]===v.id){D.valide=Object.assign({},D.valide);delete D.valide[D.activeDiplome]}
-      persistData();paintRef()}));
-  }
-  else if(k==="tableau")paintMatrice(main);
-  else paintEtape(k,main);
+  /* page et étape 5 : écran écrit en TypeScript (src/referentiel/constituer.ts) ; règles dans src/domaine/constituer.ts */
+  const D=DATA, dip=D.activeDiplome;
+  window.dnmaxPont.referentiel.peindrePageConstituer(host,{vue:D,diplomes:D.diplomes,actif:dip,etape:ui.ref.cp,
+    versions:versionsOf(dip),versionActive:versionActive(dip),aJour:refAJour(dip),
+    usage:vid=>{const u=versionUsage(dip,vid);return {promotions:u.ps.map(p=>p.nom||"promo"),evaluations:u.fs.length}},
+    aujourdhui:new Date().toISOString().slice(0,10),
+    choisirEtape:cp=>{ui.ref.cp=cp;ui.ref.cq="";edArm=null;paintRef();window.scrollTo({top:0,behavior:"smooth"})},
+    choisirDiplome:nom=>{const dp=D.diplomes.find(x=>norm(x.nom||"")===norm(nom));
+      if(dp){D.activeDiplome=dp.id;ui.ref.filter={kind:"",value:""};saveData()}},
+    choisirMention:id=>{D.activeDiplome=id;ui.ref.filter={kind:"",value:""};saveData()},
+    peindreEtape:(cp,main)=>cp==="tableau"?paintMatrice(main):paintEtape(cp,main),
+    valider:validerVersion,
+    attester:vid=>{const v=versionsOf(dip).find(x=>x.id===vid);if(!v)return;
+      v.attestation=new Date().toISOString().slice(0,10);persistData();REF=computeREF();paintRef()},
+    retablir:restaurerVersion,
+    supprimerVersion:i=>{window.dnmaxPont.constituer.supprimerVersion(D,dip,i);persistData();paintRef()},
+    armement:{arme:edArm,armer:(id,fn)=>armDel(id,fn)},annoncer:toast});
 }
 /* Étapes 1 à 3 de Constituer : écrans écrits en TypeScript (src/referentiel/etapes.ts) ;
    règles dans src/domaine/constituer.ts */
