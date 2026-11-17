@@ -15,6 +15,7 @@ import * as constituer from "../domaine/constituer";
 import { peindreEtapeBlocs, peindreEtapeEcs, peindreEtapeUes } from "../referentiel/etapes";
 import { peindrePlanification } from "../referentiel/planification";
 import { peindrePageConstituer } from "../referentiel/constituer";
+import { peindreRecherche } from "../referentiel/recherche";
 import { NIVEAUX_ACQUISITION, regleNiveauxAcquisition } from "../domaine/regles-affichees";
 import * as suiviSimplifie from "../domaine/suivi-simplifie";
 import { lireMoisConservation } from "../domaine/conservation";
@@ -166,6 +167,7 @@ interface Pont {
     peindreEtapeBlocs: typeof peindreEtapeBlocs;
     peindrePlanification: typeof peindrePlanification;
     peindrePageConstituer: typeof peindrePageConstituer;
+    peindreRecherche: typeof peindreRecherche;
   };
   /** Niveaux d'acquisition du DN MADE et leur règle, montrée dans la carte du module (voir `domaine/regles-affichees`). */
   readonly niveauxAcquisition: { noms: typeof NIVEAUX_ACQUISITION; regle: typeof regleNiveauxAcquisition };
@@ -311,7 +313,7 @@ export async function chargerInterfaceHistorique(
     promotions,
     diplomes,
     constituer,
-    referentiel: { peindreEtapeUes, peindreEtapeEcs, peindreEtapeBlocs, peindrePlanification, peindrePageConstituer },
+    referentiel: { peindreEtapeUes, peindreEtapeEcs, peindreEtapeBlocs, peindrePlanification, peindrePageConstituer, peindreRecherche },
     niveauxAcquisition: { noms: NIVEAUX_ACQUISITION, regle: regleNiveauxAcquisition },
     suiviSimplifie,
     jauge: jaugeExport,

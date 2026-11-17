@@ -1118,106 +1118,20 @@ function ecNomRef(code){const e=refEcByCode(code);return (e&&e.nom)||code}
 function ueColor(ue){const u=(REF.ues||[]).find(x=>tidy(x.nom)===tidy(ue));return (u&&u.couleur)||hueOf(ue)}
 const ueOrd = ue => {const i=(REF.ecs||[]).findIndex(e=>tidy(e.ue)===ue);return i<0?99:i};
 const norm = s => String(s==null?"":s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
-const squash = s => norm(s).replace(/[^a-z0-9.]/g,"");
 function ecNum(ec){return window.dnmaxPont.constituer.numeroCode(ec)}
 function lienEc(c,id){return ((c||{}).ecs||[]).find(x=>x.id===id)||null}
 function ecOrd(e){return window.dnmaxPont.constituer.ordreEc(e||{})}
-function hi(txt,q){
-  if(!q)return esc(txt);
-  const t=String(txt==null?"":txt), n=norm(t), i=n.indexOf(q);
-  if(i<0)return esc(t);
-  return esc(t.slice(0,i))+"<mark>"+esc(t.slice(i,i+q.length))+"</mark>"+esc(t.slice(i+q.length));
-}
-function refPairs(){
-  const r=ui.ref, q=norm(r.q.trim()), qs=squash(r.q);
-  const out=[];
-  const hit=t=>{const n=norm(t);return n.includes(q)||(qs.length>1&&squash(n).includes(qs))};
-  const tag=e=>e.ec+" "+(e.nom||"")+" "+(e.ue||"");
-  const F2=refFilter();
-  REF.competences.forEach(c=>{
-    if(F2.kind==="bloc"&&String(c.bloc)!==F2.value)return;
-    if(F2.kind==="comp"&&c.code!==F2.value)return;
-    const compMatch = !q || hit([c.code,c.libelle,blocName(c.bloc)].join(" "));
-    const any = compMatch || (c.ecs||[]).some(e=>hit(tag(e)));
-    if(!any)return;
-    (c.ecs||[]).forEach(e=>{
-      if(F2.kind==="ue"&&e.ue!==F2.value)return;
-      if(F2.kind==="ec"&&e.id!==F2.value)return;
-      if(!compMatch && !hit(tag(e)))return;
-      if(r.sems.length && !r.sems.includes(e.sem))return;
-      if(r.annee!=="*" && String(anneeOf(e.sem))!==r.annee)return;
-      out.push({c,ec:e.ec,ecId:e.id,nom:e.nom||"",couleur:e.couleur,ue:e.ue,sem:e.sem,dn:e.dn,annee:anneeOf(e.sem)});
-    });
-  });
-  return out;
-}
-function groupPairs(pairs){
-  const r=ui.ref, g=new Map();
-  if(!GROUPS[r.group])r.group="bloc";
-  const add=(k,label,sub,ord,p,c)=>{
-    if(!g.has(k))g.set(k,{label,sub,ord,c:c||null,items:new Map()});
-    const G=g.get(k), it=G.items.get(p.c.code)||{c:p.c,sems:new Set(),ecs:new Set()};
-    it.sems.add(p.sem); it.ecs.add(p.ec); G.items.set(p.c.code,it);
-  };
-  pairs.forEach(p=>{
-    if(r.group==="bloc")add("b"+p.c.bloc,"Bloc "+p.c.bloc,blocName(p.c.bloc),+p.c.bloc,p);
-    else if(r.group==="ue")add("u"+p.ue,p.ue,"Unité d'enseignement",ueOrd(p.ue),p,ueColor(p.ue));
-    else if(r.group==="ec")add("e"+p.ec,p.ec,(p.nom||"")+" · "+p.ue,ecNum(p.ec),p,p.couleur||ecColor(p.ec));
-    else if(r.group==="annee")add("a"+p.annee,"Année "+p.annee,
-      MOD.dn?(p.dn+" · "+(((REF.meta.niveaux||[]).find(n=>+n.annee===p.annee)||{}).label||"")):("Semestres "+semsOfAnnee(p.annee).join(" et ")),p.annee,p);
-    else if(r.group==="semestre")add("s"+p.sem,p.sem,"Année "+p.annee+(MOD.dn?" · "+p.dn:""),SEMS.indexOf(p.sem),p);
-    else add("all","Toutes les compétences",REF.meta.diplome||"",0,p);
-  });
-  return [...g.values()].sort((a,b)=>a.ord-b.ord);
-}
+/* Explorer : la carte (radiale ou chaîne) reste dessinée ici ; la vue « Recherche » est écrite en TypeScript
+   (src/referentiel/recherche.ts), ses règles dans src/domaine/exploration.ts */
 function paintExplore(){
   const m=REF.meta||{};
   paintMap();
   document.getElementById("refSearch").hidden = (ui.ref.view||"radial")!=="search";
-  const r=ui.ref;
-  const gs=document.getElementById("r-group");
-  gs.innerHTML=Object.entries(GROUPS).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("");
-  gs.value=r.group;
-  const as=document.getElementById("r-annee");
-  as.innerHTML=`<option value="*">Toutes les années</option>`+
-    (m.niveaux||[]).map(n=>`<option value="${n.annee}">${esc(anneeLabel(n.annee))}</option>`).join("");
-  as.value=r.annee;
-  document.getElementById("r-sem").innerHTML=
-    `<button type="button" data-sem="*" aria-pressed="${r.sems.length===0}">Tous</button>`+
-    SEMS.map(x=>`<button type="button" data-sem="${x}" aria-pressed="${r.sems.includes(x)}">${x}</button>`).join("");
-  document.getElementById("r-sem").querySelectorAll("button").forEach(b=>b.onclick=()=>{
-    const v=b.dataset.sem;
-    if(v==="*")r.sems=[];
-    else r.sems=r.sems.includes(v)?r.sems.filter(x=>x!==v):[...r.sems,v].sort((a,b2)=>SEMS.indexOf(a)-SEMS.indexOf(b2));
-    paintRef()});
-  document.getElementById("r-search").value=r.q;
-
-  const pairs=refPairs(), groups=groupPairs(pairs);
-  const seen=new Set(pairs.map(p=>p.c.code));
-  document.getElementById("rCount").textContent=seen.size+" / "+REF.competences.length;
-  const q=norm(r.q.trim());
-  const host=document.getElementById("refList");
-  if(!groups.length){host.innerHTML=`<div class="empty">Aucune compétence ne correspond${r.q?` à « ${esc(r.q)} »`:""} avec ces filtres.</div>`;return}
-  const showBloc=r.group!=="bloc";
-  host.innerHTML=groups.map(G=>{
-    const items=[...G.items.values()].sort((a,b)=>(+a.c.bloc-+b.c.bloc)||ecNum(a.c.code)-ecNum(b.c.code));
-    const col=G.c||null;
-    return `<div class="bloc grp"><div class="bh ${col?"rail":(r.group==="bloc"&&(+G.ord)%2?"tint":"")}" style="${col?`--c:${col}`:`--bloc:${BLOC_TINT}`}">
-      <span class="n">${esc(G.label)}</span><span class="t">${esc(G.sub||"")}</span>
-      <span class="c">${items.length} comp.</span></div>
-      <div class="tw"><table class="t"><thead><tr>
-        ${showBloc?"<th>Bloc</th>":""}<th>Code</th><th>Compétence</th><th>Semestres</th><th>EC</th></tr></thead><tbody>
-      ${items.map(it=>{
-        const sems=[...it.sems].sort((a,b)=>SEMS.indexOf(a)-SEMS.indexOf(b));
-        const ecs=[...it.ecs].sort((a,b)=>ecNum(a)-ecNum(b));
-        return `<tr>
-          ${showBloc?`<td class="mono" title="${esc(blocName(it.c.bloc))}">${esc(it.c.bloc)}</td>`:""}
-          <td class="mono" style="color:var(--accent);white-space:nowrap">${hi(it.c.code,q)}</td>
-          <td style="min-width:240px">${hi(it.c.libelle,q)}</td>
-          <td style="white-space:nowrap">${sems.map(x=>`<span class="pill">${x}</span>`).join(" ")}</td>
-          <td class="hint">${ecs.map(x=>
-            `<span class="pill c" style="--c:${ecColor(x)}" title="${esc(ecNomRef(x))}">${hi(x,q)}</span>`).join(" ")}</td></tr>`}).join("")}
-      </tbody></table></div></div>`}).join("");
+  window.dnmaxPont.referentiel.peindreRecherche({competences:REF.competences,recherche:ui.ref,filtre:refFilter(),modes:GROUPS,
+    annees:(m.niveaux||[]).map(n=>({annee:String(n.annee),libelle:anneeLabel(n.annee)})),teinteBlocs:BLOC_TINT,
+    nomBloc:blocName,rangUe:ueOrd,couleurUe:ueColor,couleurEc:ecColor,nomEcReferentiel:ecNomRef,
+    sousTitreAnnee:p=>MOD.dn?(p.dn+" · "+(((REF.meta.niveaux||[]).find(n=>+n.annee===p.annee)||{}).label||"")):("Semestres "+semsOfAnnee(p.annee).join(" et ")),
+    sousTitreSemestre:p=>"Année "+p.annee+(MOD.dn?" · "+p.dn:""),diplome:REF.meta.diplome||"",redessiner:paintRef});
 }
 
 function arcPath(cx,cy,r0,r1,a0,a1){
