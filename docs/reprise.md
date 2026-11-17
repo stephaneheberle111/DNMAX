@@ -36,10 +36,10 @@
 | #168 | Progression, vue « Promotion » ; choix des promotions et des semestres | `src/progression/promotion.ts`, `src/domaine/vue-progression.ts` |
 | #169 | Progression, vue « Étudiant » (avancement du semestre, comparaison à la classe, trajectoires, niveaux d'acquisition) ; barre des filtres commune aux deux vues | `src/progression/etudiant.ts`, `src/domaine/vue-progression.ts` |
 | #170 | L'exemple : noms, répartition, évaluations détaillées et jeu étendu, résultats | `src/domaine/exemple.ts` |
-| (cette demande) | Barre des onglets, vues affichées et titre de la fenêtre | `src/interface/onglets.ts`, `src/domaine/onglets.ts` |
-| (cette demande) | Paramètres > Modules : catalogue, dépendances, cartes et activation du module Étudiants | `src/parametres/modules.ts`, `src/domaine/modules.ts` |
-| (cette demande) | Préférences : nom du champ d'évaluation, sceau, dossier des exports | `src/preferences/preferences.ts`, `src/domaine/preferences.ts` |
-| (cette demande) | Étape 1 : intitulé, consignes, dates ; retrait du panneau « Étudiants et promotions » et du choix du diplôme, toujours masqués | `src/editeur/formulaire.ts` |
+| #171 | Barre des onglets, vues affichées et titre de la fenêtre | `src/interface/onglets.ts`, `src/domaine/onglets.ts` |
+| #172 | Paramètres > Modules : catalogue, dépendances, cartes et activation du module Étudiants | `src/parametres/modules.ts`, `src/domaine/modules.ts` |
+| #173 | Préférences : nom du champ d'évaluation, sceau, dossier des exports | `src/preferences/preferences.ts`, `src/domaine/preferences.ts` |
+| #174 | Étape 1 : intitulé, consignes, dates ; retrait du panneau « Étudiants et promotions » et du choix du diplôme, toujours masqués | `src/editeur/formulaire.ts` |
 | (cette demande) | Branchements des boutons et champs fixes au chargement ; retrait du bouton d'export JSON absent de la page | `src/interface/branchements.ts` |
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
