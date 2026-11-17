@@ -3,9 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   basculerSemestre,
   candidatsAjout,
+  changerCodeEc,
+  codesEc,
   codesEnDouble,
+  ecsAffiches,
   elementNeuf,
   libelleElement,
+  numeroCode,
+  ordreEc,
   retirerDuReferentiel,
   sansAccents,
 } from "./constituer";
@@ -115,5 +120,68 @@ describe("retirerDuReferentiel", () => {
     const referentiel = { ues: [], ecs: [], blocs: [{ id: "b1" }], competences: [{ id: "c1", bloc: "1" }] };
     retirerDuReferentiel(referentiel, "blocs", "b1");
     expect(referentiel).toEqual({ ues: [], ecs: [], blocs: [], competences: [{ id: "c1", bloc: "1" }] });
+  });
+});
+
+describe("numeroCode", () => {
+  it("range EC 11.2 après EC 2.10, par numéro puis sous-numéro", () => {
+    expect(numeroCode("EC 11.2")).toBe(1102);
+    expect(numeroCode("EC 2.10")).toBe(210);
+    expect(numeroCode("C4")).toBe(400);
+  });
+
+  it("met à la fin un code sans chiffre ou absent", () => {
+    expect(numeroCode("EC")).toBe(9999);
+    expect(numeroCode(undefined)).toBe(9999);
+  });
+});
+
+describe("codesEc et ordreEc", () => {
+  it("donne les codes d'un EC de la 1re à la 3e année, sans les années vides", () => {
+    expect(codesEc({ codes: { 3: "EC 19.2", 1: "EC 1.2", 2: "" } })).toEqual(["EC 1.2", "EC 19.2"]);
+    expect(codesEc({})).toEqual([]);
+  });
+
+  it("range un EC d'après son premier code, et un EC sans code à la fin", () => {
+    expect(ordreEc({ codes: { 2: "EC 11.2" } })).toBe(1102);
+    expect(ordreEc({ codes: {} })).toBe(9999);
+  });
+});
+
+describe("ecsAffiches", () => {
+  const ecs = [
+    { id: "b", nom: "Pratique plastique", codes: { 1: "EC 11.2" } },
+    { id: "a", nom: "Humanités", codes: { 1: "EC 1.1" } },
+    { id: "c", nom: "Sans code", codes: {} },
+  ];
+
+  it("range les EC par code", () => {
+    expect(ecsAffiches(ecs, "").map((ec) => ec.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("filtre sur les codes et l'intitulé, sans tenir compte de la casse ni des accents", () => {
+    expect(ecsAffiches(ecs, "  HUMANITES ").map((ec) => ec.id)).toEqual(["a"]);
+    expect(ecsAffiches(ecs, "11.2").map((ec) => ec.id)).toEqual(["b"]);
+  });
+
+  it("ne rend rien quand rien ne correspond", () => {
+    expect(ecsAffiches(ecs, "zzz")).toEqual([]);
+  });
+});
+
+describe("changerCodeEc", () => {
+  it("écrit le code d'une année, sans espaces autour", () => {
+    const ec: Record<string, unknown> = { codes: { 1: "EC 1.1" } };
+    changerCodeEc(ec, "2", " EC 9.1 ");
+    expect(ec.codes).toEqual({ 1: "EC 1.1", 2: "EC 9.1" });
+  });
+
+  it("efface le code d'une année laissée vide, et crée la table des codes quand elle manque", () => {
+    const ec: Record<string, unknown> = { codes: { 1: "EC 1.1" } };
+    changerCodeEc(ec, "1", "  ");
+    expect(ec.codes).toEqual({});
+    const sansCodes: Record<string, unknown> = { codes: "abîmé" };
+    changerCodeEc(sansCodes, "3", "EC 3.1");
+    expect(sansCodes.codes).toEqual({ 3: "EC 3.1" });
   });
 });

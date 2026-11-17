@@ -9,9 +9,12 @@
  * le dictionnaire commun à l'enregistrement.
  */
 import {
+  ANNEES,
   basculerSemestre,
   candidatsAjout,
+  changerCodeEc,
   codesEnDouble,
+  ecsAffiches,
   elementNeuf,
   libelleElement,
   SEMESTRES,
@@ -42,6 +45,10 @@ export interface ContexteEtape {
   nouvelIdentifiant(prefixe: string): string;
   /** Enregistre ; `redessiner` à faux pendant la frappe, pour garder le curseur. */
   enregistrer(redessiner: boolean): void;
+  /** Filtre saisi dans l'étape (EC, blocs et compétences). */
+  readonly filtre: string;
+  /** Change le filtre et redessine l'étape. */
+  filtrer(texte: string): void;
   /** Vide le filtre de l'étape, avant un ajout. */
   viderFiltre(): void;
   /** Retient dans ce référentiel un élément déjà connu, avec ses associations d'une autre mention, puis enregistre. */
@@ -240,6 +247,118 @@ export function peindreEtapeUes(hote: HTMLElement, contexte: ContexteEtape): voi
       entete: { css: CSS_UES, cellules: ["", "Code", "Nom", "Semestres", "EC", ""] },
       lignes,
       aide: `À cette étape, seules les UE se créent, se renomment et se retirent. Les semestres ouverts ici bornent ceux de leurs EC. ${NOTE_ETAPE}`,
+    }),
+  );
+}
+
+/** Champ « Filtrer… » des étapes 2 et 3 ; le curseur reste au bout de la saisie après chaque redessin. */
+export function champFiltre(contexte: ContexteEtape): HTMLInputElement {
+  const champ = balise("input", [
+    ["type", "text"],
+    ["id", "cq"],
+    ["value", contexte.filtre],
+    ["placeholder", "Filtrer…"],
+    ["aria-label", "Filtrer"],
+    ["style", "width:auto"],
+  ]);
+  champ.addEventListener("input", () => {
+    contexte.filtrer(champ.value);
+    const nouveau = document.getElementById("cq");
+    if (nouveau instanceof HTMLInputElement) {
+      nouveau.focus();
+      nouveau.setSelectionRange(nouveau.value.length, nouveau.value.length);
+    }
+  });
+  return champ;
+}
+
+const CSS_ECS = "grid-template-columns:44px 228px minmax(0,1fr) 190px 216px 54px 92px";
+
+/** Étape 2 : les enseignements constitutifs, leurs codes par année, leur UE, leurs semestres et leurs ECTS. */
+export function peindreEtapeEcs(hote: HTMLElement, contexte: ContexteEtape): void {
+  const { vue } = contexte;
+  const affiches = ecsAffiches(vue.ecs, contexte.filtre);
+  const filtre = contexte.filtre.trim() !== "";
+  const lignes: Node[] = [];
+  if (vue.ues.length === 0) {
+    lignes.push(balise("div", [["class", "empty"]], "Aucune UE dans ce référentiel : les EC restent « sans UE » tant que l'étape 1 n'en a pas."));
+  }
+  for (const ec of affiches) {
+    const rang = vue.ecs.indexOf(ec);
+    const id = String(ec.id);
+    const ue = vue.ues.find((candidate) => candidate.id === ec.ueId);
+    const codes = balise("div", [["class", "codes3"]]);
+    const table = typeof ec.codes === "object" && ec.codes !== null ? (ec.codes as Record<string, unknown>) : {};
+    for (const annee of ANNEES) {
+      const champ = balise("input", [
+        ["type", "text"],
+        ["value", texteAffiche(table[annee])],
+        ["data-ec3", String(rang)],
+        ["data-a", String(annee)],
+        ["class", "mono"],
+        ["placeholder", `EC ${String(annee)}.1`],
+        ["aria-label", `Code en DN${String(annee)}`],
+      ]);
+      champ.addEventListener("change", () => {
+        changerCodeEc(ec, String(annee), champ.value);
+        contexte.enregistrer(false);
+      });
+      const etiquette = balise("label");
+      etiquette.append(balise("b", [], `DN${String(annee)}`), champ);
+      codes.append(etiquette);
+    }
+    const choixUe = balise("select", [
+      ["data-em", String(rang)],
+      ["aria-label", "Unité d'enseignement"],
+      ["title", "L'UE se choisit ici ; son nom se modifie à l'étape 1"],
+    ]);
+    choixUe.append(balise("option", [["value", ""]], "— sans UE —"));
+    for (const candidate of vue.ues) {
+      const code = texteAffiche(candidate.code);
+      choixUe.append(
+        balise(
+          "option",
+          [["value", String(candidate.id)], ...(candidate.id === ec.ueId ? [["selected", ""] as const] : [])],
+          (code === "" ? "" : `${code} · `) + String(candidate.nom),
+        ),
+      );
+    }
+    choixUe.addEventListener("change", () => {
+      ec.ueId = choixUe.value;
+      contexte.enregistrer(true);
+    });
+    const ects = balise("input", [
+      ["type", "text"],
+      ["value", texteAffiche(ec.ects)],
+      ["data-ee", String(rang)],
+      ["aria-label", "ECTS"],
+      ["class", "mono"],
+    ]);
+    ects.addEventListener("input", () => {
+      ec.ects = ects.value;
+      contexte.enregistrer(false);
+    });
+    const semestresUe = ue !== undefined && Array.isArray(ue.sems) ? (ue.sems as string[]) : null;
+    const ligne = ligneEditeur(CSS_ECS, [
+      champCouleur(contexte, "ecs", rang, ec.couleur),
+      codes,
+      champElement(contexte, "ecs", rang, "nom", { valeur: ec.nom, exemple: "Intitulé de l'enseignement", libelle: "Intitulé de l'EC" }),
+      choixUe,
+      pastillesSemestres(contexte, "es", rang, ec, semestresUe ?? SEMESTRES),
+      ects,
+      boutonRetirer(contexte, "ecs", id, "Retirer"),
+    ]);
+    ligne.setAttribute("data-row", id);
+    lignes.push(ligne);
+  }
+  hote.replaceChildren(
+    panneauEditeur({
+      titre: `Étape 2 · Enseignements constitutifs · ${contexte.diplome}`,
+      compte: String(affiches.length) + (filtre ? ` / ${String(vue.ecs.length)}` : ""),
+      actions: [champFiltre(contexte), listeAjout(contexte, "ecs", "Ajouter un EC", "Nouvel enseignement constitutif")],
+      entete: { css: CSS_ECS, cellules: ["", "Codes par année", "Intitulé", "Unité d'enseignement", "Semestres", "ECTS", ""] },
+      lignes,
+      aide: `À cette étape, seuls les EC se créent, se renomment et se retirent ; leur UE se choisit dans la liste, mais son nom se modifie à l'étape 1. Le code d'un EC change d'une année de diplôme à l'autre. Les semestres grisés sont hors du calendrier de l'UE. ${NOTE_ETAPE}`,
     }),
   );
 }
