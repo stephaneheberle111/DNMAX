@@ -293,7 +293,6 @@ function critLabel(){return PREF.libelleCritere(PREFS)}
 function savePrefs(){LS.set("dnmade.prefs",PREFS)}
 let promos = LS.get("dnmade.promos",[]);
 
-let delArm = null;
 /* brouillon de départ : une évaluation vide (vierge() ne peut pas servir ici, elle lit F) */
 let F = LS.get("dnmade.draft",null) || {id:uid(),promoId:"",titre:"",livrables:[],semestre:"S1",classe:"",
   date:new Date().toISOString().slice(0,10),prof:"",ues:[],ecCodes:[],compCode:"",consignes:"",
@@ -424,10 +423,6 @@ function promoDisp(name){const pr=promos.find(x=>x.nom===name);return pr?(promoS
 function classesDisp(f){f=f||F;const l=Array.isArray(f.classes)?f.classes:String(f.classe||"").split(/,\s*/).filter(Boolean);
   return l.map(promoDisp).join(", ")}
 function savePromos(){LS.set("dnmade.promos",promos)}
-function promoLabel(pr){promoLive(pr);const sh=promoShort(pr);return (sh?sh+" — ":"")+(pr.nom||"Sans nom")+" · Année "+pr.annee+(pr.as?" · "+pr.as:"")+
-  " ("+String(pr.eleves||"").split(/\r?\n/).filter(x=>x.trim()).length+")"}
-function refreshPromoOption(){const pr=curPromo();if(!pr)return;
-  const o=document.querySelector('#f-promo option[value="'+pr.id+'"]');if(o)o.textContent=promoLabel(pr)}
 function setSemestre(sem){F.semestre=sem;syncItemEcs()}
 function ecsOf(c,sem){return (c.ecs||[]).filter(e=>e.sem===sem)}
 function compsFor(sem){return REF.competences.filter(c=>ecsOf(c,sem).length>0)}
@@ -543,25 +538,14 @@ function nouvelleFiche(){
   paintTabs();paintForm();paintPick();paintLignes();goStep(1);
   window.scrollTo({top:0,behavior:"smooth"});
 }
+/* Étape 1 : champs simples dans src/editeur/formulaire.ts, autres blocs dans src/editeur/etape-evaluation.ts */
 function paintForm(){
   REF=computeREF();
-  const g=id=>document.getElementById(id);
-  const dvs=dipVisibles(), nd=dvs.length;
-  g("fld-dip").hidden = true;   // la mention découle des promotions cochées
-  if(nd>1){
-    g("f-dip").innerHTML=dvs.map(dp=>`<option value="${dp.id}">${esc(dipLabel(dp))}</option>`).join("");
-    g("f-dip").value=DATA.activeDiplome;
-  }
   paintLivrables();
-  g("f-titre").value=F.titre;
+  window.dnmaxPont.editeur.remplirFormulaire(document,{titre:F.titre,consignes:F.consignes,distribution:F.distribPrev||"",rendu:F.renduPrev||""});
   paintClasse();paintEleveField();paintProf();
-  g("f-distrib").value=F.distribPrev||""; g("f-rendu").value=F.renduPrev||""; g("f-rendu").min=F.distribPrev||"";
-  g("f-consignes").value=F.consignes;
-  g("f-eleves").value=F.eleves;
   paintSems();
   paintContexte();
-  g("panel-eleves").hidden=true;
-  g("step1cols").style.gridTemplateColumns="minmax(0,1fr)";
   paintSteps();
 }
 function anneeOfClasse(t){return EVAL.anneeDeClasse(t)}
@@ -657,42 +641,6 @@ function paintContexte(){
     couleurUe:u=>ueColor(u),nomUe:u=>tidy(u).replace(/^UE\s*/i,""),
     ecsAffectes:lim?[...lim]:null,enseignants:(F.profs||[]).join(", "),
     apresChangement:()=>{syncItemEcs();save();paintForm();paintPick()}});
-}
-function paintPromos(){
-  const g=id=>document.getElementById(id);
-  const hp=g("helpPromo");
-  if(hp&&!hp.innerHTML)hp.innerHTML=help("Choisir une promotion renseigne la classe de l'évaluation et cale le semestre sur son année de formation. Ses étudiants apparaissent à l'étape 4, où vous notez chacun ; à l'export, le Word sort un document par étudiant, degrés cochés, et l'Excel ajoute un onglet « Grille classe » rempli. Renommer un étudiant lui donne une nouvelle ligne : ses résultats déjà saisis ne le suivent pas.");
-  const sel=g("f-promo");
-  sel.innerHTML=`<option value="">— Aucune promotion —</option>`+promos.filter(pr=>migPromoCohorte(pr).diplomeId===DATA.activeDiplome||pr.id===F.promoId).map(pr=>
-    `<option value="${pr.id}">${esc(promoLabel(pr))}</option>`).join("");
-  sel.value=F.promoId||"";
-  const pr=curPromo();
-  g("promoEdit").hidden=!pr;
-  g("fld-eleves-libre").hidden=!!pr;
-  if(pr){
-    g("p-nom").value=pr.nom||""; g("p-nom").readOnly=true; g("p-nom").title="Code du diplôme, année de début, année de fin";
-    g("p-as").value=pr.as||""; g("p-as").readOnly=true;
-    g("p-as").title="Déduite de la date de l'évaluation";
-    const an=g("p-annee");
-    an.innerHTML=(REF.meta.niveaux||[{annee:1},{annee:2},{annee:3}]).map(n=>
-      `<option value="${n.annee}">${esc(anneeLabel(n.annee))} — ${semsOfAnnee(n.annee).join(" / ")}</option>`).join("");
-    an.value=String(pr.annee);
-    g("p-eleves").value=pr.eleves||"";
-    const n=(pr.eleves||"").split(/\r?\n/).filter(x=>x.trim()).length;
-    g("p-count").textContent=n+(n>1?" inscrits":" inscrit");
-    g("bPromoDel").textContent=delArm===pr.id?"Confirmer la suppression":"Supprimer";
-  }
-}
-function selectPromo(id){
-  const old=curPromo();
-  F.promoId=id||"";delArm=null;
-  const pr=curPromo();
-  if(pr){
-    if(pr.nom)setClasses([...(F.classes||[]).filter(x=>!(old&&x===old.nom)),pr.nom]);
-    const sems=semsOfAnnee(pr.annee);
-    if(!sems.includes(F.semestre))setSemestre(sems[0]);
-  }
-  save();paintForm();paintPick();
 }
 function opIndex(id){return F.ops.findIndex(o=>o.id===id)+1}
 function lignes(){return lignesOf(F)}
@@ -2482,42 +2430,11 @@ bind("bBack","click",()=>{ui.tab="saved";paintTabs();paintSaved();window.scrollT
 bind("bNew","click",nouvelleFiche);
 bind("bModReset","click",()=>{MOD=modDefaults();LS.set("dnmade.modules",MOD);
   paintSet();paintTabs();paintForm();paintPick();paintRef();toast("Modules remis par défaut.")});
-[["f-titre","titre"],["f-consignes","consignes"],["f-eleves","eleves"]]
-  .forEach(([id,k])=>bind(id,"input",e=>{F[k]=e.target.value;save()}));
-bind("f-distrib","input",e=>{F.distribPrev=e.target.value;applySemDate();save();paintForm();paintPick()});
-bind("f-rendu","input",e=>{F.renduPrev=e.target.value;save();paintForm()});
+window.dnmaxPont.editeur.brancherFormulaire(document,{
+  changerTitre:v=>{F.titre=v;save()},changerConsignes:v=>{F.consignes=v;save()},
+  changerDistribution:v=>{F.distribPrev=v;applySemDate();save();paintForm();paintPick()},
+  changerRendu:v=>{F.renduPrev=v;save();paintForm()}});
 
-bind("f-dip","change",e=>{DATA.activeDiplome=e.target.value;saveData()});
-bind("f-promo","change",e=>selectPromo(e.target.value));
-
-bind("bPromoNew","click",()=>{
-  const pr={id:uid(),nom:"",debut:asStart(anneeScolaire()),diplomeId:DATA.activeDiplome,eleves:"",liste:[]};
-  pr.nom=promoNomAuto(pr);promoLive(pr);
-  promos.push(pr);savePromos();selectPromo(pr.id);document.getElementById("p-nom").focus();
-});
-bind("bPromoDel","click",()=>{
-  const pr=curPromo();if(!pr)return;
-  if(delArm!==pr.id){delArm=pr.id;paintPromos();return}
-  promos=promos.filter(x=>x.id!==pr.id);savePromos();delArm=null;selectPromo("");
-  toast("Promotion supprimée.");
-});
-bind("p-nom","input",e=>{const pr=curPromo();if(!pr)return;
-  const old=pr.nom, v=e.target.value;pr.nom=v;
-  const cs=(F.classes||[]).slice(), i=cs.indexOf(old);
-  if(i>=0){if(v.trim())cs[i]=v;else cs.splice(i,1)}else if(v.trim())cs.push(v);
-  setClasses(cs);
-  savePromos();save();paintClasse();refreshPromoOption();paintSteps()});
-bind("p-annee","change",e=>{const pr=curPromo();if(!pr)return;
-  const old=pr.nom;pr.debut=asStart(anneeScolaire())-(+e.target.value)+1;pr.nom=promoNomAuto(pr);
-  if(old!==pr.nom)setClasses((F.classes||[]).map(x=>x===old?pr.nom:x));
-  promoLive(pr);savePromos();
-  const sems=semsOfAnnee(pr.annee);if(!sems.includes(F.semestre))setSemestre(sems[0]);
-  save();paintForm();paintPick()});
-bind("p-eleves","input",e=>{const pr=curPromo();if(!pr)return;
-  syncListe(pr,e.target.value);savePromos();
-  const n=(pr.liste||[]).length;
-  document.getElementById("p-count").textContent=n+(n>1?" inscrits":" inscrit");refreshPromoOption();
-  if(ui.step===4)paintEleves();paintSteps()});
 bind("f-search","input",e=>{ui.q=e.target.value;paintPick()});
 bind("bClear","click",()=>{F.items=[];F.ops=[];ui.sel=[];save();paintPick();paintSteps()});
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>goStep(b.dataset.go));
