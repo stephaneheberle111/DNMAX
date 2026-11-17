@@ -515,8 +515,9 @@ const MODULE_ELEVES: Parcours = {
     ALLER_PARAMETRES,
     {
       titre: "Activer le module",
-      texte: "Activez l'interrupteur du module « Étudiants ».",
-      texteFait: "Le module Étudiants est actif.",
+      texte:
+        "Activez l'interrupteur du module « Étudiants ». Une fenêtre rappelle vos obligations, propose les documents à remettre et demande de confirmer votre mot de passe.",
+      texteFait: "Le module Étudiants est actif. Les documents à remettre restent disponibles dans sa carte, à côté de « Visite guidée ».",
       cibles: ['#modList .mod:has([data-mod="eleves"])'],
       pointe: ".tg",
       geste: "cliquer",

@@ -33,17 +33,18 @@ import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement, type
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
 import { confirmerExportEleves, proposerOuvertureExport } from "./ecran-export";
-import { confirmerMotDePasseEleves } from "./ecran-mot-de-passe-eleves";
 import { motsInterditsDe } from "./domaine/robustesse-mot-de-passe";
 import { lireVerrouillageParInactivite, surveillerInactivite } from "./ecran-verrouillage";
 import { moduleElevesActif } from "./domaine/securite";
 import { installerSauvegardes } from "./ecran-sauvegardes";
 import {
   attendreAvantFermeture,
+  changerMotDePasse,
   enregistrerCoffre,
   estDansEnveloppe,
   lireCoffre,
   lireEtatCoffre,
+  verifierMotDePasse,
 } from "./enveloppe";
 import { ajusterEnseignants, chargerInterfaceHistorique, suivreRenommageMoi } from "./heritage/pont";
 import { dresserCatalogue } from "./heritage/referentiels";
@@ -198,11 +199,18 @@ async function demarrer(): Promise<void> {
   const { magasin, acces, reprendreNom, ecrireEnAttente, installationExistante, etablissementSaisi } = await creerMagasinProtege();
   surveillerInactivite({ verrouillageExige: () => moduleElevesActif(magasin.entrees()), ecrireEnAttente });
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);
-  await chargerInterfaceHistorique(magasin, proposerOuvertureExport, () =>
-    confirmerMotDePasseEleves(
-      () => acces.enregistrerMaintenant(),
-      () => motsInterditsDe(magasin.entrees()),
-    ),
+  await chargerInterfaceHistorique(
+    magasin,
+    proposerOuvertureExport,
+    {
+      verifier: verifierMotDePasse,
+      // Le changement de mot de passe réécrit le fichier des données : ce qui est en attente y est écrit d'abord.
+      changer: async (actuel, nouveau) => {
+        await acces.enregistrerMaintenant();
+        await changerMotDePasse(actuel, nouveau);
+      },
+      motsInterdits: () => motsInterditsDe(magasin.entrees()),
+    },
     confirmerExportEleves,
   );
   // L'enseignant qui a donné son nom figure d'office parmi les enseignants de l'établissement, marqué « C'est moi ».
