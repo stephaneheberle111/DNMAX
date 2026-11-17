@@ -4230,24 +4230,6 @@ function paintLignes(){
   });
 }
 /* ---------- étape 4 : évaluation des étudiants ---------- */
-function curEleve(){
-  const els=studentsOf(F);if(!els.length)return null;
-  return els.find(e=>e.id===ui.eleve)||els[0];
-}
-function eleveDone(eid){return SAISIE.avancementEtudiant((F.res||{})[eid],lignes().map(ligKey))}
-function paintEprog(){
-  const els=studentsOf(F), L=lignes(), st=evalStats(F);
-  const c=document.getElementById("eCount");if(c)c.textContent=els.length;
-  const prog=document.getElementById("eProg");
-  if(prog)prog.textContent=!els.length?""
-    :`${st.faits} / ${els.length} étudiant${els.length>1?"s":""} évalué${els.length>1?"s":""}`
-     +(st.partiels?` · ${st.partiels} commencé${st.partiels>1?"s":""}`:"")
-     +` · ${L.length} ligne${L.length>1?"s":""}`;
-  const h=document.getElementById("n4hint");
-  if(h)h.textContent=!els.length?""
-    :(st.faits===els.length?"Tout le monde est évalué — le Word par étudiant et l'Excel de la promo se génèrent depuis « Mes évaluations »."
-      :"Chaque saisie est enregistrée aussitôt ; les documents se génèrent depuis « Mes évaluations ».");
-}
 /* Niveau d'acquisition en pourcentage continu (0 à 100, sans crans visibles).
    Règle quel que soit le nombre N de niveaux : les deux niveaux extrêmes occupent chacun 60/N %
    (15 % pour 4 niveaux), les niveaux intermédiaires se partagent le reste à parts égales.
@@ -4258,165 +4240,30 @@ function pctBounds(N){return SAISIE.bornesNiveaux(N)}
 function pctLvl(p,N){return SAISIE.niveauDuPourcentage(p,N)}
 function pctSnap(p,N){return SAISIE.aimanterPourcentage(p,N)}
 function pctOf(r,k){return SAISIE.pourcentageAffiche(r,k,(F.niveaux||[]).length)}
-/* Niveaux : du pétrole pâle (premier niveau) au pétrole foncé (dernier), selon l'identité visuelle. */
-const NIV_TEINTES=[[168,210,212],[98,169,174],[42,127,136],[16,85,95]];
-function nivPos(i,n){return n>1?Math.min(1,Math.max(0,i/(n-1))):1}
-function nivColor(i,n){const t=nivPos(i,n)*(NIV_TEINTES.length-1),a=Math.floor(Math.min(t,NIV_TEINTES.length-2)),f=t-a;
-  const c=NIV_TEINTES[a].map((v,k)=>Math.round(v+(NIV_TEINTES[a+1][k]-v)*f));return `rgb(${c.join(" ")})`}
-/* encre lisible sur la teinte d'un niveau : sombre sur les teintes claires, blanche sur les foncées */
-function nivEncre(i,n){return nivPos(i,n)<0.5?"#1C1A15":"#FFFFFF"}
+/* Couleur et encre de chaque niveau : règles dans src/domaine/teintes-niveaux.ts */
+function nivColor(i,n){return window.dnmaxPont.teintes.couleurNiveau(i,n)}
+function nivEncre(i,n){return window.dnmaxPont.teintes.encreNiveau(i,n)}
 function pctTxt(p,niv){
   niv=niv||F.niveaux||[];if(p==null)return "";
   const N=niv.length,l=pctLvl(p,N);
   return niv[l]||"";
 }
-function ntkHtml(eid,k,p,niv,big){
-  const N=niv.length,t=pctBounds(N),has=p!=null,l=has?pctLvl(p,N):0;
-  const ticks=t.slice(1,-1).map(x=>`<b class="maj" style="left:${x.toFixed(3)}%"></b>`).join("");
-  const scale=big?`<span class="ns">${niv.map((x,i)=>`<span style="left:${((t[i]+t[i+1])/2).toFixed(2)}%">${esc(x)}</span>`).join("")}</span>`:"";
-  return `<div class="ntk${big?" big":""}${has?"":" empty"}" data-el="${esc(eid)}" data-k="${esc(k)}" data-p="${has?p:""}"
-      role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" ${has?`aria-valuenow="${p}"`:""}
-      aria-valuetext="${esc(has?pctTxt(p,niv):"non renseigné")}" title="Glisser ou cliquer · flèches pour ajuster · Suppr ou double-clic pour effacer">
-    <span class="nt"><i class="nf${has&&p===0?" zero":""}" style="width:${has?p:0}%;background:${has?nivColor(l,N):"transparent"}"></i>${ticks}</span>
-    ${scale}<span class="nl">${esc(has?pctTxt(p,niv):"—")}</span></div>`;
-}
-function wireNtk(host,after){
-  const niv=F.niveaux||[], N=niv.length;
-  const show=(el,p)=>{const f=el.querySelector(".nf"), l=el.querySelector(".nl");
-    if(p==null){f.style.width="0";f.style.background="transparent";f.classList.remove("zero");l.textContent="—";el.classList.add("empty");return}
-    f.style.width=p+"%";f.style.background=nivColor(pctLvl(p,N),N);f.classList.toggle("zero",p===0);l.textContent=pctTxt(p,niv);el.classList.remove("empty")};
-  // pendant le glisser, la jauge suit la souris partout ; au relâchement, la zone du premier niveau retombe à 0 et celle du dernier monte à 100
-  const at=(el,x)=>{const r=el.querySelector(".nt").getBoundingClientRect();return Math.round(Math.max(0,Math.min(100,(x-r.left)/r.width*100)))};
-  const commit=(el,p)=>{el.dataset.p=p==null?"":p;setPct(el.dataset.el,el.dataset.k,p);show(el,p);
-    el.setAttribute("aria-valuetext",p==null?"non renseigné":pctTxt(p,niv));if(p==null)el.removeAttribute("aria-valuenow");else el.setAttribute("aria-valuenow",p);
-    if(after)after(el.dataset.el)};
-  host.querySelectorAll(".ntk").forEach(el=>{
-    let drag=null;
-    el.onpointerdown=e=>{if(e.button>0)return;e.preventDefault();el.focus({preventScroll:true});
-      try{el.setPointerCapture(e.pointerId)}catch(_){}drag={p:at(el,e.clientX)};el.classList.add("drag");show(el,drag.p)};
-    el.onpointermove=e=>{if(!drag)return;const q=at(el,e.clientX);if(q!==drag.p){drag.p=q;show(el,q)}};
-    el.onpointerup=()=>{if(!drag)return;const q=pctSnap(drag.p,N);drag=null;el.classList.remove("drag");commit(el,q)};
-    el.onpointercancel=()=>{drag=null;el.classList.remove("drag");show(el,el.dataset.p===""?null:+el.dataset.p)};
-    el.ondblclick=()=>commit(el,null);
-    el.onkeydown=e=>{const cur=el.dataset.p===""?null:+el.dataset.p, t=pctBounds(N);let q;
-      const step=e.shiftKey?10:1;
-      if(e.key==="ArrowRight"||e.key==="ArrowUp")q=cur==null?0:pctSnap(Math.min(100,cur===0?t[1]:cur+step),N);
-      else if(e.key==="ArrowLeft"||e.key==="ArrowDown")q=cur==null?0:pctSnap(Math.max(0,cur===100?t[N-1]-step:cur-step),N);
-      else if(e.key==="Home")q=0;else if(e.key==="End")q=100;
-      else if(e.key==="Delete"||e.key==="Backspace")q=null;
-      else return;
-      e.preventDefault();commit(el,q)};
-  });
-}
-function setPct(eid,key,p){
-  // un niveau saisi = travail rendu (règle dans src/domaine/saisie-resultats.ts)
-  const r=resOf(F,eid), s=SAISIE.noterNiveau(r,key,p==null?null:p,(F.niveaux||[]).length,new Date().toISOString().slice(0,10));
-  remplacerResultat(r,s.resultat);
-  if(s.effet==="absence-levee"){save();paintEleves();paintSteps();return}
-  if(s.effet==="devenu-rendu")
-    document.querySelectorAll(`[data-est="${CSS.escape(eid)}"],#eEst`).forEach(sl=>{sl.value="rendu";sl.classList.remove("vide","on")});
-  save();paintEprog();paintSteps();
-}
-/* Rendu de chaque étudiant (module Étudiants) : vide au départ, « Rendu » dès qu'un niveau est saisi,
-   « Non rendu » ou « Dispensé » vident ce qui avait été saisi pour lui. */
-const hasSaisie=r=>SAISIE.aDesNiveaux(r);
+/* Rendu de chaque étudiant (module Étudiants) : statut lu par les règles de src/domaine/saisie-resultats.ts */
 function estOf(r){return SAISIE.statutRendu(r)}
-function estSelect(r,attr,lbl){const st=estOf(r);
-  return `<select class="est${st==="nr"||st==="disp"?" on":st===""?" vide":""}" ${attr} aria-label="${esc(lbl)}"><option value="" ${st===""?"selected":""}>—</option><option value="rendu" ${st==="rendu"?"selected":""}>Rendu</option><option value="nr" ${st==="nr"?"selected":""}>Non rendu</option><option value="disp" ${st==="disp"?"selected":""}>Dispensé</option></select>`}
 function rendusManquants(f){if(!MOD.eleves)return 0;return SAISIE.etudiantsSansRendu(f.res,studentsOf(f).map(e=>e.id))}
-/* Les règles rendent un nouveau résultat ; on le verse dans l'objet existant, que des gestionnaires
-   déjà posés à l'écran (observations, appréciation) tiennent encore et dans lequel ils écriront. */
-function remplacerResultat(r,nouveau){for(const k of Object.keys(r))delete r[k];Object.assign(r,nouveau)}
-function setEst(eid,v){
-  const r=resOf(F,eid), s=SAISIE.changerRendu(r,v,new Date().toISOString().slice(0,10));
-  remplacerResultat(r,s.resultat);
-  if(s.avis==="saisie-effacee")toast("Niveaux, observations et appréciation de l'étudiant effacés.");
-  if(s.avis==="reste-rendu")toast("Des niveaux sont saisis pour cet étudiant : il reste « Rendu ».");
-  save();paintEleves();paintSteps()}
+/* Étape 4, saisie des étudiants : écran écrit en TypeScript (src/editeur/saisie-etudiants.ts), qui reçoit l'évaluation en cours */
+function contexteSaisie(){
+  if(!F.res||typeof F.res!=="object")F.res={};
+  return {resultats:F.res,niveaux:F.niveaux||[],etudiants:studentsOf(F),
+    lignes:lignes().map(l=>{const t=ligTitre(l);return {cle:ligKey(l),code:t.code,libelle:t.lib}}),
+    vue:{mode:ui.emode==="fiche"?"fiche":"grille",etudiant:ui.eleve||""},
+    aujourdhui:()=>new Date().toISOString().slice(0,10),
+    retenirVue:v=>{ui.emode=v.mode;ui.eleve=v.etudiant},
+    enregistrer:()=>save(),apresSaisie:()=>paintSteps(),annoncer:m=>toast(m)};
+}
 function paintEleves(){
   const host=document.getElementById("elevesPane");if(!host)return;
-  const els=studentsOf(F), L=lignes();
-  const mode=ui.emode||"grille";
-  document.querySelectorAll("#eMode [data-emode]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.emode===mode)));
-  paintEprog();
-  if(!els.length){
-    host.innerHTML=`<div class="empty">Aucun étudiant. Choisissez une promotion à l'étape 1, ou saisissez une liste de noms,
-      puis revenez ici pour évaluer chacun.</div>`;return;
-  }
-  if(!L.length){host.innerHTML=`<div class="empty">Aucune ligne à évaluer : revenez à l'étape 2 pour choisir des compétences.</div>`;return}
-  const niv=F.niveaux||[];
-  if(mode==="grille"){
-    const css=`grid-template-columns:minmax(150px,1.4fr) 112px repeat(${L.length},minmax(140px,1fr)) 64px 86px`;
-    const estSel=(e,r)=>estSelect(r,`data-est="${esc(e.id)}"`,"Rendu de "+e.nom);
-    host.innerHTML=`<div class="tw"><div class="egrid">
-      <div class="eh" style="${css}">
-        <span>Étudiant</span><span title="Rendu, non rendu ou dispensé — à renseigner pour chaque étudiant avant de terminer l'évaluation. Un niveau saisi le passe en « Rendu »">Rendu</span>
-        ${L.map(l=>{const t=ligTitre(l);
-          return `<span title="${esc(t.lib)}"><b>${esc(t.code)}</b></span>`}).join("")}
-        <span style="text-align:center" title="Résultat rendu à l'étudiant">Restitué</span>
-        <span style="text-align:right">Fait</span>
-      </div>
-      ${els.map(e=>{const d=eleveDone(e.id), r=resOf(F,e.id);
-        return `<div class="er${r.nr||r.disp?" abs":d.n>=d.tot?" ok":d.n?" part":""}" style="${css}" data-row="${esc(e.id)}">
-          <span class="nm"><button type="button" class="lnk" data-eopen="${esc(e.id)}">${esc(e.nom)}</button></span>
-          <span>${estSel(e,r)}</span>
-          ${L.map(l=>{const k=ligKey(l), v=r.n[k];
-            return `<span>${ntkHtml(e.id,k,pctOf(r,k),niv,false)}</span>`}).join("")}
-          <span style="text-align:center"><input type="checkbox" class="cbox" data-rest="${esc(e.id)}" ${r.rest?"checked":""} title="${r.rest?"Restitué le "+esc(r.rest):"Pas encore restitué"}" aria-label="Restitué à ${esc(e.nom)}"></span>
-          <span class="n">${d.n}/${d.tot}</span></div>`}).join("")}
-    </div></div>
-    <div class="hint" style="padding:10px 14px 2px">Une ligne par étudiant, une colonne par compétence évaluée. Un clic sur un nom ouvre sa fiche.</div>`;
-    wireNtk(host,eid=>{
-      const row=host.querySelector(`[data-row="${CSS.escape(eid)}"]`), d=eleveDone(eid);
-      if(row){row.classList.toggle("ok",d.n>=d.tot);row.classList.toggle("part",d.n>0&&d.n<d.tot);
-        const c=row.querySelector(":scope>.n");if(c)c.textContent=d.n+"/"+d.tot}
-    });
-    host.querySelectorAll("[data-rest]").forEach(cb=>cb.onchange=()=>{const r=resOf(F,cb.dataset.rest);
-      if(cb.checked)r.rest=new Date().toISOString().slice(0,10);else delete r.rest;save();paintEprog();
-      cb.title=r.rest?"Restitué le "+r.rest:"Pas encore restitué"});
-    host.querySelectorAll("[data-eopen]").forEach(b=>b.onclick=()=>{
-      ui.eleve=b.dataset.eopen;ui.emode="fiche";paintEleves()});
-    host.querySelectorAll("[data-est]").forEach(sl=>sl.onchange=()=>setEst(sl.dataset.est,sl.value));
-    return;
-  }
-  const el=curEleve(); ui.eleve=el.id;
-  const idx=els.findIndex(x=>x.id===el.id), r=resOf(F,el.id), d=eleveDone(el.id);
-  host.innerHTML=`<div class="efiche">
-    <div class="ehead">
-      <button class="btn ghost" id="ePrev" ${idx<=0?"disabled":""}>←</button>
-      <select id="eSel" aria-label="Étudiant">${els.map(x=>{const dd=eleveDone(x.id);
-        return `<option value="${esc(x.id)}" ${x.id===el.id?"selected":""}>${esc(x.nom)} — ${dd.n}/${dd.tot}</option>`}).join("")}</select>
-      <button class="btn ghost" id="eNext" ${idx>=els.length-1?"disabled":""}>→</button>
-      <span class="hint mono">${idx+1} / ${els.length}</span>
-      <span style="margin-left:auto">${estSelect(r,'id="eEst"',"Rendu")}</span>
-      <label class="rstl"><input type="checkbox" class="cbox" id="eRest" ${r.rest?"checked":""}> Restitué${r.rest?` <span class="hint mono">${esc(r.rest)}</span>`:""}</label>
-      <span class="count">${d.n}/${d.tot}</span>
-    </div>
-    ${L.map(l=>{const k=ligKey(l), t=ligTitre(l), v=r.n[k];
-      return `<div class="eline">
-        <div class="t"><span class="code">${esc(t.code)}</span> <span>${esc(t.lib)}</span></div>
-        <div class="nbrow">${ntkHtml(el.id,k,pctOf(r,k),niv,true)}
-          <button type="button" class="btn ghost nclr" data-nclr="${esc(k)}" title="Effacer">—</button></div>
-        <input type="text" class="eobs" data-obsfor="${esc(k)}" value="${esc(r.obs[k]||"")}" placeholder="Observation (facultatif)">
-      </div>`}).join("")}
-    <div class="eline">
-      <div class="t"><span>Appréciation générale</span></div>
-      <textarea id="eAppr" rows="3" placeholder="Quelques lignes pour ${esc(el.nom)}…">${esc(r.appr||"")}</textarea>
-    </div>`;
-  const go=id=>{ui.eleve=id;paintEleves();host.scrollIntoView({block:"start",behavior:"smooth"})};
-  host.querySelector("#eSel").onchange=e=>go(e.target.value);
-  host.querySelector("#ePrev").onclick=()=>{if(idx>0)go(els[idx-1].id)};
-  host.querySelector("#eNext").onclick=()=>{if(idx<els.length-1)go(els[idx+1].id)};
-  const upd=()=>{const c=host.querySelector(".ehead .count"), dd=eleveDone(el.id);if(c)c.textContent=dd.n+"/"+dd.tot};
-  wireNtk(host,upd);
-  host.querySelectorAll("[data-nclr]").forEach(b=>b.onclick=()=>{setPct(el.id,b.dataset.nclr,null);paintEleves()});
-  host.querySelectorAll("[data-obsfor]").forEach(i=>i.oninput=()=>{
-    resOf(F,el.id).obs[i.dataset.obsfor]=i.value;save()});
-  {const es=host.querySelector("#eEst");if(es)es.onchange=()=>setEst(el.id,es.value)}
-  const rs=host.querySelector("#eRest");
-  if(rs)rs.onchange=()=>{const rr=resOf(F,el.id);if(rs.checked)rr.rest=new Date().toISOString().slice(0,10);else delete rr.rest;save();paintEleves()};
-  const ap=host.querySelector("#eAppr");
-  if(ap)ap.oninput=()=>{resOf(F,el.id).appr=ap.value;save()};
+  window.dnmaxPont.editeur.peindreSaisieEtudiants(host,contexteSaisie());
 }
 function linkSelection(){
   if(ui.sel.length<2)return;
