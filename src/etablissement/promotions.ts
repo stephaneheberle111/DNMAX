@@ -6,6 +6,7 @@
  * automatique, l'année de formation et le nom court restent calculés par
  * l'interface historique, qui les fournit.
  */
+import { MODULES } from "../domaine/modules";
 import { completerPersonne, composerNom } from "../domaine/personnes";
 import { ajouterEtudiants, deplacerEtudiant, etatPromotion, ordrePromotions, rafraichirListe, retirerEtudiant } from "../domaine/promotions";
 import { balise, boutonAction, boutonSupprimer, champLigne, ligneEditeur, panneauEditeur, type Armement } from "./editeur-commun";
@@ -51,8 +52,8 @@ const AIDE =
   "Une promotion suit un groupe d'un diplôme et d'une mention de son entrée à sa sortie. Choisissez d'abord le diplôme et la mention, puis l'année de début : le nom se compose seul avec le code du diplôme, l'année de début et l'année de fin, qui dépend de la durée du diplôme (Diplômes et mentions) — DNO-2025-2028 pour un DN MADE mention Objet en trois ans commencé en 2025. L'année de formation se déduit de l'année scolaire, et l'étape 1 de l'évaluation propose les promotions de la mention active.";
 const AIDE_ETUDIANTS =
   " Ouvrez « étudiants » pour gérer la liste : renommer, retirer, ajouter plusieurs noms d'un coup, ou faire passer un étudiant dans une autre promotion, y compris d'une autre mention. Ses résultats déjà saisis restent attachés aux évaluations de son ancienne promotion.";
-const AIDE_SANS_ETUDIANTS =
-  " Le module « Étudiants et promotions » (Paramètres) permet en plus de gérer la liste des étudiants de chaque promotion.";
+// Le nom du module vient du catalogue : l'aide suit un changement de nom.
+export const AIDE_SANS_ETUDIANTS = ` Le module « ${MODULES.eleves?.nom ?? "Étudiants"} » (Paramètres) permet en plus de gérer la liste des étudiants de chaque promotion.`;
 const CSS_ETUDIANT = "grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px 92px";
 const INVITATION_AJOUT =
   "Ajouter des étudiants — un par ligne : prénom puis nom, ou deux colonnes Prénom / Nom collées d'un tableur";
