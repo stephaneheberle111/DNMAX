@@ -14,6 +14,11 @@ import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION
 import * as jaugeExport from "../domaine/jauge-export";
 import { couleurNiveau, encreNiveau } from "../domaine/teintes-niveaux";
 import { peindreBarreEtapes, peindreEnregistrement } from "../editeur/barre-etapes";
+import { dessinateurJauge } from "../export/image-jauge";
+import { colonnesExport } from "../export/modele";
+import { construireOdt } from "../export/opendocument";
+import { construireTableur } from "../export/tableur";
+import { construireDocx } from "../export/word";
 import { peindreCompetences } from "../editeur/competences";
 import * as etapesEditeur from "../domaine/etapes-editeur";
 import { peindreEnseignants, peindreLivrables, peindrePromotions, peindreSemestres, peindreUesEtEcs } from "../editeur/etape-evaluation";
@@ -139,6 +144,14 @@ interface Pont {
     lierSelection: typeof lierSelection;
     peindreSaisieEtudiants: typeof peindreSaisieEtudiants;
   };
+  /** Exports Word, OpenDocument et tableur (voir `export/`). */
+  readonly exports: {
+    colonnesExport: typeof colonnesExport;
+    construireDocx: typeof construireDocx;
+    construireOdt: typeof construireOdt;
+    construireTableur: typeof construireTableur;
+    dessinateurJauge: typeof dessinateurJauge;
+  };
   /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
   readonly etapesEditeur: typeof etapesEditeur;
   /** Progression de la promotion sur chaque compétence du semestre (voir `domaine/progression-competences`). */
@@ -221,6 +234,7 @@ export async function chargerInterfaceHistorique(
     editeur: { peindreBarreEtapes, peindreEnregistrement, peindreLivrables, peindreEnseignants, peindreSemestres, peindreUesEtEcs, peindrePromotions, peindreCompetences, peindreFormulation, lierSelection, peindreSaisieEtudiants },
     progressionCompetences: progressionDesCompetences,
     etapesEditeur,
+    exports: { colonnesExport, construireDocx, construireOdt, construireTableur, dessinateurJauge },
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
       : {}),
