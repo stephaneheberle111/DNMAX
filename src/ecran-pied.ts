@@ -12,6 +12,10 @@ import { lireVersion, ouvrirDansNavigateur } from "./enveloppe";
 /** Présentation de DNMAX : version, objet, licence (consultable), éditeur et code source. */
 function montrerAPropos(versionInstallee: Promise<string>, adresseRetours: Promise<string>): void {
   const { boite, fermer } = ouvrirBoite("À propos de DNMAX");
+  // La même icône que dans la barre des tâches et la fenêtre.
+  const icone = creer("img", "apropos-icone");
+  icone.setAttribute("src", "/icone.svg");
+  icone.setAttribute("alt", "");
   const version = creer("p", "apropos-version", "DNMAX");
   void versionInstallee.then((numero) => {
     version.textContent = numero === "" ? "DNMAX" : `DNMAX, version ${numero}`;
@@ -45,6 +49,7 @@ function montrerAPropos(versionInstallee: Promise<string>, adresseRetours: Promi
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer));
   boite.append(
+    icone,
     version,
     creer(
       "p",
