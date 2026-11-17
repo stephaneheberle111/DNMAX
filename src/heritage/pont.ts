@@ -15,6 +15,8 @@ import * as constituer from "../domaine/constituer";
 import * as filtresEvaluations from "../domaine/filtres-evaluations";
 import { peindreFiltres } from "../evaluations/filtres";
 import { peindreListe } from "../evaluations/liste";
+import { apresDessinListe, ouvrirActions } from "../evaluations/actions";
+import * as actionsEvaluation from "../domaine/actions-evaluation";
 import { peindreEtapeBlocs, peindreEtapeEcs, peindreEtapeUes } from "../referentiel/etapes";
 import { peindrePlanification } from "../referentiel/planification";
 import { peindrePageConstituer } from "../referentiel/constituer";
@@ -167,7 +169,14 @@ interface Pont {
   /** Filtres de Mes évaluations (voir `domaine/filtres-evaluations`). */
   readonly filtresEvaluations: typeof filtresEvaluations;
   /** Écrans de Mes évaluations écrits en TypeScript (voir `evaluations/`). */
-  readonly evaluations: { peindreFiltres: typeof peindreFiltres; peindreListe: typeof peindreListe };
+  readonly evaluations: {
+    peindreFiltres: typeof peindreFiltres;
+    peindreListe: typeof peindreListe;
+    ouvrirActions: typeof ouvrirActions;
+    apresDessinListe: typeof apresDessinListe;
+  };
+  /** Actions de suivi d'une évaluation (voir `domaine/actions-evaluation`). */
+  readonly actionsEvaluation: typeof actionsEvaluation;
   /** Écrans de Référentiel > Constituer écrits en TypeScript (voir `referentiel/`). */
   readonly referentiel: {
     peindreEtapeUes: typeof peindreEtapeUes;
@@ -323,7 +332,8 @@ export async function chargerInterfaceHistorique(
     diplomes,
     constituer,
     filtresEvaluations,
-    evaluations: { peindreFiltres, peindreListe },
+    evaluations: { peindreFiltres, peindreListe, ouvrirActions, apresDessinListe },
+    actionsEvaluation,
     referentiel: { peindreEtapeUes, peindreEtapeEcs, peindreEtapeBlocs, peindrePlanification, peindrePageConstituer, peindreRecherche, peindreHabillageCarte },
     niveauxAcquisition: { noms: NIVEAUX_ACQUISITION, regle: regleNiveauxAcquisition },
     suiviSimplifie,
