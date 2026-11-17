@@ -178,9 +178,15 @@ function paneReferentiel(pane: string): () => boolean {
   return () => visible("#v-ref") && document.querySelector(`#refNav [data-pane="${pane}"][aria-pressed="true"]`) !== null;
 }
 
-/** Créer une évaluation n'a pas lieu d'être : il y en a déjà une, ou le référentiel n'est pas validé (création refusée). */
+/** Vrai une fois la boîte « Échanger » ouverte pendant la visite : sa fermeture fait passer à la suite. */
+let boiteEchangeOuverte = false;
+
+/**
+ * Créer une évaluation n'a pas lieu d'être tant que le référentiel n'est pas validé (création refusée).
+ * Une évaluation déjà enregistrée ne fait pas sauter ces étapes : la visite montre l'assistant en entier.
+ */
 function creationSansObjet(avancement: Avancement): boolean {
-  return avancement.evaluations > 0 || !avancement.referentielValide;
+  return !avancement.referentielValide;
 }
 
 function sansEvaluation(avancement: Avancement): boolean {
@@ -268,6 +274,16 @@ const PRISE_EN_MAIN: Parcours = {
       siBoite: {
         texte: "Rien à faire ici pour l'instant : vous pourrez y revenir quand un collègue vous enverra un fichier. Pour continuer la visite, cliquez « Fermer ».",
         cibles: [".echange-boite .echange-actions .btn"],
+      },
+      // La boîte ouverte puis refermée, la visite passe d'elle-même aux promotions.
+      atteinte: () => {
+        if (visible(".echange-boite")) {
+          boiteEchangeOuverte = true;
+          return false;
+        }
+        const refermee = boiteEchangeOuverte;
+        boiteEchangeOuverte = false;
+        return refermee;
       },
     },
     ALLER_ETABLISSEMENT,
