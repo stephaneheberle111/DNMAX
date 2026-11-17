@@ -3976,7 +3976,8 @@ function paintLivrables(){
   inp.onblur=()=>{if(!inp.disabled)commit()};
 }
 function goStep(n){
-  const max=MOD.eleves?4:3;
+  const brouillon=!!F.brouillon||!fiches.some(f=>f.id===F.id);
+  const max=MOD.eleves&&!brouillon?4:3;
   ui.step=Math.min(max,Math.max(1,+n));
   if(ui.step===3)ui.sel=[];
   paintSteps();
@@ -3988,9 +3989,11 @@ function goStep(n){
 }
 function paintSteps(){
   const li4=document.getElementById("li-step4");
-  // l'évaluation des étudiants s'ouvre depuis Mes évaluations (« Évaluer ») : pas d'étape 4 dans le parcours
-  if(li4)li4.hidden=true;
-  if(!MOD.eleves&&ui.step===4)ui.step=3;
+  // avec le module Étudiants, l'évaluation des étudiants est la 4e étape ; un brouillon ne s'évalue pas (décision 29)
+  const brouillon4=!!F.brouillon||!fiches.some(f=>f.id===F.id);
+  if(li4){li4.hidden=!MOD.eleves;const b4=li4.querySelector("button");
+    if(b4){b4.disabled=brouillon4;b4.title=brouillon4?"Enregistrez d'abord l'évaluation (étape Formulation)":""}}
+  if((!MOD.eleves||brouillon4)&&ui.step===4)ui.step=3;
   for(const n of [1,2,3,4]){
     const pane=document.getElementById("step"+n);if(!pane)continue;
     pane.hidden = ui.step!==n;
@@ -7057,8 +7060,13 @@ function fname(ext,who){
 function ligneContexte(){
   return [classesDisp(F),F.livrables.join(" · "),F.semestre+(MOD.dn?" · "+dnLabel(F.semestre):"")].filter(Boolean).join(" — ");
 }
+/* au-dessus de la ligne de contexte : l'établissement et le ou les enseignants, qui signent le document */
+function ligneSignature(){
+  const profs=(Array.isArray(F.profs)&&F.profs.length?F.profs:[F.prof]).map(p=>String(p||"").trim()).filter(Boolean);
+  return [String((DATA.etab||{}).nom||"").trim(),profs.join(", ")].filter(Boolean).join(" — ");
+}
 function ligneEnseignant(who){
-  return [F.prof?"Enseignant·e : "+F.prof:"",who?"Étudiant : "+who:""].filter(Boolean).join(" · ");
+  return who?"Étudiant : "+who:"";
 }
 
 /* ---------- export Excel ---------- */
@@ -7207,6 +7215,7 @@ function ficheXml(el){
   let entete="";
   entete+=wp(REF.meta.diplome||"",{sz:8.5,caps:true,color:"5A5345",after:20});
   entete+=wp(F.titre||"Évaluation",{b:true,sz:16,after:40});
+  {const sig=ligneSignature();if(sig)entete+=wp(sig,{sz:10,after:30});}
   entete+=wp(ligneContexte(),{sz:10,color:"10555F",after:40,border:true});
   const ens=ligneEnseignant(who);
   if(ens)entete+=wp(ens,{sz:10,after:120});
@@ -7299,7 +7308,7 @@ async function buildOdt(only){
     const res=(el&&el.id)?((F.res||{})[el.id]||{n:{},obs:{},appr:""}):null;
     const cols=columns(), rs=rows(), TOT=10500, sum=cols.reduce((a,c)=>a+c.w,0), widths=cols.map(c=>Math.round(TOT*c.w/sum));   // A4 portrait
     let entete=tp(REF.meta.diplome||"","Pk")+tp(F.titre||"Évaluation","Ph")
-      +tp(ligneContexte(),"Pa");
+      +(ligneSignature()?tp(ligneSignature()):"")+tp(ligneContexte(),"Pa");
     const ens=ligneEnseignant(who);
     if(ens)entete+=tp(ens);
     let x=sceauActif()?avecSceau(entete,TOT):entete;
