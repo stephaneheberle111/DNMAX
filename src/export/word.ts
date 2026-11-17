@@ -26,7 +26,7 @@ const EMU_PAR_PX = 9525;
 /** Largeur réservée au sceau dans l'en-tête, en vingtièmes de point. */
 export const SCEAU_LARGEUR = 1500;
 const CONSIGNE_JAUGE =
-  "Niveau d'acquisition : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.";
+  "Niveau de maîtrise : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.";
 
 interface OptionsParagraphe {
   b?: boolean;

@@ -4,7 +4,7 @@ import { dispositionLibellesNiveaux, largeurMinimaleLibelle, largeursLibellesNiv
 import { bornesNiveaux } from "./saisie-resultats";
 
 const NIVEAUX = ["Non acquis", "En cours d'acquisition", "Acquis", "Maîtrisé"];
-/** Largeur de la jauge d'une colonne « Niveau d'acquisition » d'un export Word A4, en twips. */
+/** Largeur de la jauge d'une colonne « Niveau de maîtrise » d'un export Word A4, en twips. */
 const JAUGE = 2638;
 const TAILLE = 7;
 

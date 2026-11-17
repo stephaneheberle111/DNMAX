@@ -499,6 +499,8 @@ Arbitrées par l'auteur le 15 novembre 2026, règle par règle, avec un principe
 
 **Conséquence** : les évaluations existantes passent à l'échelle unique ; leurs niveaux saisis (rangs de 0 à 3) gardent leur sens. Aucune donnée d'enseignant n'existe encore.
 
+**Précisé le 17 novembre 2026** : le module « Niveaux DN MADE » devient « Niveaux d'acquisition » (Initié, Guidé, Autonome selon l'année), facultatif car absent du référentiel du diplôme. Sa règle de validation (« Satisfaisant » ou mieux dans l'année) quitte Règles d'évaluation pour la carte du module, toujours sans réglage. Ce qui est évalué et exporté s'appelle « Niveau de maîtrise ».
+
 ## 37. L'éditeur d'évaluation passe en TypeScript écran par écran
 
 **Contexte** : l'éditeur d'évaluation (quatre étapes : évaluation, compétences, formulation, évaluation des étudiants) vit dans l'interface historique, un seul fichier JavaScript sans typage ni tests unitaires, qui tient l'évaluation en cours dans des variables globales.

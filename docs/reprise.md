@@ -33,7 +33,6 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 
 ## Questions en attente de l'auteur
 
-- **« Autonome » ou « Autonomie »** : le niveau DN MADE de 3e année s'appelle « Autonomie » dans les deux référentiels livrés (`site/referentiels/dn-made-objet.dnmax` et `dn-made-espace.dnmax`) et « Autonome » dans les textes de l'application (`src/parcours-etapes.ts`, `src/domaine/regles-affichees.ts`, `site/index.html`, valeur par défaut `dnPalier` dans le fichier historique). Aligner l'un sur l'autre une fois tranché.
 - **Résumé de l'étape 3** : un regroupement compte comme « formulé » même sans formulation (comportement repris tel quel, noté dans la décision 37). À corriger si l'auteur le souhaite.
 
 ## Méthode : réécrire sans rien changer
