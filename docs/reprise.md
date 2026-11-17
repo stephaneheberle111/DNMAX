@@ -29,15 +29,22 @@
 | #160 | Constituer, étape 4 (planification par semestre) : colonnes, rattachements | `src/referentiel/planification.ts`, `src/domaine/planification.ts` |
 | #161 | Constituer : page des cinq étapes et étape 5 (validation, versions) | `src/referentiel/constituer.ts`, `src/domaine/constituer.ts` |
 | #163 | Explorer, vue « Recherche » : paires compétence × EC, regroupements, surlignage | `src/referentiel/recherche.ts`, `src/domaine/exploration.ts` |
-| (cette demande) | Explorer, habillage de la carte : diplôme et mention, tuiles de filtre, barre des vues, tableaux EC × semestres et compétences × semestres | `src/referentiel/habillage-carte.ts`, `src/domaine/exploration.ts` |
+| #164 | Explorer, habillage de la carte : diplôme et mention, tuiles de filtre, barre des vues, tableaux EC × semestres et compétences × semestres | `src/referentiel/habillage-carte.ts`, `src/domaine/exploration.ts` |
+| (cette demande) | Mes évaluations : barre des filtres | `src/evaluations/filtres.ts`, `src/domaine/filtres-evaluations.ts` |
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
 
 ## Ce qui reste, dans l'ordre convenu avec l'auteur
 
-1. **L'éditeur commun** : fait. Tous ses volets sont dans `src/etablissement/` et `src/referentiel/etapes.ts` ; le fichier historique ne garde que la suppression en deux temps (`edArm`, `armDel`), partagée avec la liste des versions de la validation.
-2. **Référentiel > Constituer** : fait. Restent dans le fichier historique la création et le rétablissement d'une version (`validerVersion`, `askPromosVersion`, `restaurerVersion`), que la page appelle.
-3. **Référentiel > Explorer** : fait. La carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) et la chaîne (`paintChain`, `chainModel`, `chainWire`, `chainBind`) restent dans le fichier historique, inchangées, comme convenu ; l'habillage en TypeScript insère leur balisage tel quel. Pour comparer, ces deux vues ne sont pas reproductibles d'une exécution à l'autre (positions animées, hauteurs mesurées selon les polices) : neutraliser nombres, `transform` et `style` avant de comparer.
+L'éditeur commun, Référentiel > Constituer et Référentiel > Explorer sont faits (voir le tableau). L'auteur préfère une v1 propre à une sortie rapide : la réécriture continue, dans cet ordre.
+
+1. **Mes évaluations** : la barre des filtres est faite ; restent la liste, la colonne de suivi et sa frise, et la fenêtre des actions.
+2. **Progression** : vue promotion et vue étudiant (les calculs sont déjà dans `src/domaine/progression.ts`).
+3. **L'exemple** : établissement fictif et évaluations générées.
+4. **Le reste de l'interface** : onglets, Paramètres > Modules, Préférences, formulaire de l'étape 1, branchements au chargement.
+5. **Le modèle de données** (dictionnaire, référentiels, vue active), en dernier, avec une vérification renforcée sur des données réelles exportées puis rechargées.
+
+La carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) et la chaîne (`paintChain`, `chainModel`, `chainWire`, `chainBind`) restent dans le fichier historique, inchangées. Pour comparer, ces deux vues ne sont pas reproductibles d'une exécution à l'autre (positions animées, hauteurs mesurées selon les polices) : neutraliser nombres, `transform` et `style` avant de comparer.
 
 **Consigne de l'auteur, à respecter strictement : aucun risque sur la carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) ni sur la chaîne (`paintChain`, `chainModel`, `chainWire`).** Leur dessin reste tel quel. Au plus, un calcul déjà isolé peut en sortir, avec une comparaison d'images avant et après.
 

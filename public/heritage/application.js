@@ -944,9 +944,10 @@ function mesPromoIds(){const me=DATA.moi;if(!me)return null;
   const ids=promos.filter(pr=>teachesPromo(pr.id,me)).map(p=>p.id);
   return ids.length?new Set(ids):null}
 function promoVisible(pr){const v=mesPromoIds();return !v||v.has(pr.id)}
-function sfDefault(){return {per:["cur"],mine:true,sem:[],st:[],q:""}}
-function sfState(){const s=ui.sf=ui.sf||sfDefault();["per","sem","st"].forEach(k=>{if(!Array.isArray(s[k]))s[k]=s[k]&&s[k]!=="all"?[s[k]]:[]});return s}
-function profsOf(f){return Array.isArray(f.profs)&&f.profs.length?f.profs:String(f.prof||"").split(/,\s*/).filter(Boolean)}
+/* règles des filtres : écrites et testées dans src/domaine/filtres-evaluations.ts */
+function sfDefault(){return window.dnmaxPont.filtresEvaluations.filtresParDefaut()}
+function sfState(){return window.dnmaxPont.filtresEvaluations.normaliserFiltres(ui.sf=ui.sf||sfDefault())}
+function profsOf(f){return window.dnmaxPont.filtresEvaluations.profsDe(f)}
 function moiNom(){return (DATA.enseignants.find(t=>t.id===DATA.moi)||{}).nom||""}
 function promosOfF(f){
   const l=Array.isArray(f.classes)&&f.classes.length?f.classes:String(f.classe||"").split(/,\s*/).filter(Boolean);
@@ -956,60 +957,20 @@ function promosOfF(f){
 }
 function promoEnCours(pr){const a=promoAnneeAt(pr,anneeScolaire(new Date()));return a>=1&&a<=promoDuree(pr)}
 /* sélections multiples : une liste vide = pas de filtre ; "cur" = toutes les promotions en cours */
-function sfMatch(f){
-  const s=sfState();
-  {const vis=mesPromoIds();if(vis&&!(promosOfF(f).some(p=>vis.has(p.id))||profsOf(f).includes(moiNom())))return false}
-  if(s.per.length){const ps=promosOfF(f);
-    const ok=(s.per.includes("cur")&&(!ps.length||ps.some(promoEnCours)))||ps.some(p=>s.per.includes(p.id));
-    if(!ok)return false}
-  if(s.sem.length&&!s.sem.includes(f.semestre))return false;
-  if(s.st.length&&!s.st.includes(statutOf(f)))return false;
-  if(s.q&&!String(f.titre||"").toLowerCase().includes(s.q.toLowerCase()))return false;
-  return true;
-}
-function sfActive(){return JSON.stringify(sfState())!==JSON.stringify(sfDefault())}
+function sfMatch(f){return window.dnmaxPont.filtresEvaluations.correspondFiltres(f,sfState(),{visibles:mesPromoIds(),promotionsDe:promosOfF,enCours:promoEnCours,moi:moiNom(),statut:statutOf})}
+function sfActive(){return window.dnmaxPont.filtresEvaluations.filtresActifs(sfState())}
+/* barre des filtres de Mes évaluations : écran écrit en TypeScript (src/evaluations/filtres.ts),
+   règles dans src/domaine/filtres-evaluations.ts */
 function paintSavedFilters(){
-  const host=document.getElementById("sFilters");if(!host)return;
-  if(!fiches.length){host.hidden=true;host.innerHTML="";return}
-  const s=sfState(), me=moiNom(), ae=document.activeElement, qFocus=ae&&ae.id==="sfQ", caret=qFocus?ae.selectionStart:0;
+  const host=document.getElementById("sFilters");
   promos.forEach(migPromoCohorte);
   const dipIdx=id=>DATA.diplomes.findIndex(d=>d.id===id);
   const sorted=promos.filter(promoVisible).sort((a,b)=>(dipIdx(a.diplomeId)-dipIdx(b.diplomeId))||(b.debut-a.debut));
-  const cur=sorted.filter(promoEnCours), old=sorted.filter(p=>!promoEnCours(p));
-  s.per=s.per.filter(v=>v==="cur"||promos.some(p=>p.id===v));
-  const pName=p=>(promoShort(p)?promoShort(p)+" — ":"")+p.nom;
-  const cb=(k,v,l,extra)=>`<label class="sfo"><input type="checkbox" data-sfk="${k}" value="${esc(v)}" ${s[k].includes(v)?"checked":""}> <span>${esc(l)}</span>${extra||""}</label>`;
-  const sum=(k)=>{const v=s[k];
-    if(k==="per"){if(!v.length)return "Toutes les promotions";const n=v.map(x=>x==="cur"?"En cours":(promoShort(promos.find(p=>p.id===x))||(promos.find(p=>p.id===x)||{}).nom||""));
-      return n.length<=2?n.join(", "):n.length+" sélections"}
-    if(k==="sem")return v.length?SEMS.filter(x=>v.includes(x)).join(", "):"Tous les semestres";
-    return !v.length?"Tous les suivis":v.length===1?ST_LBL[v[0]]:v.length+" suivis"};
-  const menu=(k,label,body)=>`<span class="xmenu sfm"><button type="button" class="sfb${s[k].length?" on":""}" data-sfm="${k}" aria-haspopup="true" aria-expanded="false" aria-label="${label}"><span class="sfl2">${label}</span> ${esc(sum(k))} ▾</button>
-    <span class="xpop sfpop" hidden data-sfp="${k}">${body}<span class="xsep"></span><span class="sfpa"><button type="button" data-sfclr="${k}">Tout afficher</button></span></span></span>`;
-  host.hidden=false;
-  host.innerHTML=`<span class="sfl">Filtrer</span>
-    ${menu("per","Promotions",cb("per","cur","Promotions en cours",` <span class="hint">${cur.length}</span>`)
-      +(cur.length?`<span class="xh">En cours</span>${cur.map(p=>cb("per",p.id,pName(p))).join("")}`:"")
-      +(old.length?`<span class="xh">Terminées ou à venir</span>${old.map(p=>cb("per",p.id,p.nom)).join("")}`:""))}
-
-    ${menu("sem","Semestres",SEMS.map(x=>cb("sem",x,x)).join(""))}
-    ${menu("st","Suivi",Object.keys(ST_LBL).map(k=>cb("st",k,ST_LBL[k])).join(""))}
-    <input type="search" id="sfQ" placeholder="Rechercher un intitulé" value="${esc(s.q)}" aria-label="Rechercher un intitulé">
-    ${sfActive()?`<button type="button" class="btn ghost" id="sfReset">Filtres par défaut</button>`:""}`;
-  const g=id=>document.getElementById(id);
-  const reopen=k=>{const b=host.querySelector(`[data-sfm="${k}"]`);if(!b)return;b.nextElementSibling.hidden=false;b.setAttribute("aria-expanded","true")};
-  host.querySelectorAll("[data-sfm]").forEach(b=>b.onclick=e=>{e.stopPropagation();const p=b.nextElementSibling,was=!p.hidden;
-    document.querySelectorAll(".xpop").forEach(x=>{if(!x.hidden){x.hidden=true;x.previousElementSibling.setAttribute("aria-expanded","false")}});
-    ui.sfOpen=was?"":b.dataset.sfm;if(!was)reopen(b.dataset.sfm)});
-  host.querySelectorAll(".sfpop").forEach(p=>p.onclick=e=>e.stopPropagation());
-  host.querySelectorAll("[data-sfk]").forEach(c=>c.onchange=()=>{const k=c.dataset.sfk, v=c.value;
-    s[k]=c.checked?[...new Set([...s[k],v])]:s[k].filter(x=>x!==v);ui.sfOpen=k;paintSaved()});
-  host.querySelectorAll("[data-sfclr]").forEach(b=>b.onclick=()=>{s[b.dataset.sfclr]=[];ui.sfOpen=b.dataset.sfclr;paintSaved()});
-  g("sfQ").oninput=e=>{s.q=e.target.value;ui.sfOpen="";paintSaved()};
-  if(g("sfReset"))g("sfReset").onclick=()=>{ui.sf=sfDefault();ui.sfOpen="";paintSaved()};
-  if(ui.sfOpen)reopen(ui.sfOpen);
-  if(!document._sfClose){document._sfClose=true;document.addEventListener("click",()=>{ui.sfOpen=""})}
-  if(qFocus){const q=g("sfQ");q.focus();try{q.setSelectionRange(caret,caret)}catch(e){}}
+  window.dnmaxPont.evaluations.peindreFiltres(host,{filtres:()=>sfState(),reinitialiser:()=>{ui.sf=sfDefault()},
+    promotions:sorted.map(p=>({id:p.id,nom:p.nom,court:promoShort(p)||"",enCours:promoEnCours(p)})),
+    existe:id=>promos.some(p=>p.id===id),
+    nomPromotion:id=>{const p=promos.find(x=>x.id===id);return p?(promoShort(p)||p.nom||""):""},
+    statuts:ST_LBL,ouvert:()=>ui.sfOpen||"",retenirOuvert:k=>{ui.sfOpen=k},redessiner:paintSaved});
 }
 function paintSaved(){
   paintSavedFilters();
