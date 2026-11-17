@@ -2447,90 +2447,12 @@ function vueMention(dip){
 function frDate(d){const t=new Date(d+"T12:00:00");return isNaN(t)?d:t.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}
 /* ---- Tableau du référentiel : compétences en lignes, enseignements en colonnes,
    comme le tableau d'origine ; chaque case ouvre ou ferme un semestre ---- */
+/* Étape 4, planification par semestre : écran écrit en TypeScript (src/referentiel/planification.ts) ;
+   règles dans src/domaine/planification.ts */
 function paintMatrice(host){
-  const D=DATA, dipL=REF.meta.diplome||"—";
-  const sem=SEMS.includes(ui.ref.msem)?ui.ref.msem:"";
-  const ueG=D.ues.map(u=>({u,ecs:D.ecs.filter(e=>e.ueId===u.id).sort((a,b)=>ecOrd(a)-ecOrd(b))}));
-  const orph=D.ecs.filter(e=>!D.ues.some(u=>u.id===e.ueId));
-  if(orph.length)ueG.push({u:{id:"",nom:"Sans unité",couleur:"#9aa2ae"},ecs:orph});
-  const vis=e=>!sem||(e.sems||[]).includes(sem);
-  const groups=ueG.map(g=>({u:g.u,ecs:g.ecs.filter(vis)})).filter(g=>g.ecs.length);
-  const semsOf=e=>SEMS.filter(x=>(e.sems||[]).includes(x)&&(!sem||x===sem));
-  const cols=[];let ecI=0;
-  groups.forEach(g=>g.ecs.forEach(e=>{
-    const ss=semsOf(e), n=ss.length||1;
-    (ss.length?ss:[""]).forEach((sm,j)=>cols.push({u:g.u,e,sm,alt:ecI%2===1,fin:j===n-1}));
-    ecI++;
-  }));
-  cols.forEach((x,i)=>{x.finUe=x.fin&&(!cols[i+1]||cols[i+1].u.id!==x.u.id)});
-  const spanEc=e=>Math.max(1,semsOf(e).length);
-  const spanUe=g=>g.ecs.reduce((a,e)=>a+spanEc(e),0);
-  const blocs=D.blocs.slice().sort((a,b)=>(+a.num||0)-(+b.num||0));
-  const compOf=num=>D.competences.filter(c=>String(c.bloc)===String(num)).sort((a,b)=>ecNum(a.code)-ecNum(b.code));
-  const sansBloc=D.competences.filter(c=>!blocs.some(b=>String(b.num)===String(c.bloc)));
-  const nLien=c=>(c.ecs||[]).filter(l=>cols.some(x=>x.e.id===l.id&&x.sm&&(l.sems||[]).includes(x.sm))).length;
-  const bord=x=>(x.alt?" alt":"")+(x.finUe?" ueend":x.fin?" ecend":"");
-  const cell=(c,x)=>{
-    const e=x.e, sm=x.sm;
-    if(!sm)return `<td class="hs${bord(x)}"></td>`;
-    const l=lienEc(c,e.id), on=!!l&&(l.sems||[]).includes(sm);
-    return `<td class="${bord(x).trim()}"><button type="button" class="xc${on?" on":""}" data-tog="${esc(c.id)}|${esc(e.id)}|${sm}"
-      aria-pressed="${on}" title="${esc(c.code+" · "+ecName(e)+" · "+sm+(ecCodeAt(e,sm)?" · "+ecCodeAt(e,sm):""))}">${on?"✓":""}</button></td>`;
-  };
-  const ligne=(c,i)=>`<tr>
-    <th class="st cmp"><button type="button" class="matbtn" data-mapcomp="${esc(c.code)}" title="Modifier à l'étape 3, Blocs et compétences"><b>${esc(c.code)}</b> <span>${esc(c.libelle||"")}</span></button></th>
-    ${cols.map(x=>cell(c,x)).join("")}
-    <td class="n">${nLien(c)}</td>
-    <td class="n"></td></tr>`;
-  const bande=(num,nom,cs)=>`<tr class="band" style="--c:${esc(BLOC_TINT)}">
-    <th colspan="${cols.length+3}"><span class="bl">${esc("Bloc "+num+(nom?" · "+nom:""))}
-      <span class="n">${cs.length} compétence${cs.length>1?"s":""}</span>
-      </span></th></tr>`;
-  host.innerHTML=`<div class="panel">
-    <div class="semfilter"><span class="sflab">Semestre</span>
-      <div class="seg">${[["","Tous"]].concat(SEMS.map(x=>[x,x])).map(([v,l])=>
-        `<button type="button" data-msem="${v}" aria-pressed="${v===sem}">${esc(l)}</button>`).join("")}</div>
-      </div>
-    ${cols.length?`<div class="tw mtxw" id="mtxw"><table class="mx mtx" style="--rh:58px">
-      <thead>
-        <tr><th class="st" rowspan="3">Compétence</th>
-          ${groups.map(g=>`<th colspan="${spanUe(g)}" class="an ueend" style="--c:${esc(g.u.couleur||"#9aa2ae")}">
-            <span>${esc(g.u.nom)}</span></th>`).join("")}
-          <th class="n" rowspan="3">EC</th><th rowspan="3"></th></tr>
-        <tr>${groups.map((g,gi)=>g.ecs.map((e,ei)=>`<th colspan="${spanEc(e)}" class="ecn ${ei===g.ecs.length-1?"ueend":"ecend"}" style="--c:${esc(e.couleur||"#9aa2ae")}">
-          <span class="nm">${esc(ecName(e))}</span></th>`).join("")).join("")}</tr>
-        <tr>${cols.map(x=>`<th class="ecc2${bord(x)}" style="--c:${esc(x.e.couleur||"#9aa2ae")}">
-          <span class="sm">${esc(x.sm||"—")}</span>
-          <span class="rotbox"><b class="rot">${esc(x.sm?(ecCodeAt(x.e,x.sm)||"—"):"—")}</b></span></th>`).join("")}</tr>
-      </thead>
-      <tbody>
-        ${blocs.map(b=>{const cs=compOf(b.num);return bande(b.num,b.nom,cs)+cs.map(ligne).join("")}).join("")}
-        ${sansBloc.length?bande("—","compétences sans bloc",sansBloc)+sansBloc.map(ligne).join(""):""}
-      </tbody></table></div>
-      ${!D.competences.length?`<div class="empty">Aucune compétence dans ce référentiel : ajoutez-les à l'étape 3, Blocs et compétences.</div>`:""}`
-      :`<div class="empty">Aucun enseignement dans ce référentiel : ajoutez-en un à l'étape 2, Enseignements constitutifs.</div>`}
-  </div>`;
-  // l'en-tête reste visible : on mesure ses deux premiers rangs pour les empiler
-  const tbl=host.querySelector("table.mtx");
-  if(tbl){const r=tbl.querySelectorAll("thead tr");
-    const h1=r[0]?r[0].getBoundingClientRect().height:34, h2=r[1]?r[1].getBoundingClientRect().height:40;
-    tbl.style.setProperty("--h1",h1.toFixed(1)+"px");tbl.style.setProperty("--h2",h2.toFixed(1)+"px")}
-  host.querySelectorAll("[data-msem]").forEach(b=>b.onclick=()=>{ui.ref.msem=b.dataset.msem;edArm=null;paintRef()});
-  host.querySelectorAll("[data-tog]").forEach(b=>b.onclick=()=>{
-    const [cid,eid,sm]=b.dataset.tog.split("|");
-    const c=D.competences.find(x=>x.id===cid);if(!c)return;
-    let l=lienEc(c,eid);
-    if(!l){l={id:eid,sems:[]};c.ecs=[...(c.ecs||[]),l]}
-    l.sems=(l.sems||[]).includes(sm)?l.sems.filter(x=>x!==sm):[...(l.sems||[]),sm].sort((x,y)=>SEMS.indexOf(x)-SEMS.indexOf(y));
-    c.ecs=(c.ecs||[]).filter(x=>(x.sems||[]).length);
-    c.ecIds=c.ecs.map(x=>x.id);
-    const on=!!lienEc(c,eid)&&(lienEc(c,eid).sems||[]).includes(sm);
-    b.classList.toggle("on",on);b.setAttribute("aria-pressed",String(on));
-    b.textContent=on?"✓":"";
-    const row=b.closest("tr"), n=row&&row.querySelector("td.n");
-    if(n)n.textContent=String(nLien(c));
-    saveData(false)});
-  host.querySelectorAll("[data-mapcomp]").forEach(b=>b.onclick=()=>allerEtape("blocs",b.dataset.mapcomp));
+  window.dnmaxPont.referentiel.peindrePlanification(host,{vue:DATA,semestre:SEMS.includes(ui.ref.msem)?ui.ref.msem:"",
+    choisirSemestre:sem=>{ui.ref.msem=sem;edArm=null;paintRef()},teinteBlocs:BLOC_TINT,
+    enregistrer:()=>saveData(false),allerALaCompetence:code=>allerEtape("blocs",code)});
 }
 /* Constituer le référentiel d'une mention, en 5 étapes comme une évaluation : 1. les UE retenues, 2. les EC,
    3. les blocs et leurs compétences, 4. la planification par semestre (tableau compétences × EC), 5. la validation datée. */

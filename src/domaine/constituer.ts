@@ -191,12 +191,12 @@ export function lignesIntitule(intitule: unknown): number {
 }
 
 /** Année de formation d'un semestre (S1 et S2 : 1). */
-function anneeDuSemestre(semestre: string): number {
+export function anneeDuSemestre(semestre: string): number {
   return Math.floor(Math.max(0, SEMESTRES.indexOf(semestre as (typeof SEMESTRES)[number])) / 2) + 1;
 }
 
 /** Nom d'un EC : son intitulé, sinon ses codes, sinon « — ». */
-function nomEc(ec: Element): string {
+export function nomEc(ec: Element): string {
   const nom = texte(ec.nom).trim();
   if (nom !== "") return nom;
   const codes = codesEc(ec);
@@ -230,4 +230,10 @@ export function rattachementsLus(competence: Element, ecs: readonly Element[]): 
     };
   });
   return { pastilles, enPlus: Math.max(0, liens.length - 5) };
+}
+
+/** Code d'un EC au semestre donné (celui de son année), ou chaîne vide. */
+export function codeAuSemestre(ec: Element, semestre: string): string {
+  const table = typeof ec.codes === "object" && ec.codes !== null ? (ec.codes as Record<string, unknown>) : {};
+  return texte(table[anneeDuSemestre(semestre)]);
 }
