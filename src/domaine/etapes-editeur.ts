@@ -24,7 +24,7 @@ export interface ResumeEtapes {
   readonly retenues: number;
   readonly lignes: number;
   readonly regroupements: number;
-  /** Lignes formulées. Un regroupement compte toujours comme formulé (comportement repris de l'interface historique). */
+  /** Lignes formulées : regroupement ou compétence seule dont la formulation est renseignée. */
   readonly formulees: number;
 }
 
@@ -36,12 +36,14 @@ export function resumeEtapes(brut: unknown): ResumeEtapes {
   const evaluation = estObjet(brut) ? brut : {};
   const lignes = lignesDe(evaluation);
   const regroupements = lignes.filter((ligne) => ligne.regroupement !== null).length;
-  const seulesFormulees = lignes.filter((ligne) => ligne.regroupement === null && ligne.competence.libelle !== "").length;
+  const formulees = lignes.filter(
+    (ligne) => (ligne.regroupement === null ? ligne.competence.libelle : ligne.regroupement.libelle) !== "",
+  ).length;
   return {
     livrables: Array.isArray(evaluation.livrables) ? evaluation.livrables.length : 0,
     retenues: Array.isArray(evaluation.items) ? evaluation.items.length : 0,
     lignes: lignes.length,
     regroupements,
-    formulees: regroupements + seulesFormulees,
+    formulees,
   };
 }
