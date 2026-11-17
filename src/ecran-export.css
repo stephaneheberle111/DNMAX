@@ -22,13 +22,6 @@
   overflow-wrap: anywhere;
 }
 
-.annonce-export .annonce-export-avertissement {
-  padding: 8px 10px;
-  border-left: 3px solid var(--signal);
-  background: var(--signal-soft);
-  color: var(--ink);
-}
-
 .annonce-export .annonce-actions {
   display: flex;
   justify-content: flex-end;

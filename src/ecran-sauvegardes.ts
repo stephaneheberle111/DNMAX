@@ -141,8 +141,13 @@ function installerPolitique(): void {
     .catch(() => {
       zone.hidden = true;
     });
+  // Les écritures se suivent : deux changements rapprochés ne doivent pas se croiser
+  // et laisser l'enveloppe garder le premier. Chacune envoie les deux valeurs du moment.
+  let precedente: Promise<unknown> = Promise.resolve();
   const enregistrer = (): void => {
-    enregistrerPolitiqueSauvegardes({ moisHebdomadaires: Number(hebdo.value), moisMensuelles: Number(mensuel.value) })
+    precedente = precedente
+      .catch(() => undefined)
+      .then(() => enregistrerPolitiqueSauvegardes({ moisHebdomadaires: Number(hebdo.value), moisMensuelles: Number(mensuel.value) }))
       .then(() => {
         message.textContent = "Retenu : s'applique à la prochaine ouverture.";
       })

@@ -142,7 +142,12 @@ class ErreurEnregistrement extends Error {
 async function enregistrerPourInterfaceHistorique(
   demande: DemandeEnregistrement,
   surExport: SurExport,
+  avantExportEleves: () => Promise<boolean>,
 ): Promise<void> {
+  // Un document qui contient des étudiants sort du coffre en clair : l'enseignant en est prévenu avant de l'enregistrer.
+  if (demande.eleves === true && !(await avantExportEleves())) {
+    throw new ErreurEnregistrement("declined", "enregistrement annulé");
+  }
   const octets = await convertirEnOctets(demande.data);
   const fichierEcrit = await enregistrerFichier(demande.filename, octets);
   if (!fichierEcrit) {
@@ -162,17 +167,20 @@ async function enregistrerPourInterfaceHistorique(
  * @param confirmerMotDePasseEleves dernière étape de l'activation du module Étudiants, après
  *   l'avertissement RGPD : rend `true` si le mot de passe convient au module. Hors de
  *   l'enveloppe, il n'y a pas de mot de passe : rien n'est demandé.
+ * @param avantExportEleves avant d'enregistrer un document qui contient des étudiants :
+ *   rend `true` si l'enseignant confirme, après avoir lu qu'il ne sera pas protégé
  */
 export async function chargerInterfaceHistorique(
   magasin: MagasinMemoire,
   surExport: SurExport = () => undefined,
   confirmerMotDePasseEleves: () => Promise<boolean> = () => Promise.resolve(true),
+  avantExportEleves: () => Promise<boolean> = () => Promise.resolve(true),
 ): Promise<void> {
   window.XLSX = XLSX;
   window.JSZip = JSZip;
   window.dnmaxPont = {
     stockage: magasin,
-    telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport) },
+    telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport, avantExportEleves) },
     estCadreVierge,
     nettoyerDiplomesVierges,
     zoomCarte,
