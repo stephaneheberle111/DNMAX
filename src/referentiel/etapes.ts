@@ -11,12 +11,20 @@
 import {
   ANNEES,
   basculerSemestre,
+  blocCorrespond,
+  blocsRanges,
   candidatsAjout,
   changerCodeEc,
   codesEnDouble,
+  competenceCorrespond,
+  competencesDuBloc,
+  competencesSansBloc,
   ecsAffiches,
   elementNeuf,
   libelleElement,
+  lignesIntitule,
+  rattachementsLus,
+  sansAccents,
   SEMESTRES,
   type Sorte,
 } from "../domaine/constituer";
@@ -55,6 +63,13 @@ export interface ContexteEtape {
   reprendre(sorte: Sorte, id: string): void;
   /** Retire un élément de ce référentiel, puis enregistre. */
   retirer(sorte: Sorte, id: string): void;
+  /**
+   * Renumérote un bloc dans tous les référentiels qui le retiennent, ses
+   * compétences le suivant, et enregistre si c'est fait.
+   */
+  renumeroterBloc(id: string, numero: string): { modifie: boolean; refus?: string };
+  /** Redessine l'étape sans rien enregistrer. */
+  redessiner(): void;
   readonly armement: Armement;
   annoncer(texte: string): void;
 }
@@ -359,6 +374,209 @@ export function peindreEtapeEcs(hote: HTMLElement, contexte: ContexteEtape): voi
       entete: { css: CSS_ECS, cellules: ["", "Codes par année", "Intitulé", "Unité d'enseignement", "Semestres", "ECTS", ""] },
       lignes,
       aide: `À cette étape, seuls les EC se créent, se renomment et se retirent ; leur UE se choisit dans la liste, mais son nom se modifie à l'étape 1. Le code d'un EC change d'une année de diplôme à l'autre. Les semestres grisés sont hors du calendrier de l'UE. ${NOTE_ETAPE}`,
+    }),
+  );
+}
+
+const CSS_BLOCS = "grid-template-columns:90px minmax(0,1.4fr) 104px minmax(0,1fr) 92px";
+
+function pluriel(nombre: number, mot: string): string {
+  return `${String(nombre)} ${mot}${nombre > 1 ? "s" : ""}`;
+}
+
+/** EC qui portent la compétence, lus ici et réglés à l'étape 4. */
+function rattachements(competence: Element, ecs: readonly Element[]): HTMLElement {
+  const { pastilles, enPlus } = rattachementsLus(competence, ecs);
+  if (pastilles.length === 0) {
+    return balise(
+      "span",
+      [
+        ["class", "hint"],
+        ["style", "font-size:11.5px"],
+      ],
+      "aucun EC — étape 4",
+    );
+  }
+  const liste = balise("div", [
+    ["class", "chips"],
+    ["title", "Rattachements réglés à l'étape 4, Planification par semestre"],
+  ]);
+  for (const pastille of pastilles) {
+    liste.append(
+      balise(
+        "span",
+        [
+          ["class", "pill c"],
+          ["style", `--c:${pastille.couleur}`],
+          ["title", pastille.titre],
+        ],
+        pastille.texte,
+      ),
+    );
+  }
+  if (enPlus > 0) liste.append(balise("span", [["class", "pill"]], `+${String(enPlus)}`));
+  return liste;
+}
+
+/** Étape 3 : les blocs, chacun avec ses compétences ; les EC rattachés se lisent ici et se règlent à l'étape 4. */
+export function peindreEtapeBlocs(hote: HTMLElement, contexte: ContexteEtape): void {
+  const { vue } = contexte;
+  const filtre = sansAccents(contexte.filtre.trim());
+  const blocs = blocsRanges(vue.blocs);
+  const enDouble = codesEnDouble(vue.competences, "code");
+  const sansBloc = competencesSansBloc(vue.competences, blocs);
+
+  const ligne = (competence: Element): HTMLElement => {
+    const rang = vue.competences.indexOf(competence);
+    const code = texteAffiche(competence.code);
+    const champCode = balise("input", [
+      ["type", "text"],
+      ["value", code],
+      ["data-ccode", String(rang)],
+      ["class", "mono"],
+      ["aria-label", "Code de la compétence"],
+      ["placeholder", "C1.1"],
+      ...signalDouble(enDouble(competence), "Code déjà porté par une autre compétence"),
+    ]);
+    champCode.addEventListener("change", () => {
+      competence.code = champCode.value.trim();
+      contexte.enregistrer(true);
+    });
+    const intitule = balise(
+      "textarea",
+      [
+        ["data-cf", `competences|${String(rang)}|libelle`],
+        ["rows", String(lignesIntitule(competence.libelle))],
+        ["aria-label", `Intitulé de ${code || "la compétence"}`],
+        ["placeholder", "Intitulé de la compétence"],
+      ],
+      texteAffiche(competence.libelle),
+    );
+    intitule.addEventListener("input", () => {
+      const cible = vue.competences[rang];
+      if (cible === undefined) return;
+      cible.libelle = intitule.value;
+      contexte.enregistrer(false);
+    });
+    const choixBloc = balise("select", [
+      ["data-cbloc", String(rang)],
+      ["aria-label", `Bloc de ${code || "la compétence"}`],
+    ]);
+    choixBloc.append(balise("option", [["value", ""]], "sans bloc"));
+    for (const bloc of blocs) {
+      choixBloc.append(
+        balise(
+          "option",
+          [["value", String(bloc.num)], ...(String(bloc.num) === String(competence.bloc) ? [["selected", ""] as const] : [])],
+          `Bloc ${String(bloc.num)}`,
+        ),
+      );
+    }
+    choixBloc.addEventListener("change", () => {
+      competence.bloc = choixBloc.value;
+      contexte.enregistrer(true);
+    });
+    const rangee = ligneEditeur(`${CSS_BLOCS};align-items:start`, [
+      champCode,
+      intitule,
+      choixBloc,
+      rattachements(competence, vue.ecs),
+      boutonRetirer(contexte, "competences", String(competence.id), "Retirer"),
+    ]);
+    rangee.setAttribute("data-row", String(competence.id));
+    return rangee;
+  };
+
+  const groupe = (bloc: Element | null, competences: Element[]): HTMLElement | null => {
+    const blocVu = bloc !== null && blocCorrespond(bloc, filtre);
+    const visibles = blocVu ? competences : competences.filter((competence) => competenceCorrespond(competence, filtre));
+    if (filtre !== "" && visibles.length === 0 && !blocVu) return null;
+    const cadre = balise("div", [["class", "dgrp cgrp"], ...(bloc === null ? [] : ([["data-row", String(bloc.id)]] as const))]);
+    const tete = balise("div", [["class", "hd"]]);
+    if (bloc !== null) {
+      const rang = vue.blocs.indexOf(bloc);
+      const numero = balise("input", [
+        ["type", "text"],
+        ["value", texteAffiche(bloc.num)],
+        ["data-bnum", String(bloc.id)],
+        ["class", "mono"],
+        ["aria-label", "Numéro du bloc"],
+        ["style", "flex:0 0 58px"],
+      ]);
+      numero.addEventListener("change", () => {
+        const resultat = contexte.renumeroterBloc(String(bloc.id), numero.value);
+        if (resultat.modifie) {
+          contexte.annoncer("Bloc renuméroté : ses compétences le suivent.");
+          return;
+        }
+        if (resultat.refus === "doublon") {
+          contexte.annoncer(`Le bloc ${numero.value.trim()} existe déjà dans un référentiel qui retient celui-ci : choisissez un autre numéro.`);
+        } else if (resultat.refus === "vide") {
+          contexte.annoncer("Un bloc garde un numéro : ses compétences s'y rattachent par lui.");
+        }
+        contexte.redessiner();
+      });
+      tete.append(
+        balise("span", [["class", "lab"]], "Bloc"),
+        numero,
+        champElement(contexte, "blocs", rang, "nom", { valeur: bloc.nom, exemple: "Intitulé du bloc", libelle: `Intitulé du bloc ${String(bloc.num)}` }),
+      );
+    } else {
+      tete.append(
+        balise("span", [["class", "lab"]], "Sans bloc"),
+        balise(
+          "span",
+          [
+            ["class", "hint"],
+            ["style", "flex:1"],
+          ],
+          "Compétences dont le bloc n'est pas dans ce référentiel",
+        ),
+      );
+    }
+    const numeroBloc = bloc === null ? "" : texteAffiche(bloc.num);
+    const ajouter = balise(
+      "button",
+      [
+        ["class", "btn ghost"],
+        ["data-cnew", numeroBloc],
+      ],
+      "+ Compétence",
+    );
+    ajouter.addEventListener("click", () => {
+      const competence = elementNeuf("competences", vue, numeroBloc, contexte.nouvelIdentifiant("c"));
+      vue.competences.push(competence);
+      contexte.enregistrer(true);
+      focaliser(String(competence.id));
+    });
+    tete.append(balise("span", [["class", "count"]], pluriel(competences.length, "compétence")), ajouter);
+    if (bloc !== null) tete.append(boutonRetirer(contexte, "blocs", String(bloc.id), "Retirer le bloc"));
+    cadre.append(tete, ...visibles.map(ligne));
+    return cadre;
+  };
+
+  const lignes: Node[] = [];
+  for (const bloc of blocs) {
+    const cadre = groupe(bloc, competencesDuBloc(vue.competences, bloc.num));
+    if (cadre !== null) lignes.push(cadre);
+  }
+  if (sansBloc.length > 0) {
+    const cadre = groupe(null, sansBloc);
+    if (cadre !== null) lignes.push(cadre);
+  }
+  const retenues = vue.competences.filter((competence) => competenceCorrespond(competence, filtre)).length;
+  hote.replaceChildren(
+    panneauEditeur({
+      titre: `Étape 3 · Blocs et compétences · ${contexte.diplome}`,
+      compte: `${pluriel(vue.blocs.length, "bloc")} · ${filtre === "" ? "" : `${String(retenues)} / `}${pluriel(vue.competences.length, "compétence")}`,
+      actions: [
+        champFiltre(contexte),
+        listeAjout(contexte, "blocs", "Ajouter un bloc", "Nouveau bloc"),
+        listeAjout(contexte, "competences", "Ajouter une compétence", "Nouvelle compétence, sans bloc"),
+      ],
+      entete: { css: CSS_BLOCS, cellules: ["Code", "Intitulé", "Bloc", "EC rattachés (étape 4)", ""] },
+      lignes,
+      aide: `À cette étape, seuls les blocs et les compétences se créent, se renomment et se retirent. Une compétence change de bloc avec la liste « Bloc ». Les EC et semestres qui la portent se lisent ici et se règlent à l'étape 4, Planification par semestre. Retirer un bloc garde ses compétences, alors sans bloc. ${NOTE_ETAPE}`,
     }),
   );
 }
