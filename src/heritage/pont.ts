@@ -57,6 +57,7 @@ import { peindreEnseignants, peindreLivrables, peindrePromotions, peindreSemestr
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { progressionDesCompetences } from "../domaine/progression-competences";
 import { peindreSaisieEtudiants } from "../editeur/saisie-etudiants";
+import { brancherFormulaire, remplirFormulaire } from "../editeur/formulaire";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
@@ -217,6 +218,8 @@ interface Pont {
     peindreFormulation: typeof peindreFormulation;
     lierSelection: typeof lierSelection;
     peindreSaisieEtudiants: typeof peindreSaisieEtudiants;
+    remplirFormulaire: typeof remplirFormulaire;
+    brancherFormulaire: typeof brancherFormulaire;
   };
   /** Exports Word, OpenDocument et tableur (voir `export/`). */
   readonly exports: {
@@ -371,7 +374,7 @@ export async function chargerInterfaceHistorique(
     suiviSimplifie,
     jauge: jaugeExport,
     teintes: { couleurNiveau, encreNiveau },
-    editeur: { peindreBarreEtapes, peindreEnregistrement, peindreLivrables, peindreEnseignants, peindreSemestres, peindreUesEtEcs, peindrePromotions, peindreCompetences, peindreFormulation, lierSelection, peindreSaisieEtudiants },
+    editeur: { peindreBarreEtapes, peindreEnregistrement, peindreLivrables, peindreEnseignants, peindreSemestres, peindreUesEtEcs, peindrePromotions, peindreCompetences, peindreFormulation, lierSelection, peindreSaisieEtudiants, remplirFormulaire, brancherFormulaire },
     progressionCompetences: progressionDesCompetences,
     etapesEditeur,
     suivi: suiviEvaluation,
