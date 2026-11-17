@@ -13,28 +13,19 @@ const anneeOf = sem => Math.floor(Math.max(0,SEMS.indexOf(sem))/2)+1;
 /* une seule échelle pour tous, celle des niveaux de maîtrise (voir src/domaine/evaluation.ts) */
 const PRESETS = {maitrise:{nom:EVAL.ECHELLE.nom,niveaux:[...EVAL.ECHELLE.niveaux]}};
 const DEF_PRESET_GET=()=>"maitrise";
-const MODULES = {
-  base:{nom:"Base",def:true,locked:true,
-    d:"Toujours actif. Composer une évaluation (livrables, compétences, regroupements, consignes et attendus, rattachement aux UE et EC), l'enregistrer dans Mes évaluations avec son suivi, l'exporter en Word, Excel ou OpenDocument ; explorer et importer le référentiel ; décrire l'établissement (mentions, enseignants, promotions, répartition de service) et suivre la progression des promotions."},
-  eleves:{nom:"Étudiants",def:false,
-    d:"Gestion nominative des évaluations directement dans l'application, étudiant par étudiant : promotions nominatives, saisie de chaque étudiant ligne par ligne (grille de la promo ou fiche individuelle, observations, appréciation), non-rendus, restitution par étudiant, un document Word par étudiant, et la page « Progression étudiant » pour savoir où en est chacun dans le semestre et dans l'acquisition des compétences."},
-  dn:{nom:"Niveaux d'acquisition",def:false,req:"eleves",
-    d:"Attribue à chaque étudiant son niveau d'acquisition sur chaque compétence, selon l'année et le niveau de maîtrise obtenu. Affiché dans « Progression étudiant », dans les intitulés d'année et dans les exports.",
-    regle:()=>window.dnmaxPont.niveauxAcquisition.regle()}
-};
-/* visite guidée de chaque module (voir src/parcours-etapes.ts) */
-const VISITE_MODULE={eleves:"eleves",dn:"niveaux"};
+/* modules (Paramètres > Modules) : catalogue et règles dans src/domaine/modules.ts */
+const MODULES = window.dnmaxPont.modules.MODULES;
 const SUPPORTS_DEF = ["Carnet de projet","Catalogue d'expérimentation","Planches de projet",
   "Maquettes de recherches","Frise chronologique","Fiche de lecture","Devoir réflexif",
   "Carnet d'exposition","Diaporama","Oral de présentation de projet"];
-const modDefaults = () => Object.fromEntries(Object.entries(MODULES).map(([k,v])=>[k,v.def]));
+const modDefaults = () => window.dnmaxPont.modules.modulesParDefaut();
 const LS = {
   get(k,d){try{const v=STOCKAGE.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
   set(k,v){try{STOCKAGE.setItem(k,JSON.stringify(v))}catch(e){}}
 };
 let MOD = Object.assign(modDefaults(), LS.get("dnmade.modules",{}));
 // un module qui en requiert un autre ne reste pas actif sans lui (Niveaux d'acquisition → Étudiants)
-function modDeps(){Object.entries(MODULES).forEach(([k,v])=>{if(v.req&&!MOD[v.req])MOD[k]=false})}
+function modDeps(){window.dnmaxPont.modules.appliquerDependances(MOD)}
 modDeps();
 MOD.base=true;
 function buildData(ref,livr){
@@ -2245,34 +2236,19 @@ function paintPrefs(){
   paintVocab();paintSceau();
   paintEditor("livrables",document.getElementById("prefLivr"));
 }
+/* Paramètres > Modules : écran écrit en TypeScript (src/parametres/modules.ts) */
 function paintSet(){
-  const on=Object.keys(MODULES).filter(k=>MOD[k]).length;
-  document.getElementById("mCount").textContent=on+" / "+Object.keys(MODULES).length;
-  const host=document.getElementById("modList");
-  host.innerHTML=Object.entries(MODULES).map(([k,v])=>`
-    <div class="mod${v.req&&!MOD[v.req]?" modoff":""}"><label class="tg"><input type="checkbox" data-mod="${k}" ${MOD[k]?"checked":""} ${v.locked||(v.req&&!MOD[v.req])?"disabled":""} aria-label="${esc(v.nom)}"><span></span></label>
-    <div><b>${esc(v.nom)}</b>${v.req?`<span class="hint" style="margin-left:8px;font-size:11.5px">nécessite le module ${esc(MODULES[v.req].nom)}</span>`:""}<div class="d">${esc(v.d)}</div>${v.regle?`<div class="d modregle">${esc(v.regle())}</div>`:""}
-    ${v.locked?`<div class="off" style="color:var(--accent)">toujours actif</div>`:v.req&&!MOD[v.req]?`<div class="off">activez d'abord le module ${esc(MODULES[v.req].nom)}</div>`:v.def===false?`<div class="off">désactivé par défaut</div>`:""}<div class="modactions">${k==="eleves"&&MOD.eleves?`<button type="button" class="btn ghost modvisite" data-docs-eleves>Documents à remettre</button>`:""}${VISITE_MODULE[k]?`<button type="button" class="btn ghost modvisite" data-parcours="${VISITE_MODULE[k]}">Visite guidée</button>`:""}</div></div></div>`).join("");
-  // Les documents RGPD restent disponibles une fois le module Étudiants activé.
-  const docs=host.querySelector("[data-docs-eleves]");
-  if(docs)docs.onclick=()=>window.dnmaxPont.documentsModuleEleves(DATA.etab||{});
-  host.querySelectorAll("[data-mod]").forEach(cb=>cb.onchange=()=>{
-    if((MODULES[cb.dataset.mod]||{}).locked){cb.checked=true;return}
-    // Activer le module Étudiants passe par un avertissement RGPD : la case ne reste cochée que si l'enseignant confirme.
-    if(cb.dataset.mod==="eleves"&&cb.checked&&!MOD.eleves){
-      cb.checked=false;
-      window.dnmaxPont.confirmerModuleEleves(DATA.etab||{}).then(ok=>{if(ok&&!MOD.eleves){cb.checked=true;appliquerModule(cb)}});
-      return;
-    }
-    appliquerModule(cb);
-  });
+  window.dnmaxPont.modules.peindre(document.getElementById("modList"),document.getElementById("mCount"),{actifs:MOD,
+    ouvrirDocuments:()=>window.dnmaxPont.documentsModuleEleves(DATA.etab||{}),
+    confirmerEleves:()=>window.dnmaxPont.confirmerModuleEleves(DATA.etab||{}),
+    appliquer:appliquerModule});
 }
-function appliquerModule(cb){
-  if(!cb.checked&&Object.entries(MODULES).some(([k,v])=>v.req===cb.dataset.mod&&MOD[k]))
-    toast("Niveaux d'acquisition désactivé aussi : il nécessite le module "+MODULES[cb.dataset.mod].nom+".");
-  MOD[cb.dataset.mod]=cb.checked;modDeps();LS.set("dnmade.modules",MOD);
+function appliquerModule(cle,actif){
+  if(!actif&&window.dnmaxPont.modules.entraineDautres(cle,MOD))
+    toast("Niveaux d'acquisition désactivé aussi : il nécessite le module "+MODULES[cle].nom+".");
+  MOD[cle]=actif;modDeps();LS.set("dnmade.modules",MOD);
   paintSet();paintTabs();paintForm();paintPick();paintLignes();paintVocab();paintRef();
-  toast(MODULES[cb.dataset.mod].nom+(cb.checked?" : activé":" : désactivé"));
+  toast(MODULES[cle].nom+(actif?" : activé":" : désactivé"));
 }
 
 /* ---------- construction de la fiche ---------- */
