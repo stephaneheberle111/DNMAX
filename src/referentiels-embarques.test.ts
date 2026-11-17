@@ -31,4 +31,19 @@ describe("référentiels embarqués", () => {
       }
     },
   );
+
+  it.each(REFERENTIELS_EMBARQUES.map((referentiel) => [referentiel.mention, referentiel.texte] as const))(
+    "le fichier %s nomme les niveaux d'acquisition Initié, Guidé et Autonome",
+    (_mention, texte) => {
+      const paquet = lirePaquet(texte);
+      if (typeof paquet === "string") {
+        throw new Error(paquet);
+      }
+      const niveaux = paquet.referentiels.map((referentiel) => {
+        const contenu = referentiel.contenuLisible as { meta?: { niveaux?: { label: string }[] } };
+        return (contenu.meta?.niveaux ?? []).map((niveau) => niveau.label);
+      });
+      expect(niveaux).toEqual([["Initié", "Guidé", "Autonome"]]);
+    },
+  );
 });
