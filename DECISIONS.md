@@ -498,3 +498,13 @@ Arbitrées par l'auteur le 15 novembre 2026, règle par règle, avec un principe
 **Retirés** : coefficients des lignes ; échelles « Degrés d'acquisition », « Note chiffrée » et personnalisée, et leur réglage dans Préférences.
 
 **Conséquence** : les évaluations existantes passent à l'échelle unique ; leurs niveaux saisis (rangs de 0 à 3) gardent leur sens. Aucune donnée d'enseignant n'existe encore.
+
+## 37. L'éditeur d'évaluation passe en TypeScript écran par écran
+
+**Contexte** : l'éditeur d'évaluation (quatre étapes : évaluation, compétences, formulation, évaluation des étudiants) vit dans l'interface historique, un seul fichier JavaScript sans typage ni tests unitaires, qui tient l'évaluation en cours dans des variables globales.
+
+**Décision** : le réécrire étape par étape dans `src/editeur/`, en TypeScript, avec des fonctions qui reçoivent un contexte (l'évaluation en cours, ses étudiants et ses lignes, de quoi enregistrer) et dessinent dans un élément de la page. L'interface historique garde un adaptateur de quelques lignes qui construit ce contexte et appelle l'écran par `window.dnmaxPont.editeur`. Une étape réécrite est retirée du fichier historique dans la même branche. Chaque étape est vérifiée en rejouant le même scénario sur l'ancienne et la nouvelle version : les données enregistrées doivent être identiques.
+
+**Ordre** : évaluation des étudiants (étape 4), puis formulation (étape 3), compétences (étape 2), évaluation (étape 1), enfin la barre des étapes et l'état de l'évaluation en cours.
+
+**Pourquoi pas d'un bloc** : une réécriture complète laisserait l'éditeur cassé pendant des semaines et rendrait chaque écart introuvable ; étape par étape, l'application reste utilisable à chaque fusion.
