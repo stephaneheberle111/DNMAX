@@ -3245,7 +3245,10 @@ function paintSet(){
   host.innerHTML=Object.entries(MODULES).map(([k,v])=>`
     <div class="mod${v.req&&!MOD[v.req]?" modoff":""}"><label class="tg"><input type="checkbox" data-mod="${k}" ${MOD[k]?"checked":""} ${v.locked||(v.req&&!MOD[v.req])?"disabled":""} aria-label="${esc(v.nom)}"><span></span></label>
     <div><b>${esc(v.nom)}</b>${v.req?`<span class="hint" style="margin-left:8px;font-size:11.5px">nécessite le module ${esc(MODULES[v.req].nom)}</span>`:""}<div class="d">${esc(v.d)}</div>${v.regle?`<div class="d modregle">${esc(v.regle())}</div>`:""}
-    ${v.locked?`<div class="off" style="color:var(--accent)">toujours actif</div>`:v.req&&!MOD[v.req]?`<div class="off">activez d'abord le module ${esc(MODULES[v.req].nom)}</div>`:v.def===false?`<div class="off">désactivé par défaut</div>`:""}${VISITE_MODULE[k]?`<button type="button" class="btn ghost modvisite" data-parcours="${VISITE_MODULE[k]}">Visite guidée</button>`:""}</div></div>`).join("");
+    ${v.locked?`<div class="off" style="color:var(--accent)">toujours actif</div>`:v.req&&!MOD[v.req]?`<div class="off">activez d'abord le module ${esc(MODULES[v.req].nom)}</div>`:v.def===false?`<div class="off">désactivé par défaut</div>`:""}<div class="modactions">${k==="eleves"&&MOD.eleves?`<button type="button" class="btn ghost modvisite" data-docs-eleves>Documents à remettre</button>`:""}${VISITE_MODULE[k]?`<button type="button" class="btn ghost modvisite" data-parcours="${VISITE_MODULE[k]}">Visite guidée</button>`:""}</div></div></div>`).join("");
+  // Les documents RGPD restent disponibles une fois le module Étudiants activé.
+  const docs=host.querySelector("[data-docs-eleves]");
+  if(docs)docs.onclick=()=>window.dnmaxPont.documentsModuleEleves(DATA.etab||{});
   host.querySelectorAll("[data-mod]").forEach(cb=>cb.onchange=()=>{
     if((MODULES[cb.dataset.mod]||{}).locked){cb.checked=true;return}
     // Activer le module Étudiants passe par un avertissement RGPD : la case ne reste cochée que si l'enseignant confirme.
