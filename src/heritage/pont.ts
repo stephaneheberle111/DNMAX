@@ -12,6 +12,8 @@ import * as personnes from "../domaine/personnes";
 import * as promotions from "../domaine/promotions";
 import * as diplomes from "../domaine/diplomes";
 import * as constituer from "../domaine/constituer";
+import * as filtresEvaluations from "../domaine/filtres-evaluations";
+import { peindreFiltres } from "../evaluations/filtres";
 import { peindreEtapeBlocs, peindreEtapeEcs, peindreEtapeUes } from "../referentiel/etapes";
 import { peindrePlanification } from "../referentiel/planification";
 import { peindrePageConstituer } from "../referentiel/constituer";
@@ -161,6 +163,10 @@ interface Pont {
   readonly diplomes: typeof diplomes;
   /** Référentiel > Constituer : libellés, éléments neufs, codes en double, retrait (voir `domaine/constituer`). */
   readonly constituer: typeof constituer;
+  /** Filtres de Mes évaluations (voir `domaine/filtres-evaluations`). */
+  readonly filtresEvaluations: typeof filtresEvaluations;
+  /** Écrans de Mes évaluations écrits en TypeScript (voir `evaluations/`). */
+  readonly evaluations: { peindreFiltres: typeof peindreFiltres };
   /** Écrans de Référentiel > Constituer écrits en TypeScript (voir `referentiel/`). */
   readonly referentiel: {
     peindreEtapeUes: typeof peindreEtapeUes;
@@ -315,6 +321,8 @@ export async function chargerInterfaceHistorique(
     promotions,
     diplomes,
     constituer,
+    filtresEvaluations,
+    evaluations: { peindreFiltres },
     referentiel: { peindreEtapeUes, peindreEtapeEcs, peindreEtapeBlocs, peindrePlanification, peindrePageConstituer, peindreRecherche, peindreHabillageCarte },
     niveauxAcquisition: { noms: NIVEAUX_ACQUISITION, regle: regleNiveauxAcquisition },
     suiviSimplifie,
