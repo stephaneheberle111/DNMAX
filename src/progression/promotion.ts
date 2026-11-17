@@ -68,19 +68,57 @@ function pluriel(nombre: number, mot: string): string {
   return `${String(nombre)} ${mot}${nombre > 1 ? "s" : ""}`;
 }
 
-function option(valeur: string, libelle: string, choisie: boolean): HTMLOptionElement {
+export function option(valeur: string, libelle: string, choisie: boolean): HTMLOptionElement {
   return balise("option", [["value", valeur], ...(choisie ? [["selected", ""] as const] : [])], libelle);
 }
 
-function liste(contexte: ContexteProgressionPromotion, cle: string, libelle: string, options: readonly Node[]): HTMLElement {
+/** Une liste de choix de la barre des filtres. */
+export function liste(choisir: (cle: string, valeur: string) => void, cle: string, libelle: string, options: readonly Node[]): HTMLElement {
   const etiquette = balise("label");
   const choix = balise("select", [["data-pgsel", cle], ["aria-label", libelle]]);
   choix.append(...options);
   choix.addEventListener("change", () => {
-    contexte.choisir(cle, choix.value);
+    choisir(cle, choix.value);
   });
   etiquette.append(balise("span", [["class", "sfl2"]], libelle), choix);
   return etiquette;
+}
+
+/** Ce que la barre des filtres de Progression montre dans les deux vues. */
+export interface FiltresCommuns {
+  readonly groupes: ContexteProgressionPromotion["groupes"];
+  readonly promotion: string;
+  readonly semestres: readonly string[];
+  readonly semestre: string;
+  readonly courant: string;
+  choisir(cle: string, valeur: string): void;
+}
+
+/** Barre des filtres : promotion (groupée par diplôme), semestre, puis les choix propres à la vue. */
+export function barreFiltres(contexte: FiltresCommuns, suite: readonly Node[]): HTMLElement {
+  const choisir = (cle: string, valeur: string): void => {
+    contexte.choisir(cle, valeur);
+  };
+  const barre = balise("div", [["class", "sfbar"]]);
+  const promotions = contexte.groupes.flatMap((groupe) => {
+    const options = groupe.promotions.map((promotion) => option(promotion.id, promotion.libelle, promotion.id === contexte.promotion));
+    if (groupe.diplome === null) return options;
+    const ensemble = balise("optgroup", [["label", groupe.diplome]]);
+    ensemble.append(...options);
+    return [ensemble];
+  });
+  barre.append(
+    balise("span", [["class", "sfl"]], "Filtrer"),
+    liste(choisir, "promo", "Promotion", promotions),
+    liste(
+      choisir,
+      "sem",
+      "Semestre",
+      contexte.semestres.map((semestre) => option(semestre, semestre + (semestre === contexte.courant ? " (en cours)" : ""), semestre === contexte.semestre)),
+    ),
+    ...suite,
+  );
+  return barre;
 }
 
 /** Bascule « Promotion » / « Étudiant » (module Étudiants). */
@@ -100,35 +138,21 @@ export function basculeVue(vueEtudiant: boolean, choisirVue: (vue: string) => vo
 }
 
 function filtres(contexte: ContexteProgressionPromotion): HTMLElement {
-  const barre = balise("div", [["class", "sfbar"]]);
-  const promotions = contexte.groupes.flatMap((groupe) => {
-    const options = groupe.promotions.map((promotion) => option(promotion.id, promotion.libelle, promotion.id === contexte.promotion));
-    if (groupe.diplome === null) return options;
-    const ensemble = balise("optgroup", [["label", groupe.diplome]]);
-    ensemble.append(...options);
-    return [ensemble];
-  });
-  barre.append(
-    balise("span", [["class", "sfl"]], "Filtrer"),
-    liste(contexte, "promo", "Promotion", promotions),
-    liste(
-      contexte,
-      "sem",
-      "Semestre",
-      contexte.semestres.map((semestre) => option(semestre, semestre + (semestre === contexte.courant ? " (en cours)" : ""), semestre === contexte.semestre)),
-    ),
-  );
+  const choisir = (cle: string, valeur: string): void => {
+    contexte.choisir(cle, valeur);
+  };
+  const suite: Node[] = [];
   if (contexte.enseignants.length > 0) {
-    barre.append(
-      liste(contexte, "t", "Enseignant", [
+    suite.push(
+      liste(choisir, "t", "Enseignant", [
         option("", "Tous", false),
         ...contexte.enseignants.map((enseignant) => option(enseignant.id, enseignant.nom, contexte.enseignantsChoisis.includes(enseignant.id))),
       ]),
     );
   }
-  barre.append(
+  suite.push(
     liste(
-      contexte,
+      choisir,
       "f",
       "Compétences",
       [
@@ -138,7 +162,7 @@ function filtres(contexte: ContexteProgressionPromotion): HTMLElement {
       ].map(([cle, libelle]) => option(cle ?? "", libelle ?? "", cle === contexte.filtre)),
     ),
   );
-  return barre;
+  return barreFiltres(contexte, suite);
 }
 
 function ligne(contexte: ContexteProgressionPromotion, donnees: LigneProgression): HTMLElement {

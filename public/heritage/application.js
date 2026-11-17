@@ -2497,25 +2497,6 @@ async function buildOdt(){
 }
 
 /* ---------- Progression d'une promotion : ce qui reste à évaluer au semestre ---------- */
-/* barre de filtres de la Progression, sur le modèle de « Mes évaluations » */
-function progFiltres(ps,pr,sem,semsAll,semCur,extra){
-  const dips=[...new Set(ps.map(p=>p.diplomeId))];
-  const opt=p=>`<option value="${esc(p.id)}" ${p.id===pr.id?"selected":""}>${esc((promoShort(p)?promoShort(p)+" — ":"")+(p.nom||""))}</option>`;
-  const promoOpts=dips.length>1?dips.map(d=>`<optgroup label="${esc(dipLabel(DATA.diplomes.find(x=>x.id===d)||{}))}">${ps.filter(p=>p.diplomeId===d).map(opt).join("")}</optgroup>`).join(""):ps.map(opt).join("");
-  return `<div class="sfbar"><span class="sfl">Filtrer</span>
-    <label><span class="sfl2">Promotion</span><select data-pgsel="promo" aria-label="Promotion">${promoOpts}</select></label>
-    <label><span class="sfl2">Semestre</span><select data-pgsel="sem" aria-label="Semestre">${semsAll.map(x=>`<option value="${x}" ${x===sem?"selected":""}>${x}${x===semCur?" (en cours)":""}</option>`).join("")}</select></label>
-    ${extra||""}</div>`;
-}
-function bindProgFiltres(host){
-  host.querySelectorAll("[data-pgsel]").forEach(sel=>sel.onchange=()=>{const k=sel.dataset.pgsel, v=sel.value;
-    if(k==="promo"){ui.prog.promo=v;ui.prog.sem="";ui.prog.t=null;ui.prog.el=""}
-    else if(k==="sem")ui.prog.sem=v;
-    else if(k==="f")ui.prog.f=v;
-    else if(k==="t")ui.prog.t=v?[v]:[];
-    else if(k==="el")ui.prog.el=v;
-    paintProg()});
-}
 function paintProg(){
   const host=document.getElementById("progPane");if(!host)return;
   ui.prog=ui.prog||{};
@@ -2528,7 +2509,7 @@ function paintProg(){
   const dIdx=id=>DATA.diplomes.findIndex(d=>d.id===id);
   const suivies=window.dnmaxPont.vueProgression.promotionsSuivies(promos.map(migPromoCohorte).filter(pr=>DATA.diplomes.some(d=>d.id===pr.diplomeId))
     .map(pr=>({promotion:pr,annee:promoAnneeAt(pr,AS),duree:promoDuree(pr),rangDiplome:dIdx(pr.diplomeId),debut:pr.debut,mienne:!!mine(pr)})),!!me);
-  const ps=suivies.promotions, nMine=suivies.nombreMiennes, onlyMine=suivies.seulementMiennes;
+  const ps=suivies.promotions;
   if(!ps.length){host.innerHTML=`<div class="panel"><div class="empty">Aucune promotion en cours pour ${esc(REF.meta.diplome||"cette mention")} en ${esc(AS)}.
     Crée-la dans Mon établissement > Promotions.</div></div>`;return}
   const pr=ps.find(x=>x.id===ui.prog.promo)||ps.find(x=>x.diplomeId===DATA.activeDiplome)||ps[0];ui.prog.promo=pr.id;
@@ -2541,8 +2522,16 @@ function paintProg(){
   const filt=ui.prog.f||"tout";
   const els=migPromo(pr).liste;
   const fs=fiches.filter(f=>!f.brouillon&&((f.classes||[]).includes(pr.nom)||f.promoId===pr.id));
-  const viewSeg=MOD.eleves?`<div class="seg" id="pgView"><button type="button" data-pv="promo" aria-pressed="${ui.prog.view!=="eleve"}">Promotion</button><button type="button" data-pv="eleve" aria-pressed="${ui.prog.view==="eleve"}">Étudiant</button></div>`:"";
-  if(MOD.eleves&&ui.prog.view==="eleve"){paintProgEleve(host,{ps,pr,sem,semsAll,semCur,els,fs,me,nMine,onlyMine,viewSeg});return}
+  /* filtres communs aux deux vues : écrans dans src/progression/ */
+  const dips=[...new Set(ps.map(p=>p.diplomeId))];
+  const optP=p=>({id:p.id,libelle:(promoShort(p)?promoShort(p)+" — ":"")+(p.nom||"")});
+  const communs={groupes:dips.length>1?dips.map(d=>({diplome:dipLabel(DATA.diplomes.find(x=>x.id===d)||{}),promotions:ps.filter(p=>p.diplomeId===d).map(optP)})):[{diplome:null,promotions:ps.map(optP)}],
+    promotion:pr.id,nomPromotion:pr.nom,semestres:semsAll,semestre:sem,courant:semCur,
+    choisir:(k,v)=>{if(k==="promo"){ui.prog.promo=v;ui.prog.sem="";ui.prog.t=null;ui.prog.el=""}
+      else if(k==="sem")ui.prog.sem=v;else if(k==="f")ui.prog.f=v;else if(k==="t")ui.prog.t=v?[v]:[];else if(k==="el")ui.prog.el=v;
+      paintProg()},
+    choisirVue:v=>{ui.prog.view=v;paintProg()}};
+  if(MOD.eleves&&ui.prog.view==="eleve"){paintProgEleve(host,{pr,sem,els,fs,communs});return}
   // avec « c'est moi » : uniquement mes enseignements (pas de choix d'un autre enseignant)
   const aSem=Math.floor(SEMS.indexOf(sem)/2)+1, asSem=asOf(pr.debut+aSem-1);
   const A0=affGet(pr.id,asSem), A=Object.keys(A0).length?A0:affGet(pr.id);   // répartition de l'année du semestre affiché
@@ -2563,21 +2552,13 @@ function paintProg(){
     return {c,cover:p.partout,inSem:p.auSemestre,done:p.faits,dist:p.repartition,ecn,state:p.etat};
   });
   /* vue « Promotion » : écran écrit en TypeScript (src/progression/promotion.ts), règles dans src/domaine/vue-progression.ts */
-  const dips=[...new Set(ps.map(p=>p.diplomeId))];
-  const optP=p=>({id:p.id,libelle:(promoShort(p)?promoShort(p)+" — ":"")+(p.nom||"")});
-  window.dnmaxPont.progression.peindrePromotion(host,{
-    groupes:dips.length>1?dips.map(d=>({diplome:dipLabel(DATA.diplomes.find(x=>x.id===d)||{}),promotions:ps.filter(p=>p.diplomeId===d).map(optP)})):[{diplome:null,promotions:ps.map(optP)}],
-    promotion:pr.id,nomPromotion:pr.nom,semestres:semsAll,semestre:sem,courant:semCur,
+  window.dnmaxPont.progression.peindrePromotion(host,{...communs,
     enseignants:tAvail.map(t=>({id:t.id,nom:t.nom})),enseignantsChoisis:tSel,
     nomsChoisis:tSel.map(id=>(DATA.enseignants.find(t=>t.id===id)||{}).nom).join(", "),filtre:filt,
     lignes:rowsP.map(r=>({c:{code:r.c.code,libelle:r.c.libelle,bloc:r.c.bloc},inSem:r.inSem.map(f=>({titre:f.titre||"",date:f.date})),
       cover:r.cover.map(f=>({semestre:f.semestre||"",titre:f.titre||""})),done:r.done,dist:r.dist,ecn:r.ecn,state:r.state})),
     moduleEleves:!!MOD.eleves,etudiants:els.length,evaluationsAuSemestre:fs.filter(f=>f.semestre===sem).length,niveaux:LV,
-    couleurNiveau:nivColor,nomBloc:n=>((REF.blocs||[]).find(b=>String(b.num)===n)||{}).nom||"",vueEtudiant:ui.prog.view==="eleve",
-    choisir:(k,v)=>{if(k==="promo"){ui.prog.promo=v;ui.prog.sem="";ui.prog.t=null;ui.prog.el=""}
-      else if(k==="sem")ui.prog.sem=v;else if(k==="f")ui.prog.f=v;else if(k==="t")ui.prog.t=v?[v]:[];else if(k==="el")ui.prog.el=v;
-      paintProg()},
-    choisirVue:v=>{ui.prog.view=v;paintProg()}});
+    couleurNiveau:nivColor,nomBloc:n=>((REF.blocs||[]).find(b=>String(b.num)===n)||{}).nom||"",vueEtudiant:ui.prog.view==="eleve"});
 }
 /* ---------- Progression étudiant (module Étudiants) ----------
    Pour un étudiant d'une promotion en cours : où il en est dans les évaluations du semestre, comparé aux autres
@@ -2585,92 +2566,44 @@ function paintProg(){
    jusqu'à ce semestre (dernier niveau connu ; niveau d'acquisition atteint avec le module Niveaux d'acquisition). */
 function dnPalier(a){const n=(REF.meta.niveaux||[]).find(x=>+x.annee===+a);return (n&&n.label)||window.dnmaxPont.niveauxAcquisition.noms[a-1]||("Année "+a)}
 function paintProgEleve(host,c){
-  const {ps,pr,sem,semsAll,semCur,els,fs,me,nMine,onlyMine,viewSeg}=c;
+  const {pr,sem,els,fs,communs}=c;
   // acquise à partir de « Satisfaisant » (voir src/domaine/evaluation.ts)
   const LV=PRESETS[DEF_PRESET_GET()].niveaux, NL=LV.length, thr=EVAL.RANG_ACQUIS;
   const el=els.find(e=>e.id===ui.prog.el)||els[0];if(el)ui.prog.el=el.id;
-  // règles : src/domaine/progression.ts
+  // règles : src/domaine/progression.ts ; écran : src/progression/etudiant.ts
   const PG=window.dnmaxPont.progression, dateOf=f=>PG.dateDeLEvaluation(f);
   const live=fs.filter(f=>!f.annulee&&el&&studentsOf(f).some(e=>e.id===el.id));
   /* A. avancement du semestre */
   const rowsA=live.filter(f=>f.semestre===sem).sort((a,b)=>dateOf(a).localeCompare(dateOf(b))).map(f=>{
     const keys=lignesOf(f).map(ligKey), r=(f.res||{})[el.id]||{}, st=saisieDnmax(f), e=PG.etatEtudiantDansEvaluation(r,keys,st.any);
-    return {f,fi:fiches.indexOf(f),keys,n:e.lignesSaisies,s:e.etat,st,r}});
-  const cnt=k=>rowsA.filter(x=>x.s===k).length;
+    return {etat:e.etat,titre:f.titre||"",distribPrev:f.distribPrev||"",renduPrev:f.renduPrev||"",
+      saisies:e.lignesSaisies,lignes:keys.length,sansLignes:!!(r.nr||r.disp),promoSaisis:st.full,promoTotal:st.tot}});
   /* rendus, non-rendus et dispenses de l'étudiant au semestre, comparés à la moyenne de la promo */
   const evSem=fs.filter(f=>!f.annulee&&f.semestre===sem);
   const estCount=e=>{const o={tot:0,rendu:0,nr:0,disp:0};
     evSem.forEach(f=>{if(!studentsOf(f).some(x=>x.id===e.id))return;o.tot++;const st=estOf((f.res||{})[e.id]);if(o[st]!=null)o[st]++});return o};
   const moi=el?estCount(el):{tot:0,rendu:0,nr:0,disp:0};
   const moy=k=>els.length?els.reduce((a,e)=>a+estCount(e)[k],0)/els.length:0;
-  const fr1=x=>(Math.round(x*10)/10).toLocaleString("fr-FR");
-  const kpi=(k,lbl,bad)=>{const m=moy(k), v=moi[k], d=v-m, hi=k!=="rendu"&&Math.abs(d)>=0.5;
-    const cls=!hi?"":((bad?d>0:d<0)?" warn":" good");
-    return `<div class="pgkpi${cls}"><span class="kl">${lbl}</span><b>${v}</b>${k==="rendu"?`<span class="kt"> / ${moi.tot}</span>`:""}
-      ${k==="rendu"?"":`<span class="kc">classe : ${fr1(m)} en moyenne</span>`}</div>`};
-  const LBL={ok:["ok","Évalué"],part:["part","Évaluation partielle"],nr:["todo","Non rendu"],disp:["prevue","Dispensé"],miss:["autre","Non évalué"],wait:["prevue","Pas encore évaluée"]};
   /* B. acquisition des compétences, cumulée jusqu'au semestre affiché */
-  const comp={};
-  Object.entries(PG.trajectoires(live.filter(f=>SEMS.indexOf(f.semestre)<=SEMS.indexOf(sem)),el?el.id:"",NL)).forEach(([code,L])=>{
-    comp[code]=L.map(x=>({f:x.evaluation,lv:x.niveau,d:x.date,a:anneeOf(x.semestre)}))});
-  const rowsB=Object.entries(comp).map(([code,L])=>{
-    const cc=REF.competences.find(x=>x.code===code)||{code,libelle:code,bloc:""};
-    const ok=L.filter(x=>x.lv>=thr), pal=ok.length?Math.max(...ok.map(x=>x.a)):0;
-    return {c:cc,L,last:L[L.length-1],pal}});
-  const blocs=[...new Set(rowsB.map(r=>String(r.c.bloc)))].sort((a,b)=>+a-+b);
-  const blocNom=n=>((REF.blocs||[]).find(b=>String(b.num)===n)||{}).nom||"";
-  const nAcq=rowsB.filter(r=>r.last.lv>=thr).length;
+  const traj=PG.trajectoires(live.filter(f=>SEMS.indexOf(f.semestre)<=SEMS.indexOf(sem)),el?el.id:"",NL);
   /* niveau de la classe sur chaque compétence : dernier niveau de chaque étudiant, jusqu'au semestre affiché */
   const lastOf=e=>PG.derniersNiveaux(fs.filter(f=>!f.annulee&&SEMS.indexOf(f.semestre)<=SEMS.indexOf(sem)&&studentsOf(f).some(x=>x.id===e.id)),e.id,NL);
   const classe=els.map(lastOf);
   // la comparaison à la promotion se masque dans Paramètres > Règles d'évaluation
   const masquer=!!LS.get("dnmade.reglages",{}).masquerComparaison;
-  const posCl=r=>{if(masquer)return "";const pos=PG.positionDansLaClasse(r.last.lv,classe.map(m=>m[r.c.code]));if(!pos)return "";
-    const vs={length:pos.nombre}, moyLv=pos.moyenne, d=pos.ecart;
-    return `<div class="pgpos" style="margin-top:4px"><span class="hint">Classe : en moyenne « ${esc(LV[moyLv]||"")} » (${vs.length} étudiants)</span>
-      <span class="pp ${d>0?"up":d<0?"dn":"eq"}">${d>0?"▲ au-dessus":d<0?"▼ en dessous":"= dans la moyenne"}</span></div>`};
-  const palCount=[1,2,3].map(a=>rowsB.filter(r=>r.pal===a).length);
-  const i0=els.findIndex(e=>el&&e.id===el.id), anCur=anneeOf(sem);
-  host.innerHTML=`<div class="panel">
-    <div class="pick-head"><h3>Progression étudiant${help("Pour un étudiant : les évaluations du semestre et ce qu'il y a obtenu, comparé au reste de la promotion — « Non évalué » signale une évaluation où les autres étudiants ont déjà été saisis mais pas lui. « Non rendu » et « Dispensé » se renseignent dans l'évaluation elle-même (étape Étudiants) et comptent comme traités. En dessous, toutes les compétences sur lesquelles il a été évalué jusqu'à ce semestre, avec l'évolution de son niveau de maîtrise d'une évaluation à l'autre"+(MOD.dn?" et sa progression dans les niveaux d'acquisition : Initié (année 1) → Guidé (année 2) → Autonome (année 3), chaque niveau étant atteint dès qu'il est évalué avec une maîtrise suffisante dans l'année correspondante.":"."))}</h3>
-      <div style="margin-left:auto">${viewSeg}</div></div>
-    ${progFiltres(ps,pr,sem,semsAll,semCur,el?`<label><span class="sfl2">Étudiant</span>
-        <button type="button" class="btn ghost" id="pgElPrev" ${i0<=0?"disabled":""} aria-label="Étudiant précédent">‹</button>
-        <select id="pgEl" aria-label="Étudiant">${els.map(e=>`<option value="${esc(e.id)}" ${e.id===el.id?"selected":""}>${esc(e.nom)}</option>`).join("")}</select>
-        <button type="button" class="btn ghost" id="pgElNext" ${i0>=els.length-1?"disabled":""} aria-label="Étudiant suivant">›</button>
-        <span class="hint">${i0+1} / ${els.length}</span></label>`:"")}
-    ${!el?`<div class="empty">Aucun étudiant dans ${esc(pr.nom)}. Ajoutez-les dans Mon établissement > Promotions.</div>`:`
-    <div class="pgsum">
-      <div style="font-family:var(--fd);font-weight:700;font-size:15px">${esc(el.nom)} <span class="hint" style="font-weight:400">· ${esc(promoShort(pr)||pr.nom)}</span></div>
-      <div><b class="big">${cnt("ok")}</b> / ${rowsA.length} évaluation${rowsA.length>1?"s":""} du ${esc(sem)} complète${cnt("ok")>1?"s":""} pour cet étudiant</div>
-      <div class="pgbar"><i style="width:${rowsA.length?Math.round(cnt("ok")/rowsA.length*100):0}%"></i></div>
-      ${moi.tot?`<div class="pgkpis">${kpi("rendu","Rendus",false)}${kpi("nr","Non rendus",true)}${kpi("disp","Dispensé"+(moi.disp>1?"s":""),true)}</div>`:""}
-      <div class="hint">${[cnt("part")&&cnt("part")+" partielle"+(cnt("part")>1?"s":""),cnt("nr")&&"<b>"+cnt("nr")+" non rendu"+(cnt("nr")>1?"s":"")+"</b>",cnt("disp")&&cnt("disp")+" dispensé"+(cnt("disp")>1?"es":"e"),cnt("miss")&&"<b>"+cnt("miss")+" non évaluée"+(cnt("miss")>1?"s":"")+" alors que d'autres étudiants l'ont été</b>",cnt("wait")&&cnt("wait")+" pas encore évaluée"+(cnt("wait")>1?"s":"")+" (pour personne)"].filter(Boolean).join(" · ")||(rowsA.length?"Rien en retard.":"Aucune évaluation au "+esc(sem)+" pour cet étudiant.")}</div>
-    </div>
-    <div class="pgbloc"><div class="pgbh">Avancement du ${esc(sem)}</div>
-      ${rowsA.map(x=>`<div class="pgrow"><span class="pill pst ${LBL[x.s][0]}">${LBL[x.s][1]}</span>
-        <div class="pgc"><div>${esc(x.f.titre||"Sans titre")}</div><div class="hint">${x.f.distribPrev?"distribuée le "+esc(fmtD(x.f.distribPrev)):""}${x.f.renduPrev?" · rendu le "+esc(fmtD(x.f.renduPrev)):""}</div></div>
-        <div class="pgev"><span class="hint">${x.r.nr||x.r.disp?"—":x.n+" / "+x.keys.length+" ligne"+(x.keys.length>1?"s":"")}</span><div class="hint">Promo : ${x.st.full}/${x.st.tot} évalués</div></div>
-        <div class="pgst"></div></div>`).join("")||`<div class="empty">Aucune évaluation de ${esc(pr.nom)} au ${esc(sem)}.</div>`}
-    </div>
-    <div class="pgbloc"><div class="pgbh">Acquisition des compétences <span class="hint" style="font-weight:400">— ${nAcq} / ${rowsB.length} acquises (dernier niveau ≥ « ${esc(LV[thr]||"")} »), jusqu'au ${esc(sem)}${MOD.dn&&rowsB.length?" · niveaux d'acquisition : "+[1,2,3].map(a=>palCount[a-1]+" "+esc(dnPalier(a))).join(", "):""}</span></div>
-      ${blocs.map(b=>`<div class="pgbh" style="font-weight:500;border-top:0;padding-top:8px">${esc(b)} - ${esc(blocNom(b))}</div>
-        ${rowsB.filter(r=>String(r.c.bloc)===b).sort((x,y)=>String(x.c.code).localeCompare(String(y.c.code),undefined,{numeric:true})).map(r=>`<div class="pgrow">
-          <span class="pill" style="background:${nivColor(r.last.lv,NL)};color:${nivEncre(r.last.lv,NL)};border-color:transparent;justify-self:start">${esc(LV[r.last.lv]||"")}</span>
-          <div class="pgc"><div><b>${esc(r.c.code)}</b> ${esc(r.c.libelle||"")}</div>${posCl(r)}</div>
-          <div class="pgev"><div class="trj">${r.L.map((x,j)=>`${j?`<span class="trj-ar">${x.lv>r.L[j-1].lv?"↗":x.lv<r.L[j-1].lv?"↘":"→"}</span>`:""}<span class="trj-s" title="${esc((x.f.titre||"")+" — "+(LV[x.lv]||""))}"><i style="background:${nivColor(x.lv,NL)}"></i>${esc(x.f.semestre||"")} · ${esc(LV[x.lv]||"")}</span>`).join("")}</div>
-            <span class="hint">${r.L.length>1?(r.last.lv>r.L[0].lv?"en progrès":r.last.lv<r.L[0].lv?"en recul":"stable")+" sur "+r.L.length+" évaluations":"1 évaluation"}</span></div>
-          <div class="pgst">${MOD.dn?`<div class="dntrk">${[1,2,3].map(a=>{const ok=r.L.some(x=>x.a===a&&x.lv>=thr), seen=r.L.some(x=>x.a===a), fut=a>anCur;
-              return `<span class="dnst${ok?" ok":seen?" seen":""}${fut?" fut":""}" title="${esc(dnPalier(a))} (année ${a}) : ${ok?"atteint":seen?"évalué, maîtrise pas encore suffisante":fut?"année à venir":"pas encore évalué cette année"}"><i></i>${esc(dnPalier(a))}</span>`}).join("")}</div>`:""}</div></div>`).join("")}`).join("")||`<div class="empty">Pas encore de niveau saisi pour cet étudiant.</div>`}
-    </div>`}
-  </div>`;
-  host.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>{ui.prog.view=b.dataset.pv;paintProg()});
-  bindProgFiltres(host);
-  {const a=host.querySelector("#pgAll");if(a)a.onclick=()=>{ui.prog.all=!ui.prog.all;paintProg()}}
-  host.querySelectorAll("[data-ps]").forEach(b=>b.onclick=()=>{ui.prog.sem=b.dataset.ps;paintProg()});
-  const sel=host.querySelector("#pgEl");if(sel)sel.onchange=()=>{ui.prog.el=sel.value;paintProg()};
-  const mv=d=>{const j=i0+d;if(els[j]){ui.prog.el=els[j].id;paintProg()}};
-  {const p=host.querySelector("#pgElPrev");if(p)p.onclick=()=>mv(-1);const n=host.querySelector("#pgElNext");if(n)n.onclick=()=>mv(1)}
+  const competences=Object.entries(traj).map(([code,L])=>{
+    const cc=REF.competences.find(x=>x.code===code)||{code,libelle:code,bloc:""};
+    const last=L[L.length-1];
+    return {code:String(cc.code),libelle:cc.libelle||"",bloc:String(cc.bloc),
+      trajectoire:L.map(x=>({titre:x.evaluation.titre||"",semestre:x.evaluation.semestre||"",niveau:x.niveau,annee:anneeOf(x.semestre)})),
+      position:masquer?null:(PG.positionDansLaClasse(last.niveau,classe.map(m=>m[cc.code]))||null)}});
+  window.dnmaxPont.progression.peindreEtudiant(host,{...communs,
+    etudiants:els.map(e=>({id:e.id,nom:e.nom})),etudiant:el?el.id:null,promotionCourte:promoShort(pr)||pr.nom,
+    avancement:rowsA,rendus:moi,moyennes:{rendu:moy("rendu"),nr:moy("nr"),disp:moy("disp")},
+    competences,niveaux:LV,seuil:thr,couleurNiveau:nivColor,encreNiveau:nivEncre,
+    nomBloc:n=>((REF.blocs||[]).find(b=>String(b.num)===n)||{}).nom||"",
+    paliers:MOD.dn?[1,2,3].map(dnPalier):null,anneeCourante:anneeOf(sem),
+    choisirEtudiant:id=>{ui.prog.el=id;paintProg()}});
 }
 
 /* ---------- téléchargements ---------- */
