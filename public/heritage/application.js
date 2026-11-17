@@ -1974,9 +1974,10 @@ function radialWire(host){
   radInfo(null);
   wheelRaf=requestAnimationFrame(tick);
 }
+/* Habillage de la carte : écrit en TypeScript (src/referentiel/habillage-carte.ts), règles dans src/domaine/exploration.ts.
+   La carte radiale (paintRadial, radialWire) et la chaîne (paintChain, chainBind) restent ici, inchangées. */
 function paintMap(){
   const D=DATA, m=REF.meta||{}, host=document.getElementById("refMeta");
-  const nbComps=id=>D.competences.filter(c=>(c.ecIds||[]).includes(id)).length;
   const ecsOfUe=u=>filtEcs(D.ecs.filter(e=>e.ueId===u.id)).sort((a,b)=>ecOrd(a)-ecOrd(b));
   const compsOfUe=u=>{const ids=ecsOfUe(u).map(e=>e.id);
     return D.competences.filter(c=>(c.ecIds||[]).some(x=>ids.includes(x))).length};
@@ -1984,150 +1985,31 @@ function paintMap(){
   const groups=[...filtUes(D.ues).map(u=>({u,ecs:ecsOfUe(u)})),
     ...(orphan.length&&refFilter().kind!=="ue"?[{u:{nom:"Sans UE",couleur:"#9aa2ae",id:""},ecs:orphan}]:[])]
     .filter(g=>g.ecs.length);
-  // une case par suite de semestres où le code ne change pas
-  const cells=ec=>{
-    let out="",i=0;
-    while(i<SEMS.length){
-      const sm=SEMS[i], on=(ec.sems||[]).includes(sm);
-      if(!on){out+=`<td><span class="vide">·</span></td>`;i++;continue}
-      const code=ecCodeAt(ec,sm)||"";
-      let j=i+1;
-      while(j<SEMS.length&&(ec.sems||[]).includes(SEMS[j])&&(ecCodeAt(ec,SEMS[j])||"")===code)j++;
-      const sp=j-i, lot=SEMS.slice(i,j);
-      out+=`<td${sp>1?` colspan="${sp}"`:""}>${cell(ec,sm,lot)}</td>`;
-      i=j;
-    }
-    return out;
-  };
-  const cell=(ec,sem,lot)=>(ec.sems||[]).includes(sem)
-    ? `<button type="button" class="ecc" data-mapec="${esc(ecName(ec))}" style="--c:${esc(ec.couleur||"#9aa2ae")}" title="${esc((lot||[sem]).join(" ")+" · "+ecName(ec))}">${esc((ecCodeAt(ec,sem)||sem).replace(/^EC\s*/,""))}</button>`
-    : `<span class="vide">·</span>`;
-  const view=ui.ref.view||"radial";
-  const dipNoms=[];D.diplomes.forEach(dp=>{const n=(dp.nom||"").trim();
-    if(!dipNoms.some(x=>norm(x)===norm(n)))dipNoms.push(n)});
-  const curDip=D.diplomes.find(x=>x.id===D.activeDiplome)||{};
-  const mentionsCur=D.diplomes.filter(dp=>norm(dp.nom||"")===norm(curDip.nom||""));
-  const nEc=REF.competences.reduce((a,c)=>a.concat(c.ecs.map(e=>e.ec)),[]).filter((v,i,t)=>t.indexOf(v)===i).length;
-  const f=refFilter();
-  const allEc=D.ecs.slice().sort((a,b)=>ecOrd(a)-ecOrd(b));
-  const tileSel=(kind,label,count,items)=>`
-    <div class="tile ${f.kind===kind?"on":""}"><span class="k">${esc(label)}</span>
-      <select class="tsel" data-f="${kind}" aria-label="Filtrer par ${esc(label)}">
-        <option value="" hidden ${f.kind===kind?"":"selected"}>${count}</option>
-        ${f.kind===kind?`<option value="">Tout afficher</option>`:""}
-        ${items.map(o=>`<option value="${esc(o.v)}" ${f.kind===kind&&f.value===o.v?"selected":""}>${esc(o.t)}</option>`).join("")}
-      </select></div>`;
-  host.innerHTML=`
-    <div class="cbar">
-      <label class="cf"><span>Diplôme</span>
-        <select data-dipnom="1" aria-label="Diplôme">${dipNoms.map(n=>`<option value="${esc(n)}" ${norm(n)===norm(curDip.nom||"")?"selected":""}>${esc(n||"—")}</option>`).join("")}</select></label>
-      <label class="cf"><span>Mention</span>
-        <select data-dip="1" aria-label="Mention">${mentionsCur.map(dp=>
-          `<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dp.mention||"sans mention")}</option>`).join("")}</select></label>
-      ${(()=>{const va=versionActive(D.activeDiplome);
-        return va?`<span class="vst ${refAJour(D.activeDiplome)?"ok":"mod"}">${refAJour(D.activeDiplome)?"Version du "+esc(frDate(va.date)):"Modifié depuis la version du "+esc(frDate(va.date))}</span>`
-          :`<span class="vst draft">Référentiel non validé</span>`})()}
-    </div>
-    <div class="tiles">
-      ${tileSel("ue","Unités d'enseignement",REF.ues.length+" UE",REF.ues.map(u=>({v:u.nom,t:u.nom})))}
-      ${tileSel("ec","Enseignements constitutifs",allEc.length+" EC",allEc.map(e=>({v:e.id,t:ecName(e)+" · "+ecCodeLbl(e)})))}
-      ${tileSel("bloc","Blocs",REF.blocs.length+" blocs",REF.blocs.map(b=>({v:b.num,t:b.num+" - "+b.nom})))}
-      ${tileSel("comp","Compétences",REF.competences.length+" compétences",REF.competences.map(c=>({v:c.code,t:c.libelle.slice(0,64)+" — "+c.code})))}
-    </div>
-    <div class="subnav" style="margin:2px 0 0">
-      <button type="button" data-view="radial" aria-pressed="${view==="radial"}">Carte radiale</button>
-      <button type="button" data-view="chain" aria-pressed="${view==="chain"}">Carte heuristique</button>
-      <button type="button" data-view="table" aria-pressed="${view==="table"}">Tableau EC × semestres</button>
-      <button type="button" data-view="tablec" aria-pressed="${view==="tablec"}">Tableau compétences × semestres</button>
-      <button type="button" data-view="search" aria-pressed="${view==="search"}">Recherche</button>
-      ${help(view==="chain"?"Cinq colonnes, de la compétence au diplôme, le semestre entre la compétence et l'EC. La colonne verrouillée (cadenas fermé) tourne comme une roue ; les autres montrent ce qui est associé à l'élément choisi, avant et après lui. Le cadenas d'une autre colonne, ou un clic sur une case, y déplace le verrou. Survoler une case éclaire son chemin."
-        :view==="table"?"Une ligne par enseignement constitutif, groupée par unité : la case donne le code que porte l'EC à ce semestre — il change d'une année de diplôme à l'autre. Un clic sur une case ouvre l'EC dans Constituer ; un clic sur une unité bascule sur « Recherche »."
-        :view==="tablec"?"Une ligne par compétence, groupée par bloc : chaque case donne les EC qui la portent à ce semestre. Vide = la compétence n'est pas mobilisable ce semestre-là. Un clic sur une pastille d'EC l'ouvre dans Constituer ; un clic sur la compétence bascule sur « Recherche »."
-        :view==="search"?"Recherche par code, UE ou mot-clé, regroupement au choix, filtres d'année et de semestres."
-        :"Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que vous survoliez une flèche de rotation. La roue tourne quand vous survolez l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment en douceur, la roue glissant toujours le long de la même diagonale ; « Ajuster » revient à la vue de départ.","rt")}
-    </div>
-    ${view==="radial"?`<div class="radwrap"><div class="radcol">
-      <div class="radzoom" role="group" aria-label="Zoom de la carte">
-        <button type="button" class="btn ghost" data-rz="-1" aria-label="Dézoomer" title="Dézoomer (−)">−</button>
-        <output aria-live="polite"></output>
-        <button type="button" class="btn ghost" data-rz="1" aria-label="Zoomer" title="Zoomer (+)">+</button>
-        <button type="button" class="btn ghost" data-rz="0" title="Revenir à la vue de départ (0)">Ajuster</button>
-      </div>
-      <div class="radcadre">${paintRadial()}</div></div><div class="radinfo" id="radInfo"></div></div>`:""}
-    ${view==="chain"?paintChain():""}
-${MOD.dn?`<div class="hint">${(m.niveaux||[]).map(n=>esc(anneeCode(n.annee)+" "+n.label)).join(" · ")}</div>`:""}
-    ${view!=="table"?"":`<div class="tw"><table class="mx">
-      <thead>
-        <tr><th class="st" rowspan="2">Enseignement constitutif</th>
-          ${ANNEES.map(a=>`<th colspan="2" class="an">Année ${a} · ${esc(anneeCode(a))}</th>`).join("")}
-          <th class="n" rowspan="2">Compétences</th></tr>
-        <tr>${SEMS.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
-      <tbody>${groups.map(g=>`
-        <tr class="band" style="--c:${esc(g.u.couleur||"#9aa2ae")}">
-          <th colspan="${SEMS.length+2}"><button type="button" class="bandbtn" data-mapue="${esc(g.u.nom)}">${esc(g.u.nom)}</button>
-            <span class="n">${g.ecs.length} EC · ${compsOfUe(g.u)} compétences</span></th></tr>
-        ${g.ecs.map(ec=>`<tr style="--c:${esc(ec.couleur||"#9aa2ae")}">
-          <th class="st"><span class="dot"></span><button type="button" class="matbtn" data-mapec="${esc(ecName(ec))}">${esc(ecName(ec))}</button></th>
-          ${cells(ec)}
-          <td class="n">${nbComps(ec.id)}</td></tr>`).join("")}`).join("")}
-      </tbody></table></div>`}
-    ${view!=="tablec"?"":(()=>{
-      const f=refFilter();
-      let cs=REF.competences.slice();
-      if(f.kind==="bloc")cs=cs.filter(c=>String(c.bloc)===f.value);
-      else if(f.kind==="comp")cs=cs.filter(c=>c.code===f.value);
-      else if(f.kind==="ec")cs=cs.filter(c=>(c.ecs||[]).some(e=>e.id===f.value));
-      else if(f.kind==="ue")cs=cs.filter(c=>(c.ecs||[]).some(e=>e.ue===f.value));
-      cs.sort((a,b)=>(+a.bloc-+b.bloc)||ecNum(a.code)-ecNum(b.code));
-      if(!cs.length)return `<div class="empty">Aucune compétence ne correspond au filtre.</div>`;
-      const blocs=[];cs.forEach(c=>{if(!blocs.some(b=>b.num===String(c.bloc)))blocs.push({num:String(c.bloc),cs:[]});
-        blocs.find(b=>b.num===String(c.bloc)).cs.push(c)});
-      const cellc=(c,sem)=>{
-        const l=[...new Set((c.ecs||[]).filter(e=>e.sem===sem).map(e=>e.ec))];
-        if(!l.length)return `<span class="vide">·</span>`;
-        return l.map(code=>{const e=(c.ecs||[]).find(x=>x.ec===code);
-          return `<button type="button" class="ecc" data-mapec="${esc((e||{}).nom||code)}" style="--c:${esc((e||{}).couleur||ecColor(code))}" title="${esc(code+" · "+((e||{}).nom||""))}">${esc(code.replace(/^EC\s*/,""))}</button>`}).join("");
-      };
-      return `<div class="tw"><table class="mx">
-      <thead>
-        <tr><th class="st" rowspan="2">Compétence</th>
-          ${ANNEES.map(a=>`<th colspan="2" class="an">Année ${a} · ${esc(anneeCode(a))}</th>`).join("")}
-          <th class="n" rowspan="2">EC</th></tr>
-        <tr>${SEMS.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
-      <tbody>${blocs.map(b=>`
-        <tr class="band" style="--c:${esc(BLOC_TINT)}">
-          <th colspan="${SEMS.length+2}">${esc("Bloc "+b.num+(blocName(b.num)&&blocName(b.num)!=="Bloc "+b.num?" · "+blocName(b.num):""))}
-            <span class="n">${b.cs.length} compétence${b.cs.length>1?"s":""}</span></th></tr>
-        ${b.cs.map(c=>{const n=[...new Set((c.ecs||[]).map(e=>e.ec))].length;
-          return `<tr style="--c:${esc(BLOC_TINT)}">
-          <th class="st cmp"><button type="button" class="matbtn" data-mapcomp="${esc(c.code)}"><b>${esc(c.code)}</b> <span>${esc(c.libelle||"")}</span></button></th>
-          ${SEMS.map(x=>`<td>${cellc(c,x)}</td>`).join("")}
-          <td class="n">${n}</td></tr>`}).join("")}`).join("")}
-      </tbody></table></div>`;
-    })()}
-    `;
-  host.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{ui.ref.view=b.dataset.view;paintRef()});
-  host.querySelectorAll("[data-f]").forEach(s2=>s2.onchange=()=>{
-    ui.ref.filter=s2.value?{kind:s2.dataset.f,value:s2.value}:{kind:"",value:""};
-    if(ui.ref.view==="chain"&&s2.value){
-      const pk={comp:"comp",ec:"ec",ue:"ue"}[s2.dataset.f], cur=ui.ref.piv||{};
-      const hit=pk==="comp"?D.competences.find(c=>c.code===s2.value):pk==="ec"?D.ecs.find(e=>e.id===s2.value)
-        :pk==="ue"?D.ues.find(u=>u.nom===s2.value):null;
-      if(hit&&pk===cur.kind)ui.ref.piv={kind:pk,id:hit.id};}
-    paintRef()});
-  const dipSel=host.querySelector("[data-dip]");
-  if(dipSel)dipSel.onchange=()=>{D.activeDiplome=dipSel.value;ui.ref.filter={kind:"",value:""};saveData()};
-  const dipNomSel=host.querySelector("[data-dipnom]");
-  if(dipNomSel)dipNomSel.onchange=()=>{
-    const dp=D.diplomes.find(x=>norm(x.nom||"")===norm(dipNomSel.value));
-    if(!dp){dipNomSel.value=curDip.nom||"";return}
-    D.activeDiplome=dp.id;ui.ref.filter={kind:"",value:""};saveData()};
-  if(host.querySelector(".chainbox"))chainBind(host);
   const toSearch=v=>{ui.ref.q=v;ui.ref.view="search";paintRef();
     const t=document.getElementById("r-search");if(t)t.scrollIntoView({block:"center",behavior:"smooth"})};
-  host.querySelectorAll("[data-mapec]").forEach(b=>b.onclick=()=>allerEtape("ecs",b.dataset.mapec));
-  host.querySelectorAll("[data-mapcomp]").forEach(b=>b.onclick=()=>toSearch(b.dataset.mapcomp));
-  host.querySelectorAll("[data-mapue]").forEach(b=>b.onclick=()=>{ui.ref.group="ue";toSearch(b.dataset.mapue)});
+  const view=ui.ref.view||"radial";
+  window.dnmaxPont.referentiel.peindreHabillageCarte(host,{diplomes:D.diplomes,actif:D.activeDiplome,
+    versionActive:versionActive(D.activeDiplome),aJour:refAJour(D.activeDiplome),filtre:refFilter(),vue:view,
+    ues:REF.ues,blocs:REF.blocs,competences:REF.competences,ecs:D.ecs.slice().sort((a,b)=>ecOrd(a)-ecOrd(b)),competencesVue:D.competences,
+    groupesTableau:view==="table"?groups.map(g=>({ue:g.u,ecs:g.ecs,competences:compsOfUe(g.u)})):[],
+    codeAnnee:a=>anneeCode(a),nomBloc:blocName,couleurEc:ecColor,teinteBlocs:BLOC_TINT,
+    niveaux:MOD.dn?(m.niveaux||[]).map(n=>anneeCode(n.annee)+" "+n.label).join(" · "):null,
+    carteRadiale:()=>paintRadial(),carteChaine:()=>paintChain(),
+    choisirVue:v=>{ui.ref.view=v;paintRef()},
+    filtrer:(kind,value)=>{
+      ui.ref.filter=value?{kind,value}:{kind:"",value:""};
+      if(ui.ref.view==="chain"&&value){
+        const pk={comp:"comp",ec:"ec",ue:"ue"}[kind], cur=ui.ref.piv||{};
+        const hit=pk==="comp"?D.competences.find(c=>c.code===value):pk==="ec"?D.ecs.find(e=>e.id===value)
+          :pk==="ue"?D.ues.find(u=>u.nom===value):null;
+        if(hit&&pk===cur.kind)ui.ref.piv={kind:pk,id:hit.id};}
+      paintRef()},
+    choisirMention:id=>{D.activeDiplome=id;ui.ref.filter={kind:"",value:""};saveData()},
+    choisirDiplome:nom=>{const dp=D.diplomes.find(x=>norm(x.nom||"")===norm(nom));if(!dp)return false;
+      D.activeDiplome=dp.id;ui.ref.filter={kind:"",value:""};saveData();return true},
+    allerALEc:nom=>allerEtape("ecs",nom),
+    rechercher:(texte,parUe)=>{if(parUe)ui.ref.group="ue";toSearch(texte)}});
+  if(host.querySelector(".chainbox"))chainBind(host);
   const svgHost=host.querySelector(".radwrap");
   if(svgHost)radialWire(svgHost);
 }

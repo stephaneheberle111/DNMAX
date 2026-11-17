@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { basculerSemestreRecherche, competencesDuGroupe, pairesRecherche, regrouperPaires, sansSeparateurs, surligner, type OutilsRegroupement } from "./exploration";
+import {
+  basculerSemestreRecherche,
+  blocsTableau,
+  casesEc,
+  competencesTableau,
+  ecsAuSemestre,
+  titreBloc,
+  competencesDuGroupe, pairesRecherche, regrouperPaires, sansSeparateurs, surligner, type OutilsRegroupement } from "./exploration";
 
 const competences = [
   {
@@ -138,5 +145,56 @@ describe("basculerSemestreRecherche", () => {
     expect(basculerSemestreRecherche(["S3"], "S1")).toEqual(["S1", "S3"]);
     expect(basculerSemestreRecherche(["S1", "S3"], "S1")).toEqual(["S3"]);
     expect(basculerSemestreRecherche(["S1"], "*")).toEqual([]);
+  });
+});
+
+describe("casesEc", () => {
+  it("réunit en une case les semestres consécutifs où le code ne change pas", () => {
+    const ec = { sems: ["S1", "S2", "S3", "S5"], codes: { 1: "EC 1.1", 2: "EC 2.1", 3: "EC 3.1" } };
+    expect(casesEc(ec)).toEqual([
+      { semestres: ["S1", "S2"], code: "EC 1.1" },
+      { semestres: ["S3"], code: "EC 2.1" },
+      { semestres: [], code: "" },
+      { semestres: ["S5"], code: "EC 3.1" },
+      { semestres: [], code: "" },
+    ]);
+  });
+
+  it("rend six cases vides pour un EC sans semestre", () => {
+    expect(casesEc({})).toHaveLength(6);
+  });
+});
+
+describe("tableau compétences × semestres", () => {
+  const competences = [
+    { code: "C2.1", bloc: "2", ecs: [{ ec: "EC 2.1", id: "e2", ue: "UE B", sem: "S2" }] },
+    { code: "C1.10", bloc: "1", ecs: [{ ec: "EC 1.1", id: "e1", ue: "UE A", sem: "S1" }, { ec: "EC 1.1", id: "e1", ue: "UE A", sem: "S1" }, { ec: "EC 1.2", id: "e3", ue: "UE A", sem: "S1" }] },
+    { code: "C1.2", bloc: "1", ecs: [] },
+  ];
+
+  it("range les compétences par bloc puis par code, et les groupe par bloc", () => {
+    const rangees = competencesTableau(competences, { kind: "", value: "" });
+    expect(rangees.map((competence) => competence.code)).toEqual(["C1.2", "C1.10", "C2.1"]);
+    expect(blocsTableau(rangees).map((bloc) => [bloc.num, bloc.competences.length])).toEqual([
+      ["1", 2],
+      ["2", 1],
+    ]);
+  });
+
+  it("applique le filtre de la carte", () => {
+    expect(competencesTableau(competences, { kind: "ue", value: "UE B" }).map((competence) => competence.code)).toEqual(["C2.1"]);
+    expect(competencesTableau(competences, { kind: "ec", value: "e3" }).map((competence) => competence.code)).toEqual(["C1.10"]);
+    expect(competencesTableau(competences, { kind: "comp", value: "absent" })).toEqual([]);
+  });
+
+  it("donne les EC d'une compétence à un semestre sans doublon", () => {
+    expect(ecsAuSemestre(competences[1] ?? {}, "S1")).toEqual(["EC 1.1", "EC 1.2"]);
+    expect(ecsAuSemestre(competences[1] ?? {}, "S2")).toEqual([]);
+  });
+
+  it("titre un bloc par son numéro et son nom, sans répéter « Bloc n »", () => {
+    expect(titreBloc("1", "Concevoir")).toBe("Bloc 1 · Concevoir");
+    expect(titreBloc("1", "Bloc 1")).toBe("Bloc 1");
+    expect(titreBloc("1", "")).toBe("Bloc 1");
   });
 });
