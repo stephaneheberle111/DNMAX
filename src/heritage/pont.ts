@@ -45,6 +45,8 @@ import * as exemple from "../domaine/exemple";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
 import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
 import { peindreModules } from "../parametres/modules";
+import { libelleCritere, preferencesInitiales, sceauActif } from "../domaine/preferences";
+import { peindreDossierExports, peindreSceau, peindreVocabulaire } from "../preferences/preferences";
 import { installerReferentielExemple } from "./exemple";
 import { peindreRepartition, peindreVoletEtablissement } from "../etablissement/volets";
 import { peindreEnseignants as peindreVoletEnseignants } from "../etablissement/enseignants";
@@ -254,6 +256,15 @@ interface Pont {
     entraineDautres: typeof entraineDautres;
     peindre: typeof peindreModules;
   };
+  /** Préférences du menu « Mon compte » (voir `domaine/preferences`, `preferences/preferences`). */
+  readonly preferences: {
+    initiales: typeof preferencesInitiales;
+    libelleCritere: typeof libelleCritere;
+    sceauActif: typeof sceauActif;
+    peindreVocabulaire: typeof peindreVocabulaire;
+    peindreSceau: typeof peindreSceau;
+    peindreDossierExports: typeof peindreDossierExports;
+  };
   /** Contenu de « Charger un exemple » (voir `domaine/exemple`). */
   readonly exemple: typeof exemple;
   /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
@@ -368,6 +379,7 @@ export async function chargerInterfaceHistorique(
     vueProgression,
     interface: { afficherPage, brancherOnglets },
     modules: { MODULES, modulesParDefaut, appliquerDependances, entraineDautres, peindre: peindreModules },
+    preferences: { initiales: preferencesInitiales, libelleCritere, sceauActif, peindreVocabulaire, peindreSceau, peindreDossierExports },
     exemple,
     etablissement: {
       peindreVoletEtablissement,
