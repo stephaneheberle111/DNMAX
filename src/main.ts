@@ -32,7 +32,7 @@ import { installerDonneesEleves, rappelerConservation } from "./ecran-droits-ele
 import { demanderIdentite, demanderOuvertureCoffre, signalerEnregistrement, type OuvertureCoffre } from "./ecran-coffre";
 import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
-import { proposerOuvertureExport } from "./ecran-export";
+import { confirmerExportEleves, proposerOuvertureExport } from "./ecran-export";
 import { confirmerMotDePasseEleves } from "./ecran-mot-de-passe-eleves";
 import { motsInterditsDe } from "./domaine/robustesse-mot-de-passe";
 import { lireVerrouillageParInactivite, surveillerInactivite } from "./ecran-verrouillage";
@@ -203,6 +203,7 @@ async function demarrer(): Promise<void> {
       () => acces.enregistrerMaintenant(),
       () => motsInterditsDe(magasin.entrees()),
     ),
+    confirmerExportEleves,
   );
   // L'enseignant qui a donné son nom figure d'office parmi les enseignants de l'établissement, marqué « C'est moi ».
   ajusterEnseignants((donnees) => provisionnerEnseignantMoi(donnees, acces.identite));

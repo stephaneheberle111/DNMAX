@@ -5,6 +5,7 @@
 ### Modifié
 
 - Site dnmax.fr aux couleurs de l'application : crème et pétrole, fond à la teinte « Douce », mêmes polices, nom « DNMA » suivi du signe X. La reconstitution de l'application et ses exemples passent aux niveaux de maîtrise.
+- Visite guidée, référentiel : la visite fait d'abord vérifier le référentiel dans « Constituer », page par page (couleur, nom et semestres des UE, puis EC, compétences et planification, chaque page se terminant par le bouton bleu), le fait valider, puis seulement l'explorer. À la formulation d'une évaluation, elle montre qu'une compétence se glisse sur une autre pour les lier.
 - Sauvegardes : DNMAX garde désormais la dernière copie de chaque semaine pendant trois mois, puis la dernière de chaque mois pendant un an, au lieu des dix derniers jours d'utilisation. Les deux durées se règlent dans Paramètres > Sauvegardes.
 - Une seule échelle d'évaluation pour tous, officielle pour les DN MADE : les niveaux de maîtrise (Insuffisant, Fragile, Satisfaisant, Très bonne maîtrise). Une compétence est acquise à partir de « Satisfaisant ». Les degrés d'acquisition, la note chiffrée, l'échelle personnalisée et les coefficients disparaissent ; vos évaluations passent à cette échelle.
 - Pour enregistrer une évaluation, il faut désormais aussi une promotion, une consigne et au moins un EC (une UE cochée vaut tous ses EC).
@@ -31,6 +32,12 @@
 
 ### Corrigé
 
+- Même icône partout : « À propos » et l'onglet du navigateur reprennent l'icône de la barre des tâches (le signe X sur pavé pétrole) ; l'en-tête garde le nom « DNMA » suivi du signe.
+- Avec le module Étudiants, « Évaluation des étudiants » redevient l'étape 4 de l'assistant, après Formulation ; elle s'ouvre une fois l'évaluation enregistrée.
+- Documents Word et OpenDocument : le nom de l'établissement et celui de l'enseignant figurent au-dessus de la ligne de contexte.
+- Un document qui contient des étudiants est précédé d'un avertissement, avant son enregistrement et non plus après.
+- Sauvegardes : deux changements rapprochés de la politique ne se perdent plus, le second est bien retenu.
+- Visite guidée : à la fermeture de la boîte « Échanger », la visite passe d'elle-même aux promotions ; les étapes de l'assistant d'évaluation ne sont plus sautées quand une évaluation est déjà enregistrée.
 - Première ouverture : les nouveautés de la version ne s'affichent plus après la page de bienvenue (elles retenaient la visite guidée). Elles restent montrées après une mise à jour.
 - Paramètres > Exemple : l'aide décrit ce que l'exemple ajoute vraiment (un établissement fictif complet), et non plus une seule évaluation.
 - Visite guidée : à l'étape « Compétences », le curseur invitait à écrire au lieu de cocher une case ; à l'étape « Vos préférences », la bulle cachait le menu « Mon compte ».

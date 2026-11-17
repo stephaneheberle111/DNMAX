@@ -96,6 +96,12 @@ body {
   padding-bottom: var(--hauteur-pied, 0px);
 }
 
+.apropos-icone {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+
 .apropos-version {
   font-family: var(--fd);
   font-size: 18px;
