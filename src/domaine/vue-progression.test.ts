@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { blocsAffiches, lignesAffichees, ordreDansLeBloc, pourcentage, promotionsSuivies, semestresProgression } from "./vue-progression";
+import {
+  blocsAffiches,
+  ecartALaClasse,
+  etatAnnee,
+  fleche,
+  lignesAffichees,
+  ordreDansLeBloc,
+  palier,
+  pourcentage,
+  promotionsSuivies,
+  resumeAvancement,
+  semestresProgression,
+  tendance,
+} from "./vue-progression";
 
 const promo = (id: string, changements: Partial<{ annee: number; duree: number; rangDiplome: number; debut: number; mienne: boolean }> = {}) => ({
   promotion: { id },
@@ -62,5 +75,49 @@ describe("lignes de la Progression", () => {
   it("arrondit le pourcentage, et rend zéro sans compétence", () => {
     expect(pourcentage(1, 3)).toBe(33);
     expect(pourcentage(0, 0)).toBe(0);
+  });
+});
+
+describe("vue Étudiant", () => {
+  it("résume ce qui reste en retard au semestre, ou rien", () => {
+    expect(resumeAvancement({ part: 1, nr: 2, disp: 1, miss: 1, wait: 2 }, 7, "S3")).toEqual([
+      { texte: "1 partielle", gras: false },
+      { texte: "2 non rendus", gras: true },
+      { texte: "1 dispensée", gras: false },
+      { texte: "1 non évaluée alors que d'autres étudiants l'ont été", gras: true },
+      { texte: "2 pas encore évaluées (pour personne)", gras: false },
+    ]);
+    expect(resumeAvancement({ part: 0, nr: 0, disp: 0, miss: 0, wait: 0 }, 3, "S3")).toEqual([{ texte: "Rien en retard.", gras: false }]);
+    expect(resumeAvancement({ part: 0, nr: 0, disp: 0, miss: 0, wait: 0 }, 0, "S3")).toEqual([{ texte: "Aucune évaluation au S3 pour cet étudiant.", gras: false }]);
+  });
+
+  it("signale un écart d'au moins un demi-point à la moyenne de la classe, jamais pour les rendus", () => {
+    expect(ecartALaClasse("nr", 2, 1, true)).toBe(" warn");
+    expect(ecartALaClasse("nr", 0, 1, true)).toBe(" good");
+    expect(ecartALaClasse("nr", 1.2, 1, true)).toBe("");
+    expect(ecartALaClasse("rendu", 0, 5, false)).toBe("");
+  });
+
+  it("dit si l'étudiant progresse d'une évaluation à l'autre", () => {
+    expect(tendance([1, 2])).toBe("en progrès sur 2 évaluations");
+    expect(tendance([2, 1, 1])).toBe("en recul sur 3 évaluations");
+    expect(tendance([2, 2])).toBe("stable sur 2 évaluations");
+    expect(tendance([2])).toBe("1 évaluation");
+    expect(fleche(1, 2)).toBe("↗");
+    expect(fleche(2, 1)).toBe("↘");
+    expect(fleche(2, 2)).toBe("→");
+  });
+
+  it("donne l'année du niveau d'acquisition atteint et l'état de chaque année", () => {
+    const trajectoire = [
+      { annee: 1, niveau: 2 },
+      { annee: 2, niveau: 1 },
+    ];
+    expect(palier(trajectoire, 2)).toBe(1);
+    expect(palier([{ annee: 1, niveau: 1 }], 2)).toBe(0);
+    expect(etatAnnee(trajectoire, 1, 2, 2)).toEqual({ classe: " ok", texte: "atteint" });
+    expect(etatAnnee(trajectoire, 2, 2, 2)).toEqual({ classe: " seen", texte: "évalué, maîtrise pas encore suffisante" });
+    expect(etatAnnee(trajectoire, 3, 2, 2)).toEqual({ classe: " fut", texte: "année à venir" });
+    expect(etatAnnee([], 2, 2, 2)).toEqual({ classe: "", texte: "pas encore évalué cette année" });
   });
 });
