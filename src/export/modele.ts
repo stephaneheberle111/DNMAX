@@ -6,7 +6,7 @@
  */
 import { pourcentageAffiche } from "../domaine/saisie-resultats";
 
-/** Une colonne de la grille. `niveau` : la colonne de la jauge d'acquisition. */
+/** Une colonne de la grille. `niveau` : la colonne de la jauge du niveau de maîtrise. */
 export interface ColonneExport {
   readonly cle: string;
   readonly titre: string;
@@ -102,7 +102,7 @@ export function colonnesExport(nombreLivrables: number, livrablesDesLignes: read
   if (nombreLivrables > 1 && new Set(livrablesDesLignes).size > 1) colonnes.push({ cle: "livr", titre: "Livrable", largeur: 12, niveau: false });
   colonnes.push(
     { cle: "lib", titre: libelleCritere, largeur: 24, niveau: false },
-    { cle: "niv", titre: "Niveau d'acquisition", largeur: 30, niveau: true },
+    { cle: "niv", titre: "Niveau de maîtrise", largeur: 30, niveau: true },
     { cle: "obs", titre: "Observations", largeur: 17, niveau: false },
   );
   return colonnes;
