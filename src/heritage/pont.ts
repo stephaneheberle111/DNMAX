@@ -33,7 +33,12 @@ import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
 import { lireSaisieEtablissement } from "../domaine/documents-rgpd";
-import { confirmerActivationEleves } from "../ecran-avertissement-eleves";
+import {
+  confirmerActivationEleves,
+  montrerDocumentsEleves,
+  type ContexteDocumentsEleves,
+  type MotDePasseModule,
+} from "../ecran-avertissement-eleves";
 import {
   choisirDossierExports,
   enregistrerFichier,
@@ -100,13 +105,19 @@ interface Pont {
    */
   ouvrirEtablissement?: () => void;
   /**
-   * Appelée quand l'enseignant coche le module Étudiants : avertissement RGPD et
-   * documents à remettre, puis mot de passe renforcé. Rend `true` s'il
-   * confirme l'activation.
+   * Appelée quand l'enseignant coche le module Étudiants : avertissement RGPD,
+   * documents à remettre et mot de passe renforcé, dans une seule boîte. Rend
+   * `true` s'il confirme l'activation.
    *
    * @param etablissement l'objet `DATA.etab` de « Mon établissement » (champs `nom` et `contactDpo` lus)
    */
   readonly confirmerModuleEleves: (etablissement: unknown) => Promise<boolean>;
+  /**
+   * Rouvre les documents à remettre du module Étudiants, depuis sa carte.
+   *
+   * @param etablissement l'objet `DATA.etab` de « Mon établissement »
+   */
+  readonly documentsModuleEleves: (etablissement: unknown) => void;
   /**
    * Règles de validation du référentiel (`src/domaine/validation-referentiel.ts`),
    * appliquées aux données que tient l'interface historique : `donnees` est
@@ -212,6 +223,22 @@ async function enregistrerPourInterfaceHistorique(
   surExport(demande.filename, demande.eleves === true);
 }
 
+/** Ce que les documents RGPD citent de l'établissement, lu dans `DATA.etab` de « Mon établissement ». */
+function contexteDocumentsEleves(etablissement: unknown): ContexteDocumentsEleves {
+  return {
+    etablissement: lireSaisieEtablissement(etablissement),
+    moisConservation: lireMoisConservation(etablissement, {
+      minimum: MOIS_CONSERVATION_MINIMUM,
+      maximum: MOIS_CONSERVATION_MAXIMUM,
+      parDefaut: MOIS_CONSERVATION_PAR_DEFAUT,
+    }),
+    allerSaisirEtablissement: () => {
+      window.dnmaxPont?.ouvrirEtablissement?.();
+    },
+    date: new Date(),
+  };
+}
+
 /**
  * Installe ce dont l'interface historique dépend, puis charge son script.
  *
@@ -220,16 +247,16 @@ async function enregistrerPourInterfaceHistorique(
  *
  * @param surExport appelée après chaque document enregistré, avec le nom proposé pour ce document
  *   et l'indication qu'il contient, ou non, des données d'étudiants
- * @param confirmerMotDePasseEleves dernière étape de l'activation du module Étudiants, après
- *   l'avertissement RGPD : rend `true` si le mot de passe convient au module. Hors de
- *   l'enveloppe, il n'y a pas de mot de passe : rien n'est demandé.
+ * @param motDePasseEleves le mot de passe des données, à confirmer dans la boîte
+ *   d'activation du module Étudiants. Hors de l'enveloppe, il n'y en a pas (`null`) :
+ *   rien n'est demandé.
  * @param avantExportEleves avant d'enregistrer un document qui contient des étudiants :
  *   rend `true` si l'enseignant confirme, après avoir lu qu'il ne sera pas protégé
  */
 export async function chargerInterfaceHistorique(
   magasin: MagasinMemoire,
   surExport: SurExport = () => undefined,
-  confirmerMotDePasseEleves: () => Promise<boolean> = () => Promise.resolve(true),
+  motDePasseEleves: MotDePasseModule | null = null,
   avantExportEleves: () => Promise<boolean> = () => Promise.resolve(true),
 ): Promise<void> {
   window.XLSX = XLSX;
@@ -258,19 +285,11 @@ export async function chargerInterfaceHistorique(
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
       : {}),
     // L'interface historique n'est pas typée : les champs reçus sont vérifiés.
-    confirmerModuleEleves: async (etablissement) =>
-      (await confirmerActivationEleves({
-        etablissement: lireSaisieEtablissement(etablissement),
-        moisConservation: lireMoisConservation(etablissement, {
-          minimum: MOIS_CONSERVATION_MINIMUM,
-          maximum: MOIS_CONSERVATION_MAXIMUM,
-          parDefaut: MOIS_CONSERVATION_PAR_DEFAUT,
-        }),
-        allerSaisirEtablissement: () => {
-          window.dnmaxPont?.ouvrirEtablissement?.();
-        },
-        date: new Date(),
-      })) && (await confirmerMotDePasseEleves()),
+    confirmerModuleEleves: (etablissement) =>
+      confirmerActivationEleves({ ...contexteDocumentsEleves(etablissement), motDePasse: motDePasseEleves }),
+    documentsModuleEleves: (etablissement) => {
+      montrerDocumentsEleves(contexteDocumentsEleves(etablissement));
+    },
     // Données non typées : elles sont relues prudemment, et tout ce qui est illisible vaut « non validé ».
     referentielValide: {
       promotion: (donnees, promotion) =>

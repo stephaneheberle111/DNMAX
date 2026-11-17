@@ -45,9 +45,10 @@ Compter environ une heure et demie. Cocher chaque ligne ; noter le système, la 
 
 ## D. Module Étudiants et mot de passe
 
-- [ ] **D1. Activation avec un mot de passe faible.** Paramètres > Modules > Étudiants, avec le mot de passe de 8 caractères de A1. Attendu : après l'avertissement RGPD, DNMAX demande un mot de passe plus solide et dit ce qui manque.
+- [ ] **D1. Activation avec un mot de passe faible.** Paramètres > Modules > Étudiants, avec le mot de passe de 8 caractères de A1. Attendu : une seule fenêtre montre l'avertissement RGPD, les documents à remettre et le champ du mot de passe actuel ; une fois celui-ci confirmé, la même fenêtre demande un mot de passe plus solide et dit ce qui manque.
 - [ ] **D2. Refus des mots de passe faibles.** Essayer tour à tour : `motdepasse123` (courant), `Dnmax2026!abc` (mot évident), `Aaaa1234!xyz` (suite), `toutenminuscules` (types). Chacun est refusé avec la bonne explication.
 - [ ] **D3. Mot de passe accepté.** `Le chat dort 3 fois` est accepté ; le module s'active.
+- [ ] **D3 bis. Documents après activation.** Dans la carte du module Étudiants, « Documents à remettre », à gauche de « Visite guidée », rouvre l'information aux étudiants et la note au chef d'établissement.
 - [ ] **D4. Verrouillage.** Laisser DNMAX sans toucher 15 minutes : il se verrouille et redemande le mot de passe. Désactiver le module : plus de verrouillage.
 - [ ] **D5. Réouverture.** Fermer et rouvrir DNMAX avec le mot de passe de D3 : il s'ouvre sans rien redemander d'autre.
 
