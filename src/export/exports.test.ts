@@ -54,6 +54,10 @@ describe("colonnesExport", () => {
     expect(colonnesExport(2, ["Carnet", "Maquette"], "Attendu").map((colonne) => colonne.cle)).toContain("livr");
   });
 
+  it("titre « Niveau de maîtrise » la colonne de la jauge", () => {
+    expect(colonnesExport(1, [], "Attendu").find((colonne) => colonne.niveau)?.titre).toBe("Niveau de maîtrise");
+  });
+
   it("nomme la colonne de formulation comme réglé dans Préférences", () => {
     expect(colonnesExport(1, [], "Attendu").find((colonne) => colonne.cle === "lib")?.titre).toBe("Attendu");
   });
@@ -67,6 +71,12 @@ describe("construireDocx", () => {
     expect(document).toContain("Rendre le carnet &lt;complet&gt;");
     expect(document).not.toContain('w:type="page"');
     expect(document).not.toContain("Étudiant :");
+  });
+
+  it("parle de niveau de maîtrise, pas de niveau d'acquisition, dans la grille et sa consigne", async () => {
+    const document = await contenu(await construireDocx(fiche(), dessin), "word/document.xml");
+    expect(document).toContain("Niveau de maîtrise");
+    expect(document).not.toMatch(/Niveau d(&apos;|')acquisition/);
   });
 
   it("sépare les fiches des étudiants par un saut de page et nomme chacun", async () => {
@@ -108,6 +118,12 @@ describe("construireOdt", () => {
     expect(document).toContain("Maquette &amp; assemblage");
     expect(document).toContain("Lycée d'essai — Camille Durand");
     expect(document).toContain("Rendre le carnet &lt;complet&gt;");
+  });
+
+  it("parle de niveau de maîtrise, pas de niveau d'acquisition, dans la grille et sa consigne", async () => {
+    const document = await contenu(await construireOdt(fiche(), dessin), "content.xml");
+    expect(document).toContain("Niveau de maîtrise");
+    expect(document).not.toMatch(/Niveau d(&apos;|')acquisition/);
   });
 
   it("commence chaque fiche d'étudiant, sauf la première, par un saut de page", async () => {
