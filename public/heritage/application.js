@@ -815,21 +815,6 @@ function evalueeF(f){return SUIVI.estEvaluee(statutOf(f))}
 const fmtD=d=>d?d.split("-").reverse().slice(0,2).join("/"):"";
 /* suivi simplifié (Paramètres > Règles d'évaluation) : affichage seul, le statut détaillé reste celui de l'évaluation */
 function suiviSimple(){return !!LS.get("dnmade.reglages",{}).suiviSimplifie}
-/* actions de suivi proposées dans le menu Évaluer / Exporter de la liste */
-function actsMenu(f,i){
-  const s=suiviOf(f), ps=promosNomsOf(f), R=f.restit||{}, d=MOD.eleves?saisieDnmax(f):null;
-  if(f.annulee){const n=nbIndiv(f), k="r:"+f.id;
-    return `<button type="button" data-act="retab" data-xi="${i}">Rétablir l'évaluation</button>`
-      +(n?`<button type="button" class="danger" data-act="delres" data-xi="${i}">${ui.delArm===k?"Confirmer : supprimer définitivement":"Supprimer les évaluations individuelles"} <span class="hint">${n}</span></button>`
-         :`<span class="xh" style="text-transform:none;letter-spacing:0">Aucune évaluation individuelle : l'évaluation peut être supprimée.</span>`)}
-  let h=`<span class="xsep"></span>`;
-  if(!MOD.eleves)h+=`<button type="button" data-act="fin" data-xi="${i}">${s.evalue?"Rouvrir l'évaluation":"Marquer l'évaluation terminée"}</button>`;
-  else if(s.evalue)h+=`<button type="button" data-act="fin" data-xi="${i}">Rouvrir l'évaluation</button>`;
-  else if(d&&d.any&&d.full<d.tot){const m=rendusManquants(f);h+=m?`<button type="button" disabled title="${m} étudiant${m>1?"s":""} sans statut de rendu : à renseigner dans l'évaluation" style="opacity:.5;cursor:not-allowed">Terminer l'évaluation <span class="hint">${m} sans rendu</span></button>`:`<button type="button" data-act="fin" data-xi="${i}">Terminer l'évaluation <span class="hint">${d.full}/${d.tot}</span></button>`}
-  if(ps.length)h+=ps.map(n=>`<button type="button" data-act="rest" data-rp="${esc(n)}" data-xi="${i}">${R[n]?"Annuler la restitution":"Marquer restituée"}${ps.length>1?` <span class="hint">${esc(promoDisp(n))}</span>`:""}</button>`).join("");
-  h+=`<span class="xsep"></span><button type="button" class="danger" data-act="annul" data-xi="${i}">Annuler l'évaluation <span class="hint">rien n'est supprimé · peut être rétablie</span></button>`;
-  return h;
-}
 /* nombre d'étudiants ayant une évaluation individuelle enregistrée (niveaux, observations, appréciation ou restitution) */
 function nbIndiv(f){return Object.values(f.res||{}).filter(r=>r&&(Object.values(r.n||{}).some(v=>v!=null&&v!=="")||Object.values(r.obs||{}).some(Boolean)||r.appr||r.rest)).length}
 /* L'évaluation en cours d'édition ne doit pas garder celle qu'on supprime : la prochaine modification la remettrait dans la liste. */
@@ -838,53 +823,6 @@ function retirerDeLaListe(i){const f=fiches[i];if(!f)return;
   if(F.id===f.id){F=vierge();LS.set("dnmade.draft",F)}
   paintSaved()}
 function armList(key){ui.delArm=key;paintSaved();setTimeout(()=>{if(ui.delArm===key){ui.delArm=null;paintSaved()}},6000)}
-/* Fenêtre des actions d'une évaluation. Elle remplace un petit menu déroulant que l'on remarquait mal :
-   les exports y deviennent de vrais boutons. Les gestionnaires restent ceux de paintSaved (bind). */
-let XA=null, XA_RETOUR=null;
-function actionsHtml(f,i){
-  const sec=(titre,corps)=>`<section class="xasec"><h3>${titre}</h3>${corps}</section>`;
-  if(f.annulee)return sec("Autres actions",`<div class="xalist">${actsMenu(f,i)}</div>`);
-  return (MOD.eleves?sec("Évaluer",`<button type="button" class="btn primary xabig" data-sai="${i}">Évaluer les étudiants</button>`):"")
-    +sec("Exporter",exportItems(i))
-    +sec("Autres actions",`<div class="xalist"><button type="button" data-dup="${i}">Dupliquer</button>${actsMenu(f,i)}</div>`);
-}
-/* rendreFocus : faux quand l'action quitte la liste (saisie, duplication). Sinon le focus revient au bouton
-   de la ligne, et encore après le prochain dessin de la liste (XA_RETOUR), qui remplace ce bouton. */
-function fermerActions(rendreFocus=true){
-  if(!XA)return;const {el,i,prev,key}=XA;XA=null;
-  document.removeEventListener("keydown",key);el.remove();
-  if(!rendreFocus)return;
-  XA_RETOUR=i;
-  const b=document.querySelector(`#savedList [data-xm="${i}"]`)||prev;if(b&&b.isConnected&&b.focus)b.focus();
-}
-function ouvrirActions(i,bind){
-  const f=fiches[i];if(!f)return;
-  const prev=XA?XA.prev:document.activeElement;fermerActions(false);XA_RETOUR=null;
-  const el=document.createElement("div");el.className="modal xamodal";
-  const sous=[classesDisp(f)||f.classe,f.semestre].filter(Boolean).join(" · ")+(f.annulee?" · annulée":"");
-  el.innerHTML=`<div class="card xabox" role="dialog" aria-modal="true" aria-labelledby="xaT">
-    <button type="button" class="xaclose" aria-label="Fermer" title="Fermer">×</button>
-    <h2 id="xaT">${esc(f.titre||"Sans titre")}</h2>${sous?`<p class="hint">${esc(sous)}</p>`:""}
-    <div class="xabody"></div></div>`;
-  const card=el.querySelector(".xabox"), body=el.querySelector(".xabody");
-  const focusables=()=>[...card.querySelectorAll("button:not([disabled])")];
-  const remplir=bd=>{body.innerHTML=actionsHtml(fiches[i],i);bd(body);
-    if(el.isConnected&&!card.contains(document.activeElement))(body.querySelector("button:not([disabled])")||card.querySelector(".xaclose")).focus()};
-  /* le clic doit commencer et finir sur le fond : une sélection relâchée hors de la boîte ne la ferme pas */
-  let surFond=false;
-  el.onmousedown=e=>{surFond=e.target===el};
-  el.onclick=e=>{e.stopPropagation();if(surFond&&e.target===el)fermerActions()};
-  el.querySelector(".xaclose").onclick=()=>fermerActions();
-  const key=e=>{if(e.key==="Escape"){e.preventDefault();fermerActions();return}
-    if(e.key!=="Tab")return;const L=focusables();if(!L.length)return;
-    const a=L[0], z=L[L.length-1];
-    if(e.shiftKey&&(document.activeElement===a||!card.contains(document.activeElement))){e.preventDefault();z.focus()}
-    else if(!e.shiftKey&&(document.activeElement===z||!card.contains(document.activeElement))){e.preventDefault();a.focus()}};
-  XA={el,i,prev,key,id:f.id,refresh:bd=>{if(fiches[i]&&fiches[i].id===XA.id)remplir(bd);else fermerActions(false)}};
-  remplir(bind);
-  document.addEventListener("keydown",key);document.body.appendChild(el);
-  const premier=body.querySelector("button:not([disabled])")||el.querySelector(".xaclose");premier.focus();
-}
 /* filtres de la liste des évaluations : par défaut, promotions en cours et évaluations dont je suis l'enseignant·e */
 /* Visibilité : un enseignant ne voit que les promotions de sa répartition de service (et leurs étudiants).
    Si « C'est moi » n'est pas défini, ou s'il n'a encore aucune affectation, tout reste visible. */
@@ -921,34 +859,24 @@ function paintSavedFilters(){
     statuts:ST_LBL,ouvert:()=>ui.sfOpen||"",retenirOuvert:k=>{ui.sfOpen=k},redessiner:paintSaved});
 }
 /* liste de Mes évaluations : écran écrit en TypeScript (src/evaluations/liste.ts), règles de la frise dans
-   src/domaine/frise-suivi.ts. La fenêtre des actions (ouvrirActions, bindActs) reste ici. */
+   src/domaine/frise-suivi.ts ; la fenêtre des actions est dans src/evaluations/actions.ts. */
 function paintSaved(){
   paintSavedFilters();
   const h=document.getElementById("savedList");
-  const closeX=()=>fermerActions();
   const syncF=f=>{if(F&&F.id===f.id){F.suivi=structuredClone(f.suivi);F.restit=structuredClone(f.restit||{});save()}LS.set("dnmade.fiches",fiches)};
-  const bindActs=root=>{
-    root.querySelectorAll("[data-sai]").forEach(b=>b.onclick=e=>{e.stopPropagation();fermerActions(false);
-      if(refBloque(fiches[+b.dataset.sai],"Impossible de saisir les résultats"))return;
-      F=migF(structuredClone(fiches[+b.dataset.sai]));vueMention(mentionDeFiche(F));save();
-      ui.tab="new";ui.step=4;ui.eleve="";paintTabs();paintForm();paintPick();paintLignes();goStep(4)});
-    root.querySelectorAll("[data-xk]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const i=+b.dataset.xi, f=fiches[i], k=b.dataset.xk;if(!f)return;
-      if(b.dataset.xmode==="rest"){askRestitWarn(f,()=>exportFiche(i,k,"rest"));return}
-      exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()});
-    root.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>{e.stopPropagation();closeX();const f=fiches[+b.dataset.xi];if(!f)return;
-      const s=suiviOf(f);
-      if(b.dataset.act==="fin"){if(s.evalue){delete s.evalue;delete s.mode}else{if(rendusManquants(f)){toast("Renseignez d'abord le rendu de chaque étudiant.");return}s.evalue=isoToday();s.mode=MOD.eleves?"dnmax":"main"}}
-      if(b.dataset.act==="rest"){f.restit=f.restit||{};const k=b.dataset.rp;if(f.restit[k])delete f.restit[k];else f.restit[k]=isoToday()}
-      if(b.dataset.act==="annul"){f.annulee=isoToday();toast("Évaluation annulée. Elle peut être rétablie depuis le bouton « Actions… ».")}
-      if(b.dataset.act==="retab"){delete f.annulee;ui.delArm=null}
-      if(b.dataset.act==="delres"){const k="r:"+f.id;
-        if(ui.delArm!==k){toast("Action irréversible : cliquez à nouveau pour confirmer.");armList(k);const m=document.querySelector('#savedList [data-xm="'+b.dataset.xi+'"]');if(m)m.click();return}
-        ui.delArm=null;const n=nbIndiv(f);f.res={};if(F&&F.id===f.id){F.res={};save()}toast(n+" évaluation"+(n>1?"s":"")+" individuelle"+(n>1?"s":"")+" supprimée"+(n>1?"s":"")+".")}
-      if(F&&F.id===f.id){if(f.annulee)F.annulee=f.annulee;else delete F.annulee}
-      syncF(f);paintSaved()});
-    root.querySelectorAll("[data-dup]").forEach(b=>b.onclick=e=>{e.stopPropagation();fermerActions(false);
-      if(refBloque(fiches[+b.dataset.dup],"Impossible de dupliquer cette évaluation"))return;F=migF(structuredClone(fiches[+b.dataset.dup]));vueMention(mentionDeFiche(F));F.id=uid();F.titre+=" (copie)";F.date=new Date().toISOString().slice(0,10);delete F.distribPrev;delete F.renduPrev;if(F.suivi)F.suivi.saisie=F.date;save();ui.tab="new";paintTabs();paintForm();paintPick()});
-  };
+  const contexteActions={evaluation:i=>fiches[i],moduleEleves:!!MOD.eleves,suivi:suiviOf,saisie:saisieDnmax,rendusManquants,
+    evaluationsIndividuelles:nbIndiv,promotionsVisees:promosNomsOf,nomPromotion:promoDisp,promotions:f=>classesDisp(f),
+    armee:()=>ui.delArm||null,armer:armList,desarmer:()=>{ui.delArm=null},aujourdhui:isoToday(),annoncer:toast,
+    evaluer:i=>{if(refBloque(fiches[i],"Impossible de saisir les résultats"))return;
+      F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));save();
+      ui.tab="new";ui.step=4;ui.eleve="";paintTabs();paintForm();paintPick();paintLignes();goStep(4)},
+    exporter:(i,k,mode)=>{const f=fiches[i];if(!f)return;
+      if(mode==="rest"){askRestitWarn(f,()=>exportFiche(i,k,"rest"));return}
+      exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()},
+    dupliquer:i=>{if(refBloque(fiches[i],"Impossible de dupliquer cette évaluation"))return;F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));F.id=uid();F.titre+=" (copie)";F.date=new Date().toISOString().slice(0,10);delete F.distribPrev;delete F.renduPrev;if(F.suivi)F.suivi.saisie=F.date;save();ui.tab="new";paintTabs();paintForm();paintPick()},
+    synchroniser:(f,vides)=>{if(vides&&F&&F.id===f.id){F.res={};save()}
+      if(F&&F.id===f.id){if(f.annulee)F.annulee=f.annulee;else delete F.annulee}},
+    enregistrer:f=>{syncF(f);paintSaved()}};
   const openF=i=>{F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));save();ui.tab="new";ui.sel=[];ui.eleve="";
     paintTabs();paintForm();paintPick();paintLignes();goStep(ui.step===4?1:ui.step)};
   window.dnmaxPont.evaluations.peindreListe(h,document.getElementById("sCount"),{evaluations:()=>fiches,visible:sfMatch,
@@ -958,7 +886,7 @@ function paintSaved(){
     etapeOuverte:()=>ui.stOpen==null?null:String(ui.stOpen),retenirEtape:k=>{ui.stOpen=k},aujourdhui:isoToday(),
     enregistrer:f=>{syncF(f);paintSaved()},
     synchroniserPrevu:(f,k2)=>{if(F&&F.id===f.id){if(f[k2])F[k2]=f[k2];else delete F[k2];save()}},
-    ouvrir:openF,ouvrirActions:i=>ouvrirActions(i,bindActs),
+    ouvrir:openF,ouvrirActions:i=>window.dnmaxPont.evaluations.ouvrirActions(i,contexteActions),
     supprimer:i=>{const f=fiches[i];if(!f||!f.annulee)return;
       const n=nbIndiv(f);
       if(n){toast("Suppression impossible : supprimez d'abord les "+n+" évaluation"+(n>1?"s":"")+" individuelle"+(n>1?"s":"")+" (bouton « Actions… »).");return}
@@ -971,11 +899,7 @@ function paintSaved(){
       ui.delArm=null;retirerDeLaListe(i);toast("Brouillon supprimé.")},
     filtresParDefaut:()=>{ui.sf=sfDefault();paintSaved()},toutAfficher:()=>{ui.sf={per:[],mine:false,sem:[],st:[],q:""};paintSaved()},
     nouvelleEvaluation:nouvelleFiche,chargerExemple:loadDemo,
-    apresDessin:()=>{
-      /* liste redessinée pendant que la fenêtre est ouverte (fin du délai de confirmation) : on la remet à jour */
-      if(XA)XA.refresh(bindActs);
-      else if(XA_RETOUR!=null){const b=h.querySelector(`[data-xm="${XA_RETOUR}"]`);XA_RETOUR=null;
-        if(b&&(!document.activeElement||document.activeElement===document.body))b.focus()}}});
+    apresDessin:()=>window.dnmaxPont.evaluations.apresDessinListe(h,contexteActions)});
 }
 const GROUPS = {bloc:"Par bloc de compétences",ue:"Par unité d'enseignement",ec:"Par enseignement constitutif",
   annee:"Par année",semestre:"Par semestre",liste:"Liste à plat"};
@@ -2799,12 +2723,6 @@ function askRestitWarn(f,onGo){
   document.addEventListener("keydown",key);document.body.appendChild(el);el.querySelector("[data-yes]").focus();
 }
 /* exports d'une ligne (fenêtre des actions) : l'évaluation (grille vierge) et, avec le module Étudiants, les restitutions par étudiant */
-function exportItems(i){
-  const fm=m=>`<div class="xfmt">${[["docx","Word"],["xlsx","Excel"],["odt","OpenDocument texte"],["ods","OpenDocument tableur"]]
-    .map(([k,l])=>`<button type="button" data-xk="${k}" data-xmode="${m}" data-xi="${i}"><b>${l}</b><span class="hint">.${k}</span></button>`).join("")}</div>`;
-  return MOD.eleves?`<p class="xh">L'évaluation · grille vierge</p>${fm("eval")}<p class="xh">Les restitutions · résultats par étudiant</p>${fm("rest")}`
-    :`<p class="xh">Grille à remplir à la main</p>${fm("eval")}`;
-}
 async function offer(filename,data,eleves=false){
   if(!dl){toast("Téléchargement indisponible ici.");return}
   try{ await dl.save({filename,data,eleves}); toast("Fichier enregistré : "+filename); }

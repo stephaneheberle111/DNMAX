@@ -31,7 +31,8 @@
 | #163 | Explorer, vue « Recherche » : paires compétence × EC, regroupements, surlignage | `src/referentiel/recherche.ts`, `src/domaine/exploration.ts` |
 | #164 | Explorer, habillage de la carte : diplôme et mention, tuiles de filtre, barre des vues, tableaux EC × semestres et compétences × semestres | `src/referentiel/habillage-carte.ts`, `src/domaine/exploration.ts` |
 | #165 | Mes évaluations : barre des filtres | `src/evaluations/filtres.ts`, `src/domaine/filtres-evaluations.ts` |
-| (cette demande) | Mes évaluations : liste, colonne de suivi (frise, suivi simplifié) et fenêtre de chaque étape | `src/evaluations/liste.ts`, `src/domaine/frise-suivi.ts` |
+| #166 | Mes évaluations : liste, colonne de suivi (frise, suivi simplifié) et fenêtre de chaque étape | `src/evaluations/liste.ts`, `src/domaine/frise-suivi.ts` |
+| (cette demande) | Mes évaluations : fenêtre des actions (évaluer, exporter, dupliquer, terminer, restituer, annuler, rétablir) | `src/evaluations/actions.ts`, `src/domaine/actions-evaluation.ts` |
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
 
@@ -39,7 +40,7 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 
 L'éditeur commun, Référentiel > Constituer et Référentiel > Explorer sont faits (voir le tableau). L'auteur préfère une v1 propre à une sortie rapide : la réécriture continue, dans cet ordre.
 
-1. **Mes évaluations** : la barre des filtres, la liste et la frise de suivi sont faites ; reste la fenêtre des actions (`ouvrirActions`, `actionsHtml`, `actsMenu`, `bindActs`).
+1. **Mes évaluations** : fait. Restent dans le fichier historique l'export d'une évaluation (`exportFiche`) et l'avertissement avant de restituer (`askRestitWarn`), que la fenêtre des actions appelle.
 2. **Progression** : vue promotion et vue étudiant (les calculs sont déjà dans `src/domaine/progression.ts`).
 3. **L'exemple** : établissement fictif et évaluations générées.
 4. **Le reste de l'interface** : onglets, Paramètres > Modules, Préférences, formulaire de l'étape 1, branchements au chargement.
