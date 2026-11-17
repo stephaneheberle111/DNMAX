@@ -5,7 +5,7 @@
  * telles quelles de l'interface historique. La carte radiale et la chaîne,
  * elles, restent dessinées par l'interface historique.
  */
-import { anneeDuSemestre, numeroCode, sansAccents, SEMESTRES } from "./constituer";
+import { anneeDuSemestre, codeAuSemestre, numeroCode, sansAccents, SEMESTRES } from "./constituer";
 
 type Element = Record<string, unknown>;
 
@@ -176,4 +176,66 @@ export function basculerSemestreRecherche(choisis: readonly string[], semestre: 
   if (semestre === "*") return [];
   const rang = (sem: string): number => SEMESTRES.indexOf(sem as (typeof SEMESTRES)[number]);
   return choisis.includes(semestre) ? choisis.filter((sem) => sem !== semestre) : [...choisis, semestre].sort((a, b) => rang(a) - rang(b));
+}
+
+/** Une case du tableau EC × semestres : des semestres consécutifs au même code, ou une case vide. */
+export interface CaseEc {
+  readonly semestres: string[];
+  readonly code: string;
+}
+
+/** Cases d'un EC dans le tableau EC × semestres : une par suite de semestres où son code ne change pas. */
+export function casesEc(ec: Element): CaseEc[] {
+  const ouverts = Array.isArray(ec.sems) ? (ec.sems as string[]) : [];
+  const cases: CaseEc[] = [];
+  let rang = 0;
+  while (rang < SEMESTRES.length) {
+    const semestre = SEMESTRES[rang] ?? "";
+    if (!ouverts.includes(semestre)) {
+      cases.push({ semestres: [], code: "" });
+      rang += 1;
+      continue;
+    }
+    const code = codeAuSemestre(ec, semestre);
+    let fin = rang + 1;
+    while (fin < SEMESTRES.length && ouverts.includes(SEMESTRES[fin] ?? "") && codeAuSemestre(ec, SEMESTRES[fin] ?? "") === code) fin += 1;
+    cases.push({ semestres: SEMESTRES.slice(rang, fin), code });
+    rang = fin;
+  }
+  return cases;
+}
+
+/** Compétences du tableau compétences × semestres, réduites au filtre de la carte, rangées par bloc puis par code. */
+export function competencesTableau(competences: readonly Element[], filtre: { readonly kind: string; readonly value: string }): Element[] {
+  let retenues = competences.slice();
+  if (filtre.kind === "bloc") retenues = retenues.filter((competence) => String(competence.bloc) === filtre.value);
+  else if (filtre.kind === "comp") retenues = retenues.filter((competence) => competence.code === filtre.value);
+  else if (filtre.kind === "ec") retenues = retenues.filter((competence) => porteurs(competence).some((porteur) => porteur.id === filtre.value));
+  else if (filtre.kind === "ue") retenues = retenues.filter((competence) => porteurs(competence).some((porteur) => porteur.ue === filtre.value));
+  return retenues.sort((a, b) => Number(a.bloc) - Number(b.bloc) || numeroCode(a.code) - numeroCode(b.code));
+}
+
+/** Compétences regroupées par bloc, dans l'ordre où les blocs apparaissent. */
+export function blocsTableau(competences: readonly Element[]): { num: string; competences: Element[] }[] {
+  const blocs: { num: string; competences: Element[] }[] = [];
+  for (const competence of competences) {
+    const num = String(competence.bloc);
+    let bloc = blocs.find((candidat) => candidat.num === num);
+    if (bloc === undefined) {
+      bloc = { num, competences: [] };
+      blocs.push(bloc);
+    }
+    bloc.competences.push(competence);
+  }
+  return blocs;
+}
+
+/** Codes des EC qui portent la compétence à ce semestre, sans doublon. */
+export function ecsAuSemestre(competence: Element, semestre: string): string[] {
+  return [...new Set(porteurs(competence).filter((porteur) => porteur.sem === semestre).map((porteur) => porteur.ec))];
+}
+
+/** « Bloc 3 · Concevoir » ; sans nom propre, « Bloc 3 ». */
+export function titreBloc(numero: string, nom: string): string {
+  return `Bloc ${numero}${nom !== "" && nom !== `Bloc ${numero}` ? ` · ${nom}` : ""}`;
 }
