@@ -43,6 +43,7 @@ import { peindreProgressionPromotion } from "../progression/promotion";
 import * as vueProgression from "../domaine/vue-progression";
 import * as exemple from "../domaine/exemple";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
+import { brancherInterface } from "../interface/branchements";
 import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
 import { peindreModules } from "../parametres/modules";
 import { libelleCritere, preferencesInitiales, sceauActif } from "../domaine/preferences";
@@ -250,7 +251,7 @@ interface Pont {
   /** Promotions et semestres proposés dans Progression (voir `domaine/vue-progression`). */
   readonly vueProgression: typeof vueProgression;
   /** Barre des onglets et titre de la fenêtre (voir `interface/onglets`). */
-  readonly interface: { afficherPage: typeof afficherPage; brancherOnglets: typeof brancherOnglets };
+  readonly interface: { afficherPage: typeof afficherPage; brancherOnglets: typeof brancherOnglets; brancherInterface: typeof brancherInterface };
   /** Modules de Paramètres > Modules (voir `domaine/modules`, `parametres/modules`). */
   readonly modules: {
     MODULES: typeof MODULES;
@@ -380,7 +381,7 @@ export async function chargerInterfaceHistorique(
     suivi: suiviEvaluation,
     progression: { ...progressionCalculs, peindrePromotion: peindreProgressionPromotion, peindreEtudiant: peindreProgressionEtudiant },
     vueProgression,
-    interface: { afficherPage, brancherOnglets },
+    interface: { afficherPage, brancherOnglets, brancherInterface },
     modules: { MODULES, modulesParDefaut, appliquerDependances, entraineDautres, peindre: peindreModules },
     preferences: { initiales: preferencesInitiales, libelleCritere, sceauActif, peindreVocabulaire, peindreSceau, peindreDossierExports },
     exemple,

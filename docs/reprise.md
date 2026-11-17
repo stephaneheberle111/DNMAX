@@ -36,10 +36,11 @@
 | #168 | Progression, vue « Promotion » ; choix des promotions et des semestres | `src/progression/promotion.ts`, `src/domaine/vue-progression.ts` |
 | #169 | Progression, vue « Étudiant » (avancement du semestre, comparaison à la classe, trajectoires, niveaux d'acquisition) ; barre des filtres commune aux deux vues | `src/progression/etudiant.ts`, `src/domaine/vue-progression.ts` |
 | #170 | L'exemple : noms, répartition, évaluations détaillées et jeu étendu, résultats | `src/domaine/exemple.ts` |
-| (cette demande) | Barre des onglets, vues affichées et titre de la fenêtre | `src/interface/onglets.ts`, `src/domaine/onglets.ts` |
-| (cette demande) | Paramètres > Modules : catalogue, dépendances, cartes et activation du module Étudiants | `src/parametres/modules.ts`, `src/domaine/modules.ts` |
-| (cette demande) | Préférences : nom du champ d'évaluation, sceau, dossier des exports | `src/preferences/preferences.ts`, `src/domaine/preferences.ts` |
-| (cette demande) | Étape 1 : intitulé, consignes, dates ; retrait du panneau « Étudiants et promotions » et du choix du diplôme, toujours masqués | `src/editeur/formulaire.ts` |
+| #171 | Barre des onglets, vues affichées et titre de la fenêtre | `src/interface/onglets.ts`, `src/domaine/onglets.ts` |
+| #172 | Paramètres > Modules : catalogue, dépendances, cartes et activation du module Étudiants | `src/parametres/modules.ts`, `src/domaine/modules.ts` |
+| #173 | Préférences : nom du champ d'évaluation, sceau, dossier des exports | `src/preferences/preferences.ts`, `src/domaine/preferences.ts` |
+| #174 | Étape 1 : intitulé, consignes, dates ; retrait du panneau « Étudiants et promotions » et du choix du diplôme, toujours masqués | `src/editeur/formulaire.ts` |
+| (cette demande) | Branchements des boutons et champs fixes au chargement ; retrait du bouton d'export JSON absent de la page | `src/interface/branchements.ts` |
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
 
@@ -50,7 +51,7 @@ L'éditeur commun, Référentiel > Constituer et Référentiel > Explorer sont f
 1. **Mes évaluations** : fait. Restent dans le fichier historique l'export d'une évaluation (`exportFiche`) et l'avertissement avant de restituer (`askRestitWarn`), que la fenêtre des actions appelle.
 2. **Progression** : fait. Le fichier historique ne garde que la préparation des données (`paintProg`, `paintProgEleve`).
 3. **L'exemple** : fait. Le fichier historique garde l'enchaînement (`loadDemo`, `demoMass`, `validerExemple`), qui écrit dans le modèle de données ; son contenu et ses tirages sont dans `src/domaine/exemple.ts`.
-4. **Le reste de l'interface** : onglets, Paramètres > Modules et Préférences faits ; formulaire de l'étape 1 fait (avec retrait de deux blocs toujours masqués) ; restent les branchements au chargement.
+4. **Le reste de l'interface** : onglets, Paramètres > Modules et Préférences faits ; formulaire de l'étape 1 fait (avec retrait de deux blocs toujours masqués) ; branchements au chargement faits. Restent dans le fichier historique, outre la carte radiale et la chaîne, la préparation des données de chaque écran et les ponts vers l'application, qui suivront le modèle de données.
 5. **Le modèle de données** (dictionnaire, référentiels, vue active), en dernier, avec une vérification renforcée sur des données réelles exportées puis rechargées.
 
 La carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) et la chaîne (`paintChain`, `chainModel`, `chainWire`, `chainBind`) restent dans le fichier historique, inchangées. Pour comparer, ces deux vues ne sont pas reproductibles d'une exécution à l'autre (positions animées, hauteurs mesurées selon les polices) : neutraliser nombres, `transform` et `style` avant de comparer.
