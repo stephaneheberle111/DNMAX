@@ -12,6 +12,8 @@ import * as suiviSimplifie from "../domaine/suivi-simplifie";
 import { lireMoisConservation } from "../domaine/conservation";
 import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION_PAR_DEFAUT } from "../configuration";
 import * as jaugeExport from "../domaine/jauge-export";
+import { couleurNiveau, encreNiveau } from "../domaine/teintes-niveaux";
+import { peindreSaisieEtudiants } from "../editeur/saisie-etudiants";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
@@ -115,6 +117,10 @@ interface Pont {
   readonly suiviSimplifie: typeof suiviSimplifie;
   /** Libellés de niveaux au-dessus de la jauge des exports Word et OpenDocument (voir `domaine/jauge-export`). */
   readonly jauge: typeof jaugeExport;
+  /** Couleur et encre de chaque niveau de maîtrise (voir `domaine/teintes-niveaux`). */
+  readonly teintes: { couleurNiveau: typeof couleurNiveau; encreNiveau: typeof encreNiveau };
+  /** Écrans de l'éditeur d'évaluation écrits en TypeScript (voir `editeur/`). */
+  readonly editeur: { peindreSaisieEtudiants: typeof peindreSaisieEtudiants };
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: DemandeEnregistrement): Promise<void>;
@@ -189,6 +195,8 @@ export async function chargerInterfaceHistorique(
     evaluation: reglesEvaluation,
     suiviSimplifie,
     jauge: jaugeExport,
+    teintes: { couleurNiveau, encreNiveau },
+    editeur: { peindreSaisieEtudiants },
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
       : {}),
