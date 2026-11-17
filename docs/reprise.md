@@ -34,7 +34,8 @@
 | #166 | Mes évaluations : liste, colonne de suivi (frise, suivi simplifié) et fenêtre de chaque étape | `src/evaluations/liste.ts`, `src/domaine/frise-suivi.ts` |
 | #167 | Mes évaluations : fenêtre des actions (évaluer, exporter, dupliquer, terminer, restituer, annuler, rétablir) | `src/evaluations/actions.ts`, `src/domaine/actions-evaluation.ts` |
 | #168 | Progression, vue « Promotion » ; choix des promotions et des semestres | `src/progression/promotion.ts`, `src/domaine/vue-progression.ts` |
-| (cette demande) | Progression, vue « Étudiant » (avancement du semestre, comparaison à la classe, trajectoires, niveaux d'acquisition) ; barre des filtres commune aux deux vues | `src/progression/etudiant.ts`, `src/domaine/vue-progression.ts` |
+| #169 | Progression, vue « Étudiant » (avancement du semestre, comparaison à la classe, trajectoires, niveaux d'acquisition) ; barre des filtres commune aux deux vues | `src/progression/etudiant.ts`, `src/domaine/vue-progression.ts` |
+| (cette demande) | L'exemple : noms, répartition, évaluations détaillées et jeu étendu, résultats | `src/domaine/exemple.ts` |
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
 
@@ -44,7 +45,7 @@ L'éditeur commun, Référentiel > Constituer et Référentiel > Explorer sont f
 
 1. **Mes évaluations** : fait. Restent dans le fichier historique l'export d'une évaluation (`exportFiche`) et l'avertissement avant de restituer (`askRestitWarn`), que la fenêtre des actions appelle.
 2. **Progression** : fait. Le fichier historique ne garde que la préparation des données (`paintProg`, `paintProgEleve`).
-3. **L'exemple** : établissement fictif et évaluations générées.
+3. **L'exemple** : fait. Le fichier historique garde l'enchaînement (`loadDemo`, `demoMass`, `validerExemple`), qui écrit dans le modèle de données ; son contenu et ses tirages sont dans `src/domaine/exemple.ts`.
 4. **Le reste de l'interface** : onglets, Paramètres > Modules, Préférences, formulaire de l'étape 1, branchements au chargement.
 5. **Le modèle de données** (dictionnaire, référentiels, vue active), en dernier, avec une vérification renforcée sur des données réelles exportées puis rechargées.
 
@@ -89,6 +90,7 @@ Chaque morceau suit la décision 37 :
 - **Localisateurs Playwright qui se déplacent** : `.first()` sur « la première case non cochée » change de cible après chaque clic. Viser un attribut précis (`[data-code="…"]`).
 - **Bulle « Exemple chargé »** : elle recouvre une partie de la grille pendant quelques secondes et intercepte la souris.
 - **Différences de sérialisation sans effet** : `class=""` posé par `creer`, `selected` posé par propriété, `0px` au lieu de `0`. Normaliser avant de comparer, ou éviter (`document.createElement` quand l'attribut doit rester absent).
+- **Identifiants tirés de l'horloge** (`newId`, identifiants des mentions et des étudiants) : le banc avance l'heure d'une milliseconde à chaque `Date.now`. Une réécriture qui appelle l'horloge un nombre de fois différent change ces identifiants sans rien changer d'autre. Pour l'exemple, rejouer avec l'heure figée (et plusieurs dates) ; ailleurs, neutraliser ces identifiants avant de comparer.
 - **CHANGELOG** : il entre en conflit à presque chaque fusion ; garder les deux entrées.
 - **Demandes empilées puis fusionnées par écrasement** : en intégrant `main` dans la branche suivante, les conflits se règlent par la version de la branche, qui contient déjà le contenu fusionné.
 
