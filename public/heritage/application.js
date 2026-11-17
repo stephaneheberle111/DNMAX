@@ -104,7 +104,8 @@ const cloneV=v=>Array.isArray(v)?v.map(x=>x&&typeof x==="object"?Object.assign({
   :(v&&typeof v==="object"?Object.assign({},v):v);
 const ANNEES=[1,2,3];
 function ecCodeAt(e,sem){const a=anneeOf(sem);return String(((e||{}).codes||{})[a]||"")}
-function ecCodesList(e){return ANNEES.map(a=>((e||{}).codes||{})[a]).filter(Boolean)}
+/* codes et rang d'un EC : règles écrites et testées dans src/domaine/constituer.ts */
+function ecCodesList(e){return window.dnmaxPont.constituer.codesEc(e||{})}
 function ecCodeLbl(e){const l=ecCodesList(e);return l.length?l.join(" · "):"—"}
 /* dans une colonne étroite : « EC 2.3 · 10.3 · 18.3 » */
 function ecCodeShort(e){const l=ecCodesList(e);if(!l.length)return "—";
@@ -1118,9 +1119,9 @@ function ueColor(ue){const u=(REF.ues||[]).find(x=>tidy(x.nom)===tidy(ue));retur
 const ueOrd = ue => {const i=(REF.ecs||[]).findIndex(e=>tidy(e.ue)===ue);return i<0?99:i};
 const norm = s => String(s==null?"":s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 const squash = s => norm(s).replace(/[^a-z0-9.]/g,"");
-function ecNum(ec){const m=String(ec||"").match(/(\d+)\.?(\d+)?/);return m?(+m[1])*100+(+(m[2]||0)):9999}
+function ecNum(ec){return window.dnmaxPont.constituer.numeroCode(ec)}
 function lienEc(c,id){return ((c||{}).ecs||[]).find(x=>x.id===id)||null}
-function ecOrd(e){const l=ecCodesList(e);return l.length?ecNum(l[0]):9999}
+function ecOrd(e){return window.dnmaxPont.constituer.ordreEc(e||{})}
 function hi(txt,q){
   if(!q)return esc(txt);
   const t=String(txt==null?"":txt), n=norm(t), i=n.indexOf(q);
@@ -2650,38 +2651,16 @@ function etapeDoublons(list,key){
 }
 function paintEtape(kind,host){
   const D=DATA, dipL=REF.meta.diplome||"—", q=norm((ui.ref.cq||"").trim());
-  /* Étape 1 : écran écrit en TypeScript (src/referentiel/etapes.ts) ; règles dans src/domaine/constituer.ts */
+  /* Étapes 1 et 2 : écrans écrits en TypeScript (src/referentiel/etapes.ts) ; règles dans src/domaine/constituer.ts */
   if(kind==="ues")return window.dnmaxPont.referentiel.peindreEtapeUes(host,contexteEtape(D,dipL));
+  if(kind==="ecs")return window.dnmaxPont.referentiel.peindreEtapeEcs(host,contexteEtape(D,dipL));
   const txt=(k,i,f,v,ph,lbl,extra)=>`<input type="text" value="${esc(v||"")}" data-cf="${k}|${i}|${f}" placeholder="${esc(ph||"")}" aria-label="${esc(lbl)}"${extra||""}>`;
   const col=(k,i,v)=>`<input type="color" value="${esc(v||"#9aa2ae")}" data-cf="${k}|${i}|couleur" aria-label="Couleur">`;
   const semChips=(attr,i,cur,ok)=>`<div class="chips sems">${SEMS.map(x=>`<button type="button" data-${attr}="${i}" data-v="${x}" aria-pressed="${(cur||[]).includes(x)}" ${ok&&!ok.includes(x)?'disabled title="Hors des semestres de l\'UE"':""}>${x}</button>`).join("")}</div>`;
   const filtre=`<input type="text" id="cq" value="${esc(ui.ref.cq||"")}" placeholder="Filtrer…" aria-label="Filtrer" style="width:auto">`;
   const toggleSem=(o,v)=>{o.sems=(o.sems||[]).includes(v)?o.sems.filter(x=>x!==v):[...(o.sems||[]),v].sort((x,y)=>SEMS.indexOf(x)-SEMS.indexOf(y))};
   const invalide=t=>` aria-invalid="true" title="${esc(t)}"`;
-  if(kind==="ecs"){
-    const css="grid-template-columns:44px 228px minmax(0,1fr) 190px 216px 54px 92px";
-    const list=D.ecs.slice().sort((a,b)=>ecOrd(a)-ecOrd(b)).filter(e=>!q||norm([ecCodesList(e).join(" "),e.nom].join(" ")).includes(q));
-    host.innerHTML=edPanel("Étape 2 · Enseignements constitutifs · "+dipL,list.length+(q?" / "+D.ecs.length:""),filtre+etapeAddSel("ecs","Ajouter un EC","Nouvel enseignement constitutif"),
-      {css,cells:["","Codes par année","Intitulé","Unité d'enseignement","Semestres","ECTS",""]},
-      (D.ues.length?"":`<div class="empty">Aucune UE dans ce référentiel : les EC restent « sans UE » tant que l'étape 1 n'en a pas.</div>`)
-      +list.map(e=>{const i=D.ecs.indexOf(e), u=D.ues.find(x=>x.id===e.ueId);
-        return `<div class="ed" style="${css}" data-row="${esc(e.id)}">${col("ecs",i,e.couleur)}
-        <div class="codes3">${ANNEES.map(a=>`<label><b>DN${a}</b><input type="text" value="${esc((e.codes||{})[a]||"")}" data-ec3="${i}" data-a="${a}" class="mono" placeholder="EC ${a}.1" aria-label="Code en DN${a}"></label>`).join("")}</div>
-        ${txt("ecs",i,"nom",e.nom,"Intitulé de l'enseignement","Intitulé de l'EC")}
-        <select data-em="${i}" aria-label="Unité d'enseignement" title="L'UE se choisit ici ; son nom se modifie à l'étape 1"><option value="">— sans UE —</option>
-          ${D.ues.map(x=>`<option value="${esc(x.id)}" ${x.id===e.ueId?"selected":""}>${esc((x.code?x.code+" · ":"")+x.nom)}</option>`).join("")}</select>
-        ${semChips("es",i,e.sems,(u&&u.sems)||SEMS)}
-        <input type="text" value="${esc(e.ects||"")}" data-ee="${i}" aria-label="ECTS" class="mono">
-        ${delBtn("cr:ecs:"+e.id,"Retirer")}</div>`}).join(""),
-      "À cette étape, seuls les EC se créent, se renomment et se retirent ; leur UE se choisit dans la liste, mais son nom se modifie à l'étape 1. Le code d'un EC change d'une année de diplôme à l'autre. Les semestres grisés sont hors du calendrier de l'UE. "+ETAPE_NOTE);
-    host.querySelectorAll("[data-ee]").forEach(inp=>inp.oninput=()=>{D.ecs[+inp.dataset.ee].ects=inp.value;saveData(false)});
-    host.querySelectorAll("[data-ec3]").forEach(inp=>inp.onchange=()=>{
-      const e=D.ecs[+inp.dataset.ec3];if(!e.codes||typeof e.codes!=="object")e.codes={};
-      const v=inp.value.trim();if(v)e.codes[inp.dataset.a]=v;else delete e.codes[inp.dataset.a];saveData(false)});
-    host.querySelectorAll("[data-em]").forEach(sel=>sel.onchange=()=>{D.ecs[+sel.dataset.em].ueId=sel.value;saveData()});
-    host.querySelectorAll("[data-es]").forEach(b=>b.onclick=()=>{toggleSem(D.ecs[+b.dataset.es],b.dataset.v);saveData()});
-  }
-  else{
+  {
     // étape 3 : les blocs, chacun avec ses compétences ; les EC rattachés se lisent ici et se règlent à l'étape 4
     const css="grid-template-columns:90px minmax(0,1.4fr) 104px minmax(0,1fr) 92px";
     const blocs=D.blocs.slice().sort((a,b)=>(parseInt(a.num,10)||0)-(parseInt(b.num,10)||0));
@@ -2755,7 +2734,7 @@ function paintEtape(kind,host){
 /* contexte des étapes de Constituer écrites en TypeScript : la vue du référentiel actif et de quoi l'enregistrer */
 function contexteEtape(D,dipL){
   return {vue:D,diplome:dipL,nouvelIdentifiant:newId,enregistrer:redessiner=>saveData(redessiner?undefined:false),
-    viderFiltre:()=>{ui.ref.cq=""},
+    filtre:ui.ref.cq||"",filtrer:texte=>{ui.ref.cq=texte;paintRef()},viderFiltre:()=>{ui.ref.cq=""},
     reprendre:(k,v)=>{const R=refOf(D,D.activeDiplome);if(!R[k].some(r=>r.id===v))R[k].push(assocFor(D.activeDiplome,k,v));saveData(true,true)},
     retirer:(k,id)=>{absorb(D);refRemove(refOf(D,D.activeDiplome),k,id);saveData(true,true)},
     armement:{arme:edArm,armer:(id,fn)=>armDel(id,fn)},annoncer:toast};

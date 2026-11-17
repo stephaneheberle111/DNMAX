@@ -104,3 +104,52 @@ export function retirerDuReferentiel(referentiel: Record<Sorte, Element[]>, sort
     }
   }
 }
+
+/** Années d'un diplôme en trois ans : le code d'un EC change de l'une à l'autre. */
+export const ANNEES = [1, 2, 3] as const;
+
+/** Numéro de rangement d'un code (EC 11.2 : 1102) ; à la fin (9999) sans chiffre. */
+export function numeroCode(code: unknown): number {
+  const trouve = /(\d+)\.?(\d+)?/.exec(texte(code));
+  return trouve === null ? 9999 : Number(trouve[1]) * 100 + Number(trouve[2] ?? 0);
+}
+
+function tableCodes(ec: Element): Record<string, unknown> {
+  return typeof ec.codes === "object" && ec.codes !== null ? (ec.codes as Record<string, unknown>) : {};
+}
+
+/** Codes d'un EC, de la 1re à la 3e année, sans les années vides. */
+export function codesEc(ec: Element): string[] {
+  const codes = tableCodes(ec);
+  return ANNEES.map((annee) => texte(codes[annee])).filter((code) => code !== "");
+}
+
+/** Rang d'un EC : celui de son premier code, à la fin sans code. */
+export function ordreEc(ec: Element): number {
+  const codes = codesEc(ec);
+  return codes.length > 0 ? numeroCode(codes[0]) : 9999;
+}
+
+/** EC de l'étape 2, rangés par code, réduits à ceux dont les codes ou l'intitulé contiennent le filtre. */
+export function ecsAffiches(ecs: readonly Element[], filtre: string): Element[] {
+  const cherche = sansAccents(filtre.trim());
+  return ecs
+    .slice()
+    .sort((a, b) => ordreEc(a) - ordreEc(b))
+    .filter((ec) => cherche === "" || sansAccents([codesEc(ec).join(" "), texteJoint(ec.nom)].join(" ")).includes(cherche));
+}
+
+/** Comme `Array.join` dans l'interface historique : une valeur absente s'écrit vide. */
+function texteJoint(valeur: unknown): string {
+  if (typeof valeur === "string") return valeur;
+  return typeof valeur === "number" || typeof valeur === "boolean" ? String(valeur) : "";
+}
+
+/** Écrit le code d'un EC pour une année, ou l'efface si la saisie est vide. */
+export function changerCodeEc(ec: Element, annee: string, saisie: string): void {
+  if (typeof ec.codes !== "object" || ec.codes === null) ec.codes = {};
+  const codes = ec.codes as Record<string, unknown>;
+  const code = saisie.trim();
+  if (code === "") Reflect.deleteProperty(codes, annee);
+  else codes[annee] = code;
+}
