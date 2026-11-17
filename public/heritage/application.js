@@ -6561,18 +6561,8 @@ function appliquerModule(cb){
 }
 
 /* ---------- construction de la fiche ---------- */
-function columns(){
-  const rs=rows();
-  const c=[];
-  c.push({k:"ecn",t:"Enseignement",w:17});
-  c.push({k:"comp",t:"Compétence",w:24});
-  // une colonne Livrable seulement si les lignes n'ont pas toutes les mêmes livrables
-  if(F.livrables.length>1&&new Set(rs.map(r=>r.livr||"")).size>1)c.push({k:"livr",t:"Livrable",w:12});
-  c.push({k:"lib",t:critLabel(),w:24});
-  c.push({k:"niv",t:"Niveau d'acquisition",w:30,lv:true});
-  c.push({k:"obs",t:"Observations",w:17});
-  return c;
-}
+/* colonnes des documents exportés : règle dans src/export/modele.ts */
+function columns(){return window.dnmaxPont.exports.colonnesExport(F.livrables.length,rows().map(r=>r.livr||""),critLabel())}
 function ecNoms(codes){
   const nomOf=code=>{const m=REF.competences.flatMap(c=>c.ecs||[]).find(x=>x.ec===code);if(m&&m.nom)return m.nom;
     const e=DATA.ecs.find(x=>x.code===code||Object.values(x.codes||{}).includes(code));return e?(e.nom||code):code};
@@ -6623,69 +6613,24 @@ function ligneEnseignant(who){
   return who?"Étudiant : "+who:"";
 }
 
-/* ---------- export Excel ---------- */
+/* ---------- exports Word, OpenDocument et tableur : écrits en TypeScript (src/export/) ---------- */
+/* L'évaluation en cours, mise en forme pour les documents : une fiche par étudiant (module Étudiants), sinon une fiche vierge. */
+function ficheExport(){
+  const rs=rows();
+  return {diplome:REF.meta.diplome||"",titre:F.titre||"",signature:ligneSignature(),contexte:ligneContexte(),
+    consignes:F.consignes||"",prof:F.prof||"",semestre:F.semestre,promotions:classesDisp(F),plusieursPromotions:(F.classes||[]).length>1,
+    livrables:F.livrables,niveaux:F.niveaux||[],colonnes:columns(),
+    lignes:rs.map(r=>({cle:r.key,op:r.op,bloc:r.bloc,code:r.code,lib:r.lib,comp:r.comp,ec:r.ec,ecn:r.ecn,livr:r.livr})),
+    etudiants:eleveList().map(e=>({nom:e.nom,resultat:(F.res||{})[e.id]})),sceau:sceauActif()?SCEAU:null};
+}
 function buildXlsx(fmt){
-  const cols=columns(), rs=rows(), wb=XLSX.utils.book_new();
-  const aoa=[], merges=[];
-  aoa.push([(F.titre||"Évaluation").toUpperCase()]);
-  merges.push({s:{r:0,c:0},e:{r:0,c:Math.max(1,cols.length-1)}});
-  aoa.push([]);
-  aoa.push([ligneContexte()]);
-  if(F.prof)aoa.push(["Enseignant·e",F.prof]);
-  if(F.consignes){aoa.push([]);aoa.push(["Consignes / attendus",F.consignes])}
-  aoa.push([]);
-  const head=aoa.length;
-  aoa.push(cols.map(c=>c.t));
-  rs.forEach(r=>aoa.push(cols.map(c=>c.lv?"":(r[c.k]!==undefined?r[c.k]:""))));
-  aoa.push([]);aoa.push(["Appréciation générale"]);aoa.push([]);aoa.push([]);
-  const ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"]=cols.map(c=>({wch:c.w+2}));
-  ws["!merges"]=merges;
-  ws["!rows"]=aoa.map((_,i)=>i===head?{hpt:28}:{});
-  XLSX.utils.book_append_sheet(wb,ws,"Évaluation");
-  const els=eleveList();
-  if(els.length){
-    const g=[["Grille classe — "+(F.titre||""),""],["Semestre",F.semestre],[(F.classes||[]).length>1?"Promotions":"Promotion",classesDisp(F)],["Livrables",F.livrables.join(" ; ")],[]];
-    g.push(["Étudiant",...rs.map(r=>String(r.comp||"").replace(/\n/g," / ").slice(0,90))]);
-    g.push(["",...rs.map(r=>String(r.lib||"").slice(0,70))]);
-    els.forEach(e=>{const r=(F.res||{})[e.id]||{n:{}};
-      g.push([e.nom,...rs.map(x=>{const v=(r.n||{})[x.key];return pctTxt(pctOf(r,x.key))})])});
-    g.push([]);g.push(["Échelle",...F.niveaux]);
-    const ws2=XLSX.utils.aoa_to_sheet(g);
-    ws2["!cols"]=[{wch:26},...rs.map(()=>({wch:12}))];
-    XLSX.utils.book_append_sheet(wb,ws2,"Grille classe");
-  }
-  const r=[["Bloc","Code","Compétence","EC retenus","Semestre"]];
-  rs.forEach(x=>r.push([x.bloc,x.code,x.lib,x.ec,F.semestre]));
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(r),"Compétences");
-  if(fmt==="ods")return new Blob([XLSX.write(wb,{bookType:"ods",type:"array"})],{type:"application/vnd.oasis.opendocument.spreadsheet"});
-  return new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-}
-
-/* ---------- export Word (.docx, OOXML minimal) ---------- */
-const X=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-function wp(text,o={}){
-  const rpr=`<w:rPr>${o.b?"<w:b/>":""}${o.i?"<w:i/>":""}${o.sz?`<w:sz w:val="${o.sz*2}"/><w:szCs w:val="${o.sz*2}"/>`:""}${o.color?`<w:color w:val="${o.color}"/>`:""}${o.caps?"<w:caps/>":""}${o.mono?`<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/>`:""}</w:rPr>`;
-  const ppr=`<w:pPr>${o.align?`<w:jc w:val="${o.align}"/>`:""}<w:spacing w:before="${o.before||0}" w:after="${o.after==null?60:o.after}" w:line="240" w:lineRule="auto"/>${o.border?`<w:pBdr><w:bottom w:val="single" w:sz="8" w:space="2" w:color="D6CDB9"/></w:pBdr>`:""}</w:pPr>`;
-  const runs=String(text==null?"":text).split("\n").map((l,i)=>
-    `${i?'<w:r><w:br/></w:r>':''}<w:r>${rpr}<w:t xml:space="preserve">${X(l)}</w:t></w:r>`).join("");
-  return `<w:p>${ppr}${runs}</w:p>`;
-}
-function wtc(content,o={}){
-  return `<w:tc><w:tcPr><w:tcW w:w="${o.w||1000}" w:type="dxa"/>${o.shd?`<w:shd w:val="clear" w:fill="${o.shd}"/>`:""}`+
-  `${o.span?`<w:gridSpan w:val="${o.span}"/>`:""}<w:vAlign w:val="${o.v||"top"}"/></w:tcPr>${content}</w:tc>`;
-}
-function wtr(cells,o={}){return `<w:tr>${o.head?'<w:trPr><w:tblHeader/></w:trPr>':''}${cells}</w:tr>`}
-function wtable(rowsXml,widths){
-  return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblBorders>`+
-  ["top","left","bottom","right","insideH","insideV"].map(s=>`<w:${s} w:val="single" w:sz="6" w:space="0" w:color="C4BAA3"/>`).join("")+
-  `</w:tblBorders><w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:left w:w="80" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr>`+
-  `<w:tblGrid>${widths.map(w=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>${rowsXml}</w:tbl>`;
+  const ods=fmt==="ods";
+  return new Blob([window.dnmaxPont.exports.construireTableur(ficheExport(),ods?"ods":"xlsx")],
+    {type:ods?"application/vnd.oasis.opendocument.spreadsheet":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
 }
 /* Sceau DN MADE en tête des documents Word et OpenDocument : facultatif, réglé dans
    Mon compte > Préférences > Documents exportés, désactivé par défaut. Image
    public/documents/sceau-dn-made.png (voir outils/generer-sceau.ts), lue au premier export qui l'affiche. */
-const SCEAU_PX=72, EMU_PX=9525, SCEAU_TW=1500;
 let SCEAU=null;
 function sceauActif(){return PREFS.sceau===true}
 async function chargerSceau(){
@@ -6696,221 +6641,15 @@ async function chargerSceau(){
   for(let i=0;i<b.length;i+=0x8000)t+=String.fromCharCode(...b.subarray(i,i+0x8000));
   return SCEAU=btoa(t);
 }
-function imageSceau(){
-  if(!WIMG)WIMG={list:[],map:{}};
-  let im=WIMG.map.sceau;
-  if(!im){im={rid:"rIdG"+(WIMG.list.length+1),file:"g"+(WIMG.list.length+1)+".png",data:SCEAU};WIMG.list.push(im);WIMG.map.sceau=im}
-  return im;
-}
-function wImage(im,wpx,hpx,align){
-  const id=1000+(WIMG.n=(WIMG.n||0)+1), cx=Math.round(wpx*EMU_PX), cy=Math.round(hpx*EMU_PX);
-  return `<w:p><w:pPr><w:jc w:val="${align||"left"}"/><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="Image ${id}"/>`
-    +`<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">`
-    +`<pic:nvPicPr><pic:cNvPr id="${id}" name="${im.file}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${im.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>`
-    +`<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
-}
-/* en-tête avec sceau : le contenu de l'en-tête à gauche, le sceau à droite, sans bordure */
-function wAvecSceau(entete,TOT){
-  const nil=["top","left","bottom","right","insideH","insideV"].map(x=>`<w:${x} w:val="nil"/>`).join("");
-  return `<w:tbl><w:tblPr><w:tblW w:w="${TOT}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders>${nil}</w:tblBorders>`
-    +`<w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="${TOT-SCEAU_TW}"/><w:gridCol w:w="${SCEAU_TW}"/></w:tblGrid>`
-    +`<w:tr>${wtc(entete,{w:TOT-SCEAU_TW,v:"top"})}${wtc(wImage(imageSceau(),SCEAU_PX,SCEAU_PX,"right"),{w:SCEAU_TW,v:"top"})}</w:tr></w:tbl>`;
-}
-/* Jauge de l'export Word : image (piste arrondie, remplie jusqu'au niveau atteint, sans traits
-   intermédiaires), comme la saisie du module Étudiants. Une image par valeur, partagée entre lignes. */
-let WIMG=null;
-function gaugePng(p,wpx,hpx){
-  const N=(F.niveaux||[]).length, sc=3, c=document.createElement("canvas");
-  c.width=wpx*sc;c.height=hpx*sc;const g=c.getContext("2d");g.scale(sc,sc);
-  const r=hpx/2, rr=(x,y,w,h,rad)=>{g.beginPath();g.moveTo(x+rad,y);g.arcTo(x+w,y,x+w,y+h,rad);g.arcTo(x+w,y+h,x,y+h,rad);g.arcTo(x,y+h,x,y,rad);g.arcTo(x,y,x+w,y,rad);g.closePath()};
-  rr(0.75,0.75,wpx-1.5,hpx-1.5,r-0.75);g.fillStyle="#FFFFFF";g.fill();
-  if(p!=null){
-    const fw=p===0?Math.max(hpx,7):Math.max(hpx,(wpx-1.5)*p/100);
-    g.save();rr(0.75,0.75,wpx-1.5,hpx-1.5,r-0.75);g.clip();
-    rr(0.75,0.75,fw,hpx-1.5,r-0.75);g.fillStyle=nivColor(pctLvl(p,N),N);g.fill();g.restore();
-  }
-  // séparateurs discrets entre niveaux, pour situer l'étudiant d'une jauge à l'autre
-  pctBounds(N).slice(1,-1).forEach(tp=>{const x=0.75+(wpx-1.5)*tp/100;
-    g.beginPath();g.moveTo(x,2.5);g.lineTo(x,hpx-2.5);g.lineWidth=0.8;
-    g.strokeStyle=p!=null&&p>tp?"rgba(255,255,255,.85)":"#D6CDB9";g.stroke()});
-  rr(0.75,0.75,wpx-1.5,hpx-1.5,r-0.75);g.lineWidth=1.2;g.strokeStyle="#8C8270";g.stroke();
-  return c.toDataURL("image/png").split(",")[1];
-}
-function wGauge(p,w,head){
-  const niv=F.niveaux||[],N=niv.length,t=pctBounds(N),W=w-200;
-  if(head){
-    // chaque libellé a la place de son mot le plus long, pour qu'aucun mot ne soit coupé (domaine/jauge-export)
-    const {taille,largeurs:ws}=JAUGE.dispositionLibellesNiveaux(niv,t,W);
-    const cells=niv.map((n,i)=>
-      `<w:tc><w:tcPr><w:tcW w:w="${ws[i]}" w:type="dxa"/><w:vAlign w:val="bottom"/></w:tcPr>${wp(n,{sz:taille,align:"center",after:0,color:"5A5345"})}</w:tc>`);
-    return `<w:tbl><w:tblPr><w:tblW w:w="${ws.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/><w:tblBorders>`
-      +["top","bottom","right","left","insideV","insideH"].map(x=>`<w:${x} w:val="nil"/>`).join("")
-      +`</w:tblBorders><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr>`
-      +`<w:tblGrid>${ws.map(x=>`<w:gridCol w:w="${x}"/>`).join("")}</w:tblGrid><w:tr>${cells.join("")}</w:tr></w:tbl>`+wp("",{after:0,sz:2});
-  }
-  const cx=W*635, cy=280*635, key=(p==null?"v":"p"+p)+"_"+W;
-  if(!WIMG)WIMG={list:[],map:{}};
-  let im=WIMG.map[key];
-  if(!im){const wpx=Math.round(W/8), hpx=Math.max(10,Math.round(wpx*280/W));
-    im={rid:"rIdG"+(WIMG.list.length+1),file:"g"+(WIMG.list.length+1)+".png",data:gaugePng(p,wpx,hpx)};WIMG.list.push(im);WIMG.map[key]=im}
-  const id=1000+(WIMG.n=(WIMG.n||0)+1);
-  return `<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="40" w:after="40"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="Jauge ${id}"/>`
-    +`<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">`
-    +`<pic:nvPicPr><pic:cNvPr id="${id}" name="${im.file}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${im.rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>`
-    +`<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
-}
-function ficheXml(el){
-  const who=typeof el==="string"?el:(el&&el.nom)||"";
-  const res=(el&&el.id)?((F.res||{})[el.id]||{n:{},obs:{},appr:""}):null;
-  const cols=columns(), rs=rows();
-  const TOT=10500;   // A4 portrait, marges de 1,2 cm
-  const sum=cols.reduce((a,c)=>a+c.w,0);
-  const widths=cols.map(c=>Math.round(TOT*c.w/sum));
-  let entete="";
-  entete+=wp(REF.meta.diplome||"",{sz:8.5,caps:true,color:"5A5345",after:20});
-  entete+=wp(F.titre||"Évaluation",{b:true,sz:16,after:40});
-  {const sig=ligneSignature();if(sig)entete+=wp(sig,{sz:10,after:30});}
-  entete+=wp(ligneContexte(),{sz:10,color:"10555F",after:40,border:true});
-  const ens=ligneEnseignant(who);
-  if(ens)entete+=wp(ens,{sz:10,after:120});
-  let x=sceauActif()?wAvecSceau(entete,TOT)+wp("",{after:60}):entete;
-  if(F.consignes){
-    x+=wp("Consignes et attendus",{b:true,sz:10,caps:true,color:"5A5345",before:120,after:30});
-    x+=wp(F.consignes,{sz:10,after:120});
-  }
-  x+=wp("Compétences évaluées",{b:true,sz:10,caps:true,color:"5A5345",before:120,after:20});
-  x+=wp("Niveau d'acquisition : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.",{sz:8.5,i:true,color:"5A5345",after:60});
-  let tr=wtr(cols.map((c,i)=>wtc(wp(c.t,{b:true,sz:8.5,caps:true,after:c.lv?30:0,align:c.lv?"center":"left"})+(c.lv?wGauge(null,widths[i],true):""),{w:widths[i],shd:"F1ECE0"})).join(""),{head:true});
-  if(!rs.length) tr+=wtr(wtc(wp("Aucune compétence sélectionnée.",{sz:10,i:true,after:0}),{w:TOT,span:cols.length}));
-  rs.forEach(r=>{
-    tr+=wtr(cols.map((c,i)=>{
-      if(c.lv)return wtc(wGauge(res?pctOf(res,r.key):null,widths[i],false),{w:widths[i],v:"center"});
-      if(c.k==="code")return wtc(wp(r.code,{mono:true,sz:9,b:true,after:0}),{w:widths[i]});
-      if(c.k==="bloc")return wtc(wp(r.bloc,{mono:true,sz:9,align:"center",after:0}),{w:widths[i]});
-      if(c.k==="lib")return wtc(wp(r.lib,{sz:9,b:r.op,after:0}),{w:widths[i]});
-      if(c.k==="obs"){const t=res?((res.obs||{})[r.key]||""):"";
-        return wtc(t?wp(t,{sz:9,after:0}):(wp("",{after:0})+wp("",{after:0})),{w:widths[i]})}
-      return wtc(wp(r[c.k]||"",{sz:9,after:0}),{w:widths[i]});
-    }).join(""));
-  });
-  x+=wtable(tr,widths);
-  x+=wp("Appréciation générale",{b:true,sz:10,caps:true,color:"5A5345",before:200,after:40});
-  const ap=res&&res.appr?res.appr:"";
-  x+=wtable(wtr(wtc(ap?wp(ap,{sz:10,after:0}):(wp("",{after:0})+wp("",{after:0})+wp("",{after:0})+wp("",{after:0})),{w:TOT})),[TOT]);
-  return x;
-}
-async function buildDocx(only){
-  const els=only||eleveList();
+async function buildDocx(){
   if(sceauActif())await chargerSceau();
-  const SECT=`<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="680" w:right="680" w:bottom="680" w:left="680" w:header="340" w:footer="340" w:gutter="0"/></w:sectPr>`;
-  WIMG={list:[],map:{}};
-  const parts = els.length? els.map(e=>ficheXml(e)) : [ficheXml("")];
-  const body = parts.map((p,i)=> i<parts.length-1 ? p+`<w:p><w:r><w:br w:type="page"/></w:r></w:p>` : p).join("");
-  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body}${SECT}</w:body></w:document>`;
-  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr>
-<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:sz w:val="20"/><w:szCs w:val="20"/><w:lang w:val="fr-FR"/>
-</w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="252" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
-<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style></w:styles>`;
-  const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-<Default Extension="xml" ContentType="application/xml"/>
-<Default Extension="png" ContentType="image/png"/>
-<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`;
-  const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
-  const drels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${WIMG.list.map(im=>`<Relationship Id="${im.rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${im.file}"/>`).join("")}</Relationships>`;
-  const zip=new JSZip();
-  zip.file("[Content_Types].xml",ct);
-  zip.folder("_rels").file(".rels",rels);
-  const w=zip.folder("word");
-  w.file("document.xml",doc); w.file("styles.xml",styles);
-  w.folder("_rels").file("document.xml.rels",drels);
-  const md=w.folder("media");WIMG.list.forEach(im=>md.file(im.file,im.data,{base64:true}));
-  return zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",compression:"DEFLATE"});
+  return new Blob([await window.dnmaxPont.exports.construireDocx(ficheExport(),window.dnmaxPont.exports.dessinateurJauge((F.niveaux||[]).length))],
+    {type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
 }
-
-/* ---------- export OpenDocument (.odt, LibreOffice / OpenOffice) ---------- */
-async function buildOdt(only){
-  const els=only||eleveList();
+async function buildOdt(){
   if(sceauActif())await chargerSceau();
-  WIMG={list:[],map:{}};
-  let nT=0;const colSt=[];
-  const cm=tw=>(tw/567).toFixed(3)+"cm";
-  const tp=(t,st)=>`<text:p text:style-name="${st||"P"}">${String(t==null?"":t).split("\n").map(X).join("<text:line-break/>")}</text:p>`;
-  const cell=(content,st)=>`<table:table-cell table:style-name="${st||"Cell"}" office:value-type="string">${content||"<text:p/>"}</table:table-cell>`;
-  const table=(widths,rowsXml,st)=>{const n=++nT;
-    widths.forEach((w,i)=>colSt.push(`<style:style style:name="T${n}C${i}" style:family="table-column"><style:table-column-properties style:column-width="${cm(w)}"/></style:style>`));
-    colSt.push(`<style:style style:name="T${n}" style:family="table"><style:table-properties style:width="${cm(widths.reduce((a,b)=>a+b,0))}" table:align="${st==="center"?"center":"left"}" fo:margin-top="0cm" fo:margin-bottom="0cm"/></style:style>`);
-    return `<table:table table:name="Tableau${n}" table:style-name="T${n}">${widths.map((w,i)=>`<table:table-column table:style-name="T${n}C${i}"/>`).join("")}${rowsXml}</table:table>`};
-  const row=(cells,head)=>head?`<table:table-header-rows><table:table-row>${cells}</table:table-row></table:table-header-rows>`:`<table:table-row>${cells}</table:table-row>`;
-  const gauge=(p,w)=>{wGauge(p,w,false);const im=WIMG.list[WIMG.list.length-1]&&WIMG.map[(p==null?"v":"p"+p)+"_"+(w-200)];
-    return `<text:p text:style-name="Pc"><draw:frame draw:name="j${++nT}" text:anchor-type="as-char" svg:width="${cm(w-200)}" svg:height="${cm(280)}" draw:z-index="0"><draw:image xlink:href="Pictures/${im.file}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame></text:p>`};
-  const gaugeHead=w=>{const niv=F.niveaux||[],t=pctBounds(niv.length),W=w-200;
-    const {taille,largeurs:ws}=JAUGE.dispositionLibellesNiveaux(niv,t,W);
-    return table(ws,row(niv.map(n=>cell(tp(n,"Pg"+String(taille).replace(".","_")),"CellN")).join("")),"center")};
-  const image=(im,wpx,hpx,st)=>`<text:p text:style-name="${st||"Pc"}"><draw:frame draw:name="i${++nT}" text:anchor-type="as-char" svg:width="${(wpx*2.54/96).toFixed(3)}cm" svg:height="${(hpx*2.54/96).toFixed(3)}cm" draw:z-index="0"><draw:image xlink:href="Pictures/${im.file}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame></text:p>`;
-  const avecSceau=(entete,TOT)=>table([TOT-SCEAU_TW,SCEAU_TW],row(cell(entete,"CellE")+cell(image(imageSceau(),SCEAU_PX,SCEAU_PX,"PcD"),"CellE")));
-  const fiche=el=>{
-    const who=typeof el==="string"?el:(el&&el.nom)||"";
-    const res=(el&&el.id)?((F.res||{})[el.id]||{n:{},obs:{},appr:""}):null;
-    const cols=columns(), rs=rows(), TOT=10500, sum=cols.reduce((a,c)=>a+c.w,0), widths=cols.map(c=>Math.round(TOT*c.w/sum));   // A4 portrait
-    let entete=tp(REF.meta.diplome||"","Pk")+tp(F.titre||"Évaluation","Ph")
-      +(ligneSignature()?tp(ligneSignature()):"")+tp(ligneContexte(),"Pa");
-    const ens=ligneEnseignant(who);
-    if(ens)entete+=tp(ens);
-    let x=sceauActif()?avecSceau(entete,TOT):entete;
-    if(F.consignes)x+=tp("Consignes et attendus","Ps")+tp(F.consignes);
-    x+=tp("Compétences évaluées","Ps")+tp("Niveau d'acquisition : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.","Pi");
-    let tr=row(cols.map((c,i)=>cell(tp(c.t,c.lv?"PhC":"PhT")+(c.lv?gaugeHead(widths[i]):""),"CellH")).join(""),true);
-    if(!rs.length)tr+=row(`<table:table-cell table:style-name="Cell" table:number-columns-spanned="${cols.length}" office:value-type="string">${tp("Aucune compétence sélectionnée.","Pi")}</table:table-cell>`+cols.slice(1).map(()=>"<table:covered-table-cell/>").join(""));
-    rs.forEach(r=>{tr+=row(cols.map((c,i)=>{
-      if(c.lv)return cell(gauge(res?pctOf(res,r.key):null,widths[i]),"CellM");
-      if(c.k==="lib")return cell(tp(r.lib,r.op?"Pb":"P9"));
-      if(c.k==="obs")return cell(tp(res?((res.obs||{})[r.key]||""):"","P9"));
-      return cell(tp(r[c.k]||"","P9"))}).join(""))});
-    x+=table(widths,tr);
-    x+=tp("Appréciation générale","Ps");
-    const ap=res&&res.appr?res.appr:"";
-    x+=table([TOT],row(cell(ap?tp(ap):tp("")+tp("")+tp("")+tp(""))));
-    return x};
-  const parts=els.length?els.map(e=>fiche(e)):[fiche("")];
-  const body=parts.map((q,i)=>i?`<text:p text:style-name="PB"/>`+q:q).join("");
-  const ns=`xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" office:version="1.3"`;
-  const ps=(n,props,tprops)=>`<style:style style:name="${n}" style:family="paragraph"><style:paragraph-properties ${props||'fo:margin-top="0cm" fo:margin-bottom="0.05cm"'}/><style:text-properties ${tprops||""}/></style:style>`;
-  const cellSt=(n,bg,va)=>`<style:style style:name="${n}" style:family="table-cell"><style:table-cell-properties fo:padding="0.08cm" fo:border="0.5pt solid #C4BAA3" ${bg?`fo:background-color="${bg}"`:""} style:vertical-align="${va||"top"}"/></style:style>`;
-  const auto=ps("P","",'fo:font-size="10pt"')+ps("P9","",'fo:font-size="9pt"')+ps("Pb","",'fo:font-size="9pt" fo:font-weight="bold"')
-    +ps("Pk","",'fo:font-size="8pt" fo:font-weight="bold" fo:color="#5A5345" fo:text-transform="uppercase"')
-    +ps("Ph",'fo:margin-top="0.05cm" fo:margin-bottom="0.1cm"','fo:font-size="16pt" fo:font-weight="bold"')
-    +ps("Pa",'fo:margin-bottom="0.25cm" fo:border-bottom="0.5pt solid #D6CDB9" fo:padding-bottom="0.05cm"','fo:font-size="10pt" fo:color="#10555F"')
-    +ps("Ps",'fo:margin-top="0.3cm" fo:margin-bottom="0.05cm"','fo:font-size="10pt" fo:font-weight="bold" fo:color="#5A5345" fo:text-transform="uppercase"')
-    +ps("Pi",'fo:margin-bottom="0.1cm"','fo:font-size="8.5pt" fo:font-style="italic" fo:color="#5A5345"')
-    +ps("PhT","",'fo:font-size="8.5pt" fo:font-weight="bold" fo:text-transform="uppercase"')
-    +ps("PhC",'fo:text-align="center" fo:margin-bottom="0.05cm"','fo:font-size="8.5pt" fo:font-weight="bold" fo:text-transform="uppercase"')
-    +ps("Pc",'fo:text-align="center" fo:margin="0cm"','')
-    +JAUGE.TAILLES_LIBELLES.map(t=>ps("Pg"+String(t).replace(".","_"),'fo:text-align="center" fo:margin="0cm"',`fo:font-size="${t}pt" fo:color="#5A5345"`)).join("")
-    +ps("Pg2",'fo:margin-top="0.45cm"','fo:font-size="9pt" fo:color="#5A5345"')
-    +`<style:style style:name="PB" style:family="paragraph"><style:paragraph-properties fo:break-before="page"/></style:style>`
-    +cellSt("Cell")+cellSt("CellK","#F8F4EA")+cellSt("CellH","#F1ECE0")+cellSt("CellM","","middle")
-    +ps("PcD",'fo:text-align="end" fo:margin="0cm"','')
-    +`<style:style style:name="CellE" style:family="table-cell"><style:table-cell-properties fo:padding="0cm" fo:border="none" style:vertical-align="top"/></style:style>`
-    +`<style:style style:name="CellN" style:family="table-cell"><style:table-cell-properties fo:padding="0cm" fo:border="none" style:vertical-align="bottom"/></style:style>`
-    +colSt.join("");
-  const content=`<?xml version="1.0" encoding="UTF-8"?><office:document-content ${ns}><office:automatic-styles>${auto}</office:automatic-styles><office:body><office:text>${body}</office:text></office:body></office:document-content>`;
-  const styles=`<?xml version="1.0" encoding="UTF-8"?><office:document-styles ${ns}><office:styles><style:default-style style:family="paragraph"><style:text-properties style:font-name="Calibri" fo:font-family="Calibri, Carlito, sans-serif" fo:font-size="10pt" fo:language="fr" fo:country="FR"/></style:default-style></office:styles><office:automatic-styles><style:page-layout style:name="pm1"><style:page-layout-properties fo:page-width="21cm" fo:page-height="29.7cm" style:print-orientation="portrait" fo:margin-top="1.2cm" fo:margin-bottom="1.2cm" fo:margin-left="1.2cm" fo:margin-right="1.2cm"/></style:page-layout></office:automatic-styles><office:master-styles><style:master-page style:name="Standard" style:page-layout-name="pm1"/></office:master-styles></office:document-styles>`;
-  const manifest=`<?xml version="1.0" encoding="UTF-8"?><manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.3"><manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/><manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>${WIMG.list.map(im=>`<manifest:file-entry manifest:full-path="Pictures/${im.file}" manifest:media-type="image/png"/>`).join("")}</manifest:manifest>`;
-  const zip=new JSZip();
-  zip.file("mimetype","application/vnd.oasis.opendocument.text",{compression:"STORE"});
-  zip.file("content.xml",content);zip.file("styles.xml",styles);
-  zip.folder("META-INF").file("manifest.xml",manifest);
-  const pic=zip.folder("Pictures");WIMG.list.forEach(im=>pic.file(im.file,im.data,{base64:true}));
-  return zip.generateAsync({type:"blob",mimeType:"application/vnd.oasis.opendocument.text",compression:"DEFLATE"});
+  return new Blob([await window.dnmaxPont.exports.construireOdt(ficheExport(),window.dnmaxPont.exports.dessinateurJauge((F.niveaux||[]).length))],
+    {type:"application/vnd.oasis.opendocument.text"});
 }
 
 /* ---------- Progression d'une promotion : ce qui reste à évaluer au semestre ---------- */
