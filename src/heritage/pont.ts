@@ -41,6 +41,7 @@ import * as progressionCalculs from "../domaine/progression";
 import { peindreProgressionEtudiant } from "../progression/etudiant";
 import { peindreProgressionPromotion } from "../progression/promotion";
 import * as vueProgression from "../domaine/vue-progression";
+import * as exemple from "../domaine/exemple";
 import { installerReferentielExemple } from "./exemple";
 import { peindreRepartition, peindreVoletEtablissement } from "../etablissement/volets";
 import { peindreEnseignants as peindreVoletEnseignants } from "../etablissement/enseignants";
@@ -240,6 +241,8 @@ interface Pont {
   readonly progression: typeof progressionCalculs & { peindrePromotion: typeof peindreProgressionPromotion; peindreEtudiant: typeof peindreProgressionEtudiant };
   /** Promotions et semestres proposés dans Progression (voir `domaine/vue-progression`). */
   readonly vueProgression: typeof vueProgression;
+  /** Contenu de « Charger un exemple » (voir `domaine/exemple`). */
+  readonly exemple: typeof exemple;
   /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
   readonly etapesEditeur: typeof etapesEditeur;
   /** Progression de la promotion sur chaque compétence du semestre (voir `domaine/progression-competences`). */
@@ -350,6 +353,7 @@ export async function chargerInterfaceHistorique(
     suivi: suiviEvaluation,
     progression: { ...progressionCalculs, peindrePromotion: peindreProgressionPromotion, peindreEtudiant: peindreProgressionEtudiant },
     vueProgression,
+    exemple,
     etablissement: {
       peindreVoletEtablissement,
       peindreRepartition,

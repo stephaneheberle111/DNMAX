@@ -2105,110 +2105,30 @@ function paintEditor(pane,host){
     remplacer:l=>{D.livrables=l},listeOrigine:SUPPORTS_DEF,retirerDeLEvaluation:nom=>{F.livrables=F.livrables.filter(x=>x!==nom)},
     armement,enregistrer,annoncer:toast});
 }
-const DEMO_ELEVES=["Camille Ferrand","Yasmine Haddad","Noé Baptiste","Linh Tran","Timothée Vasseur",
-  "Aïssatou Konaté","Sacha Delaunay","Rayan Mansouri","Inès Carvalho","Gaspard Rouvier",
-  "Mariam Traoré","Elif Yilmaz","Soline Marchais","Enzo Ferreira"];
-const DEMO_ELEVES1=["Alix Gendreau","Bilal Amrani","Chloé Nkoulou","Diego Ramos","Esra Demir",
-  "Fatoumata Sow","Gabriel Kowalski","Hugo Maréchal","Idriss Benhamou","Jade Nguyen",
-  "Kenza Belkacem","Lucie Pham"];
-const DEMO_APPR=[
-  "Travail régulier, le carnet suit vraiment le projet. Les planches gagneraient à hiérarchiser davantage les informations.",
-  "Beaucoup d'intentions, des recherches foisonnantes ; reste à trancher et à tenir une piste jusqu'au bout.",
-  "Les maquettes ont fait progresser l'assemblage. Soigner l'oral : annoncer le principe avant de détailler.",
-  "Rendu complet et soigné. La démonstration technique est convaincante, le corpus de références mériterait d'être élargi.",
-  "Quelques fragilités dans la mise en œuvre, mais le projet a trouvé sa cohérence au fil des séances."];
-function demoRng(seed){let x=seed||7;return()=>{x=(x*1103515245+12345)%2147483648;return x/2147483648}}
+/* Contenu de l'exemple (noms, évaluations, résultats) : src/domaine/exemple.ts */
+const EXEMPLE=window.dnmaxPont.exemple;
 function fillRes(f,seed,part){
-  // part : nombre d'étudiants laissés inachevés en fin de liste
-  const els=studentsOf(f), keys=lignesOf(f).map(ligKey), nv=(f.niveaux||[]).length||4;
-  const r=demoRng(seed);
-  f.res={};
-  els.forEach((e,i)=>{
-    const reste=els.length-1-i;
-    if(part&&reste<part&&reste%2===0)return;                       // non commencé
-    const partiel=part&&reste<part;
-    const o={n:{},obs:{},appr:""};
-    keys.forEach((k,j)=>{
-      if(partiel&&j>=Math.max(1,Math.floor(keys.length/2)))return;  // à moitié saisi
-      const base=1+Math.floor(r()*(nv-1)+r()*0.8);
-      o.n[k]=Math.max(0,Math.min(nv-1,base));
-    });
-    if(!partiel&&r()<0.45)o.obs[keys[Math.floor(r()*keys.length)]]=
-      ["Progrès net depuis la dernière séance.","À reprendre : la mise à l'échelle.","Très bonne tenue du carnet.","Argumentation encore hésitante à l'oral."][Math.floor(r()*4)];
-    if(!partiel&&r()<0.5)o.appr=DEMO_APPR[Math.floor(r()*DEMO_APPR.length)];
-    f.res[e.id]=o;
-  });
+  f.res=EXEMPLE.resultatsDetailles(studentsOf(f).map(e=>e.id),lignesOf(f).map(ligKey),(f.niveaux||[]).length||4,seed,part);
   return f;
 }
-function demoFiche3(){
-  const mk=(code,lib,livr)=>{const c=REF.competences.find(x=>x.code===code);
-    return c?{code,ecs:itemEcs(c,"S4"),op:"",libelle:lib||"",livrables:livr||[]}:null};
-  const OR="Oral de présentation de projet", PL="Planches de projet";
-  const items=[mk("C10.6","Exposer le projet en cinq minutes, intentions puis démonstration",[OR]),
-    mk("C2.2","",[OR]),mk("C11.5","Tenir le calendrier annoncé et rendre les pièces attendues",[PL])].filter(Boolean);
-  return {id:uid(),promoId:"",titre:"Soutenance intermédiaire — oral et planches",
-    livrables:[OR,PL],semestre:"S4",classe:"DN MADE 2 Objet",
-    date:new Date(Date.now()-86400000*6).toISOString().slice(0,10),prof:"Marc Lenoir",
-    ues:["UE ATELIERS DE CREATION"],ecCodes:[],compCode:"",
-    consignes:"Oral de cinq minutes devant le groupe, deux planches A2 affichées. Questions du jury pendant cinq minutes.",
-    ops:[],preset:"maitrise",niveaux:PRESETS.maitrise.niveaux.slice(),
-    opts:{crit:true,obs:true},eleves:"",items};
-}
-function demoFiche(){
-  const mk=(code,lib,livr)=>{const c=REF.competences.find(x=>x.code===code);
-    return c?{code,ecs:itemEcs(c,"S3"),op:"",libelle:lib||"",livrables:livr||[]}:null};
-  const CP="Carnet de projet", MQ="Maquettes de recherches", PL="Planches de projet";
-  const op1={id:uid(),libelle:"Constituer un corpus de références et en tirer des principes formels réutilisables",livrables:[CP]};
-  const op2={id:uid(),libelle:"Éprouver les assemblages par la maquette et en dégager un principe technique viable",livrables:[MQ]};
-  const items=[mk("C4.1","",[CP]),mk("C4.3","",[CP]),mk("C10.3","",[MQ]),mk("C11.2","",[MQ]),
-    mk("C10.6","Présenter le principe d'assemblage sur deux planches lisibles à un mètre",[PL]),
-    mk("C2.1","",[CP])].filter(Boolean);
-  const byCode=c=>items.find(i=>i.code===c);
-  ["C4.1","C4.3"].forEach(c=>{const i=byCode(c);if(i)i.op=op1.id});
-  ["C10.3","C11.2"].forEach(c=>{const i=byCode(c);if(i)i.op=op2.id});
-  return {id:uid(),promoId:"",titre:"Évaluation intermédiaire — Mobilier modulaire en frêne",
-    livrables:[CP,MQ,PL],semestre:"S3",classe:"DN MADE 2 Objet",
-    date:new Date().toISOString().slice(0,10),prof:"Sophie Hébert",
-    ues:["UE ATELIERS DE CREATION"],ecCodes:["EC 11.1","EC 11.2"],compCode:"C10.6",
-    consignes:"Rendu intermédiaire du projet : carnet de projet tenu depuis le lancement, trois maquettes de recherche au 1/5 sur l'assemblage, deux planches A2 présentant le principe retenu. Oral de cinq minutes devant le groupe.",
-    ops:[op1,op2],preset:"maitrise",niveaux:PRESETS.maitrise.niveaux.slice(),
-    opts:{crit:true,obs:true},eleves:"",items};
-}
-function demoFiche2(){
-  const mk=code=>{const c=REF.competences.find(x=>x.code===code);
-    return c?{code,ecs:c.ecs.filter(e=>e.sem==="S1").map(e=>e.ec),op:"",libelle:"",livrables:["Fiche de lecture"]}:null};
-  const items=["C4.2","C4.4","C2.1"].map(mk).filter(Boolean);
-  return {id:uid(),promoId:"",titre:"Fiche de lecture — Objets du quotidien",
-    livrables:["Fiche de lecture"],semestre:"S1",classe:"DN MADE 1 Objet",
-    date:new Date(Date.now()-86400000*21).toISOString().slice(0,10),prof:"Sophie Hébert",
-    ues:["UE HUMANITES et CULTURE"],ecCodes:["EC 1.1"],compCode:"C4.2",
-    consignes:"Lecture d'un chapitre au choix dans la bibliographie, restitution en une page : thèse de l'auteur, notions clés, lien avec le projet d'atelier en cours.",
-    ops:[],preset:"maitrise",niveaux:PRESETS.maitrise.niveaux.slice(),
-    opts:{crit:true,obs:true},eleves:"",items};
+function contexteDetaille(){
+  return {competence:code=>REF.competences.find(x=>x.code===code),ecsRetenus:itemEcs,nouvelIdentifiant:uid,
+    maintenant:Date.now(),niveaux:PRESETS.maitrise.niveaux};
 }
 /* Jeu d'exemple étendu : 4 mentions, des promotions de chaque année (et une sortie),
    des dizaines d'évaluations réparties sur les semestres écoulés, avec résultats. */
 function demoMass(){
   const D=DATA, AS0=asStart(anneeScolaire(new Date()));
-  let seed=20251;const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646};
-  const pick=a=>a[Math.floor(rnd()*a.length)];
-  const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-  const PRE=["Adèle","Aïcha","Alix","Amadou","Ambre","Anaïs","Arthur","Awa","Baptiste","Bilal","Camille","Capucine","Chloé","Clément","Djibril","Elias","Elif","Emma","Fatou","Gabin","Hugo","Ibrahim","Inès","Iris","Jules","Kenza","Kim","Léa","Léon","Lina","Lou","Lucas","Maël","Malik","Manon","Mehdi","Mei","Nina","Noah","Nour","Oscar","Rayan","Rose","Salomé","Samir","Sofia","Théo","Thomas","Yanis","Yasmine","Zeynep","Zoé"];
-  const NOM=["Arnaud","Benhamou","Bonnet","Carvalho","Chevalier","Cissé","Da Silva","Diallo","Dumas","Durand","Fabre","Ferreira","Garnier","Girard","Haddad","Kaya","Keita","Kowalski","Lambert","Le Gall","Lefèvre","Mansouri","Martin","Mercier","Moreau","Morel","N'Diaye","Nguyen","Perrin","Pham","Renaud","Rossi","Roux","Saïdi","Santos","Traoré","Tran","Vidal","Yilmaz","Zhang"];
-  const isDemoNom=x=>{const w=String(x).split(" "), p=w[0], n=w.slice(1).join(" ");return PRE.includes(p)&&NOM.includes(n)};
+  const rnd=EXEMPLE.suiteEtendue(EXEMPLE.GRAINE_ETENDUE);
   const base=D.diplomes.find(d=>d.id===D.activeDiplome), act=base.id;
-  const MENT=[["Espace","DNE","l'aménagement d'espace"],["Graphisme","DNG","l'identité visuelle"],["Matériaux","DNM","la matière textile"]];
-  const dips=[[base,"le mobilier"]];
-  MENT.forEach(([m,code,th])=>{let dp=D.diplomes.find(d=>d.nom===base.nom&&d.mention===m);
+  const dips=[[base,EXEMPLE.THEME_MENTION_REFERENTIEL]];
+  EXEMPLE.MENTIONS_EXEMPLE.forEach(([m,code,th])=>{let dp=D.diplomes.find(d=>d.nom===base.nom&&d.mention===m);
     if(!dp){dp=addMention(base.id,base.nom);dp.mention=m;dp.code=code;dp.duree=+base.duree||3}dips.push([dp,th])});
   saveData(false);
-  const PROFS=["Sophie Hébert","Marc Lenoir","Amina Benali","Claire Nguyen","Julien Marchetti","Lucie Okafor"];
+  const PROFS=EXEMPLE.ENSEIGNANTS_EXEMPLE;
   PROFS.forEach(nom=>{if(!D.enseignants.some(t=>t.nom===nom))D.enseignants.push(nouvellePersonne(uid(),nom))});
   if(!D.moi)D.moi=(D.enseignants.find(t=>t.nom===PROFS[0])||{}).id;
-  const LIV=livrNames().length?livrNames():["Carnet de projet","Planches de projet","Oral de présentation de projet"];
-  const TYPES=[["Rendu de projet","Carnet de projet"],["Workshop","Planches de projet"],["Fiche de lecture","Fiche de lecture"],
-    ["Oral de présentation","Oral de présentation de projet"],["Carnet d'expérimentation","Catalogue d'expérimentation"],
-    ["Revue de projet","Maquettes de recherches"],["Dossier de recherche","Devoir réflexif"],["Exposition de fin de semestre","Carnet d'exposition"]];
+  const LIV=livrNames().length?livrNames():EXEMPLE.LIVRABLES_PAR_DEFAUT;
   const out=[];let nEl=0,nPr=0;
   dips.forEach(([dp,theme])=>{
     D.activeDiplome=dp.id;saveData(false);
@@ -2223,52 +2143,20 @@ function demoMass(){
         const tids=D.enseignants.filter(t=>PROFS.includes(t.nom)&&(mi<2||t.nom!==PROFS[0])).map(t=>t.id);
         // une répartition par année scolaire vécue par la promotion (historique)
         for(let y=debut;y<=AS0&&y<debut+duree;y++){const as=asOf(y), A=affectOf(pr.id,as);
-          promoEcs(pr,as).forEach((e,j)=>{if(!(A[e.id]||[]).length)
-            A[e.id]=rnd()<0.2?[tids[j%tids.length],tids[(j+2)%tids.length]]:[tids[(j+Math.floor(rnd()*3))%tids.length]]})}}
-      if(!(pr.liste||[]).length||pr.liste.every(e=>isDemoNom(e.nom))){
-        const had=(pr.liste||[]).length, n=had||12+Math.floor(rnd()*5),used=new Set(),noms=[];
-        while(noms.length<n){const x=pick(PRE)+" "+pick(NOM);if(!used.has(x)){used.add(x);noms.push(x)}}
+          promoEcs(pr,as).forEach((e,j)=>{if(!(A[e.id]||[]).length)A[e.id]=EXEMPLE.enseignantsDeLEc(rnd,j,tids)})}}
+      if(!(pr.liste||[]).length||pr.liste.every(e=>EXEMPLE.estNomExemple(e.nom))){
+        const had=(pr.liste||[]).length, noms=EXEMPLE.nomsDePromotion(rnd,had);
         // promotion d'exemple déjà là : on garde les étudiants (et leurs résultats), seuls les noms changent
         if(had){pr.liste.forEach((e,j)=>e.nom=noms[j]);pr.eleves=noms.join("\n")}
         else syncListe(pr,noms.join("\n"));
       }
       const els=migPromo(pr).liste;nEl+=els.length;
-      const ySem=k<duree?(k*2+rangSemestre(new Date())):duree*2;   // semestres déjà ouverts pour cette promo
+      const ySem=EXEMPLE.semestresOuverts(k,duree,rangSemestre(new Date()));
       for(let si=0;si<ySem&&si<SEMS.length;si++){
         const sem=SEMS[si], dispo=compsFor(sem);if(!dispo.length)continue;
-        const nev=2+Math.floor(rnd()*2), yr=debut+Math.floor(si/2), first=si%2===0;
-        for(let e=0;e<nev;e++){
-          const [typ,liv0]=pick(TYPES), liv=LIV.includes(liv0)?liv0:pick(LIV);
-          const comps=shuffle(dispo).slice(0,3+Math.floor(rnd()*4));
-          const items=comps.map(c=>({code:c.code,ecs:itemEcs(c,sem),op:"",libelle:"",livrables:[liv]}));
-          const mo=first?[9,10,11,12,0][Math.min(4,Math.floor((e+0.5)*5/nev))]:[1,2,3,4,5][Math.min(4,Math.floor((e+0.5)*5/nev))];
-          const dt=new Date(mo>=8?yr:yr+1,mo,3+Math.floor(rnd()*24));
-          const now=new Date(), future=dt>now;
-          if(future&&dt-now>86400000*40)continue;              // à venir : seulement le prochain mois
-          const recent=Date.now()-dt.getTime()<1000*86400*20;
-          const main=!future&&rnd()<0.28;                        // une partie évaluée à la main, hors DNMAX
-          const iso=x=>new Date(x).toISOString().slice(0,10), DAY=86400000;
-          const capT=x=>Math.min(x,now.getTime()-DAY);
-          const suivi={saisie:iso(capT(dt.getTime()-DAY*(14+Math.floor(rnd()*10))))};
-          const dd=dt.getTime()-DAY*(9+Math.floor(rnd()*4));
-          if(!future||dd<now.getTime()){suivi.distrib=iso(dd);suivi.butoir=iso(dt)}
-          if(main&&!recent){suivi.evalue=iso(dt.getTime()+DAY*(2+Math.floor(rnd()*5)));suivi.mode="main"}
-          else if(main){suivi.mode="main"}
-          const res={};
-          if(!future&&!main)
-          els.forEach(st=>{const r={n:{},p:{},obs:{},appr:""};const base0=18+si*11+(rnd()*30-15);
-            items.forEach(it=>{if(recent&&rnd()<0.35)return;
-              const p=pctSnap(Math.max(0,Math.min(100,base0+rnd()*40-12)),4);r.p["one:"+it.code]=p;r.n["one:"+it.code]=pctLvl(p,4)});
-            if(rnd()<0.25)r.appr=pick(["Bon engagement, à poursuivre.","Travail sérieux, manque encore d'audace.","Progrès nets depuis le dernier rendu.","Attention à la régularité du carnet.","Oral clair et argumenté."]);
-            res[st.id]=r});
-          out.push({id:uid(),demo:true,promoId:pr.id,classes:[pr.nom],classe:pr.nom,
-            titre:typ+" — "+theme+" ("+sem+")",livrables:[liv],semestre:sem,date:dt.toISOString().slice(0,10),prof:pick(PROFS),
-            ues:[],ecCodes:[],compCode:"",consignes:typ+" portant sur "+theme+".",ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),
-            opts:{crit:true,obs:true},eleves:"",items,res,suivi,
-            restit:(()=>{const rd=new Date(dt.getTime()+86400000*(7+Math.floor(rnd()*10)));
-              if(future||recent||rd>new Date()||(main&&!suivi.evalue))return {};const iso=rd.toISOString().slice(0,10);
-              Object.values(res).forEach(r=>{if(rnd()<0.92)r.rest=iso});return {[pr.nom]:iso}})()});
-        }
+        out.push(...EXEMPLE.evaluationsDuSemestre({hasard:rnd,rang:si,semestre:sem,competences:dispo,ecsRetenus:itemEcs,livrables:LIV,theme,
+          promotion:{id:pr.id,nom:pr.nom},debut,etudiants:els.map(e=>e.id),maintenant:Date.now(),nouvelIdentifiant:uid,
+          preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux}));
       }
     }
   });
@@ -2302,7 +2190,7 @@ async function loadDemo(){
     REF=computeREF();persistData();
   }
   const dipsAvant=new Set(refExemple?[]:DATA.diplomes.map(d=>d.id));
-  [["Sophie Hébert","Atelier de création"],["Marc Lenoir","Technologies et matériaux"],["Amina Benali","Humanités"]]
+  EXEMPLE.ENSEIGNANTS_DETAILLES
     .forEach(([nom,discipline])=>{if(!DATA.enseignants.some(t=>t.nom===nom))DATA.enseignants.push({...nouvellePersonne(uid(),nom),discipline})});
   persistData();
   const AS0=asStart(anneeScolaire(new Date()));
@@ -2313,13 +2201,13 @@ async function loadDemo(){
     migPromoCohorte(pr);syncListe(pr,noms.join("\n"));
     return pr;
   };
-  const p2=promo(2,DEMO_ELEVES);
-  const p1=promo(1,DEMO_ELEVES1);
+  const p2=promo(2,EXEMPLE.ETUDIANTS_DEUXIEME_ANNEE);
+  const p1=promo(1,EXEMPLE.ETUDIANTS_PREMIERE_ANNEE);
   savePromos();
   const cl=(f,pr)=>{f.promoId=pr.id;f.classe=pr.nom;f.classes=[pr.nom];migF(f);return f};
-  const f1=cl(demoFiche(),p2); fillRes(f1,11,3);
-  const f2=cl(demoFiche2(),p1); fillRes(f2,29,0);
-  const f3=cl(demoFiche3(),p2); fillRes(f3,47,8);
+  const f1=cl(EXEMPLE.evaluationMobilier(contexteDetaille()),p2); fillRes(f1,11,3);
+  const f2=cl(EXEMPLE.evaluationLecture(contexteDetaille()),p1); fillRes(f2,29,0);
+  const f3=cl(EXEMPLE.evaluationSoutenance(contexteDetaille()),p2); fillRes(f3,47,8);
   const titres=[f1.titre,f2.titre,f3.titre];
   const MS=demoMass();
   // Le référentiel que l'exemple installe lui-même est validé pour la démonstration ; celui de l'enseignant
