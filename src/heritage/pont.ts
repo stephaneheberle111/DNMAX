@@ -13,7 +13,9 @@ import { lireMoisConservation } from "../domaine/conservation";
 import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION_PAR_DEFAUT } from "../configuration";
 import * as jaugeExport from "../domaine/jauge-export";
 import { couleurNiveau, encreNiveau } from "../domaine/teintes-niveaux";
+import { peindreBarreEtapes, peindreEnregistrement } from "../editeur/barre-etapes";
 import { peindreCompetences } from "../editeur/competences";
+import * as etapesEditeur from "../domaine/etapes-editeur";
 import { peindreEnseignants, peindreLivrables, peindrePromotions, peindreSemestres, peindreUesEtEcs } from "../editeur/etape-evaluation";
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { progressionDesCompetences } from "../domaine/progression-competences";
@@ -125,6 +127,8 @@ interface Pont {
   readonly teintes: { couleurNiveau: typeof couleurNiveau; encreNiveau: typeof encreNiveau };
   /** Écrans de l'éditeur d'évaluation écrits en TypeScript (voir `editeur/`). */
   readonly editeur: {
+    peindreBarreEtapes: typeof peindreBarreEtapes;
+    peindreEnregistrement: typeof peindreEnregistrement;
     peindreLivrables: typeof peindreLivrables;
     peindreEnseignants: typeof peindreEnseignants;
     peindreSemestres: typeof peindreSemestres;
@@ -135,6 +139,8 @@ interface Pont {
     lierSelection: typeof lierSelection;
     peindreSaisieEtudiants: typeof peindreSaisieEtudiants;
   };
+  /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
+  readonly etapesEditeur: typeof etapesEditeur;
   /** Progression de la promotion sur chaque compétence du semestre (voir `domaine/progression-competences`). */
   readonly progressionCompetences: typeof progressionDesCompetences;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
@@ -212,8 +218,9 @@ export async function chargerInterfaceHistorique(
     suiviSimplifie,
     jauge: jaugeExport,
     teintes: { couleurNiveau, encreNiveau },
-    editeur: { peindreLivrables, peindreEnseignants, peindreSemestres, peindreUesEtEcs, peindrePromotions, peindreCompetences, peindreFormulation, lierSelection, peindreSaisieEtudiants },
+    editeur: { peindreBarreEtapes, peindreEnregistrement, peindreLivrables, peindreEnseignants, peindreSemestres, peindreUesEtEcs, peindrePromotions, peindreCompetences, peindreFormulation, lierSelection, peindreSaisieEtudiants },
     progressionCompetences: progressionDesCompetences,
+    etapesEditeur,
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
       : {}),

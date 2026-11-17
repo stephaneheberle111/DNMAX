@@ -508,3 +508,5 @@ Arbitrées par l'auteur le 15 novembre 2026, règle par règle, avec un principe
 **Ordre** : évaluation des étudiants (étape 4), puis formulation (étape 3), compétences (étape 2), évaluation (étape 1), enfin la barre des étapes et l'état de l'évaluation en cours.
 
 **Pourquoi pas d'un bloc** : une réécriture complète laisserait l'éditeur cassé pendant des semaines et rendrait chaque écart introuvable ; étape par étape, l'application reste utilisable à chaque fusion.
+
+**Réalisé** (17 novembre 2026, #139 à #144) : les quatre étapes et la barre des étapes sont dans `src/editeur/`, leurs règles dans `src/domaine/` (`evaluation`, `cadre-evaluation`, `progression-competences`, `etapes-editeur`, `saisie-resultats`, `teintes-niveaux`). Le fichier historique ne garde que des adaptateurs qui construisent le contexte de chaque écran. Une particularité reprise telle quelle : dans le résumé de l'étape 3, un regroupement compte comme formulé même sans formulation.
