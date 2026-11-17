@@ -309,6 +309,31 @@ export function detacher(brut: unknown, code: string): { items: CompetenceRetenu
 }
 
 /**
+ * Coche ou décoche un livrable attendu à l'étape 1. Décoché, il quitte aussi
+ * les lignes (compétences et regroupements) auxquelles il était associé.
+ * Un nom vide (après retrait des espaces) ne change rien.
+ */
+export function basculerLivrableAttendu(
+  brut: unknown,
+  livrable: string,
+): { livrables: string[]; items: CompetenceRetenue[]; ops: Regroupement[] } {
+  const evaluation = estObjet(brut) ? brut : {};
+  const livrables = textes(evaluation.livrables);
+  const items = competencesDe(evaluation);
+  const ops = regroupementsDe(evaluation);
+  const nom = livrable.trim();
+  if (nom === "") {
+    return { livrables, items, ops };
+  }
+  if (!livrables.includes(nom)) {
+    return { livrables: [...livrables, nom], items, ops };
+  }
+  const restants = livrables.filter((element) => element !== nom);
+  const garder = <T extends { livrables: string[] }>(ligne: T): T => ({ ...ligne, livrables: ligne.livrables.filter((element) => restants.includes(element)) });
+  return { livrables: restants, items: items.map(garder), ops: ops.map(garder) };
+}
+
+/**
  * Défait le regroupement `id` (« Délier ») : chacune de ses compétences
  * redevient seule et emporte, en plus des siens, les livrables du
  * regroupement. Sa formulation est abandonnée. Sans effet si le regroupement est inconnu.

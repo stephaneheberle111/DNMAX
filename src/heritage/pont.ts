@@ -14,6 +14,7 @@ import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION
 import * as jaugeExport from "../domaine/jauge-export";
 import { couleurNiveau, encreNiveau } from "../domaine/teintes-niveaux";
 import { peindreCompetences } from "../editeur/competences";
+import { peindreEnseignants, peindreLivrables, peindreSemestres } from "../editeur/etape-evaluation";
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { progressionDesCompetences } from "../domaine/progression-competences";
 import { peindreSaisieEtudiants } from "../editeur/saisie-etudiants";
@@ -124,6 +125,9 @@ interface Pont {
   readonly teintes: { couleurNiveau: typeof couleurNiveau; encreNiveau: typeof encreNiveau };
   /** Écrans de l'éditeur d'évaluation écrits en TypeScript (voir `editeur/`). */
   readonly editeur: {
+    peindreLivrables: typeof peindreLivrables;
+    peindreEnseignants: typeof peindreEnseignants;
+    peindreSemestres: typeof peindreSemestres;
     peindreCompetences: typeof peindreCompetences;
     peindreFormulation: typeof peindreFormulation;
     lierSelection: typeof lierSelection;
@@ -206,7 +210,7 @@ export async function chargerInterfaceHistorique(
     suiviSimplifie,
     jauge: jaugeExport,
     teintes: { couleurNiveau, encreNiveau },
-    editeur: { peindreCompetences, peindreFormulation, lierSelection, peindreSaisieEtudiants },
+    editeur: { peindreLivrables, peindreEnseignants, peindreSemestres, peindreCompetences, peindreFormulation, lierSelection, peindreSaisieEtudiants },
     progressionCompetences: progressionDesCompetences,
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
