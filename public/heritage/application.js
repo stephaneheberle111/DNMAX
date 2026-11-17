@@ -3870,21 +3870,14 @@ function anneeFiche(){
   const ys=[...new Set((F.classes||[]).map(ofC).filter(Boolean))];
   return ys.length===1?ys[0]:0;
 }
+/* Étape 1, semestre, enseignants et livrables : écrans écrits en TypeScript (src/editeur/etape-evaluation.ts) */
 function paintSems(){
-  const host=document.getElementById("f-sem");if(!host)return;
-  const an=anneeFiche(), ok=an?semsOfAnnee(an):SEMS;
-  host.innerHTML=SEMS.map(x=>`<button type="button" data-sem="${x}" aria-pressed="${x===F.semestre}" ${
-    ok.includes(x)?"":`disabled title="Hors de l'année ${an}${F.classe?" ("+esc(F.classe)+")":""}"`}>${x}</button>`).join("");
-  host.querySelectorAll("button").forEach(b=>b.onclick=()=>{
-    if(b.disabled)return;F.semManuel=true;setSemestre(b.dataset.sem);save();paintForm();paintPick()});
-  const hint=document.getElementById("semHint");
-  if(hint)hint.innerHTML=(MOD.dn?`<span class="dnbadge">${esc(dnLabel(F.semestre))}</span> &nbsp;`:"")
-    +`${compsFor(F.semestre).length} compétences mobilisées`
-    +(an?` · semestres d'année ${an}`:"")
-    +` · année scolaire ${esc(anneeScolaire())}`
-    +(F.semManuel?` · <button type="button" class="lnk" id="semAuto">suivre la date</button>`:"");
-  const ba=document.getElementById("semAuto");
-  if(ba)ba.onclick=()=>{F.semManuel=false;applySemDate();save();paintForm();paintPick()};
+  const an=anneeFiche();
+  window.dnmaxPont.editeur.peindreSemestres({semestre:F.semestre,tousLesSemestres:SEMS,autorises:an?semsOfAnnee(an):SEMS,annee:an,
+    classe:F.classe||"",niveauDn:MOD.dn?dnLabel(F.semestre):"",nombreCompetences:compsFor(F.semestre).length,
+    anneeScolaire:anneeScolaire(),choisiALaMain:!!F.semManuel,
+    choisir:sem=>{F.semManuel=true;setSemestre(sem);save();paintForm();paintPick()},
+    suivreLaDate:()=>{F.semManuel=false;applySemDate();save();paintForm();paintPick()}});
 }
 function paintClasse(){
   const host=document.getElementById("f-classes");
@@ -3915,14 +3908,8 @@ function paintClasse(){
   host.querySelectorAll("[data-classe]").forEach(b=>b.onclick=()=>toggleClasse(b.dataset.classe));
 }
 function paintProf(){
-  const host=document.getElementById("f-prof-sel");if(!host)return;
-  if(!Array.isArray(F.profs))F.profs=F.prof?String(F.prof).split(/,\s*/).filter(Boolean):[];
-  const all=[...new Set([...DATA.enseignants.map(t=>t.nom).filter(Boolean),...F.profs])];
-  host.innerHTML=all.map(n=>`<button type="button" class="liv" data-prof="${esc(n)}" aria-pressed="${F.profs.includes(n)}">${esc(n)}</button>`).join("")
-    ||`<span class="hint">Ajoutez les enseignants dans Mon établissement > Enseignants.</span>`;
-  host.querySelectorAll("[data-prof]").forEach(b=>b.onclick=()=>{const n=b.dataset.prof;
-    F.profs=F.profs.includes(n)?F.profs.filter(x=>x!==n):[...F.profs,n];F.prof=F.profs.join(", ");
-    save();paintProf();paintContexte();paintSteps()});
+  window.dnmaxPont.editeur.peindreEnseignants({evaluation:F,enseignants:DATA.enseignants.map(t=>t.nom).filter(Boolean),
+    enregistrer:()=>save(),apresChangement:()=>{paintContexte();paintSteps()}});
 }
 /* EC que les enseignants choisis assurent pour les promotions cochées (null : pas de restriction) */
 function ecsAffectes(){
@@ -3944,36 +3931,11 @@ function toggleClasse(v){
   if(sems.length&&(!F.semManuel||!sems.includes(F.semestre)))setSemestre(semSuggere()||sems[0]);
   save();paintForm();paintPick();
 }
-function livrablesAll(){return [...new Set([...livrNames(),...F.livrables])].filter(Boolean)}
 function paintLivrables(){
-  const host=document.getElementById("f-livr");
-  host.innerHTML=livrablesAll().map(x=>
-    `<button type="button" class="liv" data-livr="${esc(x)}" aria-pressed="${F.livrables.includes(x)}">${esc(x)}</button>`).join("")
-    +`<span class="livnew"><button type="button" class="liv add" id="livAddChip">Autre livrable…</button>`
-    +`<input type="text" id="f-livr-new" class="livinput" placeholder="Nom du livrable" hidden></span>`;
-  host.querySelectorAll("[data-livr]").forEach(b=>b.onclick=()=>{
-    const v=b.dataset.livr;
-    F.livrables=F.livrables.includes(v)?F.livrables.filter(x=>x!==v):[...F.livrables,v];
-    F.ops.forEach(o=>o.livrables=o.livrables.filter(x=>F.livrables.includes(x)));
-    F.items.forEach(i=>i.livrables=i.livrables.filter(x=>F.livrables.includes(x)));
-    save();paintLivrables();paintSteps()});
-  const chip=host.querySelector("#livAddChip"), inp=host.querySelector("#f-livr-new");
-  const revert=()=>{inp.hidden=true;inp.value="";chip.hidden=false;chip.setAttribute("aria-pressed","false")};
-  chip.onclick=()=>{chip.hidden=true;chip.setAttribute("aria-pressed","true");inp.hidden=false;inp.value="";inp.focus()};
-  const commit=()=>{
-    const v=inp.value.trim();
-    if(!v){revert();return}
-    inp.disabled=true;
-    if(!F.livrables.includes(v))F.livrables.push(v);
-    save();paintLivrables();paintSteps();
-    if(!livrNames().includes(v))
-      askModal(`Ajouter « ${esc(v)} » à la liste des livrables de Mon établissement, pour les prochaines évaluations ?`,
-        ()=>{DATA.livrables.push({nom:v,type:""});saveData();toast("« "+v+" » ajouté aux livrables.")});
-  };
-  inp.onkeydown=e=>{
-    if(e.key==="Enter"){e.preventDefault();commit()}
-    else if(e.key==="Escape"){e.preventDefault();revert()}};
-  inp.onblur=()=>{if(!inp.disabled)commit()};
+  window.dnmaxPont.editeur.peindreLivrables({evaluation:F,livrablesEtablissement:livrNames(),
+    enregistrer:()=>save(),apresChangement:()=>paintSteps(),
+    proposerAjoutEtablissement:v=>askModal(`Ajouter « ${esc(v)} » à la liste des livrables de Mon établissement, pour les prochaines évaluations ?`,
+      ()=>{DATA.livrables.push({nom:v,type:""});saveData();toast("« "+v+" » ajouté aux livrables.")})});
 }
 function goStep(n){
   const brouillon=!!F.brouillon||!fiches.some(f=>f.id===F.id);
