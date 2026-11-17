@@ -4,6 +4,7 @@
  * attendus, les enseignants et le semestre. Les règles sont dans
  * `domaine/evaluation` ; ce module affiche et transmet.
  */
+import { basculerEc, basculerUe, cadreDuSemestre, promotionsBloquees, uesRetenues } from "../domaine/cadre-evaluation";
 import { basculerLivrableAttendu } from "../domaine/evaluation";
 import { creer, creerBouton } from "../ecran-echange";
 
@@ -194,4 +195,170 @@ export function peindreSemestres(contexte: ContexteSemestres): void {
     morceaux.push(" · ", suivre);
   }
   information.replaceChildren(...morceaux);
+}
+
+/** Un EC proposé au semestre, tel que l'étape l'affiche. */
+export interface EcPropose {
+  readonly ec: string;
+  readonly nom: string;
+  readonly ue: string;
+  readonly couleur: string;
+}
+
+/** Ce que l'éditeur confie au choix des UE et des EC. */
+export interface ContexteUesEcs {
+  /** L'évaluation en cours ; ses UE (`ues`) et EC (`ecCodes`) sont remplacés à chaque choix. */
+  readonly evaluation: Record<string, unknown>;
+  /** EC du semestre, triés. */
+  readonly ecs: readonly EcPropose[];
+  couleurUe(ue: string): string;
+  /** Nom court d'une UE, sans le préfixe « UE ». */
+  nomUe(ue: string): string;
+  /** EC que les enseignants choisis assurent pour les promotions cochées ; `null` : pas de restriction. */
+  readonly ecsAffectes: readonly string[] | null;
+  /** Les enseignants choisis, en une ligne. */
+  readonly enseignants: string;
+  /** Après un choix : les compétences retenues suivent leurs EC, l'évaluation est enregistrée et l'étape redessinée. */
+  apresChangement(): void;
+}
+
+/** UE et EC retenus par l'évaluation, et la ligne qui résume le choix. */
+export function peindreUesEtEcs(contexte: ContexteUesEcs): void {
+  const { evaluation, ecs } = contexte;
+  // Après un changement de semestre, les UE et EC d'un autre semestre sont oubliés.
+  const cadre = cadreDuSemestre({ ues: textes(evaluation.ues), ecCodes: textes(evaluation.ecCodes) }, ecs);
+  evaluation.ues = cadre.ues;
+  evaluation.ecCodes = cadre.ecCodes;
+  const affectes = contexte.ecsAffectes === null ? null : new Set(contexte.ecsAffectes);
+  const choisir = (suite: { ues: string[]; ecCodes: string[] }): void => {
+    evaluation.ues = suite.ues;
+    evaluation.ecCodes = suite.ecCodes;
+    contexte.apresChangement();
+  };
+
+  const zoneUes = document.getElementById("f-ue");
+  if (zoneUes !== null) {
+    const ues = [...new Set(ecs.map((entree) => entree.ue))].filter(
+      (ue) => affectes === null || cadre.ues.includes(ue) || ecs.some((entree) => entree.ue === ue && affectes.has(entree.ec)),
+    );
+    if (ues.length === 0) {
+      zoneUes.replaceChildren(creer("span", "hint", "Aucune UE à ce semestre."));
+    } else {
+      zoneUes.replaceChildren(
+        ...ues.map((ue) => {
+          const cochee = cadre.ues.includes(ue);
+          const total = ecs.filter((entree) => entree.ue === ue).length;
+          const retenus = ecs.filter((entree) => entree.ue === ue && cadre.ecCodes.includes(entree.ec)).length;
+          const bouton = creerBouton(contexte.nomUe(ue), cochee && retenus < total ? "ec part" : "ec", () => {
+            choisir(basculerUe(cadre, ue, ecs));
+          });
+          bouton.style.setProperty("--c", contexte.couleurUe(ue));
+          bouton.dataset.uepick = ue;
+          bouton.setAttribute("aria-pressed", String(cochee));
+          if (cochee && total > 0) bouton.append(creer("em", "", `${String(retenus)}/${String(total)}`));
+          return bouton;
+        }),
+      );
+    }
+  }
+
+  const montres = affectes === null ? ecs : ecs.filter((entree) => affectes.has(entree.ec) || cadre.ecCodes.includes(entree.ec));
+  const zoneEcs = document.getElementById("f-ecsel");
+  if (zoneEcs !== null) {
+    zoneEcs.replaceChildren(
+      ...montres.map((entree) => {
+        const bouton = creerBouton("", "ec", () => {
+          choisir(basculerEc(cadre, entree.ec, ecs));
+        });
+        bouton.style.setProperty("--c", entree.couleur);
+        bouton.dataset.ecc = entree.ec;
+        bouton.setAttribute("aria-pressed", String(cadre.ecCodes.includes(entree.ec)));
+        bouton.title = entree.ue;
+        bouton.append(creer("span", "k", entree.ec), entree.nom);
+        return bouton;
+      }),
+    );
+  }
+
+  const resume = document.getElementById("ecHint");
+  if (resume !== null) {
+    const nombreEcs = cadre.ecCodes.length;
+    const nombreUes = uesRetenues(cadre, ecs).length;
+    const choix =
+      nombreEcs > 0 || nombreUes > 0
+        ? [nombreUes > 0 ? `${String(nombreUes)} UE` : "", nombreEcs > 0 ? `${String(nombreEcs)} EC sélectionné${nombreEcs > 1 ? "s" : ""}` : "aucun EC"]
+            .filter(Boolean)
+            .join(" · ")
+        : "Aucune UE ni EC précisé — toutes les compétences du semestre sont proposées";
+    resume.textContent =
+      choix + (affectes === null ? "" : ` · EC limités à ceux de ${contexte.enseignants} (${String(montres.length)} sur ${String(ecs.length)})`);
+  }
+}
+
+/** Une promotion proposée à l'étape 1. */
+export interface PromotionProposee {
+  readonly nom: string;
+  /** Nom court (« DNO2 »), ou le nom complet faute de mieux. */
+  readonly libelle: string;
+  /** Année de formation à l'année scolaire de l'évaluation ; `null` pour une promotion inconnue de l'établissement. */
+  readonly annee: number | null;
+  /** Vrai si la promotion est en cours (son année est dans la durée du diplôme). */
+  readonly enCours: boolean;
+  readonly referentielValide: boolean;
+}
+
+/** Ce que l'éditeur confie au choix des promotions. */
+export interface ContextePromotions {
+  /** Promotions en cours du diplôme, puis celles déjà cochées qui ne le sont plus. */
+  readonly promotions: readonly PromotionProposee[];
+  readonly cochees: readonly string[];
+  readonly anneeScolaire: string;
+  /** Vrai s'il n'y a aucune promotion en cours cette année scolaire. */
+  readonly aucuneEnCours: boolean;
+  /** Vrai si le référentiel de l'évaluation n'est pas validé : elle ne pourra pas être enregistrée. */
+  readonly referentielBloquant: boolean;
+  allerValidation(): void;
+  basculer(nom: string): void;
+}
+
+/** Promotions de l'évaluation : boutons à bascule, avec leur année et l'état de leur référentiel. */
+export function peindrePromotions(contexte: ContextePromotions): void {
+  const hote = document.getElementById("f-classes");
+  if (hote === null) return;
+  const bloquees = promotionsBloquees(contexte.promotions, contexte.cochees);
+  const elements: HTMLElement[] = contexte.promotions.map((promotion) => {
+    const cochee = contexte.cochees.includes(promotion.nom);
+    const bloquee = bloquees.has(promotion.nom);
+    const bouton = creerBouton(promotion.libelle, "liv", () => {
+      contexte.basculer(promotion.nom);
+    });
+    bouton.dataset.classe = promotion.nom;
+    bouton.setAttribute("aria-pressed", String(cochee));
+    bouton.disabled = bloquee;
+    bouton.title =
+      promotion.nom +
+      (bloquee ? " — autre année de formation que la promotion déjà choisie" : "") +
+      (promotion.referentielValide ? "" : " — référentiel non validé");
+    if (promotion.libelle === promotion.nom && promotion.enCours && promotion.annee !== null) {
+      bouton.append(creer("span", "n", `Année ${String(promotion.annee)}`));
+    }
+    if (!promotion.referentielValide) bouton.append(creer("span", "n", "référentiel à valider"));
+    return bouton;
+  });
+  if (contexte.aucuneEnCours) {
+    elements.push(creer("span", "hint", `Aucune promotion en cours en ${contexte.anneeScolaire} : crée-la dans Mon établissement > Promotions.`));
+  }
+  if (contexte.referentielBloquant) {
+    const alerte = creer("span", "hint", "Le référentiel de cette évaluation n'est pas validé : elle ne pourra pas être enregistrée. ");
+    alerte.id = "f-refnv";
+    alerte.style.color = "var(--signal)";
+    alerte.style.flexBasis = "100%";
+    const valider = creerBouton("Valider le référentiel", "btn ghost", () => {
+      contexte.allerValidation();
+    });
+    valider.dataset.allerval = "";
+    alerte.append(valider);
+    elements.push(alerte);
+  }
+  hote.replaceChildren(...elements);
 }

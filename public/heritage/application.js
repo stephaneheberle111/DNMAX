@@ -3879,9 +3879,8 @@ function paintSems(){
     choisir:sem=>{F.semManuel=true;setSemestre(sem);save();paintForm();paintPick()},
     suivreLaDate:()=>{F.semManuel=false;applySemDate();save();paintForm();paintPick()}});
 }
+/* Étape 1, promotions : écran écrit en TypeScript (src/editeur/etape-evaluation.ts) ; même année de formation pour toutes (src/domaine/cadre-evaluation.ts) */
 function paintClasse(){
-  const host=document.getElementById("f-classes");
-  if(!host)return;
   if(!Array.isArray(F.classes))migF(F);
   const AS=anneeScolaire();
   // promotions en cours de toutes les mentions du diplôme actif
@@ -3889,23 +3888,15 @@ function paintClasse(){
   const same=DATA.diplomes.filter(d=>norm(d.nom||"")===norm(dipA.nom||"")).map(d=>d.id);
   const dIdx=id=>DATA.diplomes.findIndex(d=>d.id===id);
   const ps=promos.map(migPromoCohorte).filter(pr=>same.includes(pr.diplomeId));
-  const yr=pr=>promoAnneeAt(pr,AS);
-  const live=ps.filter(pr=>{const a=yr(pr);return a>=1&&a<=promoDuree(pr)&&promoVisible(pr)})
-    .sort((x,y)=>(yr(x)-yr(y))||(dIdx(x.diplomeId)-dIdx(y.diplomeId)));
-  // plusieurs promotions possibles, mais toutes de la même année de formation
-  const selPr=F.classes.map(n=>ps.find(p=>p.nom===n)).filter(Boolean);
-  const lockY=selPr.length?yr(selPr[0]):null;
+  const yr=pr=>promoAnneeAt(pr,AS), enCours=pr=>{const a=yr(pr);return a>=1&&a<=promoDuree(pr)};
+  const live=ps.filter(pr=>enCours(pr)&&promoVisible(pr)).sort((x,y)=>(yr(x)-yr(y))||(dIdx(x.diplomeId)-dIdx(y.diplomeId)));
   const names=[...new Set([...live.map(pr=>pr.nom),...F.classes])].filter(Boolean);
-  const tag=n=>{const pr=ps.find(x=>x.nom===n);if(!pr)return "";const a=yr(pr);
-    return a>=1&&a<=promoDuree(pr)?`<span class="n">Année ${a}</span>`:""};
-  host.innerHTML=names.map(x=>{
-    const pr=ps.find(p=>p.nom===x), on=F.classes.includes(x), off=!on&&pr&&lockY!=null&&yr(pr)!==lockY;
-    return `<button type="button" class="liv" data-classe="${esc(x)}" aria-pressed="${on}" ${off?"disabled":""}
-      title="${esc(x)}${off?" — autre année de formation que la promotion déjà choisie":""}${pr&&!promoRefValide(pr)?" — référentiel non validé":""}">${esc(promoDisp(x))}${promoDisp(x)===x?tag(x):""}${pr&&!promoRefValide(pr)?`<span class="n">référentiel à valider</span>`:""}</button>`}).join("")
-    +(live.length?"":`<span class="hint">Aucune promotion en cours en ${esc(AS)} : crée-la dans Mon établissement > Promotions.</span>`)
-    +(dipBloquant(F)?`<span class="hint" id="f-refnv" style="color:var(--signal);flex-basis:100%">Le référentiel de cette évaluation n'est pas validé : elle ne pourra pas être enregistrée. <button type="button" class="btn ghost" data-allerval>Valider le référentiel</button></span>`:"");
-  {const b=host.querySelector("[data-allerval]");if(b)b.onclick=()=>allerValidation(dipBloquant(F))}
-  host.querySelectorAll("[data-classe]").forEach(b=>b.onclick=()=>toggleClasse(b.dataset.classe));
+  const bloquant=dipBloquant(F);
+  window.dnmaxPont.editeur.peindrePromotions({
+    promotions:names.map(n=>{const pr=ps.find(p=>p.nom===n);
+      return {nom:n,libelle:promoDisp(n),annee:pr?yr(pr):null,enCours:!!pr&&enCours(pr),referentielValide:!pr||promoRefValide(pr)}}),
+    cochees:F.classes,anneeScolaire:AS,aucuneEnCours:!live.length,referentielBloquant:!!bloquant,
+    allerValidation:()=>allerValidation(bloquant),basculer:n=>toggleClasse(n)});
 }
 function paintProf(){
   window.dnmaxPont.editeur.peindreEnseignants({evaluation:F,enseignants:DATA.enseignants.map(t=>t.nom).filter(Boolean),
@@ -3984,30 +3975,14 @@ function paintSteps(){
       :`${st.faits} / ${st.els}<em> évalué${st.els>1?"s":""}${st.partiels?" · "+st.partiels+" en cours":""}</em>`;}
   paintEnregistrement();
 }
+/* Étape 1, UE et EC : écran écrit en TypeScript (src/editeur/etape-evaluation.ts), règles dans src/domaine/cadre-evaluation.ts */
 function paintContexte(){
-  const g=id=>document.getElementById(id), sem=F.semestre;
-  const ues=uesOfSem(sem);
-  if(!Array.isArray(F.ues))F.ues=[];
-  F.ues=F.ues.filter(u=>ues.includes(u));
-  const all=ecsOfSem(sem);
-  F.ecCodes=F.ecCodes.filter(c=>all.some(e=>e.ec===c));
-  const lim0=ecsAffectes();
-  g("f-ue").innerHTML=ues.filter(u=>!lim0||F.ues.includes(u)||all.some(e=>e.ue===u&&lim0.has(e.ec))).map(u=>{
-    const on=F.ues.includes(u), tot=all.filter(e=>e.ue===u).length,
-          nb=all.filter(e=>e.ue===u&&F.ecCodes.includes(e.ec)).length;
-    return `<button type="button" class="ec${on&&nb<tot?" part":""}" style="--c:${ueColor(u)}" data-uepick="${esc(u)}" aria-pressed="${on}">${esc(tidy(u).replace(/^UE\s*/i,""))}${on&&tot?`<em>${nb}/${tot}</em>`:""}</button>`}).join("")
-    ||`<span class="hint">Aucune UE à ce semestre.</span>`;
-  g("f-ue").querySelectorAll("[data-uepick]").forEach(b=>b.onclick=()=>toggleUe(b.dataset.uepick));
   const lim=ecsAffectes();
-  const shown=lim?all.filter(e=>lim.has(e.ec)||F.ecCodes.includes(e.ec)):all;
-  g("f-ecsel").innerHTML=shown.map(e=>
-    `<button type="button" class="ec" style="--c:${e.couleur||ecColor(e.ec)}" data-ecc="${esc(e.ec)}" aria-pressed="${F.ecCodes.includes(e.ec)}" title="${esc(e.ue)}"><span class="k">${esc(e.ec)}</span>${esc(e.nom||"")}</button>`).join("");
-  g("f-ecsel").querySelectorAll("[data-ecc]").forEach(b=>b.onclick=()=>toggleEc(b.dataset.ecc));
-  const n=F.ecCodes.length, nu=uesSelected().length;
-  g("ecHint").textContent=(n||nu
-    ?[nu?nu+(nu>1?" UE":" UE"):"",n?n+(n>1?" EC sélectionnés":" EC sélectionné"):"aucun EC"].filter(Boolean).join(" · ")
-    :"Aucune UE ni EC précisé — toutes les compétences du semestre sont proposées")
-    +(lim?" · EC limités à ceux de "+(F.profs||[]).join(", ")+" ("+shown.length+" sur "+all.length+")":"");
+  window.dnmaxPont.editeur.peindreUesEtEcs({evaluation:F,
+    ecs:ecsOfSem(F.semestre).map(e=>({ec:e.ec,nom:e.nom||"",ue:e.ue,couleur:e.couleur||ecColor(e.ec)})),
+    couleurUe:u=>ueColor(u),nomUe:u=>tidy(u).replace(/^UE\s*/i,""),
+    ecsAffectes:lim?[...lim]:null,enseignants:(F.profs||[]).join(", "),
+    apresChangement:()=>{syncItemEcs();save();paintForm();paintPick()}});
 }
 function paintPromos(){
   const g=id=>document.getElementById(id);
@@ -7259,25 +7234,6 @@ bind("f-distrib","input",e=>{F.distribPrev=e.target.value;applySemDate();save();
 bind("f-rendu","input",e=>{F.renduPrev=e.target.value;save();paintForm()});
 
 bind("f-dip","change",e=>{DATA.activeDiplome=e.target.value;saveData()});
-function toggleUe(u){
-  if(!Array.isArray(F.ues))F.ues=[];
-  const ecs=ecsOfUe(u), on=F.ues.includes(u);
-  if(on){F.ues=F.ues.filter(x=>x!==u);F.ecCodes=F.ecCodes.filter(c=>!ecs.includes(c))}
-  else{F.ues=[...F.ues,u];
-    F.ecCodes=[...new Set([...F.ecCodes,...ecs])].sort((x,y)=>ecNum(x)-ecNum(y))}
-  syncItemEcs();save();paintForm();paintPick();
-}
-function toggleEc(code){
-  const on=F.ecCodes.includes(code), e=ecEntry(code,F.semestre);
-  F.ecCodes=(on?F.ecCodes.filter(x=>x!==code):[...F.ecCodes,code]).sort((x,y)=>ecNum(x)-ecNum(y));
-  if(!Array.isArray(F.ues))F.ues=[];
-  if(e){
-    if(!on){if(!F.ues.includes(e.ue))F.ues=[...F.ues,e.ue]}
-    else if(!F.ecCodes.some(c=>{const x=ecEntry(c,F.semestre);return x&&x.ue===e.ue}))
-      F.ues=F.ues.filter(u=>u!==e.ue);
-  }
-  syncItemEcs();save();paintForm();paintPick();
-}
 bind("f-promo","change",e=>selectPromo(e.target.value));
 
 bind("bPromoNew","click",()=>{
