@@ -4055,16 +4055,11 @@ function paintPick(){window.dnmaxPont.editeur.peindreCompetences(contexteCompete
 /* Suivi d'une évaluation : saisie dans DNMAX → distribuée aux étudiants (avec date de rendu) →
    évaluée (fiche remplie à la main hors DNMAX, ou saisie dans DNMAX) → restituée (par promotion,
    et par étudiant avec le module Étudiants). f.suivi = {saisie, distrib, butoir, evalue, mode:"main"|"dnmax"} */
-const ST_RANK={annulee:-1,prep:0,distrib:1,rendu:1,evalcours:2,eval:3,restpart:4,restit:5};
-const ST_LBL={brouillon:"Brouillon",prep:"Préparée",distrib:"Distribuée",rendu:"Rendus à évaluer",evalcours:"Évaluation en cours",eval:"Évaluée",restpart:"Restituée en partie",restit:"Restituée",annulee:"Annulée"};
+/* Règles du suivi (statuts, libellés, frise) : src/domaine/suivi-evaluation.ts */
+const SUIVI=window.dnmaxPont.suivi;
+const ST_LBL=SUIVI.LIBELLES_STATUT;
 function suiviOf(f){f.suivi=f.suivi||{};if(!f.suivi.saisie)f.suivi.saisie=f.date||new Date().toISOString().slice(0,10);return f.suivi}
-function saisieDnmax(f){
-  const els=studentsOf(f);
-  let any=0,full=0;const n=(f.items||[]).length?[...new Set((f.items||[]).map(it=>it.op?"op:"+it.op:"one:"+it.code))]:[];
-  els.forEach(e=>{const r=(f.res||{})[e.id]||{};if(r.nr||r.disp){any++;full++;return}   // non rendu ou dispensé : rien à saisir pour cet étudiant
-    const k=n.filter(x=>((r.n||{})[x]!=null&&(r.n||{})[x]!==""));if(k.length)any++;if(n.length&&k.length>=n.length)full++});
-  return {any,full,tot:els.length};
-}
+function saisieDnmax(f){return SUIVI.avancementSaisie(f,studentsOf(f).map(e=>e.id))}
 /* Le statut n'est jamais saisi : il découle de ce qui a été fait sur l'évaluation.
    - Restituée (en partie) : restitution marquée pour la ou les promotions, ou, avec le module Étudiants, pour chaque étudiant ;
    - Évaluée : tous les étudiants saisis dans DNMAX, ou évaluation marquée terminée (évaluation à la main) ;
@@ -4072,25 +4067,14 @@ function saisieDnmax(f){
    - Distribuée / Rendus à évaluer : les dates prévues de distribution / de rendu sont passées ;
    - Préparée : sinon. */
 const isoToday=()=>new Date().toISOString().slice(0,10);
-function promosNomsOf(f){return (f.classes&&f.classes.length?f.classes:[f.classe]).filter(Boolean)}
-function restEleves(f){if(!MOD.eleves)return {n:0,tot:0};const ids=studentsOf(f).map(e=>e.id);
-  return {n:ids.filter(id=>((f.res||{})[id]||{}).rest).length,tot:ids.length}}
+function promosNomsOf(f){return SUIVI.promotionsVisees(f)}
+function restEleves(f){if(!MOD.eleves)return {n:0,tot:0};return SUIVI.restitutionsEtudiants(f,studentsOf(f).map(e=>e.id))}
+/* suiviOf complète la date de saisie d'une évaluation ancienne avant de lire son statut */
 function statutOf(f){
-  if(f.brouillon)return "brouillon";
-  if(f.annulee)return "annulee";
-  const s=suiviOf(f), ps=promosNomsOf(f), R=f.restit||{}, t=isoToday();
-  const nr=ps.filter(n=>R[n]).length, re=restEleves(f);
-  if(s.restitue||(ps.length&&nr===ps.length)||(re.tot&&re.n>=re.tot))return "restit";
-  if(nr||re.n)return "restpart";
-  const d=MOD.eleves?saisieDnmax(f):{any:0,full:0,tot:0};
-  if(s.evalue||(d.tot&&d.full>=d.tot))return "eval";
-  if(s.evalDebut||d.any||(!MOD.eleves&&s.exporte))return "evalcours";
-  const dist=f.distribPrev, rend=f.renduPrev||s.butoir;
-  if(s.rendu||(rend&&rend<=t))return "rendu";
-  if(s.distrib||(dist&&dist<=t))return "distrib";
-  return "prep";
+  suiviOf(f);
+  return SUIVI.statutEvaluation(f,{aujourdhui:isoToday(),moduleEleves:!!MOD.eleves,idsEtudiants:MOD.eleves?studentsOf(f).map(e=>e.id):[]});
 }
-function evalueeF(f){return ST_RANK[statutOf(f)]>=ST_RANK.eval}
+function evalueeF(f){return SUIVI.estEvaluee(statutOf(f))}
 const fmtD=d=>d?d.split("-").reverse().slice(0,2).join("/"):"";
 /* Petite fenêtre d'une seule étape, ouverte en cliquant sur son point dans la frise */
 function stepEditor(f,i,k){
@@ -4112,8 +4096,8 @@ function stepEditor(f,i,k){
 }
 /* Suivi affiché comme une frise de 5 étapes : les étapes franchies sont pleines, l'étape en cours
    à moitié pleine si elle est commencée ; dessous, le statut et la prochaine chose à faire. */
-const ST_STEPS=["Préparée","Distribuée","Rendue","Évaluée","Restituée"];
-const ST_POS={prep:[0,0],distrib:[1,0],rendu:[2,0],evalcours:[3,1],eval:[3,0],restpart:[4,1],restit:[4,0],annulee:[-1,0]};
+const ST_STEPS=SUIVI.ETAPES_FRISE;
+const ST_POS=SUIVI.POSITIONS_FRISE;
 /* suivi simplifié (Paramètres > Règles d'évaluation) : affichage seul, le statut détaillé reste celui de l'évaluation */
 function suiviSimple(){return !!LS.get("dnmade.reglages",{}).suiviSimplifie}
 function suiviCellSimple(f,i){
@@ -6712,23 +6696,12 @@ function paintProg(){
     expected=expected.filter(c=>ecsOf(c,sem).some(e=>set.has(e.ec)));
   }
   const LV=PRESETS[DEF_PRESET_GET()].niveaux, NL=LV.length;
-  const rowsP=expected.map(c=>{
-    const cover=fs.filter(f=>(f.items||[]).some(it=>it.code===c.code));
-    const inSem=cover.filter(f=>f.semestre===sem);
-    // dernier niveau connu par étudiant, sur les évaluations du semestre (les plus récentes l'emportent)
-    const last={};
-    inSem.slice().sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))).forEach(f=>{
-      const N=(f.niveaux||[]).length||NL;
-      (f.items||[]).filter(it=>it.code===c.code).forEach(it=>{
-        const key=it.op?"op:"+it.op:"one:"+it.code;
-        Object.entries(f.res||{}).forEach(([eid,r])=>{const v=(r.n||{})[key];
-          if(v!=null&&v!=="")last[eid]=Math.round((+v)/(Math.max(1,N-1))*(NL-1))});
-      });
-    });
-    const done=els.filter(e=>last[e.id]!=null).length;
-    const dist=LV.map((_,i)=>els.filter(e=>last[e.id]===i).length);
+  // couverture de chaque compétence et dernier niveau de chaque étudiant : src/domaine/progression.ts
+  const PP=window.dnmaxPont.progression.progressionPromotion({codes:expected.map(c=>c.code),semestre:sem,evaluations:fs,
+    idsEtudiants:els.map(e=>e.id),nombreNiveaux:NL,estEvaluee:evalueeF,moduleEleves:!!MOD.eleves});
+  const rowsP=expected.map(c=>{const p=PP[c.code];
     const ecn=[...new Set((c.ecs||[]).filter(e=>e.sem===sem).map(e=>e.nom||e.ec))].join(", ");
-    return {c,cover,inSem,done,dist,ecn,state:inSem.length?(!inSem.some(evalueeF)?"prevue":(!MOD.eleves||(done>=els.length&&els.length)?"ok":"part")):(cover.length?"autre":"todo")};
+    return {c,cover:p.partout,inSem:p.auSemestre,done:p.faits,dist:p.repartition,ecn,state:p.etat};
   });
   const nOk=rowsP.filter(r=>r.inSem.length).length, nTodo=rowsP.length-nOk;
   const evSem=fs.filter(f=>f.semestre===sem);
@@ -6776,16 +6749,13 @@ function paintProgEleve(host,c){
   // acquise à partir de « Satisfaisant » (voir src/domaine/evaluation.ts)
   const LV=PRESETS[DEF_PRESET_GET()].niveaux, NL=LV.length, thr=EVAL.RANG_ACQUIS;
   const el=els.find(e=>e.id===ui.prog.el)||els[0];if(el)ui.prog.el=el.id;
-  const dateOf=f=>f.distribPrev||(f.suivi&&f.suivi.distrib)||f.date||"";
-  const norm=(f,v)=>{const N=(f.niveaux||[]).length||NL;return Math.round((+v)/Math.max(1,N-1)*(NL-1))};
+  // règles : src/domaine/progression.ts
+  const PG=window.dnmaxPont.progression, dateOf=f=>PG.dateDeLEvaluation(f);
   const live=fs.filter(f=>!f.annulee&&el&&studentsOf(f).some(e=>e.id===el.id));
-  const filled=(r,k)=>(r.n||{})[k]!=null&&(r.n||{})[k]!=="";
   /* A. avancement du semestre */
   const rowsA=live.filter(f=>f.semestre===sem).sort((a,b)=>dateOf(a).localeCompare(dateOf(b))).map(f=>{
-    const keys=lignesOf(f).map(ligKey), r=(f.res||{})[el.id]||{}, n=keys.filter(k=>filled(r,k)).length, st=saisieDnmax(f);
-    const autres=st.any-((n||r.nr)?1:0);
-    const s=r.disp?"disp":r.nr?"nr":(keys.length&&n>=keys.length)?"ok":n?"part":(autres>0?"miss":"wait");
-    return {f,fi:fiches.indexOf(f),keys,n,s,st,r}});
+    const keys=lignesOf(f).map(ligKey), r=(f.res||{})[el.id]||{}, st=saisieDnmax(f), e=PG.etatEtudiantDansEvaluation(r,keys,st.any);
+    return {f,fi:fiches.indexOf(f),keys,n:e.lignesSaisies,s:e.etat,st,r}});
   const cnt=k=>rowsA.filter(x=>x.s===k).length;
   /* rendus, non-rendus et dispenses de l'étudiant au semestre, comparés à la moyenne de la promo */
   const evSem=fs.filter(f=>!f.annulee&&f.semestre===sem);
@@ -6801,10 +6771,9 @@ function paintProgEleve(host,c){
   const LBL={ok:["ok","Évalué"],part:["part","Évaluation partielle"],nr:["todo","Non rendu"],disp:["prevue","Dispensé"],miss:["autre","Non évalué"],wait:["prevue","Pas encore évaluée"]};
   /* B. acquisition des compétences, cumulée jusqu'au semestre affiché */
   const comp={};
-  live.filter(f=>SEMS.indexOf(f.semestre)<=SEMS.indexOf(sem)).forEach(f=>{const r=(f.res||{})[el.id];if(!r||!r.n)return;
-    lignesOf(f).forEach(l=>{const k=ligKey(l);if(!filled(r,k))return;const lv=norm(f,r.n[k]);
-      (l.k==="op"?l.its.map(i=>i.code):[l.it.code]).forEach(code=>(comp[code]=comp[code]||[]).push({f,lv,d:dateOf(f),a:anneeOf(f.semestre)}))})});
-  const rowsB=Object.entries(comp).map(([code,L])=>{L.sort((x,y)=>x.d.localeCompare(y.d));
+  Object.entries(PG.trajectoires(live.filter(f=>SEMS.indexOf(f.semestre)<=SEMS.indexOf(sem)),el?el.id:"",NL)).forEach(([code,L])=>{
+    comp[code]=L.map(x=>({f:x.evaluation,lv:x.niveau,d:x.date,a:anneeOf(x.semestre)}))});
+  const rowsB=Object.entries(comp).map(([code,L])=>{
     const cc=REF.competences.find(x=>x.code===code)||{code,libelle:code,bloc:""};
     const ok=L.filter(x=>x.lv>=thr), pal=ok.length?Math.max(...ok.map(x=>x.a)):0;
     return {c:cc,L,last:L[L.length-1],pal}});
@@ -6812,17 +6781,12 @@ function paintProgEleve(host,c){
   const blocNom=n=>((REF.blocs||[]).find(b=>String(b.num)===n)||{}).nom||"";
   const nAcq=rowsB.filter(r=>r.last.lv>=thr).length;
   /* niveau de la classe sur chaque compétence : dernier niveau de chaque étudiant, jusqu'au semestre affiché */
-  const lastOf=e=>{const m={};
-    fs.filter(f=>!f.annulee&&SEMS.indexOf(f.semestre)<=SEMS.indexOf(sem)&&studentsOf(f).some(x=>x.id===e.id))
-      .sort((a,b)=>dateOf(a).localeCompare(dateOf(b))).forEach(f=>{const r=(f.res||{})[e.id];if(!r||!r.n||r.nr||r.disp)return;
-        lignesOf(f).forEach(l=>{const k=ligKey(l);if(!filled(r,k))return;const lv=norm(f,r.n[k]);
-          (l.k==="op"?l.its.map(i=>i.code):[l.it.code]).forEach(code=>{m[code]=lv})})});
-    return m};
+  const lastOf=e=>PG.derniersNiveaux(fs.filter(f=>!f.annulee&&SEMS.indexOf(f.semestre)<=SEMS.indexOf(sem)&&studentsOf(f).some(x=>x.id===e.id)),e.id,NL);
   const classe=els.map(lastOf);
   // la comparaison à la promotion se masque dans Paramètres > Règles d'évaluation
   const masquer=!!LS.get("dnmade.reglages",{}).masquerComparaison;
-  const posCl=r=>{if(masquer)return "";const vs=classe.map(m=>m[r.c.code]).filter(v=>v!=null);if(vs.length<2)return "";
-    const moyLv=Math.round(vs.reduce((a,b)=>a+b,0)/vs.length), d=r.last.lv-moyLv;
+  const posCl=r=>{if(masquer)return "";const pos=PG.positionDansLaClasse(r.last.lv,classe.map(m=>m[r.c.code]));if(!pos)return "";
+    const vs={length:pos.nombre}, moyLv=pos.moyenne, d=pos.ecart;
     return `<div class="pgpos" style="margin-top:4px"><span class="hint">Classe : en moyenne « ${esc(LV[moyLv]||"")} » (${vs.length} étudiants)</span>
       <span class="pp ${d>0?"up":d<0?"dn":"eq"}">${d>0?"▲ au-dessus":d<0?"▼ en dessous":"= dans la moyenne"}</span></div>`};
   const palCount=[1,2,3].map(a=>rowsB.filter(r=>r.pal===a).length);
