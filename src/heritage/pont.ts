@@ -21,6 +21,8 @@ import { construireTableur } from "../export/tableur";
 import { construireDocx } from "../export/word";
 import { peindreCompetences } from "../editeur/competences";
 import * as etapesEditeur from "../domaine/etapes-editeur";
+import * as suiviEvaluation from "../domaine/suivi-evaluation";
+import * as progression from "../domaine/progression";
 import { peindreEnseignants, peindreLivrables, peindrePromotions, peindreSemestres, peindreUesEtEcs } from "../editeur/etape-evaluation";
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { progressionDesCompetences } from "../domaine/progression-competences";
@@ -152,6 +154,10 @@ interface Pont {
     construireTableur: typeof construireTableur;
     dessinateurJauge: typeof dessinateurJauge;
   };
+  /** Suivi d'une évaluation : statut, saisie, restitutions (voir `domaine/suivi-evaluation`). */
+  readonly suivi: typeof suiviEvaluation;
+  /** Calculs de la page Progression (voir `domaine/progression`). */
+  readonly progression: typeof progression;
   /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
   readonly etapesEditeur: typeof etapesEditeur;
   /** Progression de la promotion sur chaque compétence du semestre (voir `domaine/progression-competences`). */
@@ -234,6 +240,8 @@ export async function chargerInterfaceHistorique(
     editeur: { peindreBarreEtapes, peindreEnregistrement, peindreLivrables, peindreEnseignants, peindreSemestres, peindreUesEtEcs, peindrePromotions, peindreCompetences, peindreFormulation, lierSelection, peindreSaisieEtudiants },
     progressionCompetences: progressionDesCompetences,
     etapesEditeur,
+    suivi: suiviEvaluation,
+    progression,
     exports: { colonnesExport, construireDocx, construireOdt, construireTableur, dessinateurJauge },
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
