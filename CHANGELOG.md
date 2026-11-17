@@ -30,6 +30,7 @@
 
 ### Corrigé
 
+- Même icône partout : « À propos » et l'onglet du navigateur reprennent l'icône de la barre des tâches (le signe X sur pavé pétrole) ; l'en-tête garde le nom « DNMA » suivi du signe.
 - Première ouverture : les nouveautés de la version ne s'affichent plus après la page de bienvenue (elles retenaient la visite guidée). Elles restent montrées après une mise à jour.
 - Paramètres > Exemple : l'aide décrit ce que l'exemple ajoute vraiment (un établissement fictif complet), et non plus une seule évaluation.
 - Visite guidée : à l'étape « Compétences », le curseur invitait à écrire au lieu de cocher une case ; à l'étape « Vos préférences », la bulle cachait le menu « Mon compte ».
