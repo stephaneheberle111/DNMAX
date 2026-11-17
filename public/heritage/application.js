@@ -339,12 +339,8 @@ function syncListe(pr,txt){
   pr.eleves=pr.liste.map(e=>e.nom).join("\n");
   return pr;
 }
-function migPromo(pr){
-  if(!Array.isArray(pr.liste))pr.liste=[];
-  pr.liste.forEach(completerPersonne);
-  pr.eleves=pr.liste.map(e=>e.nom).join("\n");
-  return pr;
-}
+/* liste des étudiants d'une promotion : règle écrite et testée dans src/domaine/promotions.ts */
+function migPromo(pr){return window.dnmaxPont.promotions.rafraichirListe(pr)}
 /* étudiants de l'évaluation : ceux des promotions choisies (ou de l'ancienne promotion liée),
    réduits à un seul si l'évaluation vise un étudiant */
 function promoElevesOf(ff){
@@ -2287,71 +2283,20 @@ function paintAffect(host){
     nomUe:u=>tidy(u),choisirAnnee:y=>{ui.org.affY=y;paintOrg()},choisirPromotion:id=>{ui.org.aff=id;paintOrg()},
     enregistrer:rep=>{const H=affH();H[AS]=H[AS]||{};H[AS][pr.id]=rep;persistData();paintOrg()}});
 }
+/* Volet Promotions : écran écrit en TypeScript (src/etablissement/promotions.ts) ; règles dans src/domaine/promotions.ts */
 function paintPromosOrg(host){
   const D=DATA, AS=anneeScolaire(new Date());
   promos.forEach(migPromoCohorte);
-  const dipIdx=id=>D.diplomes.findIndex(d=>d.id===id);
-  const list=promos.slice().sort((a,b)=>(dipIdx(a.diplomeId)-dipIdx(b.diplomeId))||(b.debut-a.debut));
-  const etat=pr=>{const a=promoAnneeAt(pr,AS), n=promoDuree(pr);
-    return a<1?"à venir":a>n?"terminée":promoShort(pr)+" · Année "+a};
-  const css="grid-template-columns:240px 92px minmax(0,1fr) 118px"+(MOD.eleves?" 120px":"")+" 92px";
-  const openId=ui.org.promo||"";
-  const moveOpts=(cur)=>dipVisibles().map(dp=>{const ps=list.filter(x=>x.diplomeId===dp.id);
-    return ps.length?`<optgroup label="${esc(dipLabel(dp))}">${ps.map(x=>`<option value="${x.id}" ${x.id===cur?"selected":""}>${esc(x.nom||"Sans nom")}</option>`).join("")}</optgroup>`:""}).join("");
-  const rows=list.map(pr=>{
-    const n=(pr.liste||[]).length, open=MOD.eleves&&openId===pr.id;
-    let h=`<div class="ed" style="${css}">
-      <select data-pd="${pr.id}" aria-label="Diplôme et mention">${dipVisibles().map(dp=>`<option value="${dp.id}" ${dp.id===pr.diplomeId?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>
-      <input type="number" min="2000" max="2100" value="${pr.debut}" data-py="${pr.id}" class="mono" aria-label="Année de début">
-      <span class="ro mono" title="Code du diplôme · début · fin (${promoDuree(pr)} ans)">${esc(pr.nom)}</span>
-      <span class="num">${esc(etat(pr))}</span>
-      ${MOD.eleves?`<button class="btn ghost" data-po="${pr.id}" aria-expanded="${open}">${n} étudiant${n>1?"s":""} ${open?"▴":"▾"}</button>`:""}
-      ${delBtn("pr"+pr.id,"Supprimer")}</div>`;
-    if(open){
-      const scss="grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px 92px";
-      h+=`<div class="pdet">
-        ${(pr.liste||[]).map(e=>`<div class="ed" style="${scss}">
-          <input type="text" value="${esc(completerPersonne(e).prenom)}" data-sp="${pr.id}|${e.id}" placeholder="Prénom" aria-label="Prénom de l'étudiant">
-          <input type="text" value="${esc(e.nomFam)}" data-sn="${pr.id}|${e.id}" placeholder="Nom" aria-label="Nom de l'étudiant">
-          <select data-sm="${pr.id}|${e.id}" aria-label="Promotion de l'étudiant" title="Changer de promotion, ou de mention">${moveOpts(pr.id)}</select>
-          ${delBtn("st"+pr.id+"|"+e.id,"Retirer")}</div>`).join("")||`<div class="empty">Aucun étudiant dans cette promotion.</div>`}
-        <div class="padd"><textarea data-sa="${pr.id}" rows="2" placeholder="Ajouter des étudiants — un par ligne : prénom puis nom, ou deux colonnes Prénom / Nom collées d'un tableur"></textarea>
-          <button class="btn ghost" data-sab="${pr.id}">Ajouter</button></div>
-      </div>`;
-    }
-    return h;
-  }).join("");
-  host.innerHTML=edPanel("Promotions",promos.length,`<button class="btn ghost" id="prAdd">+ Promotion</button>`,
-    {css,cells:["Diplôme · mention","Début","Promotion","En "+AS,...(MOD.eleves?["Étudiants"]:[]),""]},rows,
-    "Une promotion suit un groupe d'un diplôme et d'une mention de son entrée à sa sortie. Choisissez d'abord le diplôme et la mention, puis l'année de début : le nom se compose seul avec le code du diplôme, l'année de début et l'année de fin, qui dépend de la durée du diplôme (Diplômes et mentions) — DNO-2025-2028 pour un DN MADE mention Objet en trois ans commencé en 2025. L'année de formation se déduit de l'année scolaire, et l'étape 1 de l'évaluation propose les promotions de la mention active."
-    +(MOD.eleves?" Ouvrez « étudiants » pour gérer la liste : renommer, retirer, ajouter plusieurs noms d'un coup, ou faire passer un étudiant dans une autre promotion, y compris d'une autre mention. Ses résultats déjà saisis restent attachés aux évaluations de son ancienne promotion.":" Le module « Étudiants et promotions » (Paramètres) permet en plus de gérer la liste des étudiants de chaque promotion."));
-  const save2=()=>{savePromos();if(ui.tab!=="org")return;};
-  const P=id=>promos.find(x=>x.id===id);
-  const rename=(pr,fn)=>{fn();pr.nom=promoNomAuto(pr)};
-  host.querySelector("#prAdd").onclick=()=>{
-    const pr={id:uid(),nom:"",debut:asStart(AS),diplomeId:D.activeDiplome,eleves:"",liste:[]};
-    pr.nom=promoNomAuto(pr);promos.push(pr);savePromos();paintOrg();
-    const f=host.querySelector(`[data-pd="${pr.id}"]`);if(f)f.focus()};
-  host.querySelectorAll("[data-pd]").forEach(i=>i.onchange=()=>{const pr=P(i.dataset.pd);rename(pr,()=>pr.diplomeId=i.value);save2();paintOrg()});
-  host.querySelectorAll("[data-py]").forEach(i=>i.onchange=()=>{const pr=P(i.dataset.py),v=parseInt(i.value,10);
-    if(!v)return;rename(pr,()=>pr.debut=v);save2();paintOrg()});
-  host.querySelectorAll("[data-po]").forEach(b=>b.onclick=()=>{ui.org.promo=ui.org.promo===b.dataset.po?"":b.dataset.po;paintOrg()});
-  host.querySelectorAll("[data-sp],[data-sn]").forEach(i=>i.oninput=()=>{const [pid,eid]=(i.dataset.sp||i.dataset.sn).split("|"),pr=P(pid);
-    const e=pr.liste.find(x=>x.id===eid);if(!e)return;completerPersonne(e);
-    if(i.dataset.sp!==undefined)e.prenom=i.value;else e.nomFam=i.value;
-    e.nom=composerNom(e.prenom,e.nomFam);migPromo(pr);save2()});
-  host.querySelectorAll("[data-sm]").forEach(sel=>sel.onchange=()=>{const [pid,eid]=sel.dataset.sm.split("|"),from=P(pid),to=P(sel.value);
-    if(!to||to===from)return;const k=from.liste.findIndex(x=>x.id===eid);if(k<0)return;
-    const e=from.liste.splice(k,1)[0];to.liste.push(e);migPromo(from);migPromo(to);save2();paintOrg();
-    toast(e.nom+" → "+(to.nom||"promotion")+(to.diplomeId!==from.diplomeId?" ("+dipLabel(D.diplomes.find(d=>d.id===to.diplomeId)||{})+")":""))});
-  host.querySelectorAll("[data-sab]").forEach(b=>b.onclick=()=>{const pr=P(b.dataset.sab), ta=host.querySelector(`[data-sa="${b.dataset.sab}"]`);
-    const lignes=lignesNoms(ta.value);if(!lignes.length)return;
-    lignes.forEach(l=>pr.liste.push(nouvellePersonne(newId("s"),l)));migPromo(pr);save2();paintOrg()});
-  host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-    const id=b.dataset.eddel;
-    if(id.startsWith("pr")){const pid=id.slice(2);promos=promos.filter(x=>x.id!==pid);if(F.promoId===pid){F.promoId="";save()}}
-    else{const [pid,eid]=id.slice(2).split("|"),pr=P(pid);pr.liste=pr.liste.filter(x=>x.id!==eid);migPromo(pr)}
-    savePromos();paintOrg()}));
+  window.dnmaxPont.etablissement.peindrePromotions(host,{promotions:()=>promos,ordreDiplomes:D.diplomes.map(d=>d.id),
+    diplomes:dipVisibles().map(dp=>({id:dp.id,libelle:dipLabel(dp)})),libelleDiplome:id=>dipLabel(D.diplomes.find(d=>d.id===id)||{}),
+    anneeScolaire:AS,moduleEleves:!!MOD.eleves,ouverte:ui.org.promo||"",
+    basculer:id=>{ui.org.promo=ui.org.promo===id?"":id;paintOrg()},
+    anneeFormation:pr=>promoAnneeAt(pr,AS),duree:promoDuree,nomCourt:pr=>promoShort(pr)||"",renommer:pr=>{pr.nom=promoNomAuto(pr)},
+    ajouterPromotion:()=>{const pr={id:uid(),nom:"",debut:asStart(AS),diplomeId:D.activeDiplome,eleves:"",liste:[]};
+      pr.nom=promoNomAuto(pr);promos.push(pr);savePromos();paintOrg();return pr.id},
+    supprimerPromotion:pid=>{promos=promos.filter(x=>x.id!==pid);if(F.promoId===pid){F.promoId="";save()}},
+    nouvelIdentifiantEtudiant:()=>newId("s"),enregistrer:savePromos,redessiner:paintOrg,
+    armement:{arme:edArm,armer:(id,fn)=>armDel(id,fn)},annoncer:toast});
 }
 function paintRef(){
   if(!REF_PANES[ui.ref.pane])ui.ref.pane="explorer";

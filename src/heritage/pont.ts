@@ -9,6 +9,7 @@ import { renumeroterBloc } from "../domaine/numero-bloc";
 import * as saisieResultats from "../domaine/saisie-resultats";
 import * as reglesEvaluation from "../domaine/evaluation";
 import * as personnes from "../domaine/personnes";
+import * as promotions from "../domaine/promotions";
 import { NIVEAUX_ACQUISITION, regleNiveauxAcquisition } from "../domaine/regles-affichees";
 import * as suiviSimplifie from "../domaine/suivi-simplifie";
 import { lireMoisConservation } from "../domaine/conservation";
@@ -29,6 +30,7 @@ import { installerReferentielExemple } from "./exemple";
 import { peindreRepartition, peindreVoletEtablissement } from "../etablissement/volets";
 import { peindreEnseignants as peindreVoletEnseignants } from "../etablissement/enseignants";
 import { peindreLivrables as peindreVoletLivrables } from "../etablissement/livrables";
+import { peindrePromotions as peindreVoletPromotions } from "../etablissement/promotions";
 import { peindreEnseignants, peindreLivrables, peindrePromotions, peindreSemestres, peindreUesEtEcs } from "../editeur/etape-evaluation";
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { progressionDesCompetences } from "../domaine/progression-competences";
@@ -145,6 +147,8 @@ interface Pont {
   readonly evaluation: typeof reglesEvaluation;
   /** Prénom et nom des enseignants et des étudiants (voir `domaine/personnes`). */
   readonly personnes: typeof personnes;
+  /** Ordre, état et liste des étudiants des promotions (voir `domaine/promotions`). */
+  readonly promotions: typeof promotions;
   /** Niveaux d'acquisition du DN MADE et leur règle, montrée dans la carte du module (voir `domaine/regles-affichees`). */
   readonly niveauxAcquisition: { noms: typeof NIVEAUX_ACQUISITION; regle: typeof regleNiveauxAcquisition };
   /** Suivi simplifié « À faire / Faite » (voir `domaine/suivi-simplifie`). */
@@ -188,6 +192,7 @@ interface Pont {
     peindreRepartition: typeof peindreRepartition;
     peindreEnseignants: typeof peindreVoletEnseignants;
     peindreLivrables: typeof peindreVoletLivrables;
+    peindrePromotions: typeof peindreVoletPromotions;
   };
   /** Calculs de la page Progression (voir `domaine/progression`). */
   readonly progression: typeof progression;
@@ -284,6 +289,7 @@ export async function chargerInterfaceHistorique(
     saisie: saisieResultats,
     evaluation: reglesEvaluation,
     personnes,
+    promotions,
     niveauxAcquisition: { noms: NIVEAUX_ACQUISITION, regle: regleNiveauxAcquisition },
     suiviSimplifie,
     jauge: jaugeExport,
@@ -298,6 +304,7 @@ export async function chargerInterfaceHistorique(
       peindreRepartition,
       peindreEnseignants: peindreVoletEnseignants,
       peindreLivrables: peindreVoletLivrables,
+      peindrePromotions: peindreVoletPromotions,
     },
     installerReferentielExemple: () => installerReferentielExemple(magasin, new Date()),
     exports: { colonnesExport, construireDocx, construireOdt, construireTableur, dessinateurJauge },
