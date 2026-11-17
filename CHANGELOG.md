@@ -4,6 +4,7 @@
 
 ### Modifié
 
+- Site dnmax.fr aux couleurs de l'application : crème et pétrole, fond à la teinte « Douce », mêmes polices, nom « DNMA » suivi du signe X. La reconstitution de l'application et ses exemples passent aux niveaux de maîtrise.
 - Sauvegardes : DNMAX garde désormais la dernière copie de chaque semaine pendant trois mois, puis la dernière de chaque mois pendant un an, au lieu des dix derniers jours d'utilisation. Les deux durées se règlent dans Paramètres > Sauvegardes.
 - Une seule échelle d'évaluation pour tous, officielle pour les DN MADE : les niveaux de maîtrise (Insuffisant, Fragile, Satisfaisant, Très bonne maîtrise). Une compétence est acquise à partir de « Satisfaisant ». Les degrés d'acquisition, la note chiffrée, l'échelle personnalisée et les coefficients disparaissent ; vos évaluations passent à cette échelle.
 - Pour enregistrer une évaluation, il faut désormais aussi une promotion, une consigne et au moins un EC (une UE cochée vaut tous ses EC).

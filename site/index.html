@@ -5,26 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>DNMAX — évaluations par compétences pour le DN MADE</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2310555F'/><g transform='translate(12 12) scale(.76)'><path d='M17 85 40.6 59.4M67.7 32.3 85 17' fill='none' stroke='%23A8D2D4' stroke-width='8.5' stroke-linecap='round'/><path d='M15 26.5 42.5 13C59.5 33 72.5 55.5 81 82.5L74 86C56.5 66.5 38.5 45.5 15 26.5Z' fill='%23FFFFFF'/></g></svg>">
-<link rel="preload" href="polices/schibsted-grotesk.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="polices/syne.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="polices/public-sans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="polices/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* Polices servies par le site lui-même : aucune requête vers un service tiers. Licence SIL OFL 1.1, voir polices/. */
-@font-face{font-family:"Syne";src:url(polices/syne.woff2) format("woff2");font-weight:400 800;font-style:normal;font-display:swap}
-@font-face{font-family:"Schibsted Grotesk";src:url(polices/schibsted-grotesk.woff2) format("woff2");font-weight:400 900;font-style:normal;font-display:swap}
-@font-face{font-family:"Schibsted Grotesk";src:url(polices/schibsted-grotesk-italique.woff2) format("woff2");font-weight:400 900;font-style:italic;font-display:swap}
 @font-face{font-family:"Bricolage Grotesque";src:url(polices/bricolage-grotesque.woff2) format("woff2");font-weight:200 800;font-style:normal;font-display:swap}
 @font-face{font-family:"Public Sans";src:url(polices/public-sans.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
 </style>
 <style>
 :root{
-  --paper:#F3F5F9; --surface:#FFFFFF; --sunk:#E8ECF3;
-  --ink:#15181E; --ink-2:#4F5866; --line:#D7DBE2;
-  --accent:#1F4D8F; --accent-ink:#FFFFFF; --accent-soft:#E7EEF8;
-  --signal:#F0C24B; --signal-ink:#2B2100;
-  --bug:#B4432C; --ok:#1E7A4F; --focus:#F0C24B;
-  --l0:#ECEFF4; --l1:#EBB7A8; --l2:#F3D891; --l3:#A9C8EE; --l4:#1F4D8F;
-  --display:"Syne","Avenir Next","Segoe UI",system-ui,sans-serif;
-  --body:"Schibsted Grotesk","Helvetica Neue",Arial,system-ui,sans-serif;
+  /* Identité de l'application : crème et pétrole. Le fond reprend la teinte « Douce » de l'application, plus reposante à la lecture. */
+  --paper:#F6F2E9; --surface:#FFFDF7; --sunk:#F1ECE0;
+  --ink:#1C1A15; --ink-2:#5A5345; --line:#D6CDB9;
+  --accent:#10555F; --accent-ink:#FFFFFF; --accent-soft:#DCEBEA;
+  --signal:#8A4A0E; --signal-ink:#FFFFFF;
+  --bug:#A3352B; --ok:#1E7A4F; --focus:#2A7F88;
+  --l0:#ECE5D6; --l1:#A8D2D4; --l2:#62A9AE; --l3:#2A7F88; --l4:#10555F;
+  --display:"Bricolage Grotesque","Helvetica Neue",Arial,system-ui,sans-serif;
+  --body:"Public Sans","Helvetica Neue",Arial,system-ui,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   color-scheme:light;
   box-sizing:border-box;
@@ -33,20 +31,22 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --paper:#111419; --surface:#1A1E25; --sunk:#232933;
-    --ink:#E9ECF1; --ink-2:#A2ABB8; --line:#2E3540;
-    --accent:#7FA9E6; --accent-ink:#0F1726; --accent-soft:#1D2836;
-    --bug:#E8795F; --ok:#5ACB92;
-    --l0:#272D37;
+    --paper:#1A1A18; --surface:#24221E; --sunk:#2B2924;
+    --ink:#EEE8DB; --ink-2:#ABA290; --line:#3A362E;
+    --accent:#62A9AE; --accent-ink:#10181A; --accent-soft:#1D3537;
+    --signal:#D9A066; --signal-ink:#1B1A17;
+    --bug:#E8795F; --ok:#5ACB92; --focus:#62A9AE;
+    --l0:#2B2924;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --paper:#111419; --surface:#1A1E25; --sunk:#232933;
-  --ink:#E9ECF1; --ink-2:#A2ABB8; --line:#2E3540;
-  --accent:#7FA9E6; --accent-ink:#0F1726; --accent-soft:#1D2836;
-  --bug:#E8795F; --ok:#5ACB92;
-  --l0:#272D37;
+  --paper:#1A1A18; --surface:#24221E; --sunk:#2B2924;
+  --ink:#EEE8DB; --ink-2:#ABA290; --line:#3A362E;
+  --accent:#62A9AE; --accent-ink:#10181A; --accent-soft:#1D3537;
+  --signal:#D9A066; --signal-ink:#1B1A17;
+  --bug:#E8795F; --ok:#5ACB92; --focus:#62A9AE;
+  --l0:#2B2924;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -63,8 +63,11 @@ a{color:var(--accent);text-underline-offset:3px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:29;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 header.top .wrap{display:flex;align-items:center;gap:24px;height:64px}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font:800 22px/1 var(--display);letter-spacing:-.01em}
-.logo svg{width:26px;height:26px}
+/* Le nom comme dans l'en-tête de l'application : « DNMA » suivi du signe X, délié à l'encre et plein pétrole. */
+.logo{display:flex;align-items:baseline;gap:1px;text-decoration:none;color:var(--ink);font:800 26px/1 var(--display);letter-spacing:-.02em}
+.logo .signe{width:.885em;height:.885em;flex-shrink:0;margin-bottom:-.115em}
+.logo .signe-delie{fill:none;stroke:var(--ink);stroke-width:4.6;stroke-linecap:round}
+.logo .signe-plein{fill:var(--accent)}
 nav.main{display:flex;gap:4px;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none}
 /* Téléphone : le menu passe sous le logo, et ses liens vont à la ligne plutôt que de sortir de l'écran */
 @media (max-width:640px){
@@ -133,15 +136,15 @@ nav.main a.cta{background:var(--accent);color:var(--accent-ink)}
 
 /* La fenêtre de l’application (reconstitution) */
 .app{
-  --a-paper:#F3F4F6; --a-surface:#FFFFFF; --a-ink:#15181E; --a-muted:#5C6472; --a-line:#D7DBE2; --a-accent:#1F4D8F; --a-on-accent:#FFFFFF; --a-soft:#E7EEF8;
+  --a-paper:#F1ECE0; --a-surface:#FFFDF7; --a-ink:#1C1A15; --a-muted:#5A5345; --a-line:#D6CDB9; --a-accent:#10555F; --a-on-accent:#FFFFFF; --a-soft:#DCEBEA;
   container-type:inline-size;position:relative;aspect-ratio:16/11;background:var(--a-paper);color:var(--a-ink);
   border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
-  box-shadow:0 40px 80px -40px rgba(15,30,60,.45),0 2px 6px rgba(15,30,60,.06);font-family:"Public Sans",Arial,sans-serif;
+  box-shadow:0 40px 80px -40px rgba(40,30,15,.4),0 2px 6px rgba(40,30,15,.06);font-family:"Public Sans",Arial,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .app{
-  --a-paper:#13161A; --a-surface:#1B1F25; --a-ink:#E9ECF1; --a-muted:#99A2B0; --a-line:#2B313A; --a-accent:#7FA9E6; --a-on-accent:#0F1726; --a-soft:#1D2836;
+  --a-paper:#1B1A17; --a-surface:#24221E; --a-ink:#EEE8DB; --a-muted:#ABA290; --a-line:#3A362E; --a-accent:#62A9AE; --a-on-accent:#10181A; --a-soft:#1D3537;
   box-shadow:0 40px 80px -40px rgba(0,0,0,.8)}}
-:root[data-theme="dark"] .app{--a-paper:#13161A; --a-surface:#1B1F25; --a-ink:#E9ECF1; --a-muted:#99A2B0; --a-line:#2B313A; --a-accent:#7FA9E6; --a-on-accent:#0F1726; --a-soft:#1D2836}
+:root[data-theme="dark"] .app{--a-paper:#1B1A17; --a-surface:#24221E; --a-ink:#EEE8DB; --a-muted:#ABA290; --a-line:#3A362E; --a-accent:#62A9AE; --a-on-accent:#10181A; --a-soft:#1D3537}
 .app *{box-sizing:border-box}
 .app-fs{font-size:1.72cqw;line-height:1.45;display:flex;flex-direction:column;height:100%}
 .chrome{display:flex;align-items:center;gap:.5em;padding:.55em .9em;background:var(--a-surface);border-bottom:1px solid var(--a-line);font-size:.85em;color:var(--a-muted)}
@@ -320,10 +323,10 @@ svg.dim .dot.off{opacity:.1}
 .scr.on .feuille{transform:rotate(1.5deg);opacity:1}
 .feuille .nom{position:absolute;top:-1.1em;right:.8em;max-width:calc(100% - 1.6em);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72em;font-weight:700;background:#2B579A;color:#fff;border-radius:.3em .3em 0 0;padding:.2em .6em}
 .feuille h5{font:700 1em/1.25 "Bricolage Grotesque",sans-serif;margin:0 0 .2em}
-.feuille .m{font-size:.75em;color:#5C6472;margin:0 0 .7em}
+.feuille .m{font-size:.75em;color:#5A5345;margin:0 0 .7em}
 .feuille table{width:100%;border-collapse:collapse;font-size:.66em}
-.feuille th,.feuille td{border:1px solid #CBD1DA;padding:.35em .4em;text-align:left;vertical-align:top}
-.feuille th{background:#EEF1F5}
+.feuille th,.feuille td{border:1px solid #D6CDB9;padding:.35em .4em;text-align:left;vertical-align:top}
+.feuille th{background:#F1ECE0}
 .feuille td.v{width:12%}
 
 /* Étudiants */
@@ -339,7 +342,7 @@ svg.dim .dot.off{opacity:.1}
 .grille-a td.rd.nr{color:var(--bug,#B4432C);font-weight:600}
 .scr.on .grille-a td[data-l="1"]{background:var(--l1);transition-delay:calc(var(--d)*1ms)}
 .scr.on .grille-a td[data-l="2"]{background:var(--l2);transition-delay:calc(var(--d)*1ms)}
-.scr.on .grille-a td[data-l="3"]{background:var(--l3);transition-delay:calc(var(--d)*1ms)}
+.scr.on .grille-a td[data-l="3"]{background:var(--l3);color:#fff;transition-delay:calc(var(--d)*1ms)}
 .scr.on .grille-a td[data-l="4"]{background:var(--l4);color:#fff;transition-delay:calc(var(--d)*1ms)}
 .grille-a td.sans{background:transparent;border:1px dashed var(--a-line)}
 .leg{display:flex;flex-wrap:wrap;gap:.9em;font-size:.76em;color:var(--a-muted);margin-top:.6em}
@@ -359,7 +362,7 @@ svg.dim .dot.off{opacity:.1}
 .prog .pv{justify-self:start;font-size:.85em;font-weight:600;border-radius:99em;padding:.12em .6em;background:var(--l0);color:var(--a-ink);white-space:nowrap;transition:background .35s}
 .scr.on.prog .pv[data-l="1"]{background:var(--l1);color:#15181E;transition-delay:calc(var(--d)*1ms)}
 .scr.on.prog .pv[data-l="2"]{background:var(--l2);color:#15181E;transition-delay:calc(var(--d)*1ms)}
-.scr.on.prog .pv[data-l="3"]{background:var(--l3);color:#15181E;transition-delay:calc(var(--d)*1ms)}
+.scr.on.prog .pv[data-l="3"]{background:var(--l3);color:#fff;transition-delay:calc(var(--d)*1ms)}
 .scr.on.prog .pv[data-l="4"]{background:var(--l4);color:#fff;transition-delay:calc(var(--d)*1ms)}
 .prog .lib{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--a-muted)}
 .prog .lib b{font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--a-ink);margin-right:.4em}
@@ -529,7 +532,7 @@ textarea{min-height:110px;resize:vertical}
 .item .details{margin-top:6px;font-size:14px;color:var(--ink-2)}
 .item .pied{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:10px;font-size:13px;color:var(--ink-2)}
 .tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px}
-.tag.idee{background:var(--l3);color:#15181E}
+.tag.idee{background:var(--accent-soft);color:var(--ink)}
 .tag.bug{background:color-mix(in srgb,var(--bug) 18%,transparent);color:var(--bug)}
 .tag.statut{background:var(--sunk);color:var(--ink)}
 .lien-mini{all:unset;cursor:pointer;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
@@ -559,8 +562,7 @@ footer a{color:var(--ink-2)}
 <header class="top">
   <div class="wrap">
     <a class="logo" href="#accueil" aria-label="DNMAX, accueil">
-      <svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#10555F"/><g transform="translate(12 12) scale(.76)"><path d="M17 85 40.6 59.4M67.7 32.3 85 17" fill="none" stroke="#A8D2D4" stroke-width="8.5" stroke-linecap="round"/><path d="M15 26.5 42.5 13C59.5 33 72.5 55.5 81 82.5L74 86C56.5 66.5 38.5 45.5 15 26.5Z" fill="#FFFFFF"/></g></svg>
-      DNMAX
+      <b aria-hidden="true">DNMA</b><svg class="signe" viewBox="0 0 100 100" aria-hidden="true"><path class="signe-delie" d="M13 87 42.1 57.9M64.5 35.5 87 13M8 82l10 10M82 8l10 10"/><path class="signe-plein" d="M15 26.5 42.5 13C59.5 33 72.5 55.5 81 82.5L74 86C56.5 66.5 38.5 45.5 15 26.5Z"/></svg>
     </a>
     <nav class="main" aria-label="Pages">
       <a href="#accueil" data-lien="accueil">Présentation</a>
@@ -597,7 +599,7 @@ footer a{color:var(--ink-2)}
         <article class="etape" data-scr="saved" data-tab="0">
           <p class="quand">Vos évaluations</p>
           <h2>Tout votre semestre sur une seule page.</h2>
-          <p>Chaque évaluation garde sa promotion, son semestre, son échelle et l’avancement de la saisie. Vous voyez qui l’a modifiée en dernier, et quand.</p>
+          <p>Chaque évaluation garde sa promotion, son semestre et l’avancement de la saisie. Vous voyez qui l’a modifiée en dernier, et quand.</p>
         </article>
         <article class="etape" data-scr="eval" data-tab="0">
           <p class="quand">Étape 1, l’évaluation</p>
@@ -705,7 +707,7 @@ footer a{color:var(--ink-2)}
                         <div><span class="chip a" style="--d:2550"><span class="k">EC 11.1</span>Techniques et savoir-faire</span><span class="chip a" style="--d:2700"><span class="k">EC 11.2</span>Pratiques et mises en œuvre du projet</span></div>
                         <p class="grp-t">Échelle</p>
                         <div class="choix-l a" style="--d:2900"><span>Degrés d’acquisition</span><span class="mut">▾</span></div>
-                        <div class="a" style="--d:3000;font-size:.9em"><span class="chip off">Non acquis</span><span class="chip off">En cours d’acquisition</span><span class="chip off">Acquis</span><span class="chip off">Maîtrisé</span></div>
+                        <div class="a" style="--d:3000;font-size:.9em"><span class="chip off">Insuffisant</span><span class="chip off">Fragile</span><span class="chip off">Satisfaisant</span><span class="chip off">Très bonne maîtrise</span></div>
                       </div>
                     </div>
                   </div>
@@ -793,7 +795,7 @@ footer a{color:var(--ink-2)}
                       <h5>Évaluation intermédiaire — Mobilier modulaire en frêne</h5>
                       <p class="m">DN MADE 2 Objet, S3. Livrables&nbsp;: carnet de projet, maquettes, planches.</p>
                       <table>
-                        <tr><th>Critère observable</th><th>Non acquis</th><th>En cours d’acquisition</th><th>Acquis</th><th>Maîtrisé</th></tr>
+                        <tr><th>Critère observable</th><th>Insuffisant</th><th>Fragile</th><th>Satisfaisant</th><th>Très bonne maîtrise</th></tr>
                         <tr><td>Constituer un corpus de références… <b>C4.1 C4.3</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
                         <tr><td>Éprouver les assemblages par la maquette… <b>C10.3 C11.2</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
                         <tr><td>Présenter le principe d’assemblage… <b>C10.6</b></td><td class="v"></td><td class="v"></td><td class="v"></td><td class="v"></td></tr>
@@ -811,7 +813,7 @@ footer a{color:var(--ink-2)}
                       <thead><tr><th class="e">Étudiant</th><th class="r">Rendu</th><th>C4.1 + C4.3</th><th>C10.3 + C11.2</th><th>C10.6</th><th>C2.1</th><th class="f">Fait</th></tr></thead>
                       <tbody></tbody>
                     </table>
-                    <div class="leg a" style="--d:300"><span><i style="background:var(--l1)"></i>Non acquis</span><span><i style="background:var(--l2)"></i>En cours d’acquisition</span><span><i style="background:var(--l3)"></i>Acquis</span><span><i style="background:var(--l4)"></i>Maîtrisé</span></div>
+                    <div class="leg a" style="--d:300"><span><i style="background:var(--l1)"></i>Insuffisant</span><span><i style="background:var(--l2)"></i>Fragile</span><span><i style="background:var(--l3)"></i>Satisfaisant</span><span><i style="background:var(--l4)"></i>Très bonne maîtrise</span></div>
                   </div>
                 </div>
 
@@ -819,7 +821,7 @@ footer a{color:var(--ink-2)}
                   <div class="pan">
                     <div class="tete a"><h4>Progression étudiant</h4><span class="seg2 pousse"><span>Promotion</span><span class="on">Étudiant</span></span></div>
                     <p class="qui a" style="--d:80">Camille Ferrand <span>· DNO2</span></p>
-                    <div class="bh a" style="--d:120">Acquisition des compétences <span class="mut">— 5 / 6 acquises (dernier niveau ≥ «&nbsp;Acquis&nbsp;»), jusqu’au S3</span></div>
+                    <div class="bh a" style="--d:120">Acquisition des compétences <span class="mut">— 5 / 6 acquises (dernier niveau ≥ «&nbsp;Satisfaisant&nbsp;»), jusqu’au S3</span></div>
                     <div id="prog-lignes"></div>
                   </div>
                 </div>
@@ -996,7 +998,7 @@ footer a{color:var(--ink-2)}
 <p>Une évaluation enregistrée le reste&nbsp;: ses modifications ultérieures et les résultats saisis pour les étudiants sont pris en compte sans autre clic. Pour essayer une variante sans toucher à l’original, dupliquez-la d’abord (bouton «&nbsp;Actions…&nbsp;»)&nbsp;; la copie est un brouillon.</p>
 <div class="alerte"><p><strong>Le référentiel doit d’abord être validé par vous.</strong> Vous êtes responsable du référentiel sur lequel vous évaluez, y compris quand il est livré avec DNMAX ou reçu d’un collègue&nbsp;: ni l’hébergeur ni le développeur de DNMAX n’en répondent. Tant que le référentiel d’une promotion n’a pas été vérifié et validé dans Référentiel &gt; Constituer &gt; Validation (voir «&nbsp;Explorer le référentiel&nbsp;»), DNMAX refuse de créer, d’enregistrer ou de dupliquer une évaluation pour cette promotion, et d’y saisir des résultats d’étudiants. Un message l’explique et mène au volet de validation. Les évaluations déjà enregistrées ne sont ni modifiées ni supprimées&nbsp;: elles restent consultables et exportables.</p></div>
 <h4>1. L’évaluation</h4>
-<p>Intitulé, consignes données aux étudiants, livrables attendus, promotions, dates prévues, semestre et enseignants. Vous la rattachez à une unité d’enseignement et à un ou plusieurs enseignements constitutifs, et vous choisissez son échelle.</p>
+<p>Intitulé, consignes données aux étudiants, livrables attendus, promotions, dates prévues, semestre et enseignants. Vous la rattachez à une unité d’enseignement et à un ou plusieurs enseignements constitutifs.</p>
 <h4>2. Les compétences</h4>
 <p>Cochez les compétences évaluées. Elles viennent du référentiel du diplôme.</p>
 <h4>3. La formulation</h4>
@@ -1361,7 +1363,7 @@ npm run dev</code></pre>
       });
       a=a1;
     });
-    mk("circle",{cx:C,cy:C,r:RR.hub,fill:"#1F4D8F"},racine);
+    mk("circle",{cx:C,cy:C,r:RR.hub,fill:"#10555F"},racine);
     if (hub){
       const t=mk("text",{x:C,y:C-4,"text-anchor":"middle",fill:"#fff","font-family":"Bricolage Grotesque, sans-serif","font-weight":"800","font-size":"21"},racine); t.textContent="DN MADE";
       const t2=mk("text",{x:C,y:C+18,"text-anchor":"middle",fill:"#fff","font-family":"Public Sans, sans-serif","font-size":"13"},racine); t2.textContent="mention Objet";
@@ -1474,11 +1476,11 @@ npm run dev</code></pre>
     });
   })();
   (function progression(){
-    // [code, évaluations (semestre, degré de 1 à 4)] ; un niveau DN MADE est atteint dès un « Acquis » dans son année.
+    // [code, évaluations (semestre, degré de 1 à 4)] ; un niveau DN MADE est atteint dès un « Satisfaisant » dans son année.
     const PALIERS=["Initié","Guidé","Autonome"], ANNEE_COURANTE=2, SEUIL=3;
     const lignes=[["C2.1",[["S1",3],["S2",3],["S3",3]]],["C4.1",[["S1",2],["S2",3],["S3",3]]],["C4.3",[["S2",2],["S3",3]]],
       ["C10.3",[["S2",2],["S3",2]]],["C10.6",[["S2",2],["S3",4]]],["C11.2",[["S3",3]]]];
-    const DEGRES=["Non acquis","En cours d’acquisition","Acquis","Maîtrisé"];
+    const DEGRES=["Insuffisant","Fragile","Satisfaisant","Très bonne maîtrise"];
     const hote=document.getElementById("prog-lignes");
     let d=500, bloc="", r=0;
     lignes.forEach(([c,evals])=>{
