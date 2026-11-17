@@ -2254,25 +2254,11 @@ function paintOrg(){
   if(pane==="affect")return paintAffect(host);
   paintEditor(pane,host);
 }
+/* Volets Établissement et Répartition de service : écrans écrits en TypeScript (src/etablissement/volets.ts) */
 function paintEtab(host){
-  const D=DATA;D.etab=D.etab||{nom:"",uai:"",ville:"",academie:"",contactDpo:""};
-  const E=D.etab, f=(k,l,ph,cls,style)=>`<div class="field"${style?` style="${style}"`:""}><label for="et-${k}">${l}</label>
-    <input type="text" id="et-${k}" data-et="${k}" value="${esc(E[k]||"")}" placeholder="${esc(ph)}" ${cls?`class="${cls}"`:""}></div>`;
-  const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"], cal=calendrier();
-  const mois=(k,l,v)=>`<div class="field"><label for="et-${k}">${l}</label><select id="et-${k}" data-etmois="${k}">${MOIS.map((m,i)=>`<option value="${i+1}" ${i+1===v?"selected":""}>${m}</option>`).join("")}</select></div>`;
-  host.innerHTML=`<div class="panel"><div class="pick-head"><h3>Établissement${help("Le nom de l'établissement figure en tête des documents Word et Excel exportés. Avec le contact du délégué à la protection des données, il est repris dans les documents RGPD proposés à l'activation du module Étudiants.")}</h3></div>
-    <div style="padding:14px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:13px">
-      ${f("nom","Nom de l'établissement","Lycée …")}${f("uai","Code UAI (RNE)","0000000A","mono")}
-      ${f("ville","Ville","")}${f("academie","Académie","")}
-      ${f("contactDpo","Contact du délégué à la protection des données","Adresse électronique, téléphone ou service","","grid-column:1/-1")}
-      ${mois("moisRentree","Mois de la rentrée",cal.rentree)}${mois("moisBascule","Début du second semestre",cal.bascule)}
-      <div class="field" style="grid-column:1/-1"><label for="et-moisConservation">Conservation des données d'étudiants après la sortie d'une promotion</label>
-        <select id="et-moisConservation" data-etmois="moisConservation">${[3,6,9,12,18,24,36,48,60].map(m=>`<option value="${m}" ${m===(+E.moisConservation||12)?"selected":""}>${m%12?m+" mois":m===12?"1 an":(m/12)+" ans"}</option>`).join("")}</select>
-        <div class="hint">À valider avec le délégué à la protection des données ; les documents RGPD reprennent cette durée. 1 an par défaut.</div></div>
-      <div class="hint" style="grid-column:1/-1">Le calendrier sert à proposer le semestre d'une nouvelle évaluation et à dater l'année scolaire ; le semestre choisi reste celui de l'évaluation.</div>
-    </div></div>`;
-  host.querySelectorAll("[data-et]").forEach(inp=>inp.oninput=()=>{E[inp.dataset.et]=inp.value;persistData()});
-  host.querySelectorAll("[data-etmois]").forEach(sel=>sel.onchange=()=>{E[sel.dataset.etmois]=+sel.value;persistData()});
+  DATA.etab=DATA.etab||{nom:"",uai:"",ville:"",academie:"",contactDpo:""};
+  const cal=calendrier();
+  window.dnmaxPont.etablissement.peindreVoletEtablissement(host,{etablissement:DATA.etab,calendrier:{rentree:cal.rentree,bascule:cal.bascule},enregistrer:()=>persistData()});
 }
 /* Répartition de service : pour chaque promotion, les EC de son année (dans le référentiel de sa mention)
    et le ou les enseignants qui les assurent. rangés par année scolaire dans DATA.affectH (voir affH). */
@@ -2294,41 +2280,18 @@ function paintAffect(host){
   const D=DATA, ASnow=anneeScolaire(new Date()), y0=asStart(ASnow);
   const years=[0,1,2,3,4].map(k=>asOf(y0-k));
   const AS=years.includes(ui.org.affY)?ui.org.affY:ASnow;ui.org.affY=AS;
-  const yearSeg=`<div class="seg" style="margin-left:auto">${years.slice().reverse().map(y=>`<button type="button" data-afy="${y}" aria-pressed="${y===AS}">${y}${y===ASnow?" ●":""}</button>`).join("")}</div>`;
   const cur=promos.map(migPromoCohorte).filter(pr=>{const a=promoAnneeAt(pr,AS);return a>=1&&a<=promoDuree(pr)});
   const dIdx=id=>D.diplomes.findIndex(d=>d.id===id);
   cur.sort((x,y)=>(dIdx(x.diplomeId)-dIdx(y.diplomeId))||(promoAnneeAt(x,AS)-promoAnneeAt(y,AS)));
-  if(!D.enseignants.length||!cur.length){
-    host.innerHTML=`<div class="panel"><div class="pick-head"><h3>Répartition de service</h3></div><div class="empty">${!D.enseignants.length?"Ajoutez d'abord les enseignants (volet Enseignants).":""} ${!cur.length?"Aucune promotion en "+esc(AS)+" (volet Promotions).":""}</div></div>`;
-    host.querySelector(".pick-head").insertAdjacentHTML("beforeend",yearSeg);
-    host.querySelectorAll("[data-afy]").forEach(b=>b.onclick=()=>{ui.org.affY=b.dataset.afy;paintOrg()});return}
-  const pr=cur.find(x=>x.id===ui.org.aff)||cur[0];ui.org.aff=pr.id;
-  const A=affectOf(pr.id,AS), ecs=promoEcs(pr,AS), a=promoAnneeAt(pr,AS);
-  const dp=D.diplomes.find(d=>d.id===pr.diplomeId)||{};
-  const T=id=>D.enseignants.find(t=>t.id===id);
-  const ues=[...new Set(ecs.map(e=>e.ue))];
-  const chips=ecId=>(A[ecId]||[]).filter(T).map(id=>`<span class="pill afp">${esc(T(id).nom)}<button type="button" data-afrm="${ecId}|${id}" aria-label="Retirer ${esc(T(id).nom)}">×</button></span>`).join("");
-  const addSel=ecId=>{const rest=D.enseignants.filter(t=>!(A[ecId]||[]).includes(t.id));
-    return rest.length?`<select data-afadd="${ecId}" aria-label="Ajouter un enseignant"><option value="">+ enseignant</option>${rest.map(t=>`<option value="${t.id}">${esc(t.nom)}</option>`).join("")}</select>`:""};
-  const byT=D.enseignants.map(t=>({t,l:ecs.filter(e=>(A[e.id]||[]).includes(t.id))})).filter(x=>x.l.length);
-  const sansProf=ecs.filter(e=>!(A[e.id]||[]).some(T)).length;
-  host.innerHTML=`<div class="panel">
-    <div class="pick-head"><h3>Répartition de service${help("Pour chaque promotion en cours, les enseignements constitutifs de son année dans le référentiel de sa mention, et qui les assure. À l'étape 1 d'une évaluation, choisir un ou plusieurs enseignants limite les EC proposés à ceux qu'ils assurent pour les promotions cochées.")}</h3>${yearSeg}</div>
-    <div class="dkinds" style="padding:12px 14px 0">${cur.map(x=>`<button type="button" data-afp="${x.id}" aria-pressed="${x.id===pr.id}" title="${esc(x.nom)} · ${esc(dipLabel(D.diplomes.find(d=>d.id===x.diplomeId)||{}))}">${esc(promoShort(x)||x.nom)}</button>`).join("")}</div>
-    <div class="pgsum"><div><b>${esc(promoShort(pr)||pr.nom)}</b> · ${esc(pr.nom)} · ${esc(dipLabel(dp))}</div>
-      <div class="hint">Année ${a} en ${esc(AS)} · ${semsOfAnnee(a).join(" et ")} · ${ecs.length} EC${sansProf?` · <b>${sansProf} sans enseignant</b>`:" · tous attribués"}</div></div>
-    ${ues.map(u=>`<div class="pgbloc"><div class="pgbh">${esc(tidy(u)||"Sans UE")}</div>
-      ${ecs.filter(e=>e.ue===u).map(e=>`<div class="afrow">
-        <span class="ec" style="--c:${esc(e.couleur)}"><span class="k">${esc(e.code)}</span>${esc(e.nom)}</span>
-        <div class="afch">${chips(e.id)}${addSel(e.id)}</div></div>`).join("")}</div>`).join("")}
-    ${byT.length?`<div class="pgbloc"><div class="pgbh">Par enseignant</div>${byT.map(x=>`<div class="afrow"><b>${esc(x.t.nom)}</b><div class="afch">${x.l.map(e=>`<span class="pill">${esc(e.code)} · ${esc(e.nom)}</span>`).join("")}</div></div>`).join("")}</div>`:""}
-  </div>`;
-  host.querySelectorAll("[data-afp]").forEach(b=>b.onclick=()=>{ui.org.aff=b.dataset.afp;paintOrg()});
-  host.querySelectorAll("[data-afy]").forEach(b=>b.onclick=()=>{ui.org.affY=b.dataset.afy;paintOrg()});
-  host.querySelectorAll("[data-afadd]").forEach(sel=>sel.onchange=()=>{if(!sel.value)return;
-    const k=sel.dataset.afadd;A[k]=[...new Set([...(A[k]||[]),sel.value])];persistData();paintOrg()});
-  host.querySelectorAll("[data-afrm]").forEach(b=>b.onclick=()=>{const [k,id]=b.dataset.afrm.split("|");
-    A[k]=(A[k]||[]).filter(x=>x!==id);persistData();paintOrg()});
+  const vide=!D.enseignants.length||!cur.length;
+  const pr=vide?null:(cur.find(x=>x.id===ui.org.aff)||cur[0]);if(pr)ui.org.aff=pr.id;
+  const A=pr?affectOf(pr.id,AS):{}, a=pr?promoAnneeAt(pr,AS):0;
+  window.dnmaxPont.etablissement.peindreRepartition(host,{annees:years,anneeCourante:ASnow,annee:AS,
+    promotions:cur.map(x=>({id:x.id,court:promoShort(x)||"",nom:x.nom||"",diplome:dipLabel(D.diplomes.find(d=>d.id===x.diplomeId)||{})})),
+    promotion:pr?pr.id:"",ecs:pr?promoEcs(pr,AS):[],enseignants:D.enseignants.map(t=>({id:t.id,nom:t.nom})),repartition:A,
+    anneeFormation:a,semestres:pr?semsOfAnnee(a):[],manque:{enseignants:!D.enseignants.length,promotions:!cur.length},
+    nomUe:u=>tidy(u),choisirAnnee:y=>{ui.org.affY=y;paintOrg()},choisirPromotion:id=>{ui.org.aff=id;paintOrg()},
+    enregistrer:rep=>{const H=affH();H[AS]=H[AS]||{};H[AS][pr.id]=rep;persistData();paintOrg()}});
 }
 function paintPromosOrg(host){
   const D=DATA, AS=anneeScolaire(new Date());
