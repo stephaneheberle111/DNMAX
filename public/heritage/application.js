@@ -530,26 +530,9 @@ function paintActions(){
     if(!dl)b.title="Téléchargement indisponible dans cette vue";else b.removeAttribute("title");
   });
 }
+/* onglets, vues et titre de la fenêtre : src/interface/onglets.ts */
 function paintTabs(){
-  // « Mes évaluations » porte les deux vues : la liste, et la composition d'une évaluation
-  const avail={ref:true,org:true,set:true,prog:true,pref:true};
-  if(ui.tab!=="new"&&ui.tab!=="saved"&&!avail[ui.tab])ui.tab="saved";
-  const bs=document.getElementById("t-saved");
-  bs.setAttribute("aria-selected",String(ui.tab==="new"||ui.tab==="saved"));
-  document.getElementById("v-new").hidden = ui.tab!=="new";
-  document.getElementById("v-saved").hidden = ui.tab!=="saved";
-  for(const [id,v] of [["t-prog","prog"],["t-ref","ref"],["t-org","org"],["t-set","set"]]){
-    const b=document.getElementById(id);
-    b.hidden=!avail[v];
-    b.setAttribute("aria-selected",String(ui.tab===v));
-    document.getElementById("v"+id.slice(1)).hidden = ui.tab!==v;
-  }
-  // Préférences : ouvertes depuis le menu « Mon compte », sans onglet propre
-  document.getElementById("v-pref").hidden = ui.tab!=="pref";
-  {const bc=document.getElementById("bouton-compte");if(bc)bc.classList.toggle("actif",ui.tab==="pref")}
-  // titre de la fenêtre ou de l'onglet : le nom, puis la page affichée
-  const TITRES={saved:"Mes évaluations",new:"Mes évaluations",prog:"Progression",ref:"Référentiel",org:"Mon établissement",set:"Paramètres",pref:"Préférences"};
-  document.title="DNMAX · "+(TITRES[ui.tab]||"Mes évaluations");
+  ui.tab=window.dnmaxPont.interface.afficherPage(document,ui.tab);
   paintEnregistrement();
   paintActions();
 }
@@ -2538,11 +2521,11 @@ async function offer(filename,data,eleves=false){
 
 /* ---------- événements ---------- */
 const bind=(id,ev,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener(ev,fn)};
-["t-saved","t-prog","t-ref","t-org","t-set"].forEach(id=>bind(id,"click",()=>{
-  ui.tab=id==="t-saved"?"saved":id.slice(2);paintTabs();
+window.dnmaxPont.interface.brancherOnglets(document,page=>{
+  ui.tab=page;paintTabs();
   if(ui.tab==="new"){paintForm();paintPick();paintLignes()}
   if(ui.tab==="saved")paintSaved();if(ui.tab==="prog")paintProg();if(ui.tab==="ref")paintRef();if(ui.tab==="org")paintOrg();
-  if(ui.tab==="set")paintSet()}));
+  if(ui.tab==="set")paintSet()});
 bind("bDemo","click",loadDemo);
 bind("bBack","click",()=>{ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"})});
 bind("bNew","click",nouvelleFiche);
