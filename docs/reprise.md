@@ -77,4 +77,10 @@ Chaque morceau suit la décision 37 :
 - Une branche par changement (`refactor/…`, `fix/…`, `docs/…`), fusion par écrasement une fois l'intégration continue verte. Ne pas fusionner sans accord : publication, changement notable du site, migration de données.
 - Identité git du dépôt : `Stéphane Héberlé <contact@dnmax.fr>`, à régler en début de session.
 - Aucune mention d'outil d'assistance dans le code, les commits, les branches ou les demandes de fusion ; retirer tout pied de page ajouté automatiquement aux demandes de fusion.
-- L'auteur suit l'avancement sur un plan tenu à jour à chaque fusion : ce qui l'attend, ce qui est réellement en cours (vide quand on attend sa réponse), la suite, ce qui est fait, et l'heure de mise à jour.
+- **Plan d'avancement à recréer** : l'ancien plan ne peut pas être partagé, il faut en publier un nouveau dès la reprise et le tenir à jour à chaque fusion. L'auteur y suit le travail ; il contient, dans cet ordre :
+  - l'heure de la dernière mise à jour (heure de Paris) ;
+  - « À vous » : ce qui attend l'auteur (questions ci-dessus, recette et publication en fin d'optimisation) ;
+  - « En cours » : seulement ce sur quoi on travaille réellement. Il est vide (« Rien ») quand on attend la réponse de l'auteur ou une vérification automatique ;
+  - « Ensuite, dans l'ordre » : les demandes de fusion en attente de vérification, puis la liste de « Ce qui reste » ;
+  - « Déjà fait » : les demandes fusionnées (#139 à #149), avec une ligne chacune ;
+  - le nombre de lignes restant dans le fichier historique (3 714 au 17 novembre, 7 756 au départ).
