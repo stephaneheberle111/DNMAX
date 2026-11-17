@@ -10,16 +10,21 @@ import {
   codesEnDouble,
   competenceCorrespond,
   competencesDuBloc,
+  competencesPlanifiees,
   competencesSansBloc,
   ecsAffiches,
   elementNeuf,
+  etatValidation,
   libelleElement,
   lignesIntitule,
+  mentionsDuDiplome,
+  nomsDiplomes,
   numeroCode,
   ordreEc,
   rattachementsLus,
   retirerDuReferentiel,
   sansAccents,
+  supprimerVersion,
 } from "./constituer";
 
 describe("sansAccents", () => {
@@ -255,5 +260,56 @@ describe("rattachementsLus", () => {
 
   it("ne rend rien pour une compétence sans rattachement", () => {
     expect(rattachementsLus({}, ecs)).toEqual({ pastilles: [], enPlus: 0 });
+  });
+});
+
+describe("etatValidation", () => {
+  it("dit « jamais » sans version en vigueur, et « à vérifier » pour une version que l'enseignant n'a pas attestée", () => {
+    expect(etatValidation(null, false)).toBe("jamais");
+    expect(etatValidation({ date: "2026-09-01" }, true)).toBe("a-verifier");
+  });
+
+  it("distingue une version attestée à jour d'une version modifiée depuis", () => {
+    expect(etatValidation({ attestation: "2026-09-02" }, true)).toBe("a-jour");
+    expect(etatValidation({ attestation: "2026-09-02" }, false)).toBe("modifie");
+  });
+});
+
+describe("competencesPlanifiees", () => {
+  it("compte les compétences rattachées à au moins un EC à un semestre", () => {
+    expect(competencesPlanifiees([{ ecs: [{ id: "e1", sems: ["S1"] }] }, { ecs: [{ id: "e1", sems: [] }] }, {}])).toBe(1);
+  });
+});
+
+describe("nomsDiplomes et mentionsDuDiplome", () => {
+  const diplomes = [
+    { id: "o", nom: " DN MADE ", mention: "Objet" },
+    { id: "b", nom: "BTS" },
+    { id: "e", nom: "dn made", mention: "Espace" },
+  ];
+
+  it("donne chaque nom de diplôme une fois, accents et casse ignorés, tel qu'écrit la première fois", () => {
+    expect(nomsDiplomes(diplomes)).toEqual(["DN MADE", "BTS"]);
+  });
+
+  it("donne les mentions du diplôme de la mention active, casse et accents ignorés mais pas les espaces autour", () => {
+    expect(mentionsDuDiplome(diplomes, "e").map((diplome) => diplome.id)).toEqual(["e"]);
+    expect(mentionsDuDiplome([...diplomes, { id: "g", nom: "DN MADÉ" }], "e").map((diplome) => diplome.id)).toEqual(["e", "g"]);
+    expect(mentionsDuDiplome(diplomes, "absent").map((diplome) => diplome.id)).toEqual([]);
+  });
+});
+
+describe("supprimerVersion", () => {
+  it("retire la version et, si elle était en vigueur, la mention n'a plus de version en vigueur", () => {
+    const donnees = { versions: { d: [{ id: "v1" }, { id: "v2" }] }, valide: { d: "v1", autre: "x" } };
+    supprimerVersion(donnees, "d", 0);
+    expect(donnees).toEqual({ versions: { d: [{ id: "v2" }] }, valide: { autre: "x" } });
+  });
+
+  it("garde la version en vigueur quand on en retire une autre, et ne fait rien pour un rang absent", () => {
+    const donnees = { versions: { d: [{ id: "v1" }, { id: "v2" }] }, valide: { d: "v1" } };
+    supprimerVersion(donnees, "d", 1);
+    supprimerVersion(donnees, "d", 5);
+    expect(donnees).toEqual({ versions: { d: [{ id: "v1" }] }, valide: { d: "v1" } });
   });
 });

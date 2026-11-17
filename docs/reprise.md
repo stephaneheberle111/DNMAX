@@ -26,7 +26,8 @@
 | #157 | Constituer : outils communs aux étapes 1 à 3 et étape 1 (UE) ; règles des éléments (libellé, élément neuf, codes en double, semestres, retrait) | `src/referentiel/etapes.ts`, `src/domaine/constituer.ts` |
 | #158 | Constituer, étape 2 (EC) : codes par année, ordre, filtre | `src/referentiel/etapes.ts`, `src/domaine/constituer.ts` |
 | #159 | Constituer, étape 3 (blocs et compétences) : ordre, filtre, rattachements lus ; fin de l'éditeur commun historique (`edPanel`, `delBtn`) | `src/referentiel/etapes.ts`, `src/domaine/constituer.ts` |
-| (cette demande) | Constituer, étape 4 (planification par semestre) : colonnes, rattachements | `src/referentiel/planification.ts`, `src/domaine/planification.ts` |
+| (#160) | Constituer, étape 4 (planification par semestre) : colonnes, rattachements | `src/referentiel/planification.ts`, `src/domaine/planification.ts` |
+| (cette demande) | Constituer : page des cinq étapes et étape 5 (validation, versions) | `src/referentiel/constituer.ts`, `src/domaine/constituer.ts` |
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
 
@@ -35,7 +36,7 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 **À fusionner avec la publication de la 0.9, pas avant** : la branche `docs/site-niveaux` (textes du site et de la documentation lue dans l'application sur les niveaux d'acquisition ; niveau de 3e année « Autonome » dans les deux référentiels livrés, empreinte recalculée). Toute fusion qui touche `site/` publie dnmax.fr (`.github/workflows/site.yml`).
 
 1. **L'éditeur commun** : fait. Tous ses volets sont dans `src/etablissement/` et `src/referentiel/etapes.ts` ; le fichier historique ne garde que la suppression en deux temps (`edArm`, `armDel`), partagée avec la liste des versions de la validation.
-2. **Référentiel > Constituer** : validation et page d'étape (`paintConstituer`). La planification par semestre est faite.
+2. **Référentiel > Constituer** : fait. Restent dans le fichier historique la création et le rétablissement d'une version (`validerVersion`, `askPromosVersion`, `restaurerVersion`), que la page appelle.
 3. **Référentiel > Explorer** : la recherche et l'habillage autour de la carte.
 
 **Consigne de l'auteur, à respecter strictement : aucun risque sur la carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) ni sur la chaîne (`paintChain`, `chainModel`, `chainWire`).** Leur dessin reste tel quel. Au plus, un calcul déjà isolé peut en sortir, avec une comparaison d'images avant et après.
@@ -59,7 +60,7 @@ Chaque morceau suit la décision 37 :
   - `git worktree add --detach <dossier> origin/main` ;
   - lien symbolique vers `node_modules` ;
   - `npx vite --port 1421 --strictPort` dans la copie, et la branche sur le port 1420.
-- Un script Playwright joue le parcours sur les deux ports et écrit un JSON par port. Il fixe l'heure et le hasard avant le chargement (`addInitScript`) :
+- Un script Playwright joue le parcours sur les deux ports et écrit un JSON par port. Il fixe l'heure et le hasard avant le chargement (`addInitScript`), y compris `crypto.randomUUID`, dont l'exemple tire l'identifiant de la version livrée :
   - `Date.now` et `new Date()` sans argument rendent une date fixe ;
   - `Math.random` est remplacé par un générateur à graine (`graine = graine * 16807 % 2147483647`).
 - Charger l'exemple (`#t-set` puis `#bDemo`), ouvrir l'écran visé, faire les gestes, et relever :

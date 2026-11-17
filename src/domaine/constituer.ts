@@ -237,3 +237,54 @@ export function codeAuSemestre(ec: Element, semestre: string): string {
   const table = typeof ec.codes === "object" && ec.codes !== null ? (ec.codes as Record<string, unknown>) : {};
   return texte(table[anneeDuSemestre(semestre)]);
 }
+
+/** État du référentiel d'une mention au regard de sa validation par l'enseignant. */
+export type EtatValidation = "jamais" | "a-verifier" | "a-jour" | "modifie";
+
+/**
+ * Jamais validé ; validé mais pas attesté par l'enseignant (reçu, livré) ;
+ * attesté et à jour ; ou modifié depuis la version attestée.
+ */
+export function etatValidation(versionActive: Element | null, aJour: boolean): EtatValidation {
+  if (versionActive === null) return "jamais";
+  if (texte(versionActive.attestation) === "") return "a-verifier";
+  return aJour ? "a-jour" : "modifie";
+}
+
+/** Compétences rattachées à au moins un EC à un semestre (étape 4). */
+export function competencesPlanifiees(competences: readonly Element[]): number {
+  return competences.filter((competence) =>
+    (Array.isArray(competence.ecs) ? (competence.ecs as Element[]) : []).some((lien) => Array.isArray(lien.sems) && lien.sems.length > 0),
+  ).length;
+}
+
+/** Noms de diplôme, chacun une fois (casse et accents ignorés), tels qu'écrits la première fois, sans espaces autour. */
+export function nomsDiplomes(diplomes: readonly Element[]): string[] {
+  const noms: string[] = [];
+  for (const diplome of diplomes) {
+    const nom = texte(diplome.nom).trim();
+    if (!noms.some((connu) => sansAccents(connu) === sansAccents(nom))) noms.push(nom);
+  }
+  return noms;
+}
+
+/** Mentions du diplôme de la mention active (même nom, casse et accents ignorés). */
+export function mentionsDuDiplome(diplomes: readonly Element[], actif: unknown): Element[] {
+  const courant = diplomes.find((diplome) => diplome.id === actif) ?? {};
+  return diplomes.filter((diplome) => sansAccents(texte(diplome.nom)) === sansAccents(texte(courant.nom)));
+}
+
+/**
+ * Supprime une version du référentiel d'une mention ; si c'était la version
+ * en vigueur, la mention n'en a plus. Un rang absent ne change rien.
+ */
+export function supprimerVersion(donnees: { versions?: Record<string, Element[]>; valide?: Record<string, unknown> }, diplome: string, rang: number): void {
+  const versions = donnees.versions?.[diplome];
+  if (versions === undefined) return;
+  const [retiree] = versions.splice(rang, 1);
+  if (retiree !== undefined && donnees.valide !== undefined && donnees.valide[diplome] === retiree.id) {
+    const valide = { ...donnees.valide };
+    Reflect.deleteProperty(valide, diplome);
+    donnees.valide = valide;
+  }
+}
