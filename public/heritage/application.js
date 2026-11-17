@@ -2523,21 +2523,20 @@ function paintProg(){
   // si « c'est moi » est défini : seulement les promotions de ma répartition de service, en cours ou terminées
   // (mes étudiants et mes anciens étudiants) ; sinon, les promotions en cours
   const me=DATA.enseignants.find(t=>t.id===DATA.moi);
-  const live=promos.map(migPromoCohorte).filter(pr=>DATA.diplomes.some(d=>d.id===pr.diplomeId))
-    .filter(pr=>promoAnneeAt(pr,AS)>=1);
+  // règle du choix des promotions : src/domaine/vue-progression.ts
   const mine=pr=>me&&teachesPromo(pr.id,me.id);
-  const nMine=live.filter(mine).length, onlyMine=!!(me&&nMine);   // seulement les promotions de ma répartition de service
   const dIdx=id=>DATA.diplomes.findIndex(d=>d.id===id);
-  const ps=live.filter(pr=>onlyMine?mine(pr):promoAnneeAt(pr,AS)<=promoDuree(pr)).sort((a,b)=>(dIdx(a.diplomeId)-dIdx(b.diplomeId))||(b.debut-a.debut));
+  const suivies=window.dnmaxPont.vueProgression.promotionsSuivies(promos.map(migPromoCohorte).filter(pr=>DATA.diplomes.some(d=>d.id===pr.diplomeId))
+    .map(pr=>({promotion:pr,annee:promoAnneeAt(pr,AS),duree:promoDuree(pr),rangDiplome:dIdx(pr.diplomeId),debut:pr.debut,mienne:!!mine(pr)})),!!me);
+  const ps=suivies.promotions, nMine=suivies.nombreMiennes, onlyMine=suivies.seulementMiennes;
   if(!ps.length){host.innerHTML=`<div class="panel"><div class="empty">Aucune promotion en cours pour ${esc(REF.meta.diplome||"cette mention")} en ${esc(AS)}.
     Crée-la dans Mon établissement > Promotions.</div></div>`;return}
   const pr=ps.find(x=>x.id===ui.prog.promo)||ps.find(x=>x.diplomeId===DATA.activeDiplome)||ps[0];ui.prog.promo=pr.id;
   // la progression lit le référentiel de la mention de la promotion affichée
   if(pr.diplomeId!==DATA.activeDiplome){DATA.activeDiplome=pr.diplomeId;saveData(false)}
   if(ui.prog.t==null&&me&&mine(pr))ui.prog.t=[me.id];
-  const fini=promoAnneeAt(pr,AS)>promoDuree(pr), an=Math.min(promoDuree(pr),promoAnneeAt(pr,AS)), semsY=semsOfAnnee(an),
-    semCur=fini?semsY[semsY.length-1]:(semsY[rangSemestre(new Date())-1]||semsY[0]);
-  const semsAll=SEMS.slice(0,SEMS.indexOf(semsY[semsY.length-1])+1);
+  const semP=window.dnmaxPont.vueProgression.semestresProgression(promoAnneeAt(pr,AS),promoDuree(pr),rangSemestre(new Date()));
+  const semCur=semP.courant, semsAll=semP.semestres;
   const sem=semsAll.includes(ui.prog.sem)?ui.prog.sem:semCur;ui.prog.sem=sem;
   const filt=ui.prog.f||"tout";
   const els=migPromo(pr).liste;
@@ -2563,41 +2562,22 @@ function paintProg(){
     const ecn=[...new Set((c.ecs||[]).filter(e=>e.sem===sem).map(e=>e.nom||e.ec))].join(", ");
     return {c,cover:p.partout,inSem:p.auSemestre,done:p.faits,dist:p.repartition,ecn,state:p.etat};
   });
-  const nOk=rowsP.filter(r=>r.inSem.length).length, nTodo=rowsP.length-nOk;
-  const evSem=fs.filter(f=>f.semestre===sem);
-  const shown=rowsP.filter(r=>filt==="tout"||(filt==="todo"?!r.inSem.length:r.inSem.length));
-  const blocs=[...new Set(shown.map(r=>String(r.c.bloc)))].sort((a,b)=>+a-+b);
-  const blocNom=n=>((REF.blocs||[]).find(b=>String(b.num)===n)||{}).nom||"";
-  const stTxt={ok:"Évaluée",part:"En cours",prevue:"Prévue, pas encore évaluée",autre:"Vue à un autre semestre",todo:"À évaluer"};
-  const pct=rowsP.length?Math.round(nOk/rowsP.length*100):0;
-  host.innerHTML=`<div class="panel">
-    <div class="pick-head"><h3>Progression${help("Pour une promotion en cours et un semestre : les compétences que le référentiel rattache à ce semestre, et ce que vos évaluations enregistrées en couvrent déjà. Une compétence est « évaluée » dès qu'une évaluation du semestre la contient, « en cours » tant que tous les étudiants n'ont pas de niveau saisi. La répartition donne le dernier niveau de chaque étudiant.")}</h3>
-      <div style="margin-left:auto">${viewSeg}</div></div>
-    ${progFiltres(ps,pr,sem,semsAll,semCur,
-      (tAvail.length?`<label><span class="sfl2">Enseignant</span><select data-pgsel="t" aria-label="Enseignant"><option value="">Tous</option>${tAvail.map(t=>`<option value="${t.id}" ${tSel.includes(t.id)?"selected":""}>${esc(t.nom)}</option>`).join("")}</select></label>`:"")
-      +`<label><span class="sfl2">Compétences</span><select data-pgsel="f" aria-label="Compétences">${[["tout","Toutes"],["todo","À évaluer"],["fait","Évaluées"]].map(([k,l])=>`<option value="${k}" ${k===filt?"selected":""}>${l}</option>`).join("")}</select></label>`)}
-    <div class="pgsum">
-      <div><b class="big">${nOk}</b> / ${rowsP.length} compétences du ${esc(sem)} évaluées${tSel.length?` <span class="hint">— dans les EC de ${esc(tSel.map(id=>(DATA.enseignants.find(t=>t.id===id)||{}).nom).join(", "))}</span>`:""}</div>
-      <div class="pgbar"><i style="width:${pct}%"></i></div>
-      <div class="hint">${esc(pr.nom)}${MOD.eleves?` · ${els.length} étudiant${els.length>1?"s":""}`:""} · ${evSem.length} évaluation${evSem.length>1?"s":""} au ${esc(sem)}${nTodo?` · <b>${nTodo} à évaluer</b>`:" · tout est couvert"}</div>
-    </div>
-    ${blocs.map(b=>`<div class="pgbloc"><div class="pgbh">${esc(b)} - ${esc(blocNom(b))}</div>
-      ${shown.filter(r=>String(r.c.bloc)===b).sort((x,y)=>(x.inSem.length?1:0)-(y.inSem.length?1:0)).map(r=>`<div class="pgrow ${r.state}">
-        <span class="pill pst ${r.state}">${stTxt[r.state]}</span>
-        <div class="pgc"><div>${esc(r.c.libelle||r.c.code)}</div><div class="hint">${esc(r.ecn)}</div></div>
-        <div class="pgev">${r.inSem.length?r.inSem.map(f=>`<div>${esc(f.titre||"Sans titre")} <span class="hint">${esc(fmtD(f.date))}</span></div>`).join(""):
-          r.cover.length?`<span class="hint">${r.cover.map(f=>esc((f.semestre||"")+" · "+(f.titre||""))).join("<br>")}</span>`:`<span class="hint">—</span>`}</div>
-        <div class="pgst">${MOD.eleves&&r.inSem.length&&els.length?`<div class="pgdist" title="${LV.map((l,i)=>l+" : "+r.dist[i]).join(" · ")}">${r.dist.map((n,i)=>n?`<i style="flex:${n};background:${nivColor(i,NL)}"></i>`:"").join("")}${els.length-r.done?`<i style="flex:${els.length-r.done}" class="none"></i>`:""}</div>
-          <span class="hint">${r.done}/${els.length} étudiants</span>`:""}</div>
-      </div>`).join("")}</div>`).join("")||`<div class="empty">Rien à afficher pour ce filtre.</div>`}
-  </div>`;
-  bindProgFiltres(host);
-  {const a=host.querySelector("#pgAll");if(a)a.onclick=()=>{ui.prog.all=!ui.prog.all;paintProg()}}
-  host.querySelectorAll("[data-ps]").forEach(b=>b.onclick=()=>{ui.prog.sem=b.dataset.ps;paintProg()});
-  host.querySelectorAll("[data-pf]").forEach(b=>b.onclick=()=>{ui.prog.f=b.dataset.pf;paintProg()});
-  host.querySelectorAll("[data-pt]").forEach(b=>b.onclick=()=>{const id=b.dataset.pt, l=ui.prog.t||[];
-    ui.prog.t=l.includes(id)?l.filter(x=>x!==id):[...l,id];paintProg()});
-  host.querySelectorAll("[data-pv]").forEach(b=>b.onclick=()=>{ui.prog.view=b.dataset.pv;paintProg()});
+  /* vue « Promotion » : écran écrit en TypeScript (src/progression/promotion.ts), règles dans src/domaine/vue-progression.ts */
+  const dips=[...new Set(ps.map(p=>p.diplomeId))];
+  const optP=p=>({id:p.id,libelle:(promoShort(p)?promoShort(p)+" — ":"")+(p.nom||"")});
+  window.dnmaxPont.progression.peindrePromotion(host,{
+    groupes:dips.length>1?dips.map(d=>({diplome:dipLabel(DATA.diplomes.find(x=>x.id===d)||{}),promotions:ps.filter(p=>p.diplomeId===d).map(optP)})):[{diplome:null,promotions:ps.map(optP)}],
+    promotion:pr.id,nomPromotion:pr.nom,semestres:semsAll,semestre:sem,courant:semCur,
+    enseignants:tAvail.map(t=>({id:t.id,nom:t.nom})),enseignantsChoisis:tSel,
+    nomsChoisis:tSel.map(id=>(DATA.enseignants.find(t=>t.id===id)||{}).nom).join(", "),filtre:filt,
+    lignes:rowsP.map(r=>({c:{code:r.c.code,libelle:r.c.libelle,bloc:r.c.bloc},inSem:r.inSem.map(f=>({titre:f.titre||"",date:f.date})),
+      cover:r.cover.map(f=>({semestre:f.semestre||"",titre:f.titre||""})),done:r.done,dist:r.dist,ecn:r.ecn,state:r.state})),
+    moduleEleves:!!MOD.eleves,etudiants:els.length,evaluationsAuSemestre:fs.filter(f=>f.semestre===sem).length,niveaux:LV,
+    couleurNiveau:nivColor,nomBloc:n=>((REF.blocs||[]).find(b=>String(b.num)===n)||{}).nom||"",vueEtudiant:ui.prog.view==="eleve",
+    choisir:(k,v)=>{if(k==="promo"){ui.prog.promo=v;ui.prog.sem="";ui.prog.t=null;ui.prog.el=""}
+      else if(k==="sem")ui.prog.sem=v;else if(k==="f")ui.prog.f=v;else if(k==="t")ui.prog.t=v?[v]:[];else if(k==="el")ui.prog.el=v;
+      paintProg()},
+    choisirVue:v=>{ui.prog.view=v;paintProg()}});
 }
 /* ---------- Progression étudiant (module Étudiants) ----------
    Pour un étudiant d'une promotion en cours : où il en est dans les évaluations du semestre, comparé aux autres
