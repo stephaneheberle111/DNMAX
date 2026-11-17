@@ -3778,21 +3778,11 @@ function enregistrerDansListe(valide){
   if(i>=0)fiches[i]=copy;else fiches.unshift(copy);
   LS.set("dnmade.fiches",fiches);
 }
+/* Ligne d'enregistrement et barre des étapes : écrans écrits en TypeScript (src/editeur/barre-etapes.ts) */
 function paintEnregistrement(){
-  const nw=document.getElementById("newWhat");if(!nw)return;
-  const v=versionPourF(), etat=etatEnregistrement();
-  const brouillon=etat==="vide"||!!F.brouillon;
-  nw.textContent=(etat==="bloquee"?"Non enregistrée : le référentiel doit d'abord être validé"
-      :etat==="vide"?"Nouvelle évaluation — gardée en brouillon dès que vous la commencez"
-      :brouillon?"Brouillon, gardé automatiquement — à terminer par « Enregistrer l'évaluation », à l'étape Formulation"
-      :"Enregistrée automatiquement à chaque modification")
-    +(v?" · référentiel "+(REF.meta.diplome||"")+", version du "+frDate(v.date):"");
-  const n3s=document.getElementById("n3save");
-  if(n3s)n3s.textContent=etat==="bloquee"?""
-    :brouillon?"Brouillon : tant qu'elle n'est pas enregistrée, elle ne peut être ni distribuée ni évaluée et ne compte pas dans Progression."
-    :"Déjà dans « Mes évaluations » : c'est de là que sortent le Word et l'Excel.";
-  const b3=document.getElementById("bSave3");
-  if(b3)b3.textContent=brouillon?"Enregistrer l'évaluation":"Retour à « Mes évaluations »";
+  const v=versionPourF();
+  window.dnmaxPont.editeur.peindreEnregistrement({etat:etatEnregistrement(),brouillon:!!F.brouillon,
+    version:v?(REF.meta.diplome||"")+", version du "+frDate(v.date):""});
 }
 
 /* ---------- rendu ---------- */
@@ -3928,10 +3918,9 @@ function paintLivrables(){
     proposerAjoutEtablissement:v=>askModal(`Ajouter « ${esc(v)} » à la liste des livrables de Mon établissement, pour les prochaines évaluations ?`,
       ()=>{DATA.livrables.push({nom:v,type:""});saveData();toast("« "+v+" » ajouté aux livrables.")})});
 }
+function brouillonF(){return !!F.brouillon||!fiches.some(f=>f.id===F.id)}
 function goStep(n){
-  const brouillon=!!F.brouillon||!fiches.some(f=>f.id===F.id);
-  const max=MOD.eleves&&!brouillon?4:3;
-  ui.step=Math.min(max,Math.max(1,+n));
+  ui.step=window.dnmaxPont.etapesEditeur.etapeAffichee(+n,window.dnmaxPont.etapesEditeur.derniereEtape({moduleEleves:!!MOD.eleves,brouillon:brouillonF()}));
   if(ui.step===3)ui.sel=[];
   paintSteps();
   if(ui.step===1)paintForm();
@@ -3941,38 +3930,11 @@ function goStep(n){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function paintSteps(){
-  const li4=document.getElementById("li-step4");
-  // avec le module Étudiants, l'évaluation des étudiants est la 4e étape ; un brouillon ne s'évalue pas (décision 29)
-  const brouillon4=!!F.brouillon||!fiches.some(f=>f.id===F.id);
-  if(li4){li4.hidden=!MOD.eleves;const b4=li4.querySelector("button");
-    if(b4){b4.disabled=brouillon4;b4.title=brouillon4?"Enregistrez d'abord l'évaluation (étape Formulation)":""}}
-  if((!MOD.eleves||brouillon4)&&ui.step===4)ui.step=3;
-  for(const n of [1,2,3,4]){
-    const pane=document.getElementById("step"+n);if(!pane)continue;
-    pane.hidden = ui.step!==n;
-    const b=document.querySelector(`.steps [data-step="${n}"]`);
-    if(b)b.setAttribute("aria-current",String(ui.step===n));
-  }
-  const nliv=F.livrables.length, nit=F.items.length, dispo=compsFor(F.semestre).length;
-  const nop=F.ops.filter(o=>F.items.some(i=>i.op===o.id)).length;
-  const nform=rows().filter(r=>r.lib&&r.op).length+F.items.filter(i=>!i.op&&i.libelle).length;
-  document.getElementById("s1sum").innerHTML= nliv
-    ? `${nliv} livrable${nliv>1?"s":""}<em> attendu${nliv>1?"s":""}</em>`
-    : `<em>aucun livrable attendu</em>`;
-  document.getElementById("s2sum").innerHTML= nit
-    ? `${nit} retenue${nit>1?"s":""}<em> sur ${dispo} au ${esc(F.semestre)}</em>`
-    : `<em>aucune compétence cochée</em>`;
-  const nl=rows().length;
-  document.getElementById("s3sum").innerHTML= nl
-    ? `${nl} ligne${nl>1?"s":""}<em>${nop?" · "+nop+" regroupement"+(nop>1?"s":""):""}${nform?" · "+nform+" formulée"+(nform>1?"s":""):""}</em>`
-    : `<em>rien à formuler</em>`;
-  document.getElementById("n1hint").textContent=nliv?"":"Choisissez au moins un livrable pour pouvoir les associer à l'étape 3.";
-  document.getElementById("n2hint").textContent=F.items.length?"":"Cochez les compétences évaluées sur ce travail.";
-  const s4=document.getElementById("s4sum");
-  if(s4){const st=evalStats(F);
-    s4.innerHTML=!st.els?`<em>aucun étudiant</em>`
-      :st.faits>=st.els?`${st.els} évalué${st.els>1?"s":""}<em> — complet</em>`
-      :`${st.faits} / ${st.els}<em> évalué${st.els>1?"s":""}${st.partiels?" · "+st.partiels+" en cours":""}</em>`;}
+  // un brouillon ne s'évalue pas : l'étape 4 se referme (décision 29)
+  ui.step=window.dnmaxPont.etapesEditeur.etapeAffichee(ui.step,window.dnmaxPont.etapesEditeur.derniereEtape({moduleEleves:!!MOD.eleves,brouillon:brouillonF()}));
+  const st=evalStats(F);
+  window.dnmaxPont.editeur.peindreBarreEtapes({evaluation:F,etape:ui.step,moduleEleves:!!MOD.eleves,brouillon:brouillonF(),
+    semestre:F.semestre,competencesDisponibles:compsFor(F.semestre).length,bilan:{etudiants:st.els,faits:st.faits,partiels:st.partiels}});
   paintEnregistrement();
 }
 /* Étape 1, UE et EC : écran écrit en TypeScript (src/editeur/etape-evaluation.ts), règles dans src/domaine/cadre-evaluation.ts */
