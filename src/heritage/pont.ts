@@ -13,6 +13,7 @@ import { lireMoisConservation } from "../domaine/conservation";
 import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION_PAR_DEFAUT } from "../configuration";
 import * as jaugeExport from "../domaine/jauge-export";
 import { couleurNiveau, encreNiveau } from "../domaine/teintes-niveaux";
+import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { peindreSaisieEtudiants } from "../editeur/saisie-etudiants";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
@@ -120,7 +121,11 @@ interface Pont {
   /** Couleur et encre de chaque niveau de maîtrise (voir `domaine/teintes-niveaux`). */
   readonly teintes: { couleurNiveau: typeof couleurNiveau; encreNiveau: typeof encreNiveau };
   /** Écrans de l'éditeur d'évaluation écrits en TypeScript (voir `editeur/`). */
-  readonly editeur: { peindreSaisieEtudiants: typeof peindreSaisieEtudiants };
+  readonly editeur: {
+    peindreFormulation: typeof peindreFormulation;
+    lierSelection: typeof lierSelection;
+    peindreSaisieEtudiants: typeof peindreSaisieEtudiants;
+  };
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: DemandeEnregistrement): Promise<void>;
@@ -196,7 +201,7 @@ export async function chargerInterfaceHistorique(
     suiviSimplifie,
     jauge: jaugeExport,
     teintes: { couleurNiveau, encreNiveau },
-    editeur: { peindreSaisieEtudiants },
+    editeur: { peindreFormulation, lierSelection, peindreSaisieEtudiants },
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
       : {}),
