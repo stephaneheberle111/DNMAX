@@ -74,16 +74,13 @@ function buildData(ref,livr){
     blocs:(ref.blocs||[]).map(b=>({num:String(b.num),nom:b.nom||""})),
     ues,ecs,competences:comps,livrables:(livr||[]).slice()};
 }
-function autoDipCode(dp){
-  const a=String((dp||{}).nom||"").replace(/[^A-Za-zÀ-ÿ]/g,"").slice(0,2).toUpperCase();
-  const b=String((dp||{}).mention||"").replace(/[^A-Za-zÀ-ÿ]/g,"").slice(0,1).toUpperCase();
-  return a+b;
-}
+/* code et libellé d'un diplôme : règles écrites et testées dans src/domaine/diplomes.ts */
+function autoDipCode(dp){return window.dnmaxPont.diplomes.codeAutomatique(dp)}
 /* Diplômes montrés à l'enseignant : le cadre vierge d'une installation neuve reste caché.
    Le premier référentiel reçu, ou le premier diplôme créé à la main, le réutilise. */
 function estCadreVierge(id){return window.dnmaxPont.estCadreVierge(DATA,id,promos)}
 function dipVisibles(){return DATA.diplomes.filter(dp=>!estCadreVierge(dp.id))}
-function dipCode(dp){return String((dp||{}).code||"").trim()||autoDipCode(dp)}
+function dipCode(dp){return window.dnmaxPont.diplomes.codeDiplome(dp)}
 /* identifiant d'une année : celui du diplôme suivi du numéro d'année, sauf si on l'a réécrit */
 function anneeCode(a,d,dp){
   d=d||DATA;
@@ -93,7 +90,7 @@ function anneeCode(a,d,dp){
   const p=dp||((d||{}).diplomes||[]).find(x=>x.id===d.activeDiplome)||{};
   return dipCode(p)+a;
 }
-function dipLabel(dp){if(!dp)return "";return (dp.nom||"")+(dp.mention?" mention "+dp.mention:"")}
+function dipLabel(dp){return window.dnmaxPont.diplomes.libelleDiplome(dp)}
 /* Dictionnaire : les éléments eux-mêmes (nom, code, couleur, intitulé), communs à tous les diplômes.
    Référentiel : pour chaque diplôme-mention, les éléments retenus et leurs associations
    (semestres et ECTS des UE, UE et semestres de chaque EC, bloc et EC de chaque compétence).
@@ -2785,89 +2782,21 @@ function armDel(id,fn){
   if(edArm!==id){edArm=id;(ui.tab==="org"?paintOrg:ui.tab==="pref"?paintPrefs:paintRef)();return}
   edArm=null;fn();
 }
+/* Éditeur commun de Mon établissement et des Préférences : écrans écrits en TypeScript (src/etablissement/),
+   règles dans src/domaine/ (diplomes, personnes). Seule la suppression en deux temps reste tenue ici (edArm, armDel). */
 function paintEditor(pane,host){
   host=host||document.getElementById("refPane");
-  const D=DATA;
-  if(pane==="diplome"){
-    const css="grid-template-columns:minmax(0,1fr) 110px 100px";
-    const grs=[], dvs=dipVisibles();
-    dvs.forEach(dp=>{const i=D.diplomes.indexOf(dp);
-      const key=(dp.nom||"").trim().toLowerCase();
-      let gr=grs.find(g=>g.key===key);
-      if(!gr){gr={key,nom:dp.nom||"",rows:[]};grs.push(gr)}
-      gr.rows.push({dp,i});
-    });
-    host.innerHTML=edPanel("Diplômes et mentions",dvs.length+" mention"+(dvs.length>1?"s":""),
-      `<button class="btn ghost" id="edAdd">+ Nouveau diplôme</button>`,
-      {css,cells:["Mention","Code",""]},
-      grs.map((gr,gi)=>`<div class="dgrp">
-        <div class="hd">
-          <span class="lab">Diplôme</span>
-          <input type="text" value="${esc(gr.nom)}" data-dgn="${gi}" placeholder="DN MADE" aria-label="Nom du diplôme">
-          <label class="lab" style="margin-left:6px">Durée</label>
-          <select data-dgd="${gi}" aria-label="Durée du diplôme" style="width:auto">${[1,2,3,4,5].map(k=>`<option value="${k}" ${k===(+gr.rows[0].dp.duree||3)?"selected":""}>${k} an${k>1?"s":""} · ${2*k} sem.</option>`).join("")}</select>
-          <span class="count">${gr.rows.length} mention${gr.rows.length>1?"s":""}</span>
-          <button class="btn ghost" data-dgadd="${gi}">+ Mention</button>
-        </div>
-        ${gr.rows.map(({dp,i})=>`<div class="ed" style="${css}">
-          <input type="text" value="${esc(dp.mention)}" data-dm="${i}" placeholder="Objet" aria-label="Mention">
-          <input type="text" value="${esc(dp.code||"")}" data-dc="${i}" placeholder="${esc(autoDipCode(dp)||"DNO")}" aria-label="Code" class="mono">
-          ${dvs.length>1?delBtn("dip"+i,"Supprimer"):`<span class="hint">—</span>`}</div>`).join("")}
-      </div>`).join("")||`<div class="empty">Aucun diplôme : recevez un référentiel avec « Échanger… > Recevoir », ou créez-en un avec « + Nouveau diplôme ».</div>`,
-      "Un diplôme peut porter plusieurs mentions : « + Mention » ajoute une mention dont le référentiel reprend celui de la mention précédente, avec les mêmes éléments, pour que vous n'ayez qu'à ajuster les variations (Référentiel > Constituer, une fois la mention active). Chaque mention a son propre référentiel : la mention active commande tout le reste, ce qui n'est retenu que dans les autres mentions n'apparaît ni dans les évaluations ni dans la carte. Le code se compose tout seul (deux lettres du diplôme, une de la mention, sans séparateur : DN MADE mention Objet donne DNO) et sert à nommer les classes et les années (DNO1, DNO2…) — laissez-le vide pour qu'il suive, ou écrivez le vôtre.")
-      +(dvs.length?`<div class="panel" style="max-width:720px;margin-top:18px"><div class="pick-head"><h3>Réglages du référentiel</h3>${dvs.length>1?`<select id="edDipAct" aria-label="Mention dont on règle le référentiel" style="width:auto;margin-left:auto">${dvs.map(dp=>`<option value="${dp.id}" ${dp.id===D.activeDiplome?"selected":""}>${esc(dipLabel(dp))}</option>`).join("")}</select>`:`<span class="hint" style="margin-left:auto">${esc(dipLabel(dvs[0]))}</span>`}</div>
-        <div class="panel-body">
-          <div class="field"><label>Années et niveaux d'acquisition</label>
-            <div class="hint" style="margin:0 0 6px">L'identifiant d'une année suit le code du diplôme (DNO1, DNO2…) — laissez-le vide pour qu'il suive, ou écrivez le vôtre.</div>
-            ${(D.niveaux||[]).map((n,i)=>`<div class="lv"><span class="num" style="width:62px">Année ${n.annee}</span>
-              <input type="text" data-nvc="${i}" value="${esc(n.code||"")}" placeholder="${esc(dipCode(D.diplomes.find(x=>x.id===D.activeDiplome)||{})+n.annee)}" style="flex:0 1 90px" aria-label="Identifiant de l'année" class="mono">
-              <input type="text" data-nvl="${i}" value="${esc(n.label)}" aria-label="Libellé du niveau d'acquisition"></div>`).join("")}
-            </div>
-        </div></div>`:"");
-    host.querySelector("#edAdd").onclick=()=>{
-      // le cadre caché d'une installation neuve devient ce diplôme, plutôt que d'en ajouter un second
-      const cadre=D.diplomes.find(x=>estCadreVierge(x.id));
-      const dp=Object.assign(cadre||{id:newId("d")},{nom:"Nouveau diplôme",mention:"",code:"",duree:3});
-      delete dp.cadre;
-      if(!cadre)D.diplomes.push(dp);
-      D.activeDiplome=dp.id;saveData();toast("Diplôme ajouté — son référentiel est vide")};
-    host.querySelectorAll("[data-dgadd]").forEach(b=>b.onclick=()=>{
-      const gr=grs[+b.dataset.dgadd], src=gr.rows[gr.rows.length-1].dp;
-      const dp=addMention(src.id,gr.nom);dp.duree=+src.duree||3;D.activeDiplome=dp.id;saveData();
-      toast("Mention ajoutée à "+(gr.nom||"ce diplôme")+" — référentiel recopié");
-      const inp=document.querySelector(`[data-dm="${D.diplomes.indexOf(dp)}"]`);if(inp)inp.focus()});
-    {const ds=host.querySelector("#edDipAct");if(ds)ds.onchange=()=>{D.activeDiplome=ds.value;saveData()}}
-    host.querySelectorAll("[data-dgd]").forEach(sel=>sel.onchange=()=>{
-      grs[+sel.dataset.dgd].rows.forEach(({dp})=>dp.duree=+sel.value);saveData();
-      promos.forEach(migPromoCohorte);savePromos()});
-    host.querySelectorAll("[data-dgn]").forEach(inp=>inp.oninput=()=>{
-      grs[+inp.dataset.dgn].rows.forEach(({dp})=>dp.nom=inp.value);
-      grs[+inp.dataset.dgn].nom=inp.value;saveData(false);
-      grs[+inp.dataset.dgn].rows.forEach(({dp,i})=>{
-        const ph=host.querySelector(`[data-dc="${i}"]`);if(ph)ph.placeholder=autoDipCode(dp)||"DNO"});
-      });
-    host.querySelectorAll("[data-dm]").forEach(inp=>inp.oninput=()=>{D.diplomes[+inp.dataset.dm].mention=inp.value;saveData(false);
-      const dp=D.diplomes[+inp.dataset.dm];
-      const ph=host.querySelector(`[data-dc="${inp.dataset.dm}"]`);if(ph)ph.placeholder=autoDipCode(dp)||"DNO";
-      });
-    host.querySelectorAll("[data-dc]").forEach(inp=>inp.oninput=()=>{D.diplomes[+inp.dataset.dc].code=inp.value;saveData(false)});
-    host.querySelectorAll("[data-nvc]").forEach(inp=>inp.oninput=()=>{D.niveaux[+inp.dataset.nvc].code=inp.value;saveData(false)});
-    host.querySelectorAll("[data-nvl]").forEach(inp=>inp.oninput=()=>{D.niveaux[+inp.dataset.nvl].label=inp.value;saveData(false)});
-    host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-      const dp=D.diplomes.splice(+b.dataset.eddel.slice(3),1)[0];
-      if(D.refs)delete D.refs[dp.id];
-      if(D.activeDiplome===dp.id)D.activeDiplome=(D.diplomes[0]||{}).id||"";saveData()}));
-    return;
-  }
-  /* Enseignants et Livrables : écrans écrits en TypeScript (src/etablissement/enseignants.ts, livrables.ts) */
-  const armement={arme:edArm,armer:(id,fn)=>armDel(id,fn)};
+  const D=DATA, armement={arme:edArm,armer:(id,fn)=>armDel(id,fn)};
+  const enregistrer=redessiner=>saveData(redessiner?undefined:false);
+  if(pane==="diplome")return window.dnmaxPont.etablissement.peindreDiplomes(host,{donnees:D,visibles:dipVisibles(),
+    estCadreVierge,nouvelIdentifiant:()=>newId("d"),ajouterMention:addMention,enregistrer,
+    apresChangementDuree:()=>{promos.forEach(migPromoCohorte);savePromos()},armement,annoncer:toast});
   if(pane==="enseignants")return window.dnmaxPont.etablissement.peindreEnseignants(host,{enseignants:D.enseignants,
-    moi:()=>D.moi,definirMoi:id=>{D.moi=id;persistData()},armement,nouvelIdentifiant:()=>"t"+Date.now().toString(36),
-    enregistrer:redessiner=>saveData(redessiner?undefined:false),
+    moi:()=>D.moi,definirMoi:id=>{D.moi=id;persistData()},armement,nouvelIdentifiant:()=>"t"+Date.now().toString(36),enregistrer,
     renommerMoi:(prenom,nomFam)=>{if(window.dnmaxPont.renommerMoi)window.dnmaxPont.renommerMoi(prenom,nomFam)},annoncer:toast});
   if(pane==="livrables")return window.dnmaxPont.etablissement.peindreLivrables(host,{livrables:()=>D.livrables,
     remplacer:l=>{D.livrables=l},listeOrigine:SUPPORTS_DEF,retirerDeLEvaluation:nom=>{F.livrables=F.livrables.filter(x=>x!==nom)},
-    armement,enregistrer:redessiner=>saveData(redessiner?undefined:false),annoncer:toast});
+    armement,enregistrer,annoncer:toast});
 }
 const DEMO_ELEVES=["Camille Ferrand","Yasmine Haddad","Noé Baptiste","Linh Tran","Timothée Vasseur",
   "Aïssatou Konaté","Sacha Delaunay","Rayan Mansouri","Inès Carvalho","Gaspard Rouvier",
