@@ -36,7 +36,26 @@ describe("resumeEtapes", () => {
         { id: "vide", libelle: "", livrables: [] },
       ],
     };
-    expect(resumeEtapes(evaluation)).toEqual({ livrables: 2, retenues: 4, lignes: 3, regroupements: 1, formulees: 2 });
+    expect(resumeEtapes(evaluation)).toEqual({ livrables: 2, retenues: 4, lignes: 3, regroupements: 1, formulees: 1 });
+  });
+
+  it("ne compte pas comme formulé un regroupement sans formulation", () => {
+    const evaluation = {
+      items: [
+        { code: "C1.1", op: "g", libelle: "", livrables: [] },
+        { code: "C2.1", op: "g", libelle: "", livrables: [] },
+      ],
+      ops: [{ id: "g", libelle: "", livrables: [] }],
+    };
+    expect(resumeEtapes(evaluation)).toMatchObject({ lignes: 1, regroupements: 1, formulees: 0 });
+  });
+
+  it("compte comme formulé un regroupement dont la formulation est renseignée", () => {
+    const evaluation = {
+      items: [{ code: "C1.1", op: "g", libelle: "", livrables: [] }],
+      ops: [{ id: "g", libelle: "Concevoir et présenter", livrables: [] }],
+    };
+    expect(resumeEtapes(evaluation)).toMatchObject({ regroupements: 1, formulees: 1 });
   });
 
   it("rend des zéros pour une évaluation vide", () => {

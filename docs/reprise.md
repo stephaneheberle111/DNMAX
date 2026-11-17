@@ -33,7 +33,7 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 
 ## Questions en attente de l'auteur
 
-- **Résumé de l'étape 3** : un regroupement compte comme « formulé » même sans formulation (comportement repris tel quel, noté dans la décision 37). À corriger si l'auteur le souhaite.
+Aucune pour le moment.
 
 ## Méthode : réécrire sans rien changer
 
