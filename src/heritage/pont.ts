@@ -43,6 +43,8 @@ import { peindreProgressionPromotion } from "../progression/promotion";
 import * as vueProgression from "../domaine/vue-progression";
 import * as exemple from "../domaine/exemple";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
+import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
+import { peindreModules } from "../parametres/modules";
 import { installerReferentielExemple } from "./exemple";
 import { peindreRepartition, peindreVoletEtablissement } from "../etablissement/volets";
 import { peindreEnseignants as peindreVoletEnseignants } from "../etablissement/enseignants";
@@ -244,6 +246,14 @@ interface Pont {
   readonly vueProgression: typeof vueProgression;
   /** Barre des onglets et titre de la fenêtre (voir `interface/onglets`). */
   readonly interface: { afficherPage: typeof afficherPage; brancherOnglets: typeof brancherOnglets };
+  /** Modules de Paramètres > Modules (voir `domaine/modules`, `parametres/modules`). */
+  readonly modules: {
+    MODULES: typeof MODULES;
+    modulesParDefaut: typeof modulesParDefaut;
+    appliquerDependances: typeof appliquerDependances;
+    entraineDautres: typeof entraineDautres;
+    peindre: typeof peindreModules;
+  };
   /** Contenu de « Charger un exemple » (voir `domaine/exemple`). */
   readonly exemple: typeof exemple;
   /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
@@ -357,6 +367,7 @@ export async function chargerInterfaceHistorique(
     progression: { ...progressionCalculs, peindrePromotion: peindreProgressionPromotion, peindreEtudiant: peindreProgressionEtudiant },
     vueProgression,
     interface: { afficherPage, brancherOnglets },
+    modules: { MODULES, modulesParDefaut, appliquerDependances, entraineDautres, peindre: peindreModules },
     exemple,
     etablissement: {
       peindreVoletEtablissement,
