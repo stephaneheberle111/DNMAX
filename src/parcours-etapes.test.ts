@@ -39,12 +39,24 @@ describe("prise en main, grande étape Référentiel", () => {
     expect(cibles.some((cible) => cible.includes("definir"))).toBe(false);
   });
 
-  it("présente les étapes de « Constituer » avant d'ouvrir la validation", () => {
+  it("guide « Constituer » page par page, chaque page se terminant par son bouton bleu et des confettis", () => {
     const etapes = PARCOURS_DEFINIS["prise-en-main"].etapes;
-    const rang = (selecteur: string): number => etapes.findIndex((etape) => etape.cibles?.includes(selecteur) === true);
-    const presentation = rang("#refPane .steps");
-    expect(presentation).toBeGreaterThan(rang('#refNav [data-pane="constituer"]'));
-    expect(presentation).toBeLessThan(rang('#refPane .steps [data-cp="valider"]'));
+    const suivantes = ["ecs", "blocs", "tableau", "valider"];
+    const rangs = suivantes.map((suivante) =>
+      etapes.findIndex((etape) => etape.aDegager === `.btn.primary[data-cp="${suivante}"]` && etape.celebrer === true),
+    );
+    rangs.forEach((rang) => {
+      expect(rang).toBeGreaterThan(etapes.findIndex((etape) => etape.cibles?.includes('#refNav [data-pane="constituer"]') === true));
+    });
+    expect([...rangs].sort((a, b) => a - b)).toEqual(rangs);
+    expect(rangs[3]).toBeLessThan(etapes.findIndex((etape) => etape.titre === "1. Valider le référentiel"));
+  });
+
+  it("fait vérifier les couleurs, le nom et les semestres de la première UE", () => {
+    const page = PARCOURS_DEFINIS["prise-en-main"].etapes.find((etape) => etape.aDegager === '.btn.primary[data-cp="ecs"]');
+    expect(page?.pointe).toContain('input[type="color"]');
+    expect(page?.pointe).toContain(".sems");
+    expect(page?.geste).toBe("parcourir");
   });
 });
 
@@ -159,10 +171,12 @@ describe("prise en main exploratoire", () => {
     ]);
   });
 
-  it("fait explorer le référentiel avant de le constituer, et montre comment en ajouter un", () => {
+  it("fait constituer et valider le référentiel avant de l'explorer, et montre comment en ajouter un", () => {
     const rang = (selecteur: string): number => etapes.findIndex((etape) => etape.cibles?.includes(selecteur) === true);
-    expect(rang("#refExplore")).toBeLessThan(rang('#refNav [data-pane="constituer"]'));
-    expect(rang("#bouton-echange")).toBeGreaterThan(rang('#refPane .steps [data-cp="valider"]'));
+    const validation = etapes.findIndex((etape) => etape.titre === "1. Valider le référentiel");
+    expect(rang('#refNav [data-pane="constituer"]')).toBeLessThan(validation);
+    expect(rang("#refExplore")).toBeGreaterThan(validation);
+    expect(rang("#bouton-echange")).toBeGreaterThan(rang("#refExplore"));
   });
 
   it("mène aux préférences et au module Étudiants des Paramètres", () => {
@@ -191,8 +205,20 @@ describe("prise en main, guidage fin", () => {
     expect(valider?.objectif?.({ ...RIEN_FAIT, referentiel: true })).toBe(false);
   });
 
-  it("promène le curseur d'une étape de « Constituer » à la suivante", () => {
-    expect(etapeCiblant("#refPane .steps")?.geste).toBe("parcourir");
+  it("montre, avant la formulation, qu'une compétence se glisse sur une autre pour les lier", () => {
+    const rang = etapes.findIndex((etape) => etape.titre === "5. Lier des compétences");
+    const lier = etapes[rang];
+    expect(lier?.geste).toBe("glisser");
+    expect(lier?.depuis).toContain("[data-dragcomp]");
+    expect(rang).toBeLessThan(etapes.findIndex((etape) => etape.titre === "5. Formuler et enregistrer"));
+  });
+
+  it("promène le curseur sur chaque page de « Constituer »", () => {
+    const pages = etapes.filter((etape) => etape.aDegager?.startsWith(".btn.primary[data-cp=") === true);
+    expect(pages).toHaveLength(4);
+    pages.forEach((page) => {
+      expect(page.geste).toBe("parcourir");
+    });
   });
 
   it("passe d'elle-même aux promotions une fois la boîte « Échanger » refermée", () => {
@@ -221,7 +247,7 @@ describe("prise en main, guidage fin", () => {
   });
 
   it("montre le glisser-déposer d'un livrable à l'étape Formulation", () => {
-    expect(etapes.find((etape) => etape.cibles?.includes("#step3") === true)?.depuis).toBe("#palLivr [data-dragliv]");
+    expect(etapes.find((etape) => etape.titre === "5. Formuler et enregistrer")?.depuis).toBe("#palLivr [data-dragliv]");
   });
 
   it("éclaire le menu « Mon compte » une fois ouvert, pour que la bulle ne le cache pas", () => {
