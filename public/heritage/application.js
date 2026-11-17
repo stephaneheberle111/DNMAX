@@ -325,19 +325,12 @@ let dl = window.dnmaxPont.telechargements;
 
 function migF(f){return Object.assign(f,EVAL.normaliserEvaluation(f))}
 /* Prénom et nom se saisissent à part (prenom, nomFam) ; « nom » reste le nom affiché
-   « Prénom Nom », utilisé partout ailleurs (listes, exports, échanges, rapprochements). */
-function separerPrenomNom(s){
-  const t=String(s||"").trim();
-  const tab=t.indexOf("\t");   // deux colonnes collées depuis un tableur : prénom, puis nom
-  if(tab>=0)return {prenom:t.slice(0,tab).replace(/\s+/g," ").trim(),nomFam:t.slice(tab+1).replace(/\s+/g," ").trim()};
-  const u=t.replace(/\s+/g," ");const k=u.indexOf(" ");   // sinon : premier mot = prénom
-  return k<0?{prenom:"",nomFam:u}:{prenom:u.slice(0,k),nomFam:u.slice(k+1)}}
-function composerNom(prenom,nomFam){return [prenom,nomFam].map(x=>String(x||"").replace(/\s+/g," ").trim()).filter(Boolean).join(" ")}
-function nouvellePersonne(id,ligne){const p=separerPrenomNom(ligne);return {id,prenom:p.prenom,nomFam:p.nomFam,nom:composerNom(p.prenom,p.nomFam)}}
-function completerPersonne(e){
-  if(typeof e.prenom!=="string"||typeof e.nomFam!=="string"){const p=separerPrenomNom(e.nom);e.prenom=p.prenom;e.nomFam=p.nomFam}
-  return e}
-function lignesNoms(txt){return String(txt||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean)}
+   « Prénom Nom ». Règles écrites et testées dans src/domaine/personnes.ts. */
+function separerPrenomNom(s){return window.dnmaxPont.personnes.separerPrenomNom(s)}
+function composerNom(prenom,nomFam){return window.dnmaxPont.personnes.composerNom(prenom,nomFam)}
+function nouvellePersonne(id,ligne){return window.dnmaxPont.personnes.nouvellePersonne(id,ligne)}
+function completerPersonne(e){return window.dnmaxPont.personnes.completerPersonne(e)}
+function lignesNoms(txt){return window.dnmaxPont.personnes.lignesNoms(txt)}
 function syncListe(pr,txt){
   const lignes=txt==null?(pr.liste||[]).map(e=>e.nom):lignesNoms(txt);
   const old=(pr.liste||[]).slice();
@@ -2921,53 +2914,15 @@ function paintEditor(pane,host){
       if(D.activeDiplome===dp.id)D.activeDiplome=(D.diplomes[0]||{}).id||"";saveData()}));
     return;
   }
-  if(pane==="enseignants"){
-    const css="grid-template-columns:60px minmax(0,1fr) minmax(0,1fr) 92px";
-    D.enseignants.forEach(completerPersonne);
-    host.innerHTML=edPanel("Enseignants",D.enseignants.length,
-      `<button class="btn ghost" id="edAdd">+ Ajouter</button>`,
-      {css,cells:["C'est moi","Prénom","Nom",""]},
-      D.enseignants.map((t,i)=>`<div class="ed" style="${css}">
-        <input type="radio" name="moi" data-moi="${esc(t.id)}" ${D.moi===t.id?"checked":""} aria-label="C'est moi : ${esc(t.nom)}" style="justify-self:center;width:18px;height:18px">
-        <input type="text" value="${esc(t.prenom)}" data-tp="${i}" placeholder="Prénom" aria-label="Prénom">
-        <input type="text" value="${esc(t.nomFam)}" data-tn="${i}" placeholder="Nom" aria-label="Nom">
-        ${delBtn("ens"+i,"Supprimer")}</div>`).join(""),
-      "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur de DNMAX : son prénom et son nom signent ses envois, sa répartition de service cadre la page Progression, et il est coché d'office dans une nouvelle évaluation.");
-    host.querySelectorAll("[data-moi]").forEach(r=>r.onchange=()=>{D.moi=r.dataset.moi;persistData();toast("Répartition de service de "+((D.enseignants.find(t=>t.id===D.moi)||{}).nom||"")+" prise en compte.")});
-    host.querySelector("#edAdd").onclick=()=>{D.enseignants.push({id:"t"+Date.now().toString(36),nom:"",prenom:"",nomFam:"",discipline:""});saveData();
-      const l=host.querySelectorAll("[data-tp]");if(l.length)l[l.length-1].focus()};
-    host.querySelectorAll("[data-tp],[data-tn]").forEach(inp=>inp.oninput=()=>{
-      const t=D.enseignants[+(inp.dataset.tp??inp.dataset.tn)];
-      if(inp.dataset.tp!==undefined)t.prenom=inp.value;else t.nomFam=inp.value;
-      t.nom=composerNom(t.prenom,t.nomFam);saveData(false);
-      // Le nom de « C'est moi » est aussi celui qui signe les envois : l'application le reprend.
-      if(t.id===D.moi&&window.dnmaxPont.renommerMoi)window.dnmaxPont.renommerMoi(t.prenom,t.nomFam)});
-    host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-      D.enseignants.splice(+b.dataset.eddel.slice(3),1);saveData()}));
-    return;
-  }
-  if(pane==="livrables"){
-    const css="grid-template-columns:minmax(0,1fr) 190px 92px";
-    host.innerHTML=edPanel("Livrables",D.livrables.length,
-      `<button class="btn ghost" id="edAdd">+ Ajouter</button>
-       <button class="btn ghost" id="edDefault">Liste d'origine</button>`,
-      {css,cells:["Nom","Nature",""]},
-      D.livrables.map((x,i)=>`<div class="ed" style="${css}">
-        <input type="text" value="${esc(x.nom)}" data-lv="${i}" aria-label="Livrable">
-        <input type="text" value="${esc(x.type||"")}" data-lt="${i}" list="livtypes" placeholder="Écrit, oral, plastique…" aria-label="Nature">
-        ${delBtn("lv"+i,"Supprimer")}</div>`).join("")
-        +`<datalist id="livtypes"><option>Écrit</option><option>Oral</option><option>Plastique</option><option>Numérique</option><option>Maquette</option><option>Dossier</option></datalist>`,
-      "Proposés à l'étape 1 de l'évaluation ; un livrable hors liste s'ajoute ici automatiquement.");
-    host.querySelector("#edAdd").onclick=()=>{D.livrables.push({nom:"",type:""});saveData();
-      const l=host.querySelectorAll("[data-lv]");if(l.length)l[l.length-1].focus()};
-    host.querySelector("#edDefault").onclick=()=>{D.livrables=SUPPORTS_DEF.map(x=>({nom:x,type:""}));saveData();toast("Liste d'origine rétablie.")};
-    host.querySelectorAll("[data-lv]").forEach(inp=>inp.oninput=()=>{D.livrables[+inp.dataset.lv].nom=inp.value;saveData(false)});
-    host.querySelectorAll("[data-lt]").forEach(inp=>inp.oninput=()=>{D.livrables[+inp.dataset.lt].type=inp.value;saveData(false)});
-    host.querySelectorAll("[data-eddel]").forEach(b=>b.onclick=()=>armDel(b.dataset.eddel,()=>{
-      const v=D.livrables.splice(+b.dataset.eddel.slice(2),1)[0];
-      F.livrables=F.livrables.filter(x=>x!==(v||{}).nom);saveData()}));
-    return;
-  }
+  /* Enseignants et Livrables : écrans écrits en TypeScript (src/etablissement/enseignants.ts, livrables.ts) */
+  const armement={arme:edArm,armer:(id,fn)=>armDel(id,fn)};
+  if(pane==="enseignants")return window.dnmaxPont.etablissement.peindreEnseignants(host,{enseignants:D.enseignants,
+    moi:()=>D.moi,definirMoi:id=>{D.moi=id;persistData()},armement,nouvelIdentifiant:()=>"t"+Date.now().toString(36),
+    enregistrer:redessiner=>saveData(redessiner?undefined:false),
+    renommerMoi:(prenom,nomFam)=>{if(window.dnmaxPont.renommerMoi)window.dnmaxPont.renommerMoi(prenom,nomFam)},annoncer:toast});
+  if(pane==="livrables")return window.dnmaxPont.etablissement.peindreLivrables(host,{livrables:()=>D.livrables,
+    remplacer:l=>{D.livrables=l},listeOrigine:SUPPORTS_DEF,retirerDeLEvaluation:nom=>{F.livrables=F.livrables.filter(x=>x!==nom)},
+    armement,enregistrer:redessiner=>saveData(redessiner?undefined:false),annoncer:toast});
 }
 const DEMO_ELEVES=["Camille Ferrand","Yasmine Haddad","Noé Baptiste","Linh Tran","Timothée Vasseur",
   "Aïssatou Konaté","Sacha Delaunay","Rayan Mansouri","Inès Carvalho","Gaspard Rouvier",

@@ -8,6 +8,7 @@ import * as zoomCarte from "../domaine/zoom-carte";
 import { renumeroterBloc } from "../domaine/numero-bloc";
 import * as saisieResultats from "../domaine/saisie-resultats";
 import * as reglesEvaluation from "../domaine/evaluation";
+import * as personnes from "../domaine/personnes";
 import { NIVEAUX_ACQUISITION, regleNiveauxAcquisition } from "../domaine/regles-affichees";
 import * as suiviSimplifie from "../domaine/suivi-simplifie";
 import { lireMoisConservation } from "../domaine/conservation";
@@ -26,6 +27,8 @@ import * as suiviEvaluation from "../domaine/suivi-evaluation";
 import * as progression from "../domaine/progression";
 import { installerReferentielExemple } from "./exemple";
 import { peindreRepartition, peindreVoletEtablissement } from "../etablissement/volets";
+import { peindreEnseignants as peindreVoletEnseignants } from "../etablissement/enseignants";
+import { peindreLivrables as peindreVoletLivrables } from "../etablissement/livrables";
 import { peindreEnseignants, peindreLivrables, peindrePromotions, peindreSemestres, peindreUesEtEcs } from "../editeur/etape-evaluation";
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { progressionDesCompetences } from "../domaine/progression-competences";
@@ -129,6 +132,8 @@ interface Pont {
   readonly saisie: typeof saisieResultats;
   /** Règles de la composition d'une évaluation (voir `domaine/evaluation`). */
   readonly evaluation: typeof reglesEvaluation;
+  /** Prénom et nom des enseignants et des étudiants (voir `domaine/personnes`). */
+  readonly personnes: typeof personnes;
   /** Niveaux d'acquisition du DN MADE et leur règle, montrée dans la carte du module (voir `domaine/regles-affichees`). */
   readonly niveauxAcquisition: { noms: typeof NIVEAUX_ACQUISITION; regle: typeof regleNiveauxAcquisition };
   /** Suivi simplifié « À faire / Faite » (voir `domaine/suivi-simplifie`). */
@@ -167,7 +172,12 @@ interface Pont {
    */
   installerReferentielExemple(): Promise<string | null>;
   /** Volets de Mon établissement écrits en TypeScript (voir `etablissement/`). */
-  readonly etablissement: { peindreVoletEtablissement: typeof peindreVoletEtablissement; peindreRepartition: typeof peindreRepartition };
+  readonly etablissement: {
+    peindreVoletEtablissement: typeof peindreVoletEtablissement;
+    peindreRepartition: typeof peindreRepartition;
+    peindreEnseignants: typeof peindreVoletEnseignants;
+    peindreLivrables: typeof peindreVoletLivrables;
+  };
   /** Calculs de la page Progression (voir `domaine/progression`). */
   readonly progression: typeof progression;
   /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
@@ -246,6 +256,7 @@ export async function chargerInterfaceHistorique(
     renumeroterBloc,
     saisie: saisieResultats,
     evaluation: reglesEvaluation,
+    personnes,
     niveauxAcquisition: { noms: NIVEAUX_ACQUISITION, regle: regleNiveauxAcquisition },
     suiviSimplifie,
     jauge: jaugeExport,
@@ -255,7 +266,12 @@ export async function chargerInterfaceHistorique(
     etapesEditeur,
     suivi: suiviEvaluation,
     progression,
-    etablissement: { peindreVoletEtablissement, peindreRepartition },
+    etablissement: {
+      peindreVoletEtablissement,
+      peindreRepartition,
+      peindreEnseignants: peindreVoletEnseignants,
+      peindreLivrables: peindreVoletLivrables,
+    },
     installerReferentielExemple: () => installerReferentielExemple(magasin, new Date()),
     exports: { colonnesExport, construireDocx, construireOdt, construireTableur, dessinateurJauge },
     ...(estDansEnveloppe()
