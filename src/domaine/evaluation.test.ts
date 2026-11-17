@@ -6,7 +6,9 @@ import {
   changerLivrableDeLigne,
   classesNettoyees,
   cleLigne,
+  delier,
   detacher,
+  formuler,
   ECHELLE,
   enumerer,
   estAcquis,
@@ -336,5 +338,56 @@ describe("etatEnregistrement", () => {
   it("dit « vide » pour une évaluation pas encore commencée, même avec un référentiel bloquant", () => {
     expect(etatEnregistrement({ dansLaListe: false, commencee: false, referentielBloquant: true })).toBe("vide");
     expect(etatEnregistrement({ dansLaListe: false, commencee: true, referentielBloquant: true })).toBe("bloquee");
+  });
+});
+
+describe("delier", () => {
+  const evaluation = {
+    items: [
+      { code: "C1.1", op: "g", libelle: "", livrables: ["Carnet"] },
+      { code: "C2.1", op: "g", libelle: "", livrables: [] },
+      { code: "C3.1", op: "", libelle: "", livrables: [] },
+    ],
+    ops: [{ id: "g", libelle: "Construire un corpus", livrables: ["Maquette"] }],
+  };
+
+  it("défait le regroupement : chaque compétence emporte ses livrables et ceux du regroupement", () => {
+    const { items, ops } = delier(evaluation, "g");
+    expect(ops).toEqual([]);
+    expect(items.map((competence) => [competence.code, competence.op, competence.livrables])).toEqual([
+      ["C1.1", "", ["Carnet", "Maquette"]],
+      ["C2.1", "", ["Maquette"]],
+      ["C3.1", "", []],
+    ]);
+  });
+
+  it("ne touche à rien pour un regroupement inconnu", () => {
+    const { items, ops } = delier(evaluation, "absent");
+    expect(ops).toHaveLength(1);
+    expect(items.filter((competence) => competence.op === "g")).toHaveLength(2);
+  });
+});
+
+describe("formuler", () => {
+  const evaluation = {
+    items: [
+      { code: "C1.1", op: "g", libelle: "", livrables: [] },
+      { code: "C2.1", op: "g", libelle: "", livrables: [] },
+      { code: "C3.1", op: "", libelle: "", livrables: [] },
+    ],
+    ops: [{ id: "g", libelle: "", livrables: [] }],
+  };
+
+  it("écrit la formulation d'un regroupement", () => {
+    expect(formuler(evaluation, "op:g", "Construire un corpus").ops[0]?.libelle).toBe("Construire un corpus");
+  });
+
+  it("écrit la formulation d'une compétence seule, sans toucher aux autres", () => {
+    const { items } = formuler(evaluation, "one:C3.1", "Présenter le principe");
+    expect(items.map((competence) => competence.libelle)).toEqual(["", "", "Présenter le principe"]);
+  });
+
+  it("garde le texte tel que saisi, espaces compris", () => {
+    expect(formuler(evaluation, "one:C3.1", "  en cours ").items[2]?.libelle).toBe("  en cours ");
   });
 });

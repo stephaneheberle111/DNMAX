@@ -4085,150 +4085,15 @@ function selectPromo(id){
 }
 function opIndex(id){return F.ops.findIndex(o=>o.id===id)+1}
 function lignes(){return lignesOf(F)}
-let dragOn=false;
-function magnetDrag(e,src,payload){
-  if(e.button)return;
-  const sx=e.clientX, sy=e.clientY;
-  let started=false, ghost=null, target=null, zones=[];
-  const R=38;
-  const begin=()=>{
-    started=true;dragOn=true;
-    src.classList.add("dragging");
-    document.body.classList.add("dragging-now");
-    zones=[...document.querySelectorAll("#lignes [data-drop]")]
-      .filter(z=>payload.kind!=="comp"||z.dataset.drop!==payload.from)
-      .map(z=>({el:z,key:z.dataset.drop}));
-    ghost=document.createElement("div");
-    ghost.className="dragghost"+(payload.kind==="comp"?" gcomp":" gliv");
-    ghost.innerHTML=`<span class="gtxt"></span><span class="ghint"></span>`;
-    ghost.querySelector(".gtxt").textContent=payload.label;
-    document.body.appendChild(ghost);
-  };
-  const move=ev=>{
-    if(!started){
-      if(Math.hypot(ev.clientX-sx,ev.clientY-sy)<5)return;
-      begin();
-    }
-    ev.preventDefault();
-    const x=ev.clientX,y=ev.clientY;
-    let best=null,bd=1e9;
-    zones.forEach(z=>{
-      const r=z.el.getBoundingClientRect();
-      const dx=Math.max(r.left-x,0,x-r.right), dy=Math.max(r.top-y,0,y-r.bottom);
-      const d=Math.hypot(dx,dy);
-      if(d<bd){bd=d;best=z}
-    });
-    const ok=!!best&&bd<=R;
-    zones.forEach(z=>z.el.classList.toggle("magnet",ok&&z===best));
-    target=ok?best:null;
-    let gx=x+14,gy=y+10;
-    if(ok){
-      const r=best.el.getBoundingClientRect();
-      const k=Math.pow(1-Math.min(1,bd/R),1.5);
-      gx+= (r.left+26-gx)*k*0.9; gy+=(r.top+18-gy)*k*0.9;
-    }
-    ghost.style.transform=`translate(${gx}px,${gy}px)`;
-    ghost.classList.toggle("snap",ok);
-    ghost.classList.toggle("off",!ok&&!!payload.canDetach);
-    ghost.querySelector(".ghint").textContent=ok
-      ? (payload.kind==="comp"?"réunir ici":"associer ici")
-      : (payload.canDetach?(payload.kind==="comp"?"détacher du groupe":"retirer de la ligne"):"");
-  };
-  const up=()=>{
-    document.removeEventListener("pointermove",move);
-    document.removeEventListener("pointerup",up);
-    document.removeEventListener("pointercancel",up);
-    if(!started)return;
-    src.classList.remove("dragging");
-    document.body.classList.remove("dragging-now");
-    if(ghost)ghost.remove();
-    document.querySelectorAll(".lg.magnet").forEach(z=>z.classList.remove("magnet"));
-    setTimeout(()=>{dragOn=false},0);
-    if(target){
-      if(payload.kind==="comp")attachTo(target.key,payload.code);
-      else addLivrTo(target.key,payload.v);
-    }else if(payload.canDetach){
-      if(payload.kind==="comp")detachCode(payload.code);
-      else removeLivrFrom(payload.from,payload.v);
-    }
-  };
-  document.addEventListener("pointermove",move,{passive:false});
-  document.addEventListener("pointerup",up);
-  document.addEventListener("pointercancel",up);
-}
-function removeLivrFrom(key,v){Object.assign(F,EVAL.changerLivrableDeLigne(F,key,v,false));save();paintLignes()}
 function cleanOps(){Object.assign(F,EVAL.nettoyerRegroupements(F))}
-function lineOf(key){return key.startsWith("op:")?F.ops.find(o=>o.id===key.slice(3)):F.items.find(i=>i.code===key.slice(4))}
-function attachTo(key,code){Object.assign(F,EVAL.rattacher(F,key,code,uid));save();paintLignes();paintSteps()}
-function detachCode(code){Object.assign(F,EVAL.detacher(F,code));save();paintLignes();paintSteps()}
-function addLivrTo(key,v){Object.assign(F,EVAL.changerLivrableDeLigne(F,key,v,true));save();paintLignes()}
-function paintPalette(){
-  const hd=document.getElementById("helpDrag");
-  if(hd&&!hd.innerHTML)hd.innerHTML=help("Tout se fait à l'aimant : en approchant une pastille d'une ligne, celle-ci s'allume et la pastille vient s'y coller. <b>Un code de compétence</b> déposé sur une autre ligne réunit les deux en compétence opérationnelle ; lâché à l'écart, il se détache de son groupe. <b>Un livrable</b> déposé sur une ligne s'y associe ; sorti de la ligne, il s'en retire.");
-  const host=document.getElementById("palLivr");
-  host.innerHTML=F.livrables.length?F.livrables.map(x=>
-    `<span class="liv drg" data-dragliv="${esc(x)}" aria-pressed="true" title="Glisser sur une ligne pour l'associer">${esc(x)}</span>`).join("")
-    :`<span class="hint">Aucun livrable — revenez à l'étape 1.</span>`;
-  host.querySelectorAll("[data-dragliv]").forEach(el=>el.addEventListener("pointerdown",e=>
-    magnetDrag(e,el,{kind:"liv",v:el.dataset.dragliv,label:el.dataset.dragliv,canDetach:false})));
+/* Étape 3, formulation : écran écrit en TypeScript (src/editeur/formulation.ts), qui reçoit l'évaluation en cours */
+function contexteFormulation(){
+  return {evaluation:F,libelleCritere:critLabel(),
+    libelleCompetence:code=>(REF.competences.find(x=>x.code===code)||{}).libelle||"",
+    selection:()=>ui.sel,retenirSelection:cles=>{ui.sel=[...cles]},
+    nouvelIdentifiant:uid,enregistrer:()=>save(),apresChangement:()=>paintSteps(),annoncer:m=>toast(m)};
 }
-function paintLignes(){
-  paintPalette();
-  const L=lignes(), host=document.getElementById("lignes");
-  document.getElementById("lCount").textContent=L.length;
-  document.getElementById("bLink").disabled=ui.sel.length<2;
-  document.getElementById("n3hint").textContent=ui.sel.length?ui.sel.length+" ligne(s) cochée(s)":"Glissez-déposez, ou cochez deux lignes et cliquez « Lier ».";
-  if(!L.length){host.innerHTML=`<div class="empty">Aucune compétence retenue. Revenez à l'étape 2.</div>`;return}
-  host.innerHTML=L.map((l,n)=>{
-    const key=l.k==="op"?"op:"+l.o.id:"one:"+l.it.code;
-    const on=ui.sel.includes(key);
-    const codes=l.k==="op"?l.its.map(i=>i.code):[l.it.code];
-    const liv=(l.k==="op"?l.o.livrables:l.it.livrables)||[];
-    return `<div class="lg ${on?"sel":""}" data-drop="${esc(key)}">
-      <input class="cbox" type="checkbox" data-lsel="${esc(key)}" ${on?"checked":""} aria-label="Sélectionner la ligne ${n+1}">
-      <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
-        <div class="top">
-          ${l.k==="op"?`<span class="num">OP ${opIndex(l.o.id)}</span>`:""}
-          ${codes.map(c=>{const lb=(REF.competences.find(x=>x.code===c)||{}).libelle||"";
-            return `<span class="cd drg" data-dragcomp="${esc(c)}" title="${esc(c+(lb?" · "+lb:""))} — glisser vers une autre ligne pour réunir, ou à l'écart pour détacher"><span class="grip" aria-hidden="true">⠿</span><b>${esc(c)}</b>${lb?`<span class="t">${esc(lb)}</span>`:""}</span>`}).join("")}
-          ${l.k==="op"?`<button class="btn ghost" data-unlink="${l.o.id}" style="margin-left:auto">Délier</button>`:""}
-        </div>
-        <div class="ro"><label class="mini">${esc(critLabel())}</label>
-          <input type="text" data-lib="${esc(key)}" value="${esc(l.k==="op"?l.o.libelle:l.it.libelle)}" style="flex:1 1 240px"
-            placeholder="${l.k==="op"?"Formuler ce qui est attendu pour ce regroupement…":"Formuler ce qui est attendu (sinon l'intitulé du référentiel)…"}"></div>
-        <div class="ro livrow">${liv.length
-          ? liv.map(x=>`<button type="button" class="liv on drg" data-lliv="${esc(key)}" data-v="${esc(x)}" aria-pressed="true" title="Glisser à l'écart pour retirer">${esc(x)}</button>`).join("")
-          : `<span class="hint">aucun livrable — glissez-en un ici</span>`}</div>
-      </div></div>`}).join("");
-  host.querySelectorAll("[data-lsel]").forEach(cb=>cb.onchange=()=>{
-    const k=cb.dataset.lsel;ui.sel=cb.checked?[...ui.sel,k]:ui.sel.filter(x=>x!==k);paintLignes()});
-  host.querySelectorAll("[data-lib]").forEach(inp=>inp.oninput=()=>{
-    const t=lineOf(inp.dataset.lib);if(t){t.libelle=inp.value;save();paintSteps()}});
-  host.querySelectorAll("[data-lliv]").forEach(b=>{
-    b.addEventListener("pointerdown",e=>{
-      const t=lineOf(b.dataset.lliv);
-      magnetDrag(e,b,{kind:"liv",v:b.dataset.v,label:b.dataset.v,from:b.dataset.lliv,
-        canDetach:!!(t&&(t.livrables||[]).includes(b.dataset.v))});
-    });
-    b.onclick=()=>{
-      if(dragOn)return;
-      const t=lineOf(b.dataset.lliv);if(!t)return;
-      t.livrables=(t.livrables||[]).filter(x=>x!==b.dataset.v);save();paintLignes()};
-  });
-  host.querySelectorAll("[data-unlink]").forEach(b=>b.onclick=()=>{
-    const id=b.dataset.unlink;
-    F.items.forEach(i=>{if(i.op===id){const op=F.ops.find(o=>o.id===id);
-      if(op)i.livrables=[...new Set([...(i.livrables||[]),...(op.livrables||[])])];i.op=""}});
-    F.ops=F.ops.filter(o=>o.id!==id);ui.sel=[];save();paintLignes();paintSteps();toast("Compétences déliées.")});
-  host.querySelectorAll("[data-dragcomp]").forEach(el=>{
-    const zone=el.closest("[data-drop]");
-    el.addEventListener("pointerdown",e=>{
-      const code=el.dataset.dragcomp, it=F.items.find(i=>i.code===code);
-      const lb=(REF.competences.find(x=>x.code===code)||{}).libelle||"";
-      magnetDrag(e,el,{kind:"comp",code,label:code+(lb?" · "+lb:""),from:zone?zone.dataset.drop:"",canDetach:!!(it&&it.op)});
-    });
-  });
-}
+function paintLignes(){window.dnmaxPont.editeur.peindreFormulation(contexteFormulation())}
 /* ---------- étape 4 : évaluation des étudiants ---------- */
 /* Niveau d'acquisition en pourcentage continu (0 à 100, sans crans visibles).
    Règle quel que soit le nombre N de niveaux : les deux niveaux extrêmes occupent chacun 60/N %
@@ -4265,12 +4130,7 @@ function paintEleves(){
   const host=document.getElementById("elevesPane");if(!host)return;
   window.dnmaxPont.editeur.peindreSaisieEtudiants(host,contexteSaisie());
 }
-function linkSelection(){
-  if(ui.sel.length<2)return;
-  const {items,ops,regroupement}=EVAL.reunir(F,ui.sel,uid);Object.assign(F,{items,ops});
-  ui.sel=[];save();paintLignes();paintSteps();
-  const el=document.querySelector(`[data-lib="op:${regroupement}"]`);if(el){el.focus();el.scrollIntoView({block:"center"})}
-}
+function linkSelection(){window.dnmaxPont.editeur.lierSelection(contexteFormulation())}
 /* progression des promotions de l'évaluation en cours, pour chaque compétence du semestre
    (les autres évaluations enregistrées de ces promotions, hors celle-ci) */
 function pickProgress(){
