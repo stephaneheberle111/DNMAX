@@ -33,8 +33,6 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 
 ## Ce qui reste, dans l'ordre convenu avec l'auteur
 
-**À fusionner avec la publication de la 0.9, pas avant** : la branche `docs/site-niveaux` (textes du site et de la documentation lue dans l'application sur les niveaux d'acquisition ; niveau de 3e année « Autonome » dans les deux référentiels livrés, empreinte recalculée). Toute fusion qui touche `site/` publie dnmax.fr (`.github/workflows/site.yml`).
-
 1. **L'éditeur commun** : fait. Tous ses volets sont dans `src/etablissement/` et `src/referentiel/etapes.ts` ; le fichier historique ne garde que la suppression en deux temps (`edArm`, `armDel`), partagée avec la liste des versions de la validation.
 2. **Référentiel > Constituer** : fait. Restent dans le fichier historique la création et le rétablissement d'une version (`validerVersion`, `askPromosVersion`, `restaurerVersion`), que la page appelle.
 3. **Référentiel > Explorer** : la recherche et l'habillage autour de la carte.
