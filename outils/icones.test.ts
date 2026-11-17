@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: CECILL-2.1
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { PLEIN, SIGNES, assemblerIcns, assemblerIco, niveauDetail, svgIcone } from "./icones";
 
@@ -59,5 +60,15 @@ describe("assemblerIcns", () => {
 
   it("refuse une taille sans type connu", () => {
     expect(() => assemblerIcns([{ taille: 48, png: new Uint8Array() }])).toThrow(/48/);
+  });
+});
+
+describe("icônes servies par l'interface", () => {
+  it("le favicon est l'icône de l'application au niveau simple", () => {
+    expect(readFileSync("public/favicon.svg", "utf8").trim()).toBe(svgIcone(32));
+  });
+
+  it("l'icône de « À propos » est l'icône de l'application au niveau fin", () => {
+    expect(readFileSync("public/icone.svg", "utf8").trim()).toBe(svgIcone(128));
   });
 });
