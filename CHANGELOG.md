@@ -31,6 +31,7 @@
 
 ### Corrigé
 
+- Même icône partout : « À propos » et l'onglet du navigateur reprennent l'icône de la barre des tâches (le signe X sur pavé pétrole) ; l'en-tête garde le nom « DNMA » suivi du signe.
 - Avec le module Étudiants, « Évaluation des étudiants » redevient l'étape 4 de l'assistant, après Formulation ; elle s'ouvre une fois l'évaluation enregistrée.
 - Documents Word et OpenDocument : le nom de l'établissement et celui de l'enseignant figurent au-dessus de la ligne de contexte.
 - Un document qui contient des étudiants est précédé d'un avertissement, avant son enregistrement et non plus après.

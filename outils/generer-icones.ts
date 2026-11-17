@@ -3,7 +3,8 @@
 /**
  * Régénère les icônes de l'application dans src-tauri/icons/ à partir du dessin
  * de outils/icones.ts : chaque taille est rendue avec son niveau de détail, puis
- * assemblée en .ico (Windows) et .icns (macOS). Écrit aussi src-tauri/icone-source.svg.
+ * assemblée en .ico (Windows) et .icns (macOS). Écrit aussi src-tauri/icone-source.svg,
+ * ainsi que le favicon et l'icône de « À propos » (public/), pour que le signe soit le même partout.
  *
  * Usage : node outils/generer-icones.ts
  */
@@ -35,6 +36,8 @@ try {
   writeFileSync(`${DOSSIER}/icon.ico`, assemblerIco(TAILLES_ICO.map(prendre)));
   writeFileSync(`${DOSSIER}/icon.icns`, assemblerIcns(TAILLES_ICNS.map(prendre)));
   writeFileSync("src-tauri/icone-source.svg", `${svgIcone(1024)}\n`);
+  writeFileSync("public/favicon.svg", `${svgIcone(32)}\n`);
+  writeFileSync("public/icone.svg", `${svgIcone(128)}\n`);
 } finally {
   await navigateur.close();
 }
