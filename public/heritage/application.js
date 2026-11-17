@@ -4131,79 +4131,27 @@ function paintEleves(){
   window.dnmaxPont.editeur.peindreSaisieEtudiants(host,contexteSaisie());
 }
 function linkSelection(){window.dnmaxPont.editeur.lierSelection(contexteFormulation())}
-/* progression des promotions de l'évaluation en cours, pour chaque compétence du semestre
-   (les autres évaluations enregistrées de ces promotions, hors celle-ci) */
-function pickProgress(){
-  const sem=F.semestre;
-  const prs=(F.classes||[]).map(n=>promos.find(p=>p.nom===n)).filter(Boolean);
-  if(!prs.length)return null;
-  const els=prs.flatMap(pr=>migPromo(pr).liste);
-  const fs=fiches.filter(f=>f.id!==F.id&&!f.brouillon&&prs.some(pr=>(f.classes||[]).includes(pr.nom)||f.promoId===pr.id));
-  const out={};
-  compsFor(sem).forEach(c=>{
-    const cover=fs.filter(f=>(f.items||[]).some(it=>it.code===c.code));
-    const inSem=cover.filter(f=>f.semestre===sem);
-    const seen=new Set();
-    inSem.forEach(f=>(f.items||[]).filter(it=>it.code===c.code).forEach(it=>{
-      const key=it.op?"op:"+it.op:"one:"+it.code;
-      Object.entries(f.res||{}).forEach(([eid,r])=>{const v=(r.n||{})[key];if(v!=null&&v!=="")seen.add(eid)})}));
-    const done=els.filter(e=>seen.has(e.id)).length;
-    out[c.code]={inSem,cover,done,tot:els.length,
-      state:inSem.length?(!inSem.some(evalueeF)?"prevue":(MOD.eleves&&els.length&&done<els.length?"part":"ok")):(cover.length?"autre":"todo")};
-  });
-  return out;
-}
-function paintPick(){
+/* Étape 2, compétences : écran écrit en TypeScript (src/editeur/competences.ts) ; la progression de la promotion
+   (ses autres évaluations enregistrées, hors celle-ci) est calculée par src/domaine/progression-competences.ts */
+function contexteCompetences(){
   const sem=F.semestre, dispo=compsFor(sem);
-  const _lim=ecsAffectes(), codes=F.ecCodes.length?F.ecCodes:(_lim?[..._lim]:[]), cadre=codes.length&&!ui.allComps;
-  const all=cadre
-    ? dispo.filter(c=>ecsOf(c,sem).some(e=>codes.includes(e.ec))||F.items.some(i=>i.code===c.code))
-    : dispo;
-  const sc=document.getElementById("pickScope");
-  if(sc){
-    const nues=uesSelected().length;
-    sc.innerHTML = codes.length
-      ? (cadre
-        ? `${all.length} compétence${all.length>1?"s":""} portée${all.length>1?"s":""} par ${codes.length>1?"les "+codes.length+" enseignements":"l'enseignement"} choisi${codes.length>1?"s":""} à l'étape 1${nues?" ("+nues+(nues>1?" unités d'enseignement)":" unité d'enseignement)"):""} · <button type="button" class="lnk" id="pickAll">voir les ${dispo.length} du semestre</button>`
-        : `Les ${dispo.length} compétences du semestre · <button type="button" class="lnk" id="pickAll">revenir aux ${dispo.filter(c=>ecsOf(c,sem).some(e=>codes.includes(e.ec))||F.items.some(i=>i.code===c.code)).length} de la sélection</button>`)
-      : `Les ${dispo.length} compétences du ${esc(sem)} — choisissez des unités ou des enseignements à l'étape 1 pour n'en voir que la part concernée.`;
-    const ba=document.getElementById("pickAll");
-    if(ba)ba.onclick=()=>{ui.allComps=!ui.allComps;paintPick()};
-  }
-  const q=norm(ui.q.trim());
-  const PG=pickProgress(), pf=PG?(ui.pf||"tout"):"tout";
-  const keep=all.filter(c=>!q||norm(c.code+" "+c.libelle+" "+blocName(c.bloc)).includes(q))
-    .filter(c=>pf==="tout"||!PG[c.code]||(pf==="todo"?!PG[c.code].inSem.length:PG[c.code].inSem.length));
-  const pgTxt=g=>g.state==="todo"?"À évaluer":g.state==="prevue"?"Prévue · "+ST_LBL[statutOf(g.inSem[0])].toLowerCase():g.state==="autre"?"Vue au "+[...new Set(g.cover.map(f=>f.semestre))].join(", ")
-    :g.state==="part"?"En cours · "+g.done+"/"+g.tot:"Évaluée";
-  const pgDet=g=>g.inSem.length?g.inSem.map(f=>esc(f.titre||"Sans titre")+(f.date?" ("+esc(f.date)+")":"")).join(" · "):"";
-  const byBloc=new Map();
-  keep.forEach(c=>{if(!byBloc.has(c.bloc))byBloc.set(c.bloc,[]);byBloc.get(c.bloc).push(c)});
-  const host=document.getElementById("pick");
-  const nTodo=PG?all.filter(c=>PG[c.code]&&!PG[c.code].inSem.length).length:0;
-  const bar=PG?`<div class="pkbar"><span class="hint">Progression de ${esc(classesDisp(F))} au ${esc(sem)} : <b>${all.length-nTodo}</b> / ${all.length} déjà évaluées ailleurs, <b>${nTodo}</b> à évaluer.</span>
-    <span class="dkinds" style="margin:0">${[["tout","Toutes"],["todo","À évaluer"],["fait","Déjà évaluées"]].map(([k,l])=>`<button type="button" data-pkf="${k}" aria-pressed="${k===pf}">${l}</button>`).join("")}</span></div>`:"";
-  if(!keep.length){host.innerHTML=bar+`<div class="empty">Aucune compétence ne correspond à ce filtre.</div>`;}
-  else host.innerHTML=bar+[...byBloc.entries()].sort((a,b)=>(+a[0])-(+b[0])).map(([n,cs])=>`
-    <div class="bloc"><div class="bh ${(+n)%2?"tint":""}" style="--bloc:${BLOC_TINT}"><span class="n">BLOC ${esc(n)}</span><span class="t">${esc(blocName(n))}</span></div>
-    ${cs.map(c=>{
-      const it=F.items.find(i=>i.code===c.code), on=!!it;
-      return `<div class="cp ${on?"on":""}">
-        <input class="cbox" type="checkbox" data-code="${c.code}" ${on?"checked":""} aria-label="Évaluer ${c.code}">
-        <div><div><span class="code">${esc(c.code)}</span> <span class="lib">${esc(c.libelle)}</span></div>
-        ${PG&&PG[c.code]?`<div class="pkline"><span class="pill pst ${PG[c.code].state}">${esc(pgTxt(PG[c.code]))}</span>${pgDet(PG[c.code])?` <span class="hint">${pgDet(PG[c.code])}</span>`:""}</div>`:""}
-        ${on&&it.op?`<div class="optag">OP ${opIndex(it.op)}${(F.ops.find(o=>o.id===it.op)||{}).libelle?" · "+esc((F.ops.find(o=>o.id===it.op)||{}).libelle):""}</div>`:""}
-        </div></div>`}).join("")}</div>`).join("");
-  host.querySelectorAll("[data-pkf]").forEach(b=>b.onclick=()=>{ui.pf=b.dataset.pkf;paintPick()});
-  host.querySelectorAll(".cbox").forEach(cb=>cb.onchange=()=>{
-    const code=cb.dataset.code, c=REF.competences.find(x=>x.code===code);
-    if(cb.checked)F.items.push({code,ecs:itemEcs(c,sem),op:"",libelle:"",livrables:[]});
-    else F.items=F.items.filter(i=>i.code!==code);
-    save();paintPick();paintSteps()});
-
-  document.getElementById("cCount").textContent=F.items.length+" / "+all.length;
-  paintSteps();
+  const lim=ecsAffectes(), codes=F.ecCodes.length?F.ecCodes:(lim?[...lim]:[]);
+  const prs=(F.classes||[]).map(n=>promos.find(p=>p.nom===n)).filter(Boolean);
+  const progression=prs.length?window.dnmaxPont.progressionCompetences({codes:dispo.map(c=>c.code),semestre:sem,
+    evaluations:fiches.filter(f=>f.id!==F.id&&!f.brouillon&&prs.some(pr=>(f.classes||[]).includes(pr.nom)||f.promoId===pr.id)),
+    idsEtudiants:prs.flatMap(pr=>migPromo(pr).liste).map(e=>e.id),estEvaluee:evalueeF,moduleEleves:!!MOD.eleves}):null;
+  return {evaluation:F,semestre:sem,
+    competences:dispo.map(c=>({code:c.code,libelle:c.libelle,bloc:String(c.bloc),nomBloc:blocName(c.bloc),dansLeCadre:ecsOf(c,sem).some(e=>codes.includes(e.ec))})),
+    cadre:codes.length?{enseignements:codes.length,unites:uesSelected().length}:null,
+    toutVoir:()=>!!ui.allComps,basculerToutVoir:()=>{ui.allComps=!ui.allComps},
+    recherche:()=>norm(ui.q.trim()),normaliser:norm,
+    progression,nomPromotions:classesDisp(F),statutDe:f=>ST_LBL[statutOf(f)].toLowerCase(),
+    filtre:()=>ui.pf||"tout",retenirFiltre:f=>{ui.pf=f},
+    ecsDe:code=>itemEcs(REF.competences.find(x=>x.code===code),sem),
+    regroupementDe:op=>({numero:opIndex(op),libelle:(F.ops.find(o=>o.id===op)||{}).libelle||""}),
+    teinteBloc:BLOC_TINT,enregistrer:()=>save(),apresChangement:()=>paintSteps()};
 }
+function paintPick(){window.dnmaxPont.editeur.peindreCompetences(contexteCompetences())}
 /* restitution : par promotion (module de base) et, avec le module Étudiants, par étudiant */
 /* Suivi d'une évaluation : saisie dans DNMAX → distribuée aux étudiants (avec date de rendu) →
    évaluée (fiche remplie à la main hors DNMAX, ou saisie dans DNMAX) → restituée (par promotion,

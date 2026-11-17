@@ -13,7 +13,9 @@ import { lireMoisConservation } from "../domaine/conservation";
 import { MOIS_CONSERVATION_MAXIMUM, MOIS_CONSERVATION_MINIMUM, MOIS_CONSERVATION_PAR_DEFAUT } from "../configuration";
 import * as jaugeExport from "../domaine/jauge-export";
 import { couleurNiveau, encreNiveau } from "../domaine/teintes-niveaux";
+import { peindreCompetences } from "../editeur/competences";
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
+import { progressionDesCompetences } from "../domaine/progression-competences";
 import { peindreSaisieEtudiants } from "../editeur/saisie-etudiants";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
 import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
@@ -122,10 +124,13 @@ interface Pont {
   readonly teintes: { couleurNiveau: typeof couleurNiveau; encreNiveau: typeof encreNiveau };
   /** Écrans de l'éditeur d'évaluation écrits en TypeScript (voir `editeur/`). */
   readonly editeur: {
+    peindreCompetences: typeof peindreCompetences;
     peindreFormulation: typeof peindreFormulation;
     lierSelection: typeof lierSelection;
     peindreSaisieEtudiants: typeof peindreSaisieEtudiants;
   };
+  /** Progression de la promotion sur chaque compétence du semestre (voir `domaine/progression-competences`). */
+  readonly progressionCompetences: typeof progressionDesCompetences;
   readonly stockage: Pick<MagasinMemoire, "getItem" | "setItem" | "removeItem">;
   readonly telechargements: {
     save(demande: DemandeEnregistrement): Promise<void>;
@@ -201,7 +206,8 @@ export async function chargerInterfaceHistorique(
     suiviSimplifie,
     jauge: jaugeExport,
     teintes: { couleurNiveau, encreNiveau },
-    editeur: { peindreFormulation, lierSelection, peindreSaisieEtudiants },
+    editeur: { peindreCompetences, peindreFormulation, lierSelection, peindreSaisieEtudiants },
+    progressionCompetences: progressionDesCompetences,
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
       : {}),
