@@ -6,6 +6,7 @@ import {
   changerLivrableDeLigne,
   classesNettoyees,
   cleLigne,
+  basculerLivrableAttendu,
   delier,
   detacher,
   formuler,
@@ -389,5 +390,28 @@ describe("formuler", () => {
 
   it("garde le texte tel que saisi, espaces compris", () => {
     expect(formuler(evaluation, "one:C3.1", "  en cours ").items[2]?.libelle).toBe("  en cours ");
+  });
+});
+
+describe("basculerLivrableAttendu", () => {
+  const evaluation = {
+    livrables: ["Carnet", "Maquette"],
+    items: [{ code: "C1.1", op: "", libelle: "", livrables: ["Carnet", "Maquette"] }],
+    ops: [{ id: "g", libelle: "", livrables: ["Carnet"] }],
+  };
+
+  it("ajoute un livrable attendu absent, à la fin", () => {
+    expect(basculerLivrableAttendu(evaluation, "Planches").livrables).toEqual(["Carnet", "Maquette", "Planches"]);
+  });
+
+  it("retire un livrable attendu, et des lignes qui l'avaient", () => {
+    const suite = basculerLivrableAttendu(evaluation, "Carnet");
+    expect(suite.livrables).toEqual(["Maquette"]);
+    expect(suite.items[0]?.livrables).toEqual(["Maquette"]);
+    expect(suite.ops[0]?.livrables).toEqual([]);
+  });
+
+  it("ignore un nom vide", () => {
+    expect(basculerLivrableAttendu(evaluation, "  ").livrables).toEqual(["Carnet", "Maquette"]);
   });
 });
