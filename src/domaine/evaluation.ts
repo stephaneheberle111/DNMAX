@@ -309,6 +309,40 @@ export function detacher(brut: unknown, code: string): { items: CompetenceRetenu
 }
 
 /**
+ * Défait le regroupement `id` (« Délier ») : chacune de ses compétences
+ * redevient seule et emporte, en plus des siens, les livrables du
+ * regroupement. Sa formulation est abandonnée. Sans effet si le regroupement est inconnu.
+ */
+export function delier(brut: unknown, id: string): { items: CompetenceRetenue[]; ops: Regroupement[] } {
+  const evaluation = estObjet(brut) ? brut : {};
+  const items = competencesDe(evaluation);
+  const ops = regroupementsDe(evaluation);
+  const regroupement = ops.find((candidat) => candidat.id === id);
+  if (regroupement === undefined) {
+    return { items, ops };
+  }
+  return {
+    items: items.map((competence) =>
+      competence.op === id ? { ...competence, op: "", livrables: sansDoublon([...competence.livrables, ...regroupement.livrables]) } : competence,
+    ),
+    ops: ops.filter((candidat) => candidat !== regroupement),
+  };
+}
+
+/** Écrit ce qui est attendu pour la ligne `cle` (la compétence opérationnelle), tel que saisi. */
+export function formuler(brut: unknown, cle: string, texte: string): { items: CompetenceRetenue[]; ops: Regroupement[] } {
+  const evaluation = estObjet(brut) ? brut : {};
+  const items = competencesDe(evaluation);
+  const ops = regroupementsDe(evaluation);
+  if (cle.startsWith("op:")) {
+    const id = cle.slice(3);
+    return { items, ops: ops.map((regroupement) => (regroupement.id === id ? { ...regroupement, libelle: texte } : regroupement)) };
+  }
+  const code = cle.slice(4);
+  return { items: items.map((competence) => (competence.code === code ? { ...competence, libelle: texte } : competence)), ops };
+}
+
+/**
  * Ajoute (ou retire) un livrable à la ligne `cle`. Seul un livrable attendu
  * dans l'évaluation peut être ajouté. Sans effet sur une ligne inconnue.
  */
