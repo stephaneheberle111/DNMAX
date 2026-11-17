@@ -37,7 +37,9 @@ import { construireDocx } from "../export/word";
 import { peindreCompetences } from "../editeur/competences";
 import * as etapesEditeur from "../domaine/etapes-editeur";
 import * as suiviEvaluation from "../domaine/suivi-evaluation";
-import * as progression from "../domaine/progression";
+import * as progressionCalculs from "../domaine/progression";
+import { peindreProgressionPromotion } from "../progression/promotion";
+import * as vueProgression from "../domaine/vue-progression";
 import { installerReferentielExemple } from "./exemple";
 import { peindreRepartition, peindreVoletEtablissement } from "../etablissement/volets";
 import { peindreEnseignants as peindreVoletEnseignants } from "../etablissement/enseignants";
@@ -234,7 +236,9 @@ interface Pont {
     peindreDiplomes: typeof peindreVoletDiplomes;
   };
   /** Calculs de la page Progression (voir `domaine/progression`). */
-  readonly progression: typeof progression;
+  readonly progression: typeof progressionCalculs & { peindrePromotion: typeof peindreProgressionPromotion };
+  /** Promotions et semestres proposés dans Progression (voir `domaine/vue-progression`). */
+  readonly vueProgression: typeof vueProgression;
   /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
   readonly etapesEditeur: typeof etapesEditeur;
   /** Progression de la promotion sur chaque compétence du semestre (voir `domaine/progression-competences`). */
@@ -343,7 +347,8 @@ export async function chargerInterfaceHistorique(
     progressionCompetences: progressionDesCompetences,
     etapesEditeur,
     suivi: suiviEvaluation,
-    progression,
+    progression: { ...progressionCalculs, peindrePromotion: peindreProgressionPromotion },
+    vueProgression,
     etablissement: {
       peindreVoletEtablissement,
       peindreRepartition,
