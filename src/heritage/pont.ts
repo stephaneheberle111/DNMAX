@@ -23,6 +23,7 @@ import { peindreCompetences } from "../editeur/competences";
 import * as etapesEditeur from "../domaine/etapes-editeur";
 import * as suiviEvaluation from "../domaine/suivi-evaluation";
 import * as progression from "../domaine/progression";
+import { installerReferentielExemple } from "./exemple";
 import { peindreEnseignants, peindreLivrables, peindrePromotions, peindreSemestres, peindreUesEtEcs } from "../editeur/etape-evaluation";
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { progressionDesCompetences } from "../domaine/progression-competences";
@@ -156,6 +157,11 @@ interface Pont {
   };
   /** Suivi d'une évaluation : statut, saisie, restitutions (voir `domaine/suivi-evaluation`). */
   readonly suivi: typeof suiviEvaluation;
+  /**
+   * « Charger un exemple » sans référentiel : installe le référentiel Objet livré
+   * dans le magasin et rend l'identifiant du diplôme installé.
+   */
+  installerReferentielExemple(): Promise<string | null>;
   /** Calculs de la page Progression (voir `domaine/progression`). */
   readonly progression: typeof progression;
   /** Étapes accessibles de l'éditeur (voir `domaine/etapes-editeur`). */
@@ -242,6 +248,7 @@ export async function chargerInterfaceHistorique(
     etapesEditeur,
     suivi: suiviEvaluation,
     progression,
+    installerReferentielExemple: () => installerReferentielExemple(magasin, new Date()),
     exports: { colonnesExport, construireDocx, construireOdt, construireTableur, dessinateurJauge },
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
