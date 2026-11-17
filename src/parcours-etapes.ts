@@ -178,6 +178,30 @@ function paneReferentiel(pane: string): () => boolean {
   return () => visible("#v-ref") && document.querySelector(`#refNav [data-pane="${pane}"][aria-pressed="true"]`) !== null;
 }
 
+/** Vrai si la page `page` de Référentiel > Constituer est affichée. */
+function pageConstituer(page: string): () => boolean {
+  return () => paneReferentiel("constituer")() && document.querySelector(`#refPane .steps [data-cp="${page}"][aria-current="true"]`) !== null;
+}
+
+/**
+ * Une page de Référentiel > Constituer : le curseur passe sur les champs de la
+ * première ligne, puis sur le bouton bleu du bas, qui mène à la page suivante.
+ */
+function etapePageConstituer(titre: string, texte: string, champs: readonly string[], suivante: string): Etape {
+  const bouton = `.btn.primary[data-cp="${suivante}"]`;
+  return {
+    titre,
+    texte,
+    cibles: ["#refPane"],
+    pointe: [...champs, bouton].join(", "),
+    aDegager: bouton,
+    geste: "parcourir",
+    atteinte: pageConstituer(suivante),
+    ouvrir: cliquer(`#refPane ${bouton}`),
+    celebrer: true,
+  };
+}
+
 /** Vrai une fois la boîte « Échanger » ouverte pendant la visite : sa fermeture fait passer à la suite. */
 let boiteEchangeOuverte = false;
 
@@ -211,46 +235,53 @@ const PRISE_EN_MAIN: Parcours = {
     },
     ALLER_REFERENTIEL,
     {
-      titre: "1. Explorer",
-      texte: "Choisissez « Explorer » : le référentiel s'y lit d'un coup d'œil.",
-      cibles: ['#refNav [data-pane="explorer"]'],
-      geste: "cliquer",
-      atteinte: paneReferentiel("explorer"),
-      avanceAuClic: true,
-    },
-    {
-      titre: "1. La carte du référentiel",
-      texte:
-        "Chaque portion de la carte est une unité d'enseignement, année par année : survolez-la pour l'éclater, cliquez pour la figer. " +
-        "La recherche retrouve une compétence par son code (C4.1, EC 11.2) ou un mot-clé.",
-      cibles: ["#refExplore"],
-      geste: "regarder",
-    },
-    {
       titre: "1. Constituer",
-      texte: "Choisissez maintenant « Constituer » : le référentiel s'y relit et s'y corrige en cinq étapes, des unités d'enseignement à la validation.",
+      texte: "Choisissez « Constituer » : vous y vérifiez le référentiel de votre mention page par page, des unités d'enseignement à la validation.",
       cibles: ['#refNav [data-pane="constituer"]'],
       geste: "cliquer",
       atteinte: paneReferentiel("constituer"),
       avanceAuClic: true,
     },
     {
-      titre: "1. Les cinq étapes",
-      texte:
-        "UE, puis EC, puis blocs et compétences ; la planification rattache ensuite chaque compétence aux EC, semestre par semestre, avant la validation. " +
-        "Chaque étape ne modifie que ses propres éléments : le nom d'une UE se change à l'étape 1, pas à l'étape 2. C'est aussi ici que l'on construit un référentiel de zéro.",
-      cibles: ["#refPane .steps"],
-      pointe: ":scope > *",
-      geste: "parcourir",
-    },
-    {
-      titre: "1. Validation",
-      texte: "Ouvrez la dernière étape, « 5. Validation ».",
-      cibles: ['#refPane .steps [data-cp="valider"]'],
+      titre: "1. Constituer",
+      texte: "Ouvrez la première page, « 1. Unités d'enseignement ».",
+      cibles: ['#refPane .steps [data-cp="ues"]'],
       geste: "cliquer",
-      atteinte: () => visible("#cAtteste"),
+      atteinte: pageConstituer("ues"),
       avanceAuClic: true,
     },
+    etapePageConstituer(
+      "1. Unités d'enseignement",
+      "Pour chaque UE, vérifiez sa couleur (elle la signale partout dans DNMAX), corrigez au besoin son nom et les semestres où elle est programmée. " +
+        "Cliquez ensuite le bouton bleu du bas, « 2. Enseignements constitutifs ».",
+      ['[data-row="u0"] input[type="color"]', '[data-row="u0"] input[data-cf$="|nom"]', '[data-row="u0"] .sems'],
+      "ecs",
+    ),
+    etapePageConstituer(
+      "1. Enseignements constitutifs",
+      "Même vérification pour chaque EC : sa couleur, ses codes d'une année à l'autre, son nom, son UE et ses semestres. " +
+        "Puis le bouton bleu, « 3. Blocs et compétences ».",
+      [
+        '[data-row="e0"] input[type="color"]',
+        '[data-row="e0"] .codes3',
+        '[data-row="e0"] input[data-cf$="|nom"]',
+        '[data-row="e0"] [data-em]',
+        '[data-row="e0"] .chips',
+      ],
+      "blocs",
+    ),
+    etapePageConstituer(
+      "1. Blocs et compétences",
+      "Relisez le code et l'intitulé de chaque compétence, et le bloc auquel elle appartient. Puis le bouton bleu, « 4. Planification par semestre ».",
+      ['[data-row="c0"] [data-ccode]', '[data-row="c0"] textarea', '[data-row="c0"] [data-cbloc]'],
+      "tableau",
+    ),
+    etapePageConstituer(
+      "1. Planification par semestre",
+      "Chaque case rattache une compétence à un EC pour un semestre ; filtrez par semestre en haut. Vérifiez la planification, puis le bouton bleu, « 5. Validation ».",
+      [".semfilter .seg", '[data-tog="c0|e0|S1"]'],
+      "valider",
+    ),
     {
       titre: "1. Valider le référentiel",
       texte:
@@ -263,6 +294,22 @@ const PRISE_EN_MAIN: Parcours = {
       aDegager: "#cValid",
       geste: "cliquer",
       objectif: (avancement) => avancement.referentielValide,
+    },
+    {
+      titre: "1. Explorer",
+      texte: "Choisissez maintenant « Explorer » : le référentiel que vous venez de vérifier s'y lit d'un coup d'œil.",
+      cibles: ['#refNav [data-pane="explorer"]'],
+      geste: "cliquer",
+      atteinte: paneReferentiel("explorer"),
+      avanceAuClic: true,
+    },
+    {
+      titre: "1. La carte du référentiel",
+      texte:
+        "Chaque portion de la carte est une unité d'enseignement, année par année : survolez-la pour l'éclater, cliquez pour la figer. " +
+        "La recherche retrouve une compétence par son code (C4.1, EC 11.2) ou un mot-clé.",
+      cibles: ["#refExplore"],
+      geste: "regarder",
     },
     {
       titre: "1. Ajouter un référentiel",
@@ -368,6 +415,18 @@ const PRISE_EN_MAIN: Parcours = {
       groupeFait: creationSansObjet,
       ouvrir: cliquer('[data-go="3"]'),
       celebrer: true,
+    },
+    {
+      titre: "5. Lier des compétences",
+      texte:
+        "Les compétences se déplacent : saisissez-en une par sa poignée ⠿ et déposez-la sur une autre ligne pour les lier, " +
+        "elles partagent alors une même formulation et les mêmes livrables. Glissée à l'écart, elle se détache. Rien d'obligatoire : cliquez « Suivant » pour continuer.",
+      cibles: ["#step3"],
+      // Le curseur part de la poignée de la première compétence et la dépose sur la ligne suivante.
+      depuis: "#lignes [data-dragcomp]",
+      pointe: "#lignes .lg ~ .lg",
+      geste: "glisser",
+      groupeFait: creationSansObjet,
     },
     {
       titre: "5. Formuler et enregistrer",
