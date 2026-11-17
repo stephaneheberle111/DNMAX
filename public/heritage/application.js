@@ -286,9 +286,10 @@ function saveData(repaint,fromDico){
   if(repaint!==false){paintForm();paintPick();paintLignes();paintRef();if(ui.tab==="org")paintOrg();if(ui.tab==="pref")paintPrefs()}
 }
 let fiches = LS.get("dnmade.fiches",[]);
-let PREFS = Object.assign({critLabel:"Compétence opérationnelle"}, LS.get("dnmade.prefs",{}));
-const CRIT_PRESETS=["Critère observable","Critère opérationnel","Compétence opérationnelle","Attendu","Indicateur de réussite"];
-function critLabel(){return (PREFS.critLabel||"Compétence opérationnelle").trim()||"Compétence opérationnelle"}
+/* préférences (menu « Mon compte ») : règles dans src/domaine/preferences.ts, écran dans src/preferences/ */
+const PREF=window.dnmaxPont.preferences;
+let PREFS = PREF.initiales(LS.get("dnmade.prefs",{}));
+function critLabel(){return PREF.libelleCritere(PREFS)}
 function savePrefs(){LS.set("dnmade.prefs",PREFS)}
 let promos = LS.get("dnmade.promos",[]);
 
@@ -2199,37 +2200,11 @@ async function loadDemo(){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function paintSceau(){
-  const cb=document.getElementById("p-sceau");if(!cb)return;
-  cb.checked=sceauActif();
-  cb.onchange=()=>{PREFS.sceau=cb.checked;savePrefs()};
-  paintDossierExports();
-}
-/* dossier proposé par « Enregistrer sous » : choisi et retenu par l'enveloppe de bureau, qui seule enregistre ;
-   la page n'en reçoit le chemin que pour l'afficher */
-function paintDossierExports(){
-  const api=window.dnmaxPont.dossierExports, bloc=document.getElementById("p-dossier");
-  if(!bloc)return;
-  bloc.hidden=!api;document.getElementById("p-dossier-aide").hidden=!api;
-  if(!api)return;
-  const chemin=document.getElementById("p-dossier-chemin"), oublier=document.getElementById("p-dossier-oublier");
-  const afficher=d=>{chemin.textContent=d||"Documents (par défaut)";oublier.hidden=!d};
-  api.lire().then(afficher).catch(()=>afficher(null));
-  document.getElementById("p-dossier-choisir").onclick=()=>api.choisir()
-    .then(d=>{if(d)afficher(d)}).catch(e=>toast("Dossier non retenu : "+(e&&e.message||e)));
-  oublier.onclick=()=>api.oublier().then(()=>afficher(null)).catch(e=>toast("Dossier non oublié : "+(e&&e.message||e)));
+  PREF.peindreSceau(document,{actif:sceauActif(),choisir:actif=>{PREFS.sceau=actif;savePrefs()}});
+  PREF.peindreDossierExports(document,window.dnmaxPont.dossierExports,toast);
 }
 function paintVocab(){
-  const sel=document.getElementById("p-critsel"), inp=document.getElementById("p-critlab");
-  if(!sel)return;
-  const cur=critLabel(), custom=!CRIT_PRESETS.includes(cur);
-  sel.innerHTML=CRIT_PRESETS.map(x=>`<option value="${esc(x)}" ${!custom&&x===cur?"selected":""}>${esc(x)}</option>`).join("")
-    +`<option value="__autre" ${custom?"selected":""}>Autre…</option>`;
-  document.getElementById("p-critwrap").hidden=!custom;
-  inp.value=custom?cur:"";
-  sel.onchange=()=>{
-    if(sel.value==="__autre"){document.getElementById("p-critwrap").hidden=false;inp.focus();return}
-    PREFS.critLabel=sel.value;savePrefs();document.getElementById("p-critwrap").hidden=true;paintLignes()};
-  inp.oninput=()=>{PREFS.critLabel=inp.value;savePrefs();paintLignes()};
+  PREF.peindreVocabulaire(document,{libelle:critLabel(),choisir:libelle=>{PREFS.critLabel=libelle;savePrefs();paintLignes()}});
 }
 /* Préférences (menu « Mon compte ») : vocabulaire et livrables proposés ; le thème est tenu par l'application. */
 function paintPrefs(){
@@ -2323,7 +2298,7 @@ function buildXlsx(fmt){
    Mon compte > Préférences > Documents exportés, désactivé par défaut. Image
    public/documents/sceau-dn-made.png (voir outils/generer-sceau.ts), lue au premier export qui l'affiche. */
 let SCEAU=null;
-function sceauActif(){return PREFS.sceau===true}
+function sceauActif(){return PREF.sceauActif(PREFS)}
 async function chargerSceau(){
   if(SCEAU)return SCEAU;
   const r=await fetch("/documents/sceau-dn-made.png");
