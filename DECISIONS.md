@@ -271,7 +271,7 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 **Redoublement** : un élève déplacé dans sa nouvelle promotion garde son identifiant et n'appartient plus à l'ancienne : il n'est pas touché. Un élève ressaisi dans la nouvelle promotion figure dans les deux : son nom, retrouvé dans une promotion encore en cours, le signale comme redoublant probable, et il est proposé **à garder** (case cochée par défaut). Une promotion où il ne reste que des redoublants gardés ne fait plus l'objet d'un rappel.
 
-**Pourquoi** : le RGPD impose une durée de conservation limitée et proportionnée. Un an après la sortie couvre les demandes d'attestation et les recours de fin de cursus. La durée est un réglage (`ANNEES_CONSERVATION_ELEVES` dans `src/configuration.ts`), à ajuster avec l'établissement et son délégué à la protection des données.
+**Pourquoi** : le RGPD impose une durée de conservation limitée et proportionnée. Un an après la sortie couvre les demandes d'attestation et les recours de fin de cursus. La durée est désormais choisie par l'établissement, de 3 mois à 5 ans, 1 an par défaut (`MOIS_CONSERVATION_*` dans `src/configuration.ts`, décision 36), à fixer avec son délégué à la protection des données.
 
 **À tout moment** : la même boîte liste aussi les promotions encore dans leur durée de conservation, décochées ; les traiter demande une seconde confirmation. La section « Données des élèves » n'apparaît que si le module Élèves est actif ou si des élèves sont encore enregistrés.
 
@@ -326,7 +326,7 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 **Pourquoi verrouiller** : la sauvegarde peut avoir un autre mot de passe que la session en cours, et un enregistrement encore en attente dans la page écraserait sinon le coffre restauré avec l'ancien contenu.
 
-**Copies mises de côté** : elles ne comptent pas dans les dix sauvegardes quotidiennes (une restauration ne doit pas en chasser une) et apparaissent dans la même liste, ce qui permet d'annuler une restauration. Pour qu'une donnée effacée (un élève, décision 20) n'y survive pas indéfiniment, une copie mise de côté est supprimée dès que la rotation est pleine et qu'elle est plus ancienne que la plus ancienne sauvegarde quotidienne gardée : elle suit le même horizon de dix jours d'utilisation.
+**Copies mises de côté** : elles ne comptent pas parmi les sauvegardes gardées par la politique hebdomadaire et mensuelle (une restauration ne doit pas en chasser une, décision 36) et apparaissent dans la même liste, ce qui permet d'annuler une restauration. Pour qu'une donnée effacée (un élève, décision 20) n'y survive pas indéfiniment, une copie mise de côté est supprimée dès que la rotation est pleine et qu'elle est plus ancienne que la plus ancienne sauvegarde quotidienne gardée : elle suit le même horizon de dix jours d'utilisation.
 
 **Recours** : si l'application ne s'ouvre plus, la copie à la main d'un fichier de `sauvegardes/` à la place de `coffre.dnmax` reste décrite dans la documentation.
 
