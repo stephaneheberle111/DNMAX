@@ -12,7 +12,7 @@ import * as personnes from "../domaine/personnes";
 import * as promotions from "../domaine/promotions";
 import * as diplomes from "../domaine/diplomes";
 import * as constituer from "../domaine/constituer";
-import { NOTE_ETAPE, peindreEtapeEcs, peindreEtapeUes } from "../referentiel/etapes";
+import { peindreEtapeBlocs, peindreEtapeEcs, peindreEtapeUes } from "../referentiel/etapes";
 import { NIVEAUX_ACQUISITION, regleNiveauxAcquisition } from "../domaine/regles-affichees";
 import * as suiviSimplifie from "../domaine/suivi-simplifie";
 import { lireMoisConservation } from "../domaine/conservation";
@@ -158,7 +158,11 @@ interface Pont {
   /** Référentiel > Constituer : libellés, éléments neufs, codes en double, retrait (voir `domaine/constituer`). */
   readonly constituer: typeof constituer;
   /** Écrans de Référentiel > Constituer écrits en TypeScript (voir `referentiel/`). */
-  readonly referentiel: { NOTE_ETAPE: typeof NOTE_ETAPE; peindreEtapeUes: typeof peindreEtapeUes; peindreEtapeEcs: typeof peindreEtapeEcs };
+  readonly referentiel: {
+    peindreEtapeUes: typeof peindreEtapeUes;
+    peindreEtapeEcs: typeof peindreEtapeEcs;
+    peindreEtapeBlocs: typeof peindreEtapeBlocs;
+  };
   /** Niveaux d'acquisition du DN MADE et leur règle, montrée dans la carte du module (voir `domaine/regles-affichees`). */
   readonly niveauxAcquisition: { noms: typeof NIVEAUX_ACQUISITION; regle: typeof regleNiveauxAcquisition };
   /** Suivi simplifié « À faire / Faite » (voir `domaine/suivi-simplifie`). */
@@ -303,7 +307,7 @@ export async function chargerInterfaceHistorique(
     promotions,
     diplomes,
     constituer,
-    referentiel: { NOTE_ETAPE, peindreEtapeUes, peindreEtapeEcs },
+    referentiel: { peindreEtapeUes, peindreEtapeEcs, peindreEtapeBlocs },
     niveauxAcquisition: { noms: NIVEAUX_ACQUISITION, regle: regleNiveauxAcquisition },
     suiviSimplifie,
     jauge: jaugeExport,

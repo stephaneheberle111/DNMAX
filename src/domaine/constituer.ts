@@ -153,3 +153,81 @@ export function changerCodeEc(ec: Element, annee: string, saisie: string): void 
   if (code === "") Reflect.deleteProperty(codes, annee);
   else codes[annee] = code;
 }
+
+/** Comme `a+" "+b` dans l'interface historique : une valeur absente s'écrit « undefined ». */
+function concatene(...valeurs: unknown[]): string {
+  return valeurs.map((valeur) => (typeof valeur === "string" ? valeur : typeof valeur === "number" || valeur === undefined || valeur === null ? String(valeur) : "")).join(" ");
+}
+
+/** Blocs rangés par numéro ; un numéro illisible compte pour zéro. */
+export function blocsRanges(blocs: readonly Element[]): Element[] {
+  const numero = (bloc: Element): number => Number.parseInt(texte(bloc.num), 10) || 0;
+  return blocs.slice().sort((a, b) => numero(a) - numero(b));
+}
+
+/** Compétences d'un bloc, rangées par code. */
+export function competencesDuBloc(competences: readonly Element[], numero: unknown): Element[] {
+  return competences.filter((competence) => String(competence.bloc) === String(numero)).sort((a, b) => numeroCode(a.code) - numeroCode(b.code));
+}
+
+/** Compétences dont le bloc n'est pas dans ce référentiel. */
+export function competencesSansBloc(competences: readonly Element[], blocs: readonly Element[]): Element[] {
+  return competences.filter((competence) => !blocs.some((bloc) => String(bloc.num) === String(competence.bloc)));
+}
+
+/** Une compétence répond au filtre (déjà mis sous forme de comparaison) par son code ou son intitulé. */
+export function competenceCorrespond(competence: Element, filtre: string): boolean {
+  return filtre === "" || sansAccents(concatene(competence.code, competence.libelle)).includes(filtre);
+}
+
+/** Un bloc répond au filtre par son numéro ou son intitulé : toutes ses compétences sont alors montrées. */
+export function blocCorrespond(bloc: Element, filtre: string): boolean {
+  return filtre !== "" && sansAccents(concatene(bloc.num, bloc.nom)).includes(filtre);
+}
+
+/** Hauteur du champ d'un intitulé : deux à cinq lignes, une ligne pour 72 caractères. */
+export function lignesIntitule(intitule: unknown): number {
+  return Math.min(5, Math.max(2, Math.ceil(texte(intitule).length / 72)));
+}
+
+/** Année de formation d'un semestre (S1 et S2 : 1). */
+function anneeDuSemestre(semestre: string): number {
+  return Math.floor(Math.max(0, SEMESTRES.indexOf(semestre as (typeof SEMESTRES)[number])) / 2) + 1;
+}
+
+/** Nom d'un EC : son intitulé, sinon ses codes, sinon « — ». */
+function nomEc(ec: Element): string {
+  const nom = texte(ec.nom).trim();
+  if (nom !== "") return nom;
+  const codes = codesEc(ec);
+  return codes.length > 0 ? codes.join(" · ") : "—";
+}
+
+/** Un rattachement d'une compétence à un EC, lu à l'étape 3 (il se règle à l'étape 4). */
+export interface PastilleRattachement {
+  readonly couleur: string;
+  readonly titre: string;
+  readonly texte: string;
+}
+
+/**
+ * Rattachements d'une compétence lus à l'étape 3 : les cinq premiers EC qui
+ * la portent à au moins un semestre, nommés par leurs codes à ces semestres
+ * (« EC 11.1 · 11.2 ») ou, sans code, par leur nom ; et le nombre des autres.
+ */
+export function rattachementsLus(competence: Element, ecs: readonly Element[]): { pastilles: PastilleRattachement[]; enPlus: number } {
+  const liens = (Array.isArray(competence.ecs) ? (competence.ecs as Element[]) : [])
+    .map((lien) => ({ lien, ec: ecs.find((candidat) => candidat.id === lien.id) }))
+    .filter((paire): paire is { lien: Element; ec: Element } => paire.ec !== undefined && Array.isArray(paire.lien.sems) && paire.lien.sems.length > 0);
+  const pastilles = liens.slice(0, 5).map(({ lien, ec }) => {
+    const semestres = lien.sems as string[];
+    const table = typeof ec.codes === "object" && ec.codes !== null ? (ec.codes as Record<string, unknown>) : {};
+    const codes = [...new Set(semestres.map((semestre) => texte(table[anneeDuSemestre(semestre)])).filter((code) => code !== ""))];
+    return {
+      couleur: texte(ec.couleur) || "#9aa2ae",
+      titre: `${nomEc(ec)} · ${semestres.join(" ")}`,
+      texte: codes.length > 0 ? codes.map((code, rang) => (rang === 0 ? code : code.replace(/^EC\s*/i, ""))).join(" · ") : nomEc(ec),
+    };
+  });
+  return { pastilles, enPlus: Math.max(0, liens.length - 5) };
+}

@@ -2,15 +2,22 @@
 import { describe, expect, it } from "vitest";
 import {
   basculerSemestre,
+  blocCorrespond,
+  blocsRanges,
   candidatsAjout,
   changerCodeEc,
   codesEc,
   codesEnDouble,
+  competenceCorrespond,
+  competencesDuBloc,
+  competencesSansBloc,
   ecsAffiches,
   elementNeuf,
   libelleElement,
+  lignesIntitule,
   numeroCode,
   ordreEc,
+  rattachementsLus,
   retirerDuReferentiel,
   sansAccents,
 } from "./constituer";
@@ -183,5 +190,70 @@ describe("changerCodeEc", () => {
     const sansCodes: Record<string, unknown> = { codes: "abîmé" };
     changerCodeEc(sansCodes, "3", "EC 3.1");
     expect(sansCodes.codes).toEqual({ 3: "EC 3.1" });
+  });
+});
+
+describe("blocsRanges et competencesDuBloc", () => {
+  it("range les blocs par numéro, un numéro illisible en tête", () => {
+    expect(blocsRanges([{ num: "10" }, { num: "2" }, { num: "x" }]).map((bloc) => bloc.num)).toEqual(["x", "2", "10"]);
+  });
+
+  it("donne les compétences d'un bloc, rangées par code", () => {
+    const competences = [{ code: "C2.10", bloc: "2" }, { code: "C2.2", bloc: 2 }, { code: "C3.1", bloc: "3" }];
+    expect(competencesDuBloc(competences, "2").map((competence) => competence.code)).toEqual(["C2.2", "C2.10"]);
+  });
+
+  it("met à part les compétences dont le bloc n'est pas dans ce référentiel", () => {
+    expect(competencesSansBloc([{ bloc: "1" }, { bloc: "" }, { bloc: "9" }], [{ num: "1" }]).map((competence) => competence.bloc)).toEqual(["", "9"]);
+  });
+});
+
+describe("filtre de l'étape 3", () => {
+  it("retient une compétence dont le code ou l'intitulé contient le filtre, accents ignorés", () => {
+    expect(competenceCorrespond({ code: "C1.1", libelle: "Créer" }, "creer")).toBe(true);
+    expect(competenceCorrespond({ code: "C1.1", libelle: "Créer" }, "dessin")).toBe(false);
+    expect(competenceCorrespond({ code: "C1.1" }, "")).toBe(true);
+  });
+
+  it("montre tout un bloc dont le numéro ou l'intitulé contient le filtre, et jamais sans filtre", () => {
+    expect(blocCorrespond({ num: "3", nom: "Concevoir" }, "concev")).toBe(true);
+    expect(blocCorrespond({ num: "3", nom: "Concevoir" }, "")).toBe(false);
+  });
+});
+
+describe("lignesIntitule", () => {
+  it("donne deux à cinq lignes selon la longueur de l'intitulé", () => {
+    expect(lignesIntitule("")).toBe(2);
+    expect(lignesIntitule("x".repeat(200))).toBe(3);
+    expect(lignesIntitule("x".repeat(1000))).toBe(5);
+  });
+});
+
+describe("rattachementsLus", () => {
+  const ecs = [
+    { id: "e1", nom: "Pratique", couleur: "#123456", codes: { 1: "EC 11.1", 2: "EC 11.2" } },
+    { id: "e2", nom: "", codes: { 3: "EC 19.4" } },
+    { id: "e3", nom: "Sans code", codes: {} },
+  ];
+
+  it("résume chaque EC rattaché par ses codes aux semestres, sans répéter « EC »", () => {
+    const lus = rattachementsLus({ ecs: [{ id: "e1", sems: ["S1", "S2", "S3"] }] }, ecs);
+    expect(lus).toEqual({ pastilles: [{ couleur: "#123456", titre: "Pratique · S1 S2 S3", texte: "EC 11.1 · 11.2" }], enPlus: 0 });
+  });
+
+  it("nomme un EC sans code à ces semestres, et ignore un rattachement sans semestre ou vers un EC absent", () => {
+    const lus = rattachementsLus({ ecs: [{ id: "e3", sems: ["S1"] }, { id: "e1", sems: [] }, { id: "perdu", sems: ["S1"] }] }, ecs);
+    expect(lus.pastilles).toEqual([{ couleur: "#9aa2ae", titre: "Sans code · S1", texte: "Sans code" }]);
+  });
+
+  it("montre cinq rattachements et compte les autres", () => {
+    const lus = rattachementsLus({ ecs: Array.from({ length: 7 }, () => ({ id: "e2", sems: ["S5"] })) }, ecs);
+    expect(lus.pastilles).toHaveLength(5);
+    expect(lus.pastilles[0]).toEqual({ couleur: "#9aa2ae", titre: "EC 19.4 · S5", texte: "EC 19.4" });
+    expect(lus.enPlus).toBe(2);
+  });
+
+  it("ne rend rien pour une compétence sans rattachement", () => {
+    expect(rattachementsLus({}, ecs)).toEqual({ pastilles: [], enPlus: 0 });
   });
 });
