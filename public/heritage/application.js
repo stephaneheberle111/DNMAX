@@ -510,18 +510,10 @@ function paintEnregistrement(){
 }
 
 /* ---------- rendu ---------- */
-function paintActions(){
-  ["bExpJson"].forEach(id=>{
-    const b=document.getElementById(id);if(!b)return;
-    b.disabled=!dl;
-    if(!dl)b.title="Téléchargement indisponible dans cette vue";else b.removeAttribute("title");
-  });
-}
 /* onglets, vues et titre de la fenêtre : src/interface/onglets.ts */
 function paintTabs(){
   ui.tab=window.dnmaxPont.interface.afficherPage(document,ui.tab);
   paintEnregistrement();
-  paintActions();
 }
 /* une évaluation vierge, prête à composer */
 function vierge(){
@@ -2419,47 +2411,45 @@ async function offer(filename,data,eleves=false){
 }
 
 /* ---------- événements ---------- */
-const bind=(id,ev,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener(ev,fn)};
 window.dnmaxPont.interface.brancherOnglets(document,page=>{
   ui.tab=page;paintTabs();
   if(ui.tab==="new"){paintForm();paintPick();paintLignes()}
   if(ui.tab==="saved")paintSaved();if(ui.tab==="prog")paintProg();if(ui.tab==="ref")paintRef();if(ui.tab==="org")paintOrg();
   if(ui.tab==="set")paintSet()});
-bind("bDemo","click",loadDemo);
-bind("bBack","click",()=>{ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"})});
-bind("bNew","click",nouvelleFiche);
-bind("bModReset","click",()=>{MOD=modDefaults();LS.set("dnmade.modules",MOD);
-  paintSet();paintTabs();paintForm();paintPick();paintRef();toast("Modules remis par défaut.")});
 window.dnmaxPont.editeur.brancherFormulaire(document,{
   changerTitre:v=>{F.titre=v;save()},changerConsignes:v=>{F.consignes=v;save()},
   changerDistribution:v=>{F.distribPrev=v;applySemDate();save();paintForm();paintPick()},
   changerRendu:v=>{F.renduPrev=v;save();paintForm()}});
-
-bind("f-search","input",e=>{ui.q=e.target.value;paintPick()});
-bind("bClear","click",()=>{F.items=[];F.ops=[];ui.sel=[];save();paintPick();paintSteps()});
-document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>goStep(b.dataset.go));
-document.querySelectorAll(".steps [data-step]").forEach(b=>b.onclick=()=>goStep(b.dataset.step));
-bind("bLink","click",linkSelection);
-bind("bLinkNone","click",()=>{ui.sel=[];paintLignes()});
-/* L'évaluation est déjà enregistrée, modification après modification : le bouton ne fait que ramener à la liste,
-   sauf si le référentiel non validé l'a tenue hors de la liste, ce qu'il explique alors. */
-bind("bSave3","click",()=>{
-  if(refBloque(F,"Impossible d'enregistrer cette évaluation"))return;
-  const brouillon=!!F.brouillon||!fiches.some(f=>f.id===F.id);
-  if(brouillon){
-    const manque=EVAL.manquesPourEnregistrer(F);
-    if(manque.length){toast("Pour enregistrer l'évaluation, il lui manque "+EVAL.enumerer(manque)+".");return}
-  }
-  save(true);
-  ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"});
-  toast((brouillon?"Évaluation enregistrée — ":"")+"Le Word et l'Excel se génèrent d'ici, quand vous voulez.");
-});
-document.querySelectorAll("#eMode [data-emode]").forEach(b=>b.onclick=()=>{ui.emode=b.dataset.emode;paintEleves()});
-bind("bExpJson","click",()=>offer("fiches-dnmade.json",JSON.stringify({ref:REF.meta,fiches},null,1),true));
-bind("r-search","input",e=>{ui.ref.q=e.target.value;paintRef()});
-bind("r-group","change",e=>{ui.ref.group=e.target.value;paintRef()});
-bind("r-annee","change",e=>{ui.ref.annee=e.target.value;paintRef()});
-bind("rClear","click",()=>{Object.assign(ui.ref,{q:"",group:"bloc",annee:"*",sems:[]});paintRef()});
+/* boutons et champs fixes de la page : src/interface/branchements.ts */
+window.dnmaxPont.interface.brancherInterface(document,{
+  chargerExemple:loadDemo,
+  nouvelleEvaluation:nouvelleFiche,
+  revenirALaListe:()=>{ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"})},
+  remettreModulesParDefaut:()=>{MOD=modDefaults();LS.set("dnmade.modules",MOD);
+    paintSet();paintTabs();paintForm();paintPick();paintRef();toast("Modules remis par défaut.")},
+  chercherCompetence:q=>{ui.q=q;paintPick()},
+  viderSelection:()=>{F.items=[];F.ops=[];ui.sel=[];save();paintPick();paintSteps()},
+  allerALEtape:goStep,
+  regrouperSelection:linkSelection,
+  annulerSelection:()=>{ui.sel=[];paintLignes()},
+  /* L'évaluation est déjà enregistrée, modification après modification : le bouton ne fait que ramener à la liste,
+     sauf si le référentiel non validé l'a tenue hors de la liste, ce qu'il explique alors. */
+  terminer:()=>{
+    if(refBloque(F,"Impossible d'enregistrer cette évaluation"))return;
+    const brouillon=!!F.brouillon||!fiches.some(f=>f.id===F.id);
+    if(brouillon){
+      const manque=EVAL.manquesPourEnregistrer(F);
+      if(manque.length){toast("Pour enregistrer l'évaluation, il lui manque "+EVAL.enumerer(manque)+".");return}
+    }
+    save(true);
+    ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"});
+    toast((brouillon?"Évaluation enregistrée — ":"")+"Le Word et l'Excel se génèrent d'ici, quand vous voulez.");
+  },
+  choisirModeSaisie:mode=>{ui.emode=mode;paintEleves()},
+  chercherDansReferentiel:q=>{ui.ref.q=q;paintRef()},
+  regrouperReferentiel:g=>{ui.ref.group=g;paintRef()},
+  filtrerAnneeReferentiel:a=>{ui.ref.annee=a;paintRef()},
+  effacerFiltresReferentiel:()=>{Object.assign(ui.ref,{q:"",group:"bloc",annee:"*",sems:[]});paintRef()}});
 
 paintTabs();paintForm();paintPick();paintSaved();paintRef();paintSet();paintPrefs();
 
