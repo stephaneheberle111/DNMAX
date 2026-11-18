@@ -382,7 +382,7 @@ function paintContexte(){
   window.dnmaxPont.editeur.peindreUesEtEcs({evaluation:F,
     ecs:ecsOfSem(F.semestre).map(e=>({ec:e.ec,nom:e.nom||"",ue:e.ue,couleur:e.couleur||ecColor(e.ec)})),
     couleurUe:u=>ueColor(u),nomUe:u=>tidy(u).replace(/^UE\s*/i,""),
-    ecsAffectes:lim?[...lim]:null,enseignants:(F.profs||[]).join(", "),
+    ecsAffectes:lim?[...lim]:null,enseignants:(F.profs||[]).join(", "),promotionChoisie:(F.classes||[]).length>0,
     apresChangement:()=>{syncItemEcs();save();paintForm();paintPick()}});
 }
 function opIndex(id){return F.ops.findIndex(o=>o.id===id)+1}

@@ -99,3 +99,17 @@ export function promotionsBloquees(promotions: readonly PromotionDuDiplome[], co
 export function separerMiennes<P extends { readonly mienne: boolean }>(promotions: readonly P[]): { miennes: P[]; autres: P[] } {
   return { miennes: promotions.filter((promotion) => promotion.mienne), autres: promotions.filter((promotion) => !promotion.mienne) };
 }
+
+/**
+ * Promotions hors de la répartition de service à montrer à l'étape 1 :
+ * toutes si l'enseignant l'a demandé ou s'il n'a encore aucune promotion à
+ * lui ; sinon seulement celles déjà cochées, qui ne doivent pas disparaître.
+ */
+export function autresPromotionsMontrees<P extends { readonly nom: string }>(
+  autres: readonly P[],
+  cochees: readonly string[],
+  affichees: boolean,
+  aDesMiennes: boolean,
+): P[] {
+  return affichees || !aDesMiennes ? [...autres] : autres.filter((promotion) => cochees.includes(promotion.nom));
+}
