@@ -1,4 +1,5 @@
-node_modules/
+# dossier ou lien : les deux restent hors du dépôt
+node_modules
 dist/
 src-tauri/target/
 src-tauri/gen/
