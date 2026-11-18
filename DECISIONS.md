@@ -38,6 +38,7 @@ La consigne est de préférer, à fonction égale, un outil référencé au [SIL
 | `mdns-sd` | Échange en direct : annonce et recherche sur le réseau local (mDNS/DNS-SD) | Non vérifié (catalogue injoignable) | Bibliothèque Rust sans environnement asynchrone ni dépendance système (pas besoin d'Avahi ni de Bonjour installés) ; voir décision 21 |
 | `if-addrs` | Échange en direct : réseaux locaux du poste, pour ne joindre que des voisins | Non vérifié (catalogue injoignable) | Déjà tirée par `mdns-sd`, même version : aucun code en plus |
 | pdfmake 0.3.13 | PDF des documents RGPD | Non vérifié (catalogue injoignable lors du choix) | Licence MIT ; chargé à la demande ; voir décision 20 |
+| `actions/cache` (GitHub) 6.1.0 | Intégration continue : garde la compilation Rust d'une exécution à l'autre | Non (action propre à GitHub Actions, sans équivalent au SILL) | Action officielle, épinglée par commit comme `checkout` ; sans elle, la tâche « Enveloppe de bureau » recompilait tout et dépassait sa limite de temps (novembre 2026) |
 
 « Non vérifié » : le catalogue n'a pas pu être consulté au moment du choix. À compléter.
 
