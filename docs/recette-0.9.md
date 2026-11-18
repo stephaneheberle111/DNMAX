@@ -2,7 +2,7 @@
 
 Essais à la main de l'application de bureau, en local, avant de publier la 0.9. Ils complètent les tests automatiques (linter, typage, tests unitaires, `verifier:vide`, `verifier:saisie`), qui ne voient ni l'enveloppe de bureau réelle, ni le système, ni l'impression.
 
-Compter environ une heure et demie. Cocher chaque ligne ; noter le système, la version (pied de page) et tout message inattendu.
+Compter environ deux heures, dont une demi-heure pour la partie J. Cocher chaque ligne ; noter le système, la version (pied de page) et tout message inattendu.
 
 ## Avant de commencer
 
@@ -81,6 +81,19 @@ Compter environ une heure et demie. Cocher chaque ligne ; noter le système, la 
 
 - [ ] **I1. Retirer l'exemple.** « Retirer l'exemple » enlève ce que l'exemple a ajouté ; les évaluations faites à la main restent.
 - [ ] **I2. Données de la 0.8.** Fermer DNMAX, supprimer le dossier de recette, puis **copier** (sans le déplacer) le dossier mis de côté au début sous le nom `fr.dnmax.app`. Lancer `npm run dev` avec votre mot de passe habituel : tout s'ouvre, évaluations à l'échelle des niveaux de maîtrise, aucune erreur. Ne rien modifier, puis fermer, supprimer cette copie et redonner son nom à l'original.
+
+## J. Écrans réécrits en TypeScript (#139 à #178)
+
+Ces écrans ont été réécrits sans changer de comportement : chaque morceau a été rejoué dans un navigateur sur l'ancienne et la nouvelle version, avec le même affichage et les mêmes données enregistrées. Ce banc ne voit ni l'application de bureau, ni ses fenêtres d'enregistrement, ni le coffre chiffré, ni le clavier réel : ces essais les couvrent.
+
+- [ ] **J1. Données relues après redémarrage.** Charger l'exemple, modifier une UE dans Référentiel > Constituer (nom, semestres), ajouter une mention dans Mon établissement > Diplômes et mentions, puis fermer et rouvrir DNMAX : tout est là, dans les deux mentions, et la mention active est la même qu'à la fermeture.
+- [ ] **J2. Version validée suivie.** Valider le référentiel, puis modifier l'intitulé d'une compétence sans revalider : une évaluation existante d'une promotion qui suit cette version affiche toujours l'intitulé validé.
+- [ ] **J3. Éditeur au clavier.** Composer une évaluation sans la souris : Tab parcourt l'étape 1 (intitulé, consignes, dates), Entrée et Espace cochent compétences et livrables, la date de rendu ne peut précéder la distribution.
+- [ ] **J4. Mes évaluations.** Filtres (période, semestre, état, recherche), frise de suivi, fenêtre des actions : exporter en Word puis en Excel ouvre la boîte « Enregistrer sous » de Windows, macOS ou Linux ; dupliquer, terminer, restituer, annuler, rétablir agissent sur la bonne évaluation ; Échap ferme la fenêtre.
+- [ ] **J5. Progression.** Vue Promotion puis vue Étudiant : changer de promotion, de semestre et d'étudiant (‹ › et liste) ; avec le module Niveaux d'acquisition, les pastilles Initié, Guidé, Autonome apparaissent.
+- [ ] **J6. Explorer.** Vue Recherche, carte radiale et chaîne : la carte et la chaîne s'affichent et s'animent comme avant (elles n'ont pas été réécrites), les filtres de la recherche répondent.
+- [ ] **J7. Paramètres et Préférences.** Activer puis désactiver les modules (la fenêtre d'avertissement du module Étudiants s'ouvre) ; « Remettre par défaut » ; dans Préférences, nom du champ d'évaluation libre, sceau, dossier des exports.
+- [ ] **J8. Onglets.** Le titre de la fenêtre suit la page (« DNMAX · Progression »…), y compris après « Mon compte » > Préférences.
 
 ## À noter
 
