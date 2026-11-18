@@ -48,6 +48,7 @@ import { etat, publierEtat } from "../interface/etat";
 import { publierConstantes } from "../interface/constantes";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
+import { publierEditeurEtape1 } from "../interface/editeur-etape1";
 import { publierPreferencesParametres } from "../interface/preferences-parametres";
 import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
 import { publierVersionsReferentiel } from "../interface/versions-referentiel";
@@ -451,6 +452,7 @@ export async function chargerInterfaceHistorique(
       hasard: () => Math.random(),
     });
     publierEvaluationCourante(window as unknown as Record<string, unknown>, () => Math.random());
+    publierEditeurEtape1(window as unknown as Record<string, unknown>, () => new Date());
     publierPreferencesParametres(window as unknown as Record<string, unknown>, {
       ecrireStockage: (cle, valeur) => {
         magasin.setItem(cle, valeur);
