@@ -4,7 +4,7 @@
  * attendus, les enseignants et le semestre. Les règles sont dans
  * `domaine/evaluation` ; ce module affiche et transmet.
  */
-import { basculerEc, basculerUe, cadreDuSemestre, promotionsBloquees, separerMiennes, uesRetenues } from "../domaine/cadre-evaluation";
+import { basculerEc, basculerUe, cadreDuSemestre, autresPromotionsMontrees, promotionsBloquees, separerMiennes, uesRetenues } from "../domaine/cadre-evaluation";
 import { basculerLivrableAttendu } from "../domaine/evaluation";
 import { creer, creerBouton } from "../ecran-echange";
 
@@ -218,6 +218,8 @@ export interface ContexteUesEcs {
   readonly ecsAffectes: readonly string[] | null;
   /** Les enseignants choisis, en une ligne. */
   readonly enseignants: string;
+  /** Vrai si au moins une promotion est cochée : c'est son référentiel qui donne les UE et les EC. */
+  readonly promotionChoisie: boolean;
   /** Après un choix : les compétences retenues suivent leurs EC, l'évaluation est enregistrée et l'étape redessinée. */
   apresChangement(): void;
 }
@@ -225,6 +227,15 @@ export interface ContexteUesEcs {
 /** UE et EC retenus par l'évaluation, et la ligne qui résume le choix. */
 export function peindreUesEtEcs(contexte: ContexteUesEcs): void {
   const { evaluation, ecs } = contexte;
+  if (!contexte.promotionChoisie) {
+    // Les UE et EC viennent du référentiel de la promotion : rien à proposer avant d'en avoir choisi une.
+    const attente = "Choisissez d'abord une promotion : les UE et EC proposés viennent du référentiel de sa mention.";
+    document.getElementById("f-ue")?.replaceChildren(creer("span", "hint", attente));
+    document.getElementById("f-ecsel")?.replaceChildren();
+    const resume = document.getElementById("ecHint");
+    if (resume !== null) resume.textContent = "";
+    return;
+  }
   // Après un changement de semestre, les UE et EC d'un autre semestre sont oubliés.
   const cadre = cadreDuSemestre({ ues: textes(evaluation.ues), ecCodes: textes(evaluation.ecCodes) }, ecs);
   evaluation.ues = cadre.ues;
@@ -323,7 +334,15 @@ export interface ContextePromotions {
   basculer(nom: string): void;
 }
 
-/** Promotions de l'évaluation : boutons à bascule, avec leur année et l'état de leur référentiel. */
+/** Vrai quand l'enseignant a demandé à voir les promotions hors de sa répartition de service. */
+let autresAffichees = false;
+
+/**
+ * Promotions de l'évaluation : boutons à bascule, avec leur année et l'état
+ * de leur référentiel. Celles hors de la répartition de service de
+ * l'enseignant sont masquées derrière un bouton (sauf si elles sont cochées) :
+ * dans un grand établissement, elles noieraient les siennes.
+ */
 export function peindrePromotions(contexte: ContextePromotions): void {
   const hote = document.getElementById("f-classes");
   if (hote === null) return;
@@ -349,11 +368,27 @@ export function peindrePromotions(contexte: ContextePromotions): void {
     return element;
   };
   const elements: HTMLElement[] = miennes.map(boutonPromotion);
-  // Les promotions hors de ma répartition de service restent proposées, à part et plus discrètes.
+  // Les promotions hors de ma répartition de service restent accessibles, à part et plus discrètes ;
+  // masquées par défaut, sauf celles déjà cochées.
+  const montrees = autresPromotionsMontrees(autres, contexte.cochees, autresAffichees, miennes.length > 0);
   if (autres.length > 0) {
-    if (miennes.length > 0) elements.push(creer("span", "hint fl-autres", "Hors de votre répartition de service :"));
+    if (miennes.length > 0) {
+      const cachees = autres.length - montrees.length;
+      const bascule = creerBouton(
+        autresAffichees ? "Masquer les autres promotions" : `Autres promotions (${String(cachees)})`,
+        autresAffichees ? "liv add moins" : "liv add",
+        () => {
+          autresAffichees = !autresAffichees;
+          peindrePromotions(contexte);
+        },
+      );
+      bascule.dataset.autres = "";
+      bascule.setAttribute("aria-expanded", String(autresAffichees));
+      bascule.title = "Promotions en cours hors de votre répartition de service";
+      if (autresAffichees || cachees > 0) elements.push(bascule);
+    }
     elements.push(
-      ...autres.map((promotion) => {
+      ...montrees.map((promotion) => {
         const element = boutonPromotion(promotion);
         element.classList.add("discrete");
         element.title += " — hors de votre répartition de service";

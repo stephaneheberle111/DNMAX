@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { basculerEc, basculerUe, cadreDuSemestre, promotionsBloquees, rangEc, separerMiennes, uesRetenues } from "./cadre-evaluation";
+import { autresPromotionsMontrees, basculerEc, basculerUe, cadreDuSemestre, promotionsBloquees, rangEc, separerMiennes, uesRetenues } from "./cadre-evaluation";
 
 const ECS = [
   { ec: "EC 1.1", ue: "UE 1" },
@@ -94,5 +94,21 @@ describe("separerMiennes", () => {
 
   it("ne range rien à part quand toutes sont miennes", () => {
     expect(separerMiennes([{ nom: "DNO1", mienne: true }]).autres).toEqual([]);
+  });
+});
+
+describe("autresPromotionsMontrees", () => {
+  const AUTRES = [{ nom: "DNE-2025-2028" }, { nom: "DNG-2026-2029" }];
+
+  it("masque par défaut les promotions hors de ma répartition, sauf celles déjà cochées", () => {
+    expect(autresPromotionsMontrees(AUTRES, ["DNG-2026-2029"], false, true)).toEqual([{ nom: "DNG-2026-2029" }]);
+  });
+
+  it("les montre toutes quand je le demande", () => {
+    expect(autresPromotionsMontrees(AUTRES, [], true, true)).toEqual(AUTRES);
+  });
+
+  it("les montre toutes quand je n'ai encore aucune promotion à moi", () => {
+    expect(autresPromotionsMontrees(AUTRES, [], false, false)).toEqual(AUTRES);
   });
 });
