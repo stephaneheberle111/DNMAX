@@ -13,6 +13,7 @@ import { publierPromotionsCalendrier } from "../interface/promotions-calendrier"
 import { publierVersionsReferentiel } from "../interface/versions-referentiel";
 import { publierEtablissement } from "../interface/etablissement";
 import { publierReferentiel } from "../interface/referentiel";
+import { publierEditeur } from "../interface/editeur";
 
 const CHEMIN = new URL("../../public/heritage/application.js", import.meta.url);
 
@@ -53,6 +54,7 @@ function nomsPublies(): string[] {
   publierPromotionsCalendrier(fenetre, () => undefined);
   publierEtablissement(fenetre);
   publierReferentiel(fenetre);
+  publierEditeur(fenetre, () => undefined);
   publierVersionsReferentiel(fenetre, { ecrireStockage: () => undefined, promotionValide: () => false, diplomeValide: () => false, maintenant: () => new Date(0) });
   return Object.keys(fenetre);
 }
