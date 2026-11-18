@@ -269,7 +269,7 @@ const normaliser = (html) => html.replace(/--stx: ?-?[0-9.]+px/g, "--stx: (mesur
     await page.evaluate(() => { MOD.dn = true; paintProg(); });
     await relever("niveaux d'acquisition", zone, donnees);
     for (let rang = 0; rang < nbSem; rang++) { await page.locator('[data-pgsel="sem"]').selectOption({ index: rang }); await relever("dn semestre " + rang, zone, donnees); }
-    await page.evaluate(() => { const r = LS.get("dnmade.reglages", {}); r.masquerComparaison = true; LS.set("dnmade.reglages", r); paintProg(); });
+    await page.evaluate(() => { const stockage = window.dnmaxPont.stockage; let r = {}; try { r = JSON.parse(stockage.getItem("dnmade.reglages") || "{}"); } catch { r = {}; } r.masquerComparaison = true; stockage.setItem("dnmade.reglages", JSON.stringify(r)); paintProg(); });
     await relever("comparaison masquée", zone, donnees);
     await page.evaluate(() => { MOD.dn = false; paintProg(); });
     await relever("sans niveaux d'acquisition", zone, donnees);
@@ -355,7 +355,7 @@ const normaliser = (html) => html.replace(/--stx: ?-?[0-9.]+px/g, "--stx: (mesur
     await relever("suppression armée", zone, donnees);
     await page.locator(`[data-del="${iDel}"]`).click();
     await relever("supprimée ou refusée", zone, donnees);
-    await page.evaluate(() => { const r = LS.get("dnmade.reglages", {}); r.suiviSimplifie = true; LS.set("dnmade.reglages", r); paintSaved(); });
+    await page.evaluate(() => { const stockage = window.dnmaxPont.stockage; let r = {}; try { r = JSON.parse(stockage.getItem("dnmade.reglages") || "{}"); } catch { r = {}; } r.suiviSimplifie = true; stockage.setItem("dnmade.reglages", JSON.stringify(r)); paintSaved(); });
     await relever("suivi simplifié", zone, donnees);
     await page.locator("[data-ssimple]").first().click();
     await relever("marquée faite", zone, donnees);
