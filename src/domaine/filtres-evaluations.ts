@@ -4,7 +4,8 @@
  * intitulé). Par défaut, les promotions en cours. Un enseignant voit
  * d'emblée les promotions de sa répartition de service et les évaluations
  * dont il est l'enseignant ; les autres promotions restent accessibles en les
- * choisissant dans le filtre.
+ * choisissant dans le filtre. « Seulement mes évaluations » réduit la liste à
+ * celles dont il est l'enseignant (DNMAX ne retient pas qui a créé une évaluation).
  */
 import { SEMESTRES } from "./constituer";
 
@@ -17,10 +18,12 @@ export interface Filtres {
   sem: string[];
   st: string[];
   q: string;
+  /** Seulement les évaluations dont « C'est moi » est l'enseignant. */
+  miennes: boolean;
 }
 
 export function filtresParDefaut(): Filtres {
-  return { per: ["cur"], mine: true, sem: [], st: [], q: "" };
+  return { per: ["cur"], mine: true, sem: [], st: [], q: "", miennes: false };
 }
 
 /** Un filtre est posé dès que les réglages s'écartent de ceux par défaut. */
@@ -34,6 +37,7 @@ export function normaliserFiltres(filtres: Record<string, unknown>): Filtres {
     const valeur = filtres[cle];
     if (!Array.isArray(valeur)) filtres[cle] = valeur !== undefined && valeur !== null && valeur !== "" && valeur !== false && valeur !== 0 && valeur !== "all" ? [valeur] : [];
   }
+  if (typeof filtres.miennes !== "boolean") filtres.miennes = false;
   return filtres as unknown as Filtres;
 }
 
@@ -63,6 +67,8 @@ export function correspondFiltres(evaluation: Element, filtres: Filtres, outils:
     const choisie = promotions.some((promotion) => filtres.per.includes(String(promotion.id)));
     if (!mienne && !choisie) return false;
   }
+  // Sans « C'est moi », personne n'est l'enseignant de rien : le filtre ne retire rien.
+  if (filtres.miennes && outils.moi !== "" && !profsDe(evaluation).includes(outils.moi)) return false;
   if (filtres.per.length > 0) {
     const promotions = outils.promotionsDe(evaluation);
     const enCours = filtres.per.includes("cur") && (promotions.length === 0 || promotions.some((promotion) => outils.enCours(promotion)));

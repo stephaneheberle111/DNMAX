@@ -243,6 +243,7 @@ export function peindreFiltresDeLaListe(): void {
       return promotion ? nomCourt(promotion) || (promotion.nom as string) || "" : "";
     },
     statuts: LIBELLES_STATUT,
+    moiDefini: nomDeMoi() !== "",
     ouvert: () => (ui().sfOpen as string) || "",
     retenirOuvert: (cle: unknown) => {
       ui().sfOpen = cle;
@@ -429,7 +430,7 @@ export function peindreEvaluations(): void {
       peindreEvaluations();
     },
     toutAfficher: () => {
-      ui().sf = { per: [], mine: false, sem: [], st: [], q: "" };
+      ui().sf = { per: [], mine: false, sem: [], st: [], q: "", miennes: false };
       peindreEvaluations();
     },
     nouvelleEvaluation: () => {
