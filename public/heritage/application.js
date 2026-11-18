@@ -107,7 +107,6 @@ migF(F);
   if(nt&&nt.modifie){DATA=nt.donnees;materialize(DATA);REF=computeREF();persistData()}}
 syncItemEcs();
 ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"etab"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
-let dl = window.dnmaxPont.telechargements;
 
 function migF(f){return Object.assign(f,EVAL.normaliserEvaluation(f))}
 /* Prénom et nom se saisissent à part (prenom, nomFam) ; « nom » reste le nom affiché
@@ -1499,139 +1498,21 @@ function appliquerModule(cle,actif){
 
 /* ---------- construction de la fiche ---------- */
 /* colonnes des documents exportés : règle dans src/export/modele.ts */
-function columns(){return window.dnmaxPont.exports.colonnesExport(F.livrables.length,rows().map(r=>r.livr||""),critLabel())}
-function ecNoms(codes){
-  const nomOf=code=>{const m=REF.competences.flatMap(c=>c.ecs||[]).find(x=>x.ec===code);if(m&&m.nom)return m.nom;
-    const e=DATA.ecs.find(x=>x.code===code||Object.values(x.codes||{}).includes(code));return e?(e.nom||code):code};
-  return [...new Set((codes||[]).map(nomOf).filter(Boolean))].join(", ");
-}
-function rows(){
-  const out=[];
-  (F.ops||[]).forEach(o=>{
-    const its=F.items.filter(i=>i.op===o.id);
-    if(!its.length)return;
-    const cs=its.map(i=>REF.competences.find(x=>x.code===i.code)).filter(Boolean);
-    out.push({op:true,
-      bloc:[...new Set(cs.map(c=>c.bloc))].sort((a,b)=>+a-+b).join(", "),
-      code:its.map(i=>i.code).join(" + "),
-      lib:o.libelle||"(compétence opérationnelle à formuler)",
-      comp:cs.map(c=>c.code+" — "+c.libelle).join("\n"),   // le code facilite le report dans un autre logiciel
-      ec:[...new Set(its.flatMap(i=>i.ecs||[]))].join(", "),
-      ecn:ecNoms([...new Set(its.flatMap(i=>i.ecs||[]))]),
-      livr:(o.livrables||[]).join(" ; "),
-      key:"op:"+o.id,
-      ord:[0,opIndex(o.id),0]});
-  });
-  F.items.filter(i=>!i.op).forEach(it=>{
-    const c=REF.competences.find(x=>x.code===it.code)||{libelle:"",bloc:""};
-    out.push({op:false,bloc:c.bloc,code:it.code,comp:c.libelle?it.code+" — "+c.libelle:it.code,lib:it.libelle&&it.libelle!==c.libelle?it.libelle:"",ec:(it.ecs||[]).join(", "),ecn:ecNoms(it.ecs),
-      livr:(it.livrables||[]).join(" ; "),key:"one:"+it.code,
-      ord:[1,+c.bloc||99,ecNum(it.code)]});
-  });
-  return out.sort((a,b)=>{for(let i=0;i<3;i++){const x=(a.ord[i]||0)-(b.ord[i]||0);if(x)return x}return 0});
-}
 /* EXPORT_VIDE : export de « l'évaluation » (grille vierge) plutôt que des restitutions remplies par étudiant */
-let EXPORT_VIDE=false;
-function eleveList(){return MOD.eleves&&!EXPORT_VIDE?studentsOf(F):[]}
-function fname(ext,who){
-  const p=[F.semestre,classesDisp(F),F.titre||"évaluation",who].filter(Boolean).join(" - ");
-  return p.replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").slice(0,120)+"."+ext;
-}
 /* En-tête des documents exportés : une ligne de contexte et l'enseignant·e, sans cartouche. */
-function ligneContexte(){
-  return [classesDisp(F),F.livrables.join(" · "),F.semestre+(MOD.dn?" · "+dnLabel(F.semestre):"")].filter(Boolean).join(" — ");
-}
 /* au-dessus de la ligne de contexte : l'établissement et le ou les enseignants, qui signent le document */
-function ligneSignature(){
-  const profs=(Array.isArray(F.profs)&&F.profs.length?F.profs:[F.prof]).map(p=>String(p||"").trim()).filter(Boolean);
-  return [String((DATA.etab||{}).nom||"").trim(),profs.join(", ")].filter(Boolean).join(" — ");
-}
-function ligneEnseignant(who){
-  return who?"Étudiant : "+who:"";
-}
 
 /* ---------- exports Word, OpenDocument et tableur : écrits en TypeScript (src/export/) ---------- */
 /* L'évaluation en cours, mise en forme pour les documents : une fiche par étudiant (module Étudiants), sinon une fiche vierge. */
-function ficheExport(){
-  const rs=rows();
-  return {diplome:REF.meta.diplome||"",titre:F.titre||"",signature:ligneSignature(),contexte:ligneContexte(),
-    consignes:F.consignes||"",prof:F.prof||"",semestre:F.semestre,promotions:classesDisp(F),plusieursPromotions:(F.classes||[]).length>1,
-    livrables:F.livrables,niveaux:F.niveaux||[],colonnes:columns(),
-    lignes:rs.map(r=>({cle:r.key,op:r.op,bloc:r.bloc,code:r.code,lib:r.lib,comp:r.comp,ec:r.ec,ecn:r.ecn,livr:r.livr})),
-    etudiants:eleveList().map(e=>({nom:e.nom,resultat:(F.res||{})[e.id]})),sceau:sceauActif()?SCEAU:null};
-}
-function buildXlsx(fmt){
-  const ods=fmt==="ods";
-  return new Blob([window.dnmaxPont.exports.construireTableur(ficheExport(),ods?"ods":"xlsx")],
-    {type:ods?"application/vnd.oasis.opendocument.spreadsheet":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-}
 /* Sceau DN MADE en tête des documents Word et OpenDocument : facultatif, réglé dans
    Mon compte > Préférences > Documents exportés, désactivé par défaut. Image
    public/documents/sceau-dn-made.png (voir outils/generer-sceau.ts), lue au premier export qui l'affiche. */
-let SCEAU=null;
-function sceauActif(){return PREF.sceauActif(PREFS)}
-async function chargerSceau(){
-  if(SCEAU)return SCEAU;
-  const r=await fetch("/documents/sceau-dn-made.png");
-  if(!r.ok)throw new Error("image du sceau DN MADE introuvable");
-  const b=new Uint8Array(await r.arrayBuffer());let t="";
-  for(let i=0;i<b.length;i+=0x8000)t+=String.fromCharCode(...b.subarray(i,i+0x8000));
-  return SCEAU=btoa(t);
-}
-async function buildDocx(){
-  if(sceauActif())await chargerSceau();
-  return new Blob([await window.dnmaxPont.exports.construireDocx(ficheExport(),window.dnmaxPont.exports.dessinateurJauge((F.niveaux||[]).length))],
-    {type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
-}
-async function buildOdt(){
-  if(sceauActif())await chargerSceau();
-  return new Blob([await window.dnmaxPont.exports.construireOdt(ficheExport(),window.dnmaxPont.exports.dessinateurJauge((F.niveaux||[]).length))],
-    {type:"application/vnd.oasis.opendocument.text"});
-}
 
 /* ---------- Progression : écrite en TypeScript (src/interface/progression.ts) ---------- */
 
 /* ---------- téléchargements ---------- */
-async function exportFiche(i,kind,mode){
-  const f=fiches[i];if(!f)return;
-  const keep=F, rest=mode==="rest"&&MOD.eleves, vue=DATA.activeDiplome;
-  try{
-    F=migF(structuredClone(f));EXPORT_VIDE=!rest;vueMention(mentionDeFiche(F));REF=computeREF();
-    const nom=fname(kind,rest?"restitutions":""), data = kind==="docx" ? await buildDocx() : kind==="odt" ? await buildOdt() : buildXlsx(kind);
-    F=keep;EXPORT_VIDE=false;vueMention(vue);REF=computeREF();
-    await offer(nom,data,rest);
-  }catch(e){F=keep;EXPORT_VIDE=false;vueMention(vue);REF=computeREF();toast(({docx:"Word",odt:"OpenDocument texte",ods:"OpenDocument tableur"}[kind]||"Excel")+" : "+(e&&e.message||e))}
-}
 /* étudiants pas encore entièrement évalués (non rendu et dispensé comptent comme terminés) */
-function elevesNonFinis(f){const keys=lignesOf(f).map(ligKey);
-  return studentsOf(f).filter(e=>{const r=(f.res||{})[e.id]||{};if(r.nr||r.disp)return false;
-    return !(keys.length&&keys.every(k=>(r.n||{})[k]!=null&&(r.n||{})[k]!==""))})}
-function askRestitWarn(f,onGo){
-  const L=elevesNonFinis(f);if(!L.length)return onGo();
-  const prev=document.activeElement, el=document.createElement("div");el.className="modal";
-  el.innerHTML=`<div class="card" role="dialog" aria-modal="true" aria-labelledby="rwT" style="max-width:440px">
-    <p id="rwT"><b>Évaluation pas terminée</b> — ${L.length} étudiant${L.length>1?"s ne sont":" n'est"} pas entièrement évalué${L.length>1?"s":""} :
-      ${esc(L.slice(0,8).map(e=>e.nom).join(", "))}${L.length>8?"…":""}.</p>
-    <p class="hint" style="font-size:12.5px">Les non rendus et les dispensés comptent comme terminés. Les restitutions de ces étudiants seront incomplètes.</p>
-    <div class="row"><button class="btn ghost" data-no>Annuler</button><button class="btn primary" data-yes>Exporter quand même</button></div></div>`;
-  const close=()=>{el.remove();document.removeEventListener("keydown",key);if(prev&&prev.focus)prev.focus()};
-  const key=e=>{if(e.key==="Escape")close()};
-  el.querySelector("[data-no]").onclick=close;el.onclick=e=>{if(e.target===el)close()};
-  el.querySelector("[data-yes]").onclick=()=>{close();onGo()};
-  document.addEventListener("keydown",key);document.body.appendChild(el);el.querySelector("[data-yes]").focus();
-}
 /* exports d'une ligne (fenêtre des actions) : l'évaluation (grille vierge) et, avec le module Étudiants, les restitutions par étudiant */
-async function offer(filename,data,eleves=false){
-  if(!dl){toast("Téléchargement indisponible ici.");return}
-  try{ await dl.save({filename,data,eleves}); toast("Fichier enregistré : "+filename); }
-  catch(e){
-    const c=e&&e.code;
-    if(c==="declined")return;
-    if(c==="rate_limited")toast("Une demande est déjà en cours, réessaie dans un instant.");
-    else if(c==="too_large")toast("Fichier trop volumineux pour cette destination.");
-    else toast("Échec de l'enregistrement"+(e&&e.message?" : "+e.message:"."));
-  }
-}
 
 /* ---------- événements ---------- */
 window.dnmaxPont.interface.brancherOnglets(document,page=>{

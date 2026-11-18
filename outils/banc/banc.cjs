@@ -730,6 +730,33 @@ const normaliser = (html) => html.replace(/--stx: ?-?[0-9.]+px/g, "--stx: (mesur
     await relever("volet établissement", zone, () => JSON.stringify({ etab: DATA.etab, pane: ui.org.pane, edArm }));
     await page.locator(zone + ' [data-et="nom"]').fill("Lycée d'essai");
     await relever("nom saisi", zone, () => JSON.stringify({ etab: DATA.etab, stocke: JSON.parse(window.dnmaxPont.stockage.getItem("dnmade.data")).etab }));
+  } else if (parcours === "exports") {
+    await page.locator("#t-saved").click();
+    // Chaque document produit est capté à la place de la boîte « Enregistrer sous » : son nom et une empreinte de son contenu.
+    await page.evaluate(() => {
+      window.__documents = [];
+      window.dnmaxPont.telechargements.save = async (demande) => {
+        const octets = new Uint8Array(await new Response(demande.data).arrayBuffer());
+        const empreinte = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", octets))).map((o) => o.toString(16).padStart(2, "0")).join("");
+        window.__documents.push({ nom: demande.filename, eleves: !!demande.eleves, taille: octets.length, empreinte });
+      };
+    });
+    const zone = "#savedList";
+    const donnees = () => JSON.stringify({ documents: window.__documents, f: F.id, fiches: fiches.map((f) => [f.id, f.suivi]), a: DATA.activeDiplome });
+    for (const rang of [0, 3]) {
+      for (const format of ["docx", "odt", "xlsx", "ods"]) {
+        await page.evaluate(([r, k]) => exportFiche(r, k, "eval"), [rang, format]);
+        await relever(`export ${format} ${rang}`, zone, donnees);
+      }
+      await page.evaluate((r) => exportFiche(r, "docx", "rest"), rang);
+      await relever(`restitutions ${rang}`, zone, donnees);
+    }
+    await page.evaluate(() => { window.__suite = 0; askRestitWarn(fiches[0], () => { window.__suite += 1; }); });
+    if (await page.locator(".modal [data-yes]").count()) {
+      await relever("avertissement", ".modal", () => JSON.stringify({ suite: window.__suite }));
+      await page.locator(".modal [data-yes]").click();
+    }
+    await relever("après avertissement", zone, () => JSON.stringify({ suite: window.__suite }));
   } else if (parcours === "promotions") {
     await page.locator("#t-org").click();
     await page.locator('[data-opane="promos"]').click();
