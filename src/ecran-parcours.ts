@@ -5,11 +5,14 @@ import {
   CLE_REPRISE,
   lireReprise,
   doitLancerAuDemarrage,
+  doitLancerBouquet,
   estIdentifiantParcours,
   lireAvancement,
   noterParcoursVu,
+  rejouerApparition,
   salvesBouquetFinal,
   type Avancement,
+  type MotifAffichage,
   type IdentifiantParcours,
 } from "./domaine/parcours";
 import { choisirCoin, type Rectangle } from "./domaine/coin-bulle";
@@ -58,6 +61,8 @@ interface Visite {
   /** Objectif de l'étape déjà atteint en y entrant (la bulle le dit au lieu de le demander). */
   dejaFait: boolean;
   salut: number | null;
+  /** Le bouquet final est déjà parti pendant cette visite : il ne part qu'une fois. */
+  bouquetLance: boolean;
 }
 
 let visite: Visite | null = null;
@@ -357,7 +362,7 @@ function aller(index: number): void {
   visite.dejaFait = etape.objectif?.(etat) ?? false;
   visite.salut = null;
   detacherClic();
-  afficherBulle();
+  afficherBulle("etape");
   defilesEtape.clear();
 }
 
@@ -431,7 +436,7 @@ function eclater(x: number, y: number, nombre: number, ampleur = 1): void {
   }, 1400);
 }
 
-/** Bouquet final de confettis sur toute la fenêtre, quand l'enseignant termine la visite. */
+/** Bouquet final de confettis sur toute la fenêtre, à l'arrivée sur la dernière page de la visite. */
 function bouquetFinal(): void {
   for (const salve of salvesBouquetFinal(window.innerWidth, window.innerHeight)) {
     window.setTimeout(() => {
@@ -458,7 +463,7 @@ function creerFeuilleDeRoute(parcours: Parcours, index: number, derniere: boolea
   return liste;
 }
 
-function afficherBulle(): void {
+function afficherBulle(motif: MotifAffichage): void {
   const bulle = elements.bulle;
   if (visite === null || bulle === null) {
     return;
@@ -469,11 +474,14 @@ function afficherBulle(): void {
     return;
   }
   const fait = visite.dejaFait || visite.salut !== null;
+  const rejouer = rejouerApparition(motif);
   bulle.replaceChildren();
-  bulle.classList.remove("parcours-entree");
-  // Relance l'animation d'apparition à chaque étape.
-  void bulle.getBoundingClientRect();
-  bulle.classList.add("parcours-entree");
+  if (rejouer) {
+    // Relance l'animation d'apparition à chaque étape.
+    bulle.classList.remove("parcours-entree");
+    void bulle.getBoundingClientRect();
+    bulle.classList.add("parcours-entree");
+  }
   bulle.classList.toggle("parcours-reussie", fait);
 
   const derniere = visite.index === parcours.etapes.length - 1;
@@ -525,7 +533,6 @@ function afficherBulle(): void {
   continuer.type = "button";
   continuer.addEventListener("click", () => {
     if (derniere) {
-      bouquetFinal();
       terminer();
     } else if (etape.avanceAuClic === true && !fait) {
       cliquerPourLEnseignant(etape);
@@ -541,16 +548,14 @@ function afficherBulle(): void {
   });
   actions.append(passer, precedente, continuer);
   bulle.append(actions);
-  // Le contenu apparaît en cascade.
-  [...bulle.children].forEach((enfant, rang) => {
-    if (enfant instanceof HTMLElement) {
-      enfant.classList.add("parcours-cascade");
-      enfant.style.setProperty("--rang", String(rang));
-    }
-  });
-  if (derniere && parcours.chapitres !== undefined) {
-    const centre = bulle.getBoundingClientRect();
-    eclater(...departEclats(centre.left + centre.width / 2, centre.top + 40), 28);
+  // Le contenu apparaît en cascade ; un simple changement de texte s'affiche d'un coup.
+  if (rejouer) {
+    [...bulle.children].forEach((enfant, rang) => {
+      if (enfant instanceof HTMLElement) {
+        enfant.classList.add("parcours-cascade");
+        enfant.style.setProperty("--rang", String(rang));
+      }
+    });
   }
   if (!(etape.cibles?.length ?? 0)) {
     continuer.focus({ preventScroll: true });
@@ -634,6 +639,15 @@ function placerVoiles(trou: DOMRect | null, masques: boolean): void {
   });
 }
 
+/**
+ * Taille de la bulle sans ses transformations : le rebond d'apparition la réduit un
+ * instant, et une place calculée sur cette taille glissait de quelques pixels à
+ * chaque image, jusqu'à la fin du rebond.
+ */
+function tailleBulle(bulle: HTMLElement): { width: number; height: number } {
+  return { width: bulle.offsetWidth, height: bulle.offsetHeight };
+}
+
 /** Place la bulle à côté de la zone éclairée, sinon dans un coin, sinon au centre. */
 /**
  * Zone à éclairer dans une boîte de l'application : la bulle se pose à côté de la
@@ -645,7 +659,7 @@ function placerBulleACoteDe(boite: Element, visee: DOMRect): void {
     return;
   }
   const cadreBoite = boite.getBoundingClientRect();
-  const dimensions = bulle.getBoundingClientRect();
+  const dimensions = tailleBulle(bulle);
   const marge = 16;
   const haut = Math.min(
     Math.max(marge, visee.top + visee.height / 2 - dimensions.height / 2),
@@ -687,7 +701,7 @@ function placerBulle(trou: DOMRect | null, enCoin: boolean, evite: readonly Rect
   const largeur = window.innerWidth;
   const hauteur = window.innerHeight;
   const piedPage = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hauteur-pied")) || 0;
-  const dimensions = bulle.getBoundingClientRect();
+  const dimensions = tailleBulle(bulle);
   const marge = 12;
   let gauche: number;
   let haut: number;
@@ -862,7 +876,16 @@ function redessiner(): void {
   const avecBoite = boiteOuverte !== null && etape.siBoite !== undefined;
   if (avecBoite !== boiteVue) {
     boiteVue = avecBoite;
-    afficherBulle();
+    // Boîte refermée : l'étape qui n'attendait que cela passe aussitôt à la suite, sans
+    // réafficher d'abord son premier texte à son ancienne place le temps de la relecture suivante.
+    if (!avecBoite) {
+      suivre();
+      if (etapeCourante() !== etape) {
+        cadre = window.requestAnimationFrame(redessiner);
+        return;
+      }
+    }
+    afficherBulle("boite");
   }
   const cible = avecBoite && etape.siBoite !== undefined ? trouverCible({ ...etape, cibles: etape.siBoite.cibles }) : trouverCible(etape);
   cibleCourante = cible;
@@ -914,6 +937,12 @@ function redessiner(): void {
         bulle.classList.remove("parcours-entree");
         void bulle.getBoundingClientRect();
         bulle.classList.add("parcours-entree");
+        // La dernière page apparaît : c'est elle que salue le bouquet, pas la fermeture de la visite.
+        const nombreEtapes = PARCOURS_DEFINIS[visite.identifiant].etapes.length;
+        if (doitLancerBouquet({ index: visite.index, nombreEtapes, dejaLance: visite.bouquetLance })) {
+          visite.bouquetLance = true;
+          bouquetFinal();
+        }
       }
     }
   }
@@ -951,7 +980,7 @@ function suivre(): void {
     visite.salut = window.setTimeout(() => {
       avancerDepuis(index);
     }, etape.delaiSalut ?? DUREE_SALUT);
-    afficherBulle();
+    afficherBulle("salut");
     const zone = cibleCourante?.getBoundingClientRect() ?? elements.bulle?.getBoundingClientRect();
     if (zone !== undefined) {
       eclater(...departEclats(zone.left + zone.width / 2, zone.top + Math.min(zone.height / 2, 60)), 16);
@@ -973,7 +1002,7 @@ export function lancerParcours(identifiant: IdentifiantParcours, depart = 0): vo
     return;
   }
   demonter();
-  visite = { identifiant, index: depart, dejaFait: false, salut: null };
+  visite = { identifiant, index: depart, dejaFait: false, salut: null, bouquetLance: false };
   construire();
   aller(depart);
   suivi = window.setInterval(suivre, INTERVALLE_SUIVI);

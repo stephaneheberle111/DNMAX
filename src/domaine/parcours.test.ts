@@ -5,11 +5,13 @@ import {
   CLE_PARCOURS,
   colleguesDeclares,
   doitLancerAuDemarrage,
+  doitLancerBouquet,
   estIdentifiantParcours,
   lireAvancement,
   lireParcoursVus,
   lireReprise,
   noterParcoursVu,
+  rejouerApparition,
 } from "./parcours";
 
 const DONNEES_COMPLETES = {
@@ -196,5 +198,38 @@ describe("bouquet final", () => {
     for (const salve of salvesBouquetFinal(-10, 0)) {
       expect([salve.x, salve.y]).toEqual([0, 0]);
     }
+  });
+});
+
+describe("apparition animée de la bulle", () => {
+  it("se rejoue à chaque nouvelle étape", () => {
+    expect(rejouerApparition("etape")).toBe(true);
+  });
+
+  it("se rejoue pour saluer un objectif atteint", () => {
+    expect(rejouerApparition("salut")).toBe(true);
+  });
+
+  it("ne se rejoue pas quand seul le texte change à l'ouverture ou à la fermeture d'une boîte", () => {
+    expect(rejouerApparition("boite")).toBe(false);
+  });
+});
+
+describe("moment du bouquet final", () => {
+  it("part à l'arrivée sur la dernière page de la visite", () => {
+    expect(doitLancerBouquet({ index: 4, nombreEtapes: 5, dejaLance: false })).toBe(true);
+  });
+
+  it("ne part pas sur une page qui n'est pas la dernière", () => {
+    expect(doitLancerBouquet({ index: 3, nombreEtapes: 5, dejaLance: false })).toBe(false);
+  });
+
+  it("ne repart pas quand on revient sur la dernière page", () => {
+    expect(doitLancerBouquet({ index: 4, nombreEtapes: 5, dejaLance: true })).toBe(false);
+  });
+
+  it("ne part pas pour une visite sans étape ou réduite à sa page d'ouverture", () => {
+    expect(doitLancerBouquet({ index: 0, nombreEtapes: 0, dejaLance: false })).toBe(false);
+    expect(doitLancerBouquet({ index: 0, nombreEtapes: 1, dejaLance: false })).toBe(false);
   });
 });

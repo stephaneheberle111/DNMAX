@@ -175,8 +175,31 @@ export interface Salve {
   ampleur: number;
 }
 
+/** Ce qui fait réafficher la bulle de la visite : une nouvelle étape, un objectif atteint, une boîte de l'application ouverte ou refermée. */
+export type MotifAffichage = "etape" | "salut" | "boite";
+
 /**
- * Bouquet final de confettis, quand l'enseignant termine une visite : sept
+ * Vrai si la bulle rejoue son apparition animée (petit rebond) en se
+ * réaffichant. Elle salue ainsi une nouvelle étape ou un objectif atteint ;
+ * quand seul son texte change parce qu'une boîte de l'application s'ouvre ou
+ * se referme, rejouer le rebond la ferait trembler sur place.
+ */
+export function rejouerApparition(motif: MotifAffichage): boolean {
+  return motif !== "boite";
+}
+
+/**
+ * Vrai quand le bouquet final doit partir : à l'arrivée sur la dernière page
+ * de la visite, une seule fois par visite (revenir en arrière puis y retourner
+ * ne le relance pas). Fermer la visite ne le lance jamais. Une visite réduite à
+ * une page n'a pas de « fin » à saluer.
+ */
+export function doitLancerBouquet(etat: { index: number; nombreEtapes: number; dejaLance: boolean }): boolean {
+  return !etat.dejaLance && etat.nombreEtapes > 1 && etat.index === etat.nombreEtapes - 1;
+}
+
+/**
+ * Bouquet final de confettis, à l'arrivée sur la dernière page d'une visite : sept
  * salves réparties sur la largeur de la fenêtre, dans le tiers haut, qui
  * partent l'une après l'autre, la dernière au centre et plus ample. Sans
  * hasard, pour rester identique d'une fois à l'autre.

@@ -30,7 +30,7 @@
 
 ### Ajouté
 
-- Visites guidées : un bouquet final de confettis salue la fin de la visite, au clic sur « Terminer » (sauf si le système demande de réduire les animations).
+- Visites guidées : un bouquet final de confettis salue la fin de la visite, à l'arrivée sur sa dernière page (sauf si le système demande de réduire les animations).
 - Paramètres > Règles d'évaluation : suivi simplifié dans Mes évaluations, « À faire » puis « Faite » une fois la fiche distribuée. Ce n'est qu'un affichage : le suivi détaillé reste enregistré, et se retrouve en décochant la case.
 - Paramètres > Mises à jour : recherche automatique, une fois par jour à l'ouverture, désactivée par défaut. La recherche interroge désormais dnmax.fr, hébergé en France, et non plus GitHub ; la mise à jour Windows s'y télécharge aussi.
 - Envoyer : un fichier ou un envoi en direct sans étudiants peut aussi être protégé par un mot de passe (désactivé par défaut). Avec des étudiants, la protection reste obligatoire.
@@ -58,6 +58,7 @@
 - Paramètres > Exemple : l'aide décrit ce que l'exemple ajoute vraiment (un établissement fictif complet), et non plus une seule évaluation.
 - Visite guidée : à l'étape « Compétences », le curseur invitait à écrire au lieu de cocher une case ; à l'étape « Vos préférences », la bulle cachait le menu « Mon compte ».
 - Documents Word et OpenDocument : les noms des niveaux au-dessus de la jauge ne sont plus coupés au milieu d'un mot (« Non acqui-s ») ; chacun a la place de son mot le plus long, et le texte se réduit un peu si la colonne est étroite.
+- Visite guidée : le curseur animé n'apparaît plus sur la page d'accueil de la visite, seulement quand il montre un geste ; à l'étape « Échanger », la bulle ne tremble plus quand la boîte s'ouvre ou se referme ; les confettis de fin partent une seule fois, en arrivant sur la dernière page, et non plus en fermant la visite.
 
 ### Sécurité
 
