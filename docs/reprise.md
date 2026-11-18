@@ -6,7 +6,7 @@
 
 - **Version 0.9.0** : fusionnée dans `main` (#132), **pas publiée**. L'atelier « Publication » n'a pas été lancé ; il ne se lance qu'avec le feu vert de l'auteur.
 - **Recette sur le bureau de l'auteur** : en cours de son côté, avec les installeurs d'essai de l'atelier « Installeurs », exécution n° 8 (Windows et Linux ; macOS annulé faute de machine, comme les fois précédentes), et la fiche `docs/recette-0.9.md` (parties A à J). Puis publication de la 0.9, sur son accord.
-- **0.9.1 en cours** (décision 38, voir plus bas) : groupes 1 et 2 fusionnés (#184, #186) ; groupe 3 fusionné (#189) ; groupe 4 fusionné (#193) ; groupe 5 fusionné (#196) ; groupe 6 fusionné (#197) ; groupe 7 proposé (#198) ; groupe 8 (Progression) proposé, empilé sur le 7 (branche `refactor/progression-exemple`).
+- **0.9.1 en cours** (décision 38, voir plus bas) : groupes 1 et 2 fusionnés (#184, #186) ; groupe 3 fusionné (#189) ; groupe 4 fusionné (#193) ; groupe 5 fusionné (#196) ; groupe 6 fusionné (#197) ; groupe 7 fusionné (#198) ; groupe 8 (Progression) proposé (branche `refactor/progression-exemple`).
 - **Contrôles** : linter et typage sans erreur, 1 178 tests au vert sur la branche du groupe 8.
 - **Fichier historique** : 1 712 lignes après la Progression (groupe 8) (7 756 au départ), dont environ 710 pour la carte radiale et la chaîne.
 
@@ -50,7 +50,7 @@
 | #193 | 0.9.1, groupe 4 : Mon établissement (barre des volets, Établissement, Répartition, Promotions) et suppression en deux temps ; `edArm` publié dans l'état (`etat.armement`). `paintEditor` et `asOf` restent | `src/interface/etablissement.ts`, règles dans `src/domaine/repartition.ts` |
 | #196 | 0.9.1, groupe 5 : barre Constituer / Explorer, page des cinq étapes, contexte des étapes 1 à 3, passages vers une étape et vers la validation (`allerValidation` compris). Restent la carte (`paintMap`, `paintExplore`) et la planification (`paintMatrice`, qui lit `BLOC_TINT` et `SEMS`, constantes invisibles depuis TypeScript) | `src/interface/referentiel.ts` |
 | #197 | 0.9.1, groupe 6 : enregistrement de l'évaluation en cours (`save`, brouillon, ligne d'enregistrement), passage d'une étape à l'autre (`goStep`, `paintSteps`), contextes de la formulation et de la saisie des étudiants. Restent l'étape 1 (`paintForm` et ses blocs) et les compétences (`contexteCompetences`, qui lit `BLOC_TINT` et `norm`) | `src/interface/editeur.ts` |
-| groupe 7 | 0.9.1, groupe 7 : Mes évaluations (suivi et statut, filtres, liste, fenêtre des actions, suppression armée). Restent l'export d'un document (`exportFiche`, `offer`, `ficheExport`) et l'avertissement avant de restituer (`askRestitWarn`) | `src/interface/evaluations.ts` |
+| #198 | 0.9.1, groupe 7 : Mes évaluations (suivi et statut, filtres, liste, fenêtre des actions, suppression armée). Restent l'export d'un document (`exportFiche`, `offer`, `ficheExport`) et l'avertissement avant de restituer (`askRestitWarn`) | `src/interface/evaluations.ts` |
 | groupe 8 (1re partie) | 0.9.1, groupe 8 : Progression, vues « Promotion » et « Étudiant » (`paintProg`, `paintProgEleve`, `dnPalier`). Restent l'exemple (`loadDemo`, `demoMass`, `validerExemple`) et l'export d'un document | `src/interface/progression.ts` |
 
 Hors reprise, depuis #178 : fiche de recette complétée (#179), installeur Windows en français (#180), visite du référentiel simplifiée et boutons bleus de Constituer retirés (#181), évaluation possible sur un référentiel non validé avec un rappel (#182), mes promotions distinguées des autres dans une évaluation (#183), lien `node_modules` retiré (#185), `promoLabel` rétabli et garde-fou des appels (#187).
@@ -77,7 +77,7 @@ La décision 5 est levée : le fichier historique disparaît. 0.9.1 reprend tout
 4. **Fait** (#193) : Mon établissement : préparation des volets (`paintOrg`, `paintEtab`, `paintAffect`, `paintPromosOrg`, `affectOf`…).
 5. **Fait** (#196) : Référentiel : préparation de Constituer et de l'habillage de la carte (`paintRef`, `paintConstituer`, `paintEtape`, `paintMap` hors dessin).
 6. **Fait** (#197) : Éditeur : enregistrement, étapes, contextes des écrans (`save`, `goStep`, `paintPick`, `paintLignes`, `paintEleves`…).
-7. **Fait (en attente de fusion)** : Mes évaluations, exports et actions (`paintSaved`, `exportFiche`, `offer`, `ficheExport`, `buildDocx`…).
+7. **Fait** (#198) : Mes évaluations, exports et actions (`paintSaved`, `exportFiche`, `offer`, `ficheExport`, `buildDocx`…).
 8. **Progression faite (en attente de fusion) ; prochain : l'exemple et l'export d'un document** : Progression (`paintProg`, `paintProgEleve`) et l'exemple (`loadDemo`, `demoMass`).
 9. Démarrage et ponts vers l'application : le fichier historique ne garde plus que les deux cartes.
 
