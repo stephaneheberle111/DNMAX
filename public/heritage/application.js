@@ -10,61 +10,8 @@ const anneeOf = sem => Math.floor(Math.max(0,SEMS.indexOf(sem))/2)+1;
 const ANNEES=[1,2,3];
 
 /* promotions, années scolaires et calendrier (promoShort, anneeScolaire, semSuggere…) : src/interface/promotions-calendrier.ts */
-function blocName(n){const b=REF.blocs.find(b=>b.num===String(n));return b?b.nom:"Bloc "+n}
-function help(html,pos){return `<span class="help ${pos||""}" tabindex="0" role="note" aria-label="Aide"><span class="hbub">${html}</span></span>`}
-function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
-function askModal(html,onYes,onNo){
-  const prev=document.activeElement;
-  const el=document.createElement("div");
-  el.className="modal";
-  el.innerHTML=`<div class="card" role="dialog" aria-modal="true">
-    <p>${html}</p>
-    <div class="row"><button class="btn ghost" data-no>Non, juste cette évaluation</button>
-      <button class="btn primary" data-yes>Oui, l'ajouter</button></div></div>`;
-  const close=fn=>{el.remove();document.removeEventListener("keydown",key);if(prev&&prev.focus)prev.focus();if(fn)fn()};
-  const key=e=>{if(e.key==="Escape")close(onNo)};
-  el.querySelector("[data-yes]").onclick=()=>close(onYes);
-  el.querySelector("[data-no]").onclick=()=>close(onNo);
-  el.onclick=e=>{if(e.target===el)close(onNo)};
-  document.addEventListener("keydown",key);
-  document.body.appendChild(el);
-  el.querySelector("[data-yes]").focus();
-}
-function toast(m){const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
-/* Enregistrement de l'évaluation en cours (save, brouillon), passage d'une étape à l'autre (goStep, paintSteps),
-   contextes de la formulation et de la saisie des étudiants : écrits en TypeScript (src/interface/editeur.ts). */
-
-/* ---------- rendu ---------- */
-/* onglets, vues et titre de la fenêtre : src/interface/onglets.ts */
-function paintTabs(){
-  ui.tab=window.dnmaxPont.interface.afficherPage(document,ui.tab);
-  paintEnregistrement();
-}
-/* Étape 1 et compétences de l'éditeur (vierge, nouvelleFiche, paintForm, paintClasse, toggleClasse, ecsAffectes,
-   contexteCompetences, paintPick…) et aides de la grille (opIndex, cleanOps, rendusManquants) : écrits en TypeScript
-   (src/interface/editeur-etape1.ts), règles dans src/domaine/cadre-evaluation.ts. */
-/* suiviOf complète la date de saisie d'une évaluation ancienne avant de lire son statut */
-/* suivi simplifié (Paramètres > Règles d'évaluation) : affichage seul, le statut détaillé reste celui de l'évaluation */
-/* nombre d'étudiants ayant une évaluation individuelle enregistrée (niveaux, observations, appréciation ou restitution) */
-/* L'évaluation en cours d'édition ne doit pas garder celle qu'on supprime : la prochaine modification la remettrait dans la liste. */
-/* filtres de la liste des évaluations : par défaut, promotions en cours et évaluations dont je suis l'enseignant·e */
-/* Visibilité : un enseignant ne voit que les promotions de sa répartition de service (et leurs étudiants).
-   Si « C'est moi » n'est pas défini, ou s'il n'a encore aucune affectation, tout reste visible. */
-/* règles des filtres : écrites et testées dans src/domaine/filtres-evaluations.ts */
-/* sélections multiples : une liste vide = pas de filtre ; "cur" = toutes les promotions en cours */
-/* barre des filtres de Mes évaluations : écran écrit en TypeScript (src/evaluations/filtres.ts),
-   règles dans src/domaine/filtres-evaluations.ts */
-/* liste de Mes évaluations : écran écrit en TypeScript (src/evaluations/liste.ts), règles de la frise dans
-   src/domaine/frise-suivi.ts ; la fenêtre des actions est dans src/evaluations/actions.ts. */
-function hueOf(k){let h=0;for(const ch of String(k||""))h=(h*31+ch.charCodeAt(0))%360;return `hsl(${h} 52% 60%)`}
-function refEcByCode(code){return (REF.ecs||[]).find(x=>ANNEES.some(a=>(x.codes||{})[a]===code))||null}
-function ecColor(code){const e=refEcByCode(code);return (e&&e.couleur)||hueOf(code)}
-function ecNomRef(code){const e=refEcByCode(code);return (e&&e.nom)||code}
-function ueColor(ue){const u=(REF.ues||[]).find(x=>tidy(x.nom)===tidy(ue));return (u&&u.couleur)||hueOf(ue)}
-const ueOrd = ue => {const i=(REF.ecs||[]).findIndex(e=>tidy(e.ue)===ue);return i<0?99:i};
-function ecNum(ec){return window.dnmaxPont.constituer.numeroCode(ec)}
-function lienEc(c,id){return ((c||{}).ecs||[]).find(x=>x.id===id)||null}
-function ecOrd(e){return window.dnmaxPont.constituer.ordreEc(e||{})}
+/* Aides communes (esc, toast, askModal, paintTabs, blocName, hueOf, ecColor, ecNomRef, ueColor, ueOrd, ecNum, lienEc,
+   ecOrd, refEcByCode) : écrites en TypeScript (src/interface/aides-communes.ts) et publiées sous leur ancien nom. */
 /* Explorer : la carte (radiale ou chaîne) reste dessinée ici ; la vue « Recherche » est écrite en TypeScript
    (src/referentiel/recherche.ts), ses règles dans src/domaine/exploration.ts */
 function paintExplore(){
