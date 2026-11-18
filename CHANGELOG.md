@@ -26,6 +26,7 @@
 
 ### Ajouté
 
+- Visites guidées : un bouquet final de confettis salue la fin de la visite, au clic sur « Terminer » (sauf si le système demande de réduire les animations).
 - Paramètres > Règles d'évaluation : suivi simplifié dans Mes évaluations, « À faire » puis « Faite » une fois la fiche distribuée. Ce n'est qu'un affichage : le suivi détaillé reste enregistré, et se retrouve en décochant la case.
 - Paramètres > Mises à jour : recherche automatique, une fois par jour à l'ouverture, désactivée par défaut. La recherche interroge désormais dnmax.fr, hébergé en France, et non plus GitHub ; la mise à jour Windows s'y télécharge aussi.
 - Envoyer : un fichier ou un envoi en direct sans étudiants peut aussi être protégé par un mot de passe (désactivé par défaut). Avec des étudiants, la protection reste obligatoire.
@@ -39,6 +40,7 @@
 ### Corrigé
 
 - Enregistrer un document (Word, OpenDocument, tableur, PDF, fichier d'échange) à la place d'un fichier existant : si l'écriture échoue, l'ancien fichier reste intact ; quand il est ouvert dans un autre logiciel (Word, LibreOffice…), DNMAX dit de le fermer ou de choisir un autre nom, au lieu d'afficher l'erreur brute du système.
+- Bas de page : la bulle d'aide de la version dit que la recherche de mise à jour interroge le site dnmax.fr (elle nommait à tort GitHub).
 - Référentiel > Constituer > Validation : valider une nouvelle version, quand une version validée existait déjà et que des promotions sont en cours, ouvre de nouveau le choix des promotions qui passent à cette version (une erreur l'empêchait).
 - Mon établissement > Promotions : sans le module Étudiants, l'aide renvoie au module « Étudiants » sous son nom actuel.
 - Évaluation, étape 3 : le résumé sous l'étape ne compte plus comme formulé un regroupement dont la formulation n'est pas renseignée.
