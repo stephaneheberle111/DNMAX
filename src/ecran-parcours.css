@@ -172,16 +172,25 @@
   display: none;
 }
 
-/* « Parcourir » : le curseur se pose sur chaque élément tour à tour, et glisse de l'un à l'autre. */
+/* Cliquer, écrire, parcourir : le curseur glisse de là où il était (étape ou élément précédent) jusqu'à
+   l'élément visé, comme une main, puis y clique ou y écrit ; il ne repart pas de la bulle à chaque fois. */
+.parcours-curseur[data-geste="cliquer"],
+.parcours-curseur[data-geste="remplir"],
 .parcours-curseur[data-geste="parcourir"] {
   animation: none;
   transition:
-    left 0.55s cubic-bezier(0.55, 0.05, 0.3, 1),
-    top 0.55s cubic-bezier(0.55, 0.05, 0.3, 1);
+    left 0.7s cubic-bezier(0.45, 0.05, 0.3, 1),
+    top 0.7s cubic-bezier(0.45, 0.05, 0.3, 1),
+    opacity 0.25s ease;
 }
 
+.parcours-curseur[data-geste="cliquer"]::after,
 .parcours-curseur[data-geste="parcourir"]::after {
   animation: parcours-onde-halte 1.3s ease-out infinite;
+}
+
+.parcours-curseur-cache {
+  opacity: 0;
 }
 
 @keyframes parcours-onde-halte {

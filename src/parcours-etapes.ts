@@ -53,7 +53,7 @@ export interface Etape {
    * Pour `parcourir` : haltes du curseur, dans l'ordre, sur le premier élément
    * visible de chaque sélecteur (au lieu de tous les éléments de `pointe`).
    */
-  haltes?: readonly string[];
+  haltes?: Selon<readonly string[]>;
   /** Après le clic de l'enseignant sur la zone (étape `avanceAuClic`), ce que la visite fait encore pour lui. */
   apresClic?: () => void;
   /** Boutons que la bulle, rangée dans un coin, doit laisser visibles (en plus de `pointe`). */
@@ -61,6 +61,8 @@ export interface Etape {
   geste?: Selon<Geste>;
   atteinte?: () => boolean;
   objectif?: (avancement: Avancement) => boolean;
+  /** Délai avant de saluer l'objectif atteint et de passer à la suite (par défaut, un peu plus d'une seconde), pour laisser finir une saisie. */
+  delaiSalut?: number;
   groupeFait?: (avancement: Avancement) => boolean;
   /** L'étape avance au clic sur la zone éclairée. */
   avanceAuClic?: boolean;
@@ -126,6 +128,11 @@ function etapeFormulation(): "glisser" | "remplir" | "cliquer" {
   }
   const champs = [...document.querySelectorAll<HTMLInputElement>("#lignes input[data-lib]")];
   return champs.some((champ) => champ.value.trim() === "") ? "remplir" : "cliquer";
+}
+
+/** Nombre d'éléments désignés dans la page ; zéro hors navigateur (essais). */
+function compter(selecteur: string): number {
+  return typeof document === "undefined" ? 0 : document.querySelectorAll(selecteur).length;
 }
 
 function ongletOuvert(identifiantVue: string): () => boolean {
@@ -197,11 +204,12 @@ function pageConstituer(page: string): () => boolean {
 }
 
 /**
- * Une page de Référentiel > Constituer : la zone éclairée se limite à
- * l'en-tête du tableau et à sa première ligne, où le curseur passe sur chaque champ.
+ * Une page de Référentiel > Constituer : toute la page est éclairée, pour que
+ * l'enseignant puisse corriger chaque ligne ; le curseur passe sur chaque champ
+ * de la première, pour montrer quoi vérifier.
  */
-function etapePageConstituer(titre: string, texte: string, zone: readonly string[], haltes: readonly string[]): Etape {
-  return { titre, texte, cibles: [zone[0] ?? "#cpMain"], zone, haltes, pointe: haltes.join(", "), geste: "parcourir" };
+function etapePageConstituer(titre: string, texte: string, haltes: readonly string[]): Etape {
+  return { titre, texte, cibles: ["#cpMain"], haltes, pointe: haltes.join(", "), geste: "parcourir" };
 }
 
 /** Passage à la page suivante de « Constituer », par la barre des étapes en haut. */
@@ -260,14 +268,12 @@ const PRISE_EN_MAIN: Parcours = {
     etapePageConstituer(
       "1. Unités d'enseignement",
       "Pour chaque UE, vérifiez sa couleur (elle la signale partout dans DNMAX), corrigez au besoin son nom et les semestres où elle est programmée.",
-      ["#cpMain .edhead", '#cpMain [data-row="u0"]'],
       ['[data-row="u0"] input[type="color"]', '[data-row="u0"] input[data-cf$="|nom"]', '[data-row="u0"] .sems'],
     ),
     etapeOuvrirPageConstituer("ecs", "2. Enseignements constitutifs"),
     etapePageConstituer(
       "1. Enseignements constitutifs",
       "Même vérification pour chaque EC : sa couleur, ses codes d'une année à l'autre, son nom, son UE et ses semestres.",
-      ["#cpMain .edhead", '#cpMain [data-row="e0"]'],
       [
         '[data-row="e0"] input[type="color"]',
         '[data-row="e0"] .codes3',
@@ -280,14 +286,12 @@ const PRISE_EN_MAIN: Parcours = {
     etapePageConstituer(
       "1. Blocs et compétences",
       "Relisez le code et l'intitulé de chaque compétence, et le bloc auquel elle appartient.",
-      ["#cpMain .edhead", '#cpMain [data-row="c0"]'],
       ['[data-row="c0"] [data-ccode]', '[data-row="c0"] textarea', '[data-row="c0"] [data-cbloc]'],
     ),
     etapeOuvrirPageConstituer("tableau", "4. Planification par semestre"),
     etapePageConstituer(
       "1. Planification par semestre",
       "Chaque case rattache une compétence à un EC pour un semestre ; filtrez par semestre au-dessus du tableau.",
-      ["#cpMain .semfilter", "#cpMain thead", "#cpMain tbody tr:has([data-tog])"],
       [".semfilter .seg", '[data-tog="c0|e0|S1"]'],
     ),
     etapeOuvrirPageConstituer("valider", "5. Validation"),
@@ -298,10 +302,11 @@ const PRISE_EN_MAIN: Parcours = {
         "Cochez la case par laquelle vous attestez l'avoir vérifié et en assumer le contenu, puis cliquez « Valider cette version ». Sans validation, vous pouvez évaluer, mais DNMAX vous le rappellera à chaque promotion cochée.",
       texteFait: "Votre référentiel est validé : vous pouvez évaluer avec.",
       cibles: ["#cpMain .panel", "#t-ref"],
-      // D'abord la case d'attestation, puis le bouton : la réussite ne vient qu'une fois la version validée.
-      pointe: () => (caseCochee("#cAtteste") ? "#cValid" : "#cAtteste"),
+      // Le curseur coche la case d'attestation puis va sur le bouton ; la case cochée, il reste sur le bouton.
+      haltes: () => (caseCochee("#cAtteste") ? ["#cValid"] : ["#cAtteste", "#cValid"]),
+      pointe: "#cAtteste, #cValid",
       aDegager: "#cValid",
-      geste: "cliquer",
+      geste: "parcourir",
       objectif: (avancement) => avancement.referentielValide,
     },
     {
@@ -369,6 +374,8 @@ const PRISE_EN_MAIN: Parcours = {
       pointe: "#edAdd",
       geste: "cliquer",
       objectif: colleguesDeclares,
+      // Le collègue compte dès la première lettre de son nom : la visite attend qu'il soit écrit en entier.
+      delaiSalut: 5000,
     },
     ALLER_ETABLISSEMENT,
     allerVolet("affect", "Répartition de service"),
@@ -428,19 +435,22 @@ const PRISE_EN_MAIN: Parcours = {
       depuis: "#lignes [data-dragcomp]",
       pointe: "#lignes .lg ~ .lg",
       geste: "glisser",
+      // Avec une seule compétence, il n'y a rien à lier.
+      groupeFait: () => compter("#lignes .lg") < 2,
     },
     {
       titre: "5. Formuler et enregistrer",
       texte:
         "Glissez un livrable de la colonne de gauche sur chaque ligne, puis rédigez ce que vous attendez pour chaque compétence (la compétence opérationnelle). " +
         "Votre saisie est gardée en brouillon au fur et à mesure. Cliquez enfin « Enregistrer l'évaluation » : elle sort des brouillons et peut être distribuée.",
-      texteFait: "Votre évaluation est enregistrée.",
-      cibles: ["#step3", "#t-saved"],
+      cibles: ["#step3"],
       // Trois temps, selon ce qui est déjà fait : glisser un livrable, rédiger, enregistrer.
       geste: () => etapeFormulation(),
       pointe: () => ({ glisser: "#lignes .livrow", remplir: "#lignes input[data-lib]", cliquer: "#bSave3" })[etapeFormulation()],
       depuis: "#palLivr [data-dragliv]",
-      objectif: (avancement) => avancement.evaluations > 0,
+      // Enregistrée, l'évaluation ouvre « Mes évaluations » : la visite le fête et continue, sans faire cliquer « Suivant ».
+      atteinte: ongletOuvert("v-saved"),
+      celebrer: true,
     },
     ALLER_EVALUATIONS,
     {
