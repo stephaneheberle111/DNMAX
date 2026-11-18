@@ -51,6 +51,7 @@ import { publierEtablissement } from "../interface/etablissement";
 import { publierReferentiel } from "../interface/referentiel";
 import { publierEditeur } from "../interface/editeur";
 import { publierEvaluations } from "../interface/evaluations";
+import { publierProgression } from "../interface/progression";
 import { brancherInterface } from "../interface/branchements";
 import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
 import { peindreModules } from "../parametres/modules";
@@ -450,6 +451,7 @@ export async function chargerInterfaceHistorique(
       },
       (cle) => magasin.getItem(cle),
     );
+    publierProgression(window as unknown as Record<string, unknown>, (cle) => magasin.getItem(cle));
     publierVersionsReferentiel(window as unknown as Record<string, unknown>, {
       ecrireStockage: (cle, valeur) => {
         magasin.setItem(cle, valeur);
