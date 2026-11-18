@@ -287,10 +287,10 @@ function evaluationCommencee(f){return SAISIE.evaluationCommencee(f)}
 /* Rend "liste" si l'évaluation en cours est dans « Mes évaluations », "bloquee" si son référentiel
    non validé l'empêche d'y entrer, "vide" si elle n'est pas encore commencée. */
 function etatEnregistrement(){
-  return EVAL.etatEnregistrement({dansLaListe:fiches.some(f=>f.id===F.id),commencee:evaluationCommencee(F),referentielBloquant:dipBloquant(F)});
+  // Un référentiel non validé n'empêche plus d'enregistrer (avertissement à la sélection de la promotion).
+  return EVAL.etatEnregistrement({dansLaListe:fiches.some(f=>f.id===F.id),commencee:evaluationCommencee(F),referentielBloquant:false});
 }
 function enregistrerDansListe(valide){
-  if(dipBloquant(F))return;
   const i=fiches.findIndex(f=>f.id===F.id);
   if(i<0&&!evaluationCommencee(F))return;
   if(valide)delete F.brouillon;else if(i<0)F.brouillon=true;
@@ -322,7 +322,6 @@ function vierge(){
     eleves:"",items:[],res:{}});
 }
 function nouvelleFiche(){
-  if(!peutCreerFiche()){alerteRefNonValide(DATA.activeDiplome,"Impossible de créer une évaluation");return}
   F=vierge();
   {const me=DATA.enseignants.find(t=>t.id===DATA.moi);if(me&&me.nom){F.profs=[me.nom];F.prof=me.nom}}save();ui.tab="new";ui.step=1;ui.sel=[];ui.eleve="";
   paintTabs();paintForm();paintPick();paintLignes();goStep(1);
@@ -372,7 +371,7 @@ function paintClasse(){
   window.dnmaxPont.editeur.peindrePromotions({
     promotions:names.map(n=>{const pr=ps.find(p=>p.nom===n);
       return {nom:n,libelle:promoDisp(n),annee:pr?yr(pr):null,enCours:!!pr&&enCours(pr),referentielValide:!pr||promoRefValide(pr),mienne:!pr||promoVisible(pr)}}),
-    cochees:F.classes,anneeScolaire:AS,aucuneEnCours:!live.length,referentielBloquant:!!bloquant,
+    cochees:F.classes,anneeScolaire:AS,aucuneEnCours:!live.length,referentielNonValide:!!bloquant,
     allerValidation:()=>allerValidation(bloquant),basculer:n=>toggleClasse(n)});
 }
 function paintProf(){
@@ -392,6 +391,12 @@ function ecsAffectes(){
 function toggleClasse(v){
   const cs=F.classes||[];
   setClasses(cs.includes(v)?cs.filter(x=>x!==v):[...cs,v]);
+  // Une promotion au référentiel non validé se coche quand même : l'enseignant en est averti.
+  {const valide=n=>{const pr=promos.find(p=>p.nom===n);return !pr||promoRefValide(pr)};
+   const aAvertir=window.dnmaxPont.referentielValide.aAvertir(cs,F.classes||[],valide);
+   if(aAvertir.length){const pr=promos.find(p=>p.nom===aAvertir[0]), dp=DATA.diplomes.find(d=>pr&&d.id===pr.diplomeId);
+     window.dnmaxPont.referentielValide.avertir(document,{promotions:aAvertir.map(promoDisp),diplome:dp?dipLabel(dp):"",
+       allerValidation:()=>allerValidation(pr?pr.diplomeId:DATA.activeDiplome)})}}
   {const pr=F.classes.map(n=>promos.find(p=>p.nom===n)).find(Boolean);F.promoId=pr?pr.id:"";
    if(pr&&pr.diplomeId&&pr.diplomeId!==DATA.activeDiplome&&DATA.diplomes.some(d=>d.id===pr.diplomeId)){
      DATA.activeDiplome=pr.diplomeId;saveData(false)}}
@@ -581,13 +586,13 @@ function paintSaved(){
   const contexteActions={evaluation:i=>fiches[i],moduleEleves:!!MOD.eleves,suivi:suiviOf,saisie:saisieDnmax,rendusManquants,
     evaluationsIndividuelles:nbIndiv,promotionsVisees:promosNomsOf,nomPromotion:promoDisp,promotions:f=>classesDisp(f),
     armee:()=>ui.delArm||null,armer:armList,desarmer:()=>{ui.delArm=null},aujourdhui:isoToday(),annoncer:toast,
-    evaluer:i=>{if(refBloque(fiches[i],"Impossible de saisir les résultats"))return;
+    evaluer:i=>{
       F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));save();
       ui.tab="new";ui.step=4;ui.eleve="";paintTabs();paintForm();paintPick();paintLignes();goStep(4)},
     exporter:(i,k,mode)=>{const f=fiches[i];if(!f)return;
       if(mode==="rest"){askRestitWarn(f,()=>exportFiche(i,k,"rest"));return}
       exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()},
-    dupliquer:i=>{if(refBloque(fiches[i],"Impossible de dupliquer cette évaluation"))return;F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));F.id=uid();F.titre+=" (copie)";F.date=new Date().toISOString().slice(0,10);delete F.distribPrev;delete F.renduPrev;if(F.suivi)F.suivi.saisie=F.date;save();ui.tab="new";paintTabs();paintForm();paintPick()},
+    dupliquer:i=>{F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));F.id=uid();F.titre+=" (copie)";F.date=new Date().toISOString().slice(0,10);delete F.distribPrev;delete F.renduPrev;if(F.suivi)F.suivi.saisie=F.date;save();ui.tab="new";paintTabs();paintForm();paintPick()},
     synchroniser:(f,vides)=>{if(vides&&F&&F.id===f.id){F.res={};save()}
       if(F&&F.id===f.id){if(f.annulee)F.annulee=f.annulee;else delete F.annulee}},
     enregistrer:f=>{syncF(f);paintSaved()}};
@@ -1638,31 +1643,11 @@ function dipBloquant(f){
   if(!l.length)return dipRefValide(DATA.activeDiplome)?"":DATA.activeDiplome;
   const pr=l.find(p=>!promoRefValide(p));return pr?(pr.diplomeId||DATA.activeDiplome):"";
 }
-function peutCreerFiche(){return dipRefValide(DATA.activeDiplome)||promos.some(promoRefValide)}
 function allerValidation(dip){
   if(dip&&dip!==DATA.activeDiplome&&DATA.diplomes.some(d=>d.id===dip))vueMention(dip);
   ui.tab="ref";ui.ref.pane="constituer";ui.ref.cp="valider";edArm=null;
   paintTabs();paintRef();window.scrollTo({top:0,behavior:"smooth"});
 }
-/* Explique pourquoi l'action est refusée et mène au volet de validation. */
-function alerteRefNonValide(dip,action){
-  const prev=document.activeElement, el=document.createElement("div");el.className="modal";
-  const dp=DATA.diplomes.find(x=>x.id===dip);
-  el.innerHTML=`<div class="card" role="alertdialog" aria-modal="true" aria-labelledby="rnvT" aria-describedby="rnvD" style="max-width:500px;width:100%">
-    <p id="rnvT"><b>${esc(action)} : le référentiel${dp?" "+esc(dipLabel(dp)):""} n'est pas validé.</b></p>
-    <p id="rnvD">Avant une première évaluation, le référentiel doit être vérifié et validé par l'enseignant, dans Référentiel > Constituer > Validation. C'est vous qui en êtes responsable, pas l'hébergeur ni le développeur de DNMAX.</p>
-    <p class="hint">Les évaluations déjà enregistrées ne sont pas touchées : elles restent consultables et exportables.</p>
-    <div class="row"><button class="btn ghost" data-no>Fermer</button><button class="btn primary" data-yes>Aller à la validation</button></div></div>`;
-  const close=()=>{el.remove();document.removeEventListener("keydown",key);if(prev&&prev.focus&&document.contains(prev))prev.focus()};
-  const key=e=>{if(e.key==="Escape")close()};
-  el.querySelector("[data-no]").onclick=close;
-  el.querySelector("[data-yes]").onclick=()=>{close();allerValidation(dip)};
-  el.onclick=e=>{if(e.target===el)close()};
-  document.addEventListener("keydown",key);document.body.appendChild(el);
-  el.querySelector("[data-yes]").focus();
-}
-/* Vrai, avec le message, si le référentiel de l'évaluation empêche l'action. */
-function refBloque(f,action){const dip=dipBloquant(f);if(!dip)return false;alerteRefNonValide(dip,action);return true}
 /* Versions du référentiel par promotion : une promo utilise la version validée qui lui est appliquée
    (pr.refV) ; sans choix explicite, la version en vigueur de sa mention. Une évaluation enregistrée
    garde la version sur laquelle elle a été faite (f.refV) : appliquer une nouvelle version à une promo
@@ -2231,10 +2216,9 @@ window.dnmaxPont.interface.brancherInterface(document,{
   allerALEtape:goStep,
   regrouperSelection:linkSelection,
   annulerSelection:()=>{ui.sel=[];paintLignes()},
-  /* L'évaluation est déjà enregistrée, modification après modification : le bouton ne fait que ramener à la liste,
-     sauf si le référentiel non validé l'a tenue hors de la liste, ce qu'il explique alors. */
+  /* L'évaluation est déjà enregistrée, modification après modification : le bouton ne fait que ramener à la liste
+     (un brouillon complet en sort). */
   terminer:()=>{
-    if(refBloque(F,"Impossible d'enregistrer cette évaluation"))return;
     const brouillon=!!F.brouillon||!fiches.some(f=>f.id===F.id);
     if(brouillon){
       const manque=EVAL.manquesPourEnregistrer(F);

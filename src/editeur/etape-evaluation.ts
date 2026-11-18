@@ -317,8 +317,8 @@ export interface ContextePromotions {
   readonly anneeScolaire: string;
   /** Vrai s'il n'y a aucune promotion en cours cette année scolaire. */
   readonly aucuneEnCours: boolean;
-  /** Vrai si le référentiel de l'évaluation n'est pas validé : elle ne pourra pas être enregistrée. */
-  readonly referentielBloquant: boolean;
+  /** Vrai si le référentiel de l'évaluation n'est pas validé (elle s'enregistre quand même). */
+  readonly referentielNonValide: boolean;
   allerValidation(): void;
   basculer(nom: string): void;
 }
@@ -364,8 +364,8 @@ export function peindrePromotions(contexte: ContextePromotions): void {
   if (contexte.aucuneEnCours) {
     elements.push(creer("span", "hint", `Aucune promotion en cours en ${contexte.anneeScolaire} : crée-la dans Mon établissement > Promotions.`));
   }
-  if (contexte.referentielBloquant) {
-    const alerte = creer("span", "hint", "Le référentiel de cette évaluation n'est pas validé : elle ne pourra pas être enregistrée. ");
+  if (contexte.referentielNonValide) {
+    const alerte = creer("span", "hint", "Le référentiel de cette évaluation n'est pas validé : vous pouvez l'enregistrer, mais pensez à le vérifier et à le valider. ");
     alerte.id = "f-refnv";
     alerte.style.color = "var(--signal)";
     alerte.style.flexBasis = "100%";

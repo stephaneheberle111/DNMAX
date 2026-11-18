@@ -207,23 +207,6 @@ export function peindrePageConstituer(hote: HTMLElement, contexte: ContextePageC
   } else {
     navigation.append(balise("span"));
   }
-  const suivante = etapes[rangEtape + 1];
-  if (suivante !== undefined) {
-    const bouton = balise(
-      "button",
-      [
-        ["type", "button"],
-        ["class", "btn primary"],
-        ["data-cp", suivante],
-      ],
-      `${String(rangEtape + 2)}. ${ETAPES_CONSTITUER[suivante]} →`,
-    );
-    bouton.addEventListener("click", () => {
-      contexte.choisirEtape(suivante);
-    });
-    navigation.append(bouton);
-  }
-
   hote.replaceChildren(barre, liste, zone, navigation);
   if (contexte.etape === "valider") peindreValidation(zone, contexte, courant, etat, planifiees);
   else contexte.peindreEtape(contexte.etape, zone);
@@ -260,7 +243,7 @@ function peindreValidation(zone: HTMLElement, contexte: ContextePageConstituer, 
     balise(
       "div",
       [["class", "hint"]],
-      "Aucune évaluation ne peut être créée pour une promotion tant que son référentiel n'a pas été vérifié et validé ici. C'est l'enseignant qui est responsable du référentiel, y compris quand il est livré avec DNMAX ou reçu d'un collègue.",
+      "Tant que le référentiel d'une promotion n'a pas été vérifié et validé ici, DNMAX vous le rappelle quand vous la cochez dans une évaluation. C'est l'enseignant qui est responsable du référentiel, y compris quand il est livré avec DNMAX ou reçu d'un collègue.",
     ),
     chiffres,
   );
