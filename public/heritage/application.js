@@ -392,112 +392,25 @@ function paintPick(){window.dnmaxPont.editeur.peindreCompetences(contexteCompete
 /* Règles du suivi (statuts, libellés, frise) : src/domaine/suivi-evaluation.ts */
 const SUIVI=window.dnmaxPont.suivi;
 const ST_LBL=SUIVI.LIBELLES_STATUT;
-function suiviOf(f){f.suivi=f.suivi||{};if(!f.suivi.saisie)f.suivi.saisie=f.date||new Date().toISOString().slice(0,10);return f.suivi}
-function saisieDnmax(f){return SUIVI.avancementSaisie(f,studentsOf(f).map(e=>e.id))}
 /* Le statut n'est jamais saisi : il découle de ce qui a été fait sur l'évaluation.
    - Restituée (en partie) : restitution marquée pour la ou les promotions, ou, avec le module Étudiants, pour chaque étudiant ;
    - Évaluée : tous les étudiants saisis dans DNMAX, ou évaluation marquée terminée (évaluation à la main) ;
    - Évaluation en cours : au moins un étudiant saisi dans DNMAX, ou grille d'évaluation exportée (sans module Étudiants) ;
    - Distribuée / Rendus à évaluer : les dates prévues de distribution / de rendu sont passées ;
    - Préparée : sinon. */
-const isoToday=()=>new Date().toISOString().slice(0,10);
-function promosNomsOf(f){return SUIVI.promotionsVisees(f)}
-function restEleves(f){if(!MOD.eleves)return {n:0,tot:0};return SUIVI.restitutionsEtudiants(f,studentsOf(f).map(e=>e.id))}
 /* suiviOf complète la date de saisie d'une évaluation ancienne avant de lire son statut */
-function statutOf(f){
-  suiviOf(f);
-  return SUIVI.statutEvaluation(f,{aujourdhui:isoToday(),moduleEleves:!!MOD.eleves,idsEtudiants:MOD.eleves?studentsOf(f).map(e=>e.id):[]});
-}
-function evalueeF(f){return SUIVI.estEvaluee(statutOf(f))}
-const fmtD=d=>d?d.split("-").reverse().slice(0,2).join("/"):"";
 /* suivi simplifié (Paramètres > Règles d'évaluation) : affichage seul, le statut détaillé reste celui de l'évaluation */
-function suiviSimple(){return !!LS.get("dnmade.reglages",{}).suiviSimplifie}
 /* nombre d'étudiants ayant une évaluation individuelle enregistrée (niveaux, observations, appréciation ou restitution) */
-function nbIndiv(f){return Object.values(f.res||{}).filter(r=>r&&(Object.values(r.n||{}).some(v=>v!=null&&v!=="")||Object.values(r.obs||{}).some(Boolean)||r.appr||r.rest)).length}
 /* L'évaluation en cours d'édition ne doit pas garder celle qu'on supprime : la prochaine modification la remettrait dans la liste. */
-function retirerDeLaListe(i){const f=fiches[i];if(!f)return;
-  fiches.splice(i,1);LS.set("dnmade.fiches",fiches);
-  if(F.id===f.id){F=vierge();LS.set("dnmade.draft",F)}
-  paintSaved()}
-function armList(key){ui.delArm=key;paintSaved();setTimeout(()=>{if(ui.delArm===key){ui.delArm=null;paintSaved()}},6000)}
 /* filtres de la liste des évaluations : par défaut, promotions en cours et évaluations dont je suis l'enseignant·e */
 /* Visibilité : un enseignant ne voit que les promotions de sa répartition de service (et leurs étudiants).
    Si « C'est moi » n'est pas défini, ou s'il n'a encore aucune affectation, tout reste visible. */
-function mesPromoIds(){const me=DATA.moi;if(!me)return null;
-  const ids=promos.filter(pr=>teachesPromo(pr.id,me)).map(p=>p.id);
-  return ids.length?new Set(ids):null}
-function promoVisible(pr){const v=mesPromoIds();return !v||v.has(pr.id)}
 /* règles des filtres : écrites et testées dans src/domaine/filtres-evaluations.ts */
-function sfDefault(){return window.dnmaxPont.filtresEvaluations.filtresParDefaut()}
-function sfState(){return window.dnmaxPont.filtresEvaluations.normaliserFiltres(ui.sf=ui.sf||sfDefault())}
-function profsOf(f){return window.dnmaxPont.filtresEvaluations.profsDe(f)}
-function moiNom(){return (DATA.enseignants.find(t=>t.id===DATA.moi)||{}).nom||""}
-function promosOfF(f){
-  const l=Array.isArray(f.classes)&&f.classes.length?f.classes:String(f.classe||"").split(/,\s*/).filter(Boolean);
-  const ps=l.map(n=>promos.find(x=>x.nom===n)).filter(Boolean);
-  if(f.promoId){const p=promos.find(x=>x.id===f.promoId);if(p&&!ps.includes(p))ps.push(p)}
-  return ps;
-}
-function promoEnCours(pr){const a=promoAnneeAt(pr,anneeScolaire(new Date()));return a>=1&&a<=promoDuree(pr)}
 /* sélections multiples : une liste vide = pas de filtre ; "cur" = toutes les promotions en cours */
-function sfMatch(f){return window.dnmaxPont.filtresEvaluations.correspondFiltres(f,sfState(),{visibles:mesPromoIds(),promotionsDe:promosOfF,enCours:promoEnCours,moi:moiNom(),statut:statutOf})}
-function sfActive(){return window.dnmaxPont.filtresEvaluations.filtresActifs(sfState())}
 /* barre des filtres de Mes évaluations : écran écrit en TypeScript (src/evaluations/filtres.ts),
    règles dans src/domaine/filtres-evaluations.ts */
-function paintSavedFilters(){
-  const host=document.getElementById("sFilters");
-  promos.forEach(migPromoCohorte);
-  const dipIdx=id=>DATA.diplomes.findIndex(d=>d.id===id);
-  const sorted=promos.filter(promoVisible).sort((a,b)=>(dipIdx(a.diplomeId)-dipIdx(b.diplomeId))||(b.debut-a.debut));
-  window.dnmaxPont.evaluations.peindreFiltres(host,{filtres:()=>sfState(),reinitialiser:()=>{ui.sf=sfDefault()},
-    promotions:sorted.map(p=>({id:p.id,nom:p.nom,court:promoShort(p)||"",enCours:promoEnCours(p)})),
-    existe:id=>promos.some(p=>p.id===id),
-    nomPromotion:id=>{const p=promos.find(x=>x.id===id);return p?(promoShort(p)||p.nom||""):""},
-    statuts:ST_LBL,ouvert:()=>ui.sfOpen||"",retenirOuvert:k=>{ui.sfOpen=k},redessiner:paintSaved});
-}
 /* liste de Mes évaluations : écran écrit en TypeScript (src/evaluations/liste.ts), règles de la frise dans
    src/domaine/frise-suivi.ts ; la fenêtre des actions est dans src/evaluations/actions.ts. */
-function paintSaved(){
-  paintSavedFilters();
-  const h=document.getElementById("savedList");
-  const syncF=f=>{if(F&&F.id===f.id){F.suivi=structuredClone(f.suivi);F.restit=structuredClone(f.restit||{});save()}LS.set("dnmade.fiches",fiches)};
-  const contexteActions={evaluation:i=>fiches[i],moduleEleves:!!MOD.eleves,suivi:suiviOf,saisie:saisieDnmax,rendusManquants,
-    evaluationsIndividuelles:nbIndiv,promotionsVisees:promosNomsOf,nomPromotion:promoDisp,promotions:f=>classesDisp(f),
-    armee:()=>ui.delArm||null,armer:armList,desarmer:()=>{ui.delArm=null},aujourdhui:isoToday(),annoncer:toast,
-    evaluer:i=>{
-      F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));save();
-      ui.tab="new";ui.step=4;ui.eleve="";paintTabs();paintForm();paintPick();paintLignes();goStep(4)},
-    exporter:(i,k,mode)=>{const f=fiches[i];if(!f)return;
-      if(mode==="rest"){askRestitWarn(f,()=>exportFiche(i,k,"rest"));return}
-      exportFiche(i,k,"eval");if(!suiviOf(f).exporte){f.suivi.exporte=isoToday();syncF(f)}paintSaved()},
-    dupliquer:i=>{F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));F.id=uid();F.titre+=" (copie)";F.date=new Date().toISOString().slice(0,10);delete F.distribPrev;delete F.renduPrev;if(F.suivi)F.suivi.saisie=F.date;save();ui.tab="new";paintTabs();paintForm();paintPick()},
-    synchroniser:(f,vides)=>{if(vides&&F&&F.id===f.id){F.res={};save()}
-      if(F&&F.id===f.id){if(f.annulee)F.annulee=f.annulee;else delete F.annulee}},
-    enregistrer:f=>{syncF(f);paintSaved()}};
-  const openF=i=>{F=migF(structuredClone(fiches[i]));vueMention(mentionDeFiche(F));save();ui.tab="new";ui.sel=[];ui.eleve="";
-    paintTabs();paintForm();paintPick();paintLignes();goStep(ui.step===4?1:ui.step)};
-  window.dnmaxPont.evaluations.peindreListe(h,document.getElementById("sCount"),{evaluations:()=>fiches,visible:sfMatch,
-    moduleEleves:!!MOD.eleves,suiviSimplifie:suiviSimple(),promotions:f=>classesDisp(f),statut:statutOf,suivi:suiviOf,
-    saisie:saisieDnmax,restitutions:restEleves,datesRestitutionEtudiants:f=>studentsOf(f).map(e=>((f.res||{})[e.id]||{}).rest),
-    rendusManquants,evaluationsIndividuelles:nbIndiv,armee:ui.delArm||null,
-    etapeOuverte:()=>ui.stOpen==null?null:String(ui.stOpen),retenirEtape:k=>{ui.stOpen=k},aujourdhui:isoToday(),
-    enregistrer:f=>{syncF(f);paintSaved()},
-    synchroniserPrevu:(f,k2)=>{if(F&&F.id===f.id){if(f[k2])F[k2]=f[k2];else delete F[k2];save()}},
-    ouvrir:openF,ouvrirActions:i=>window.dnmaxPont.evaluations.ouvrirActions(i,contexteActions),
-    supprimer:i=>{const f=fiches[i];if(!f||!f.annulee)return;
-      const n=nbIndiv(f);
-      if(n){toast("Suppression impossible : supprimez d'abord les "+n+" évaluation"+(n>1?"s":"")+" individuelle"+(n>1?"s":"")+" (bouton « Actions… »).");return}
-      const k="f:"+f.id;
-      if(ui.delArm!==k){toast("Suppression définitive : cliquez sur « Confirmer la suppression ».");armList(k);return}
-      ui.delArm=null;retirerDeLaListe(i);toast("Évaluation supprimée.")},
-    supprimerBrouillon:i=>{const f=fiches[i];if(!f||!f.brouillon)return;
-      const k="b:"+f.id;
-      if(ui.delArm!==k){toast("Suppression définitive : cliquez sur « Confirmer la suppression ».");armList(k);return}
-      ui.delArm=null;retirerDeLaListe(i);toast("Brouillon supprimé.")},
-    filtresParDefaut:()=>{ui.sf=sfDefault();paintSaved()},toutAfficher:()=>{ui.sf={per:[],mine:false,sem:[],st:[],q:""};paintSaved()},
-    nouvelleEvaluation:nouvelleFiche,chargerExemple:loadDemo,
-    apresDessin:()=>window.dnmaxPont.evaluations.apresDessinListe(h,contexteActions)});
-}
 const GROUPS = {bloc:"Par bloc de compétences",ue:"Par unité d'enseignement",ec:"Par enseignement constitutif",
   annee:"Par année",semestre:"Par semestre",liste:"Liste à plat"};
 const tidy = s => String(s==null?"":s).replace(/([A-ZÀ-Ý])-([A-ZÀ-Ý])/g,"$1$2").trim();
