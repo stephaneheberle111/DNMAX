@@ -47,6 +47,7 @@ import { afficherPage, brancherOnglets } from "../interface/onglets";
 import { etat, publierEtat } from "../interface/etat";
 import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
 import { publierVersionsReferentiel } from "../interface/versions-referentiel";
+import { publierEtablissement } from "../interface/etablissement";
 import { brancherInterface } from "../interface/branchements";
 import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
 import { peindreModules } from "../parametres/modules";
@@ -434,6 +435,7 @@ export async function chargerInterfaceHistorique(
     publierPromotionsCalendrier(window as unknown as Record<string, unknown>, (cle, valeur) => {
       magasin.setItem(cle, valeur);
     });
+    publierEtablissement(window as unknown as Record<string, unknown>);
     publierVersionsReferentiel(window as unknown as Record<string, unknown>, {
       ecrireStockage: (cle, valeur) => {
         magasin.setItem(cle, valeur);

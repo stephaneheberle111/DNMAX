@@ -25,4 +25,13 @@ describe("publierEtat", () => {
     publierEtat(fenetre, etatVide());
     expect(Object.getOwnPropertyNames(fenetre).sort()).toEqual(Object.keys(NOMS_HISTORIQUES).sort());
   });
+
+  it("publie la suppression armée, nulle au départ", () => {
+    const source = etatVide();
+    const fenetre: Record<string, unknown> = {};
+    publierEtat(fenetre, source);
+    expect(fenetre.edArm).toBeNull();
+    fenetre.edArm = "ens1";
+    expect(source.armement).toBe("ens1");
+  });
 });
