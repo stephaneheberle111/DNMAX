@@ -33,6 +33,8 @@ export interface ContexteFiltres {
   existe(id: string): boolean;
   nomPromotion(id: string): string;
   readonly statuts: Readonly<Record<string, string>>;
+  /** « C'est moi » est défini : la case « Seulement mes évaluations » a un sens. */
+  readonly moiDefini?: boolean;
   /** Menu ouvert d'un dessin à l'autre, ou chaîne vide. */
   ouvert(): string;
   retenirOuvert(cle: string): void;
@@ -182,8 +184,19 @@ export function peindreFiltres(hote: HTMLElement, contexte: ContexteFiltres): vo
       "Suivi",
       Object.keys(contexte.statuts).map((cle) => caseACocher(filtres, "st", cle, contexte.statuts[cle] ?? "")),
     ),
-    recherche,
   ];
+  if (contexte.moiDefini === true) {
+    const caseMiennes = balise("input", [["type", "checkbox"], ["id", "sfMiennes"], ...(filtres.miennes ? [["checked", ""] as const] : [])]);
+    caseMiennes.addEventListener("change", () => {
+      filtres.miennes = caseMiennes.checked;
+      contexte.retenirOuvert("");
+      contexte.redessiner();
+    });
+    const etiquette = balise("label", [["class", "sfm"]]);
+    etiquette.append(caseMiennes, " ", balise("span", [], "Seulement mes évaluations"));
+    noeuds.push(etiquette);
+  }
+  noeuds.push(recherche);
   if (filtresActifs(filtres)) {
     const reinitialiser = balise("button", [["type", "button"], ["class", "btn ghost"], ["id", "sfReset"]], "Filtres par défaut");
     reinitialiser.addEventListener("click", () => {
