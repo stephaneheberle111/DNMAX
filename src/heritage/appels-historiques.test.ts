@@ -17,6 +17,7 @@ import { publierEditeur } from "../interface/editeur";
 import { publierEvaluations } from "../interface/evaluations";
 import { publierProgression } from "../interface/progression";
 import { publierExportDocument } from "../interface/export-document";
+import { publierExemple } from "../interface/exemple";
 
 const CHEMIN = new URL("../../public/heritage/application.js", import.meta.url);
 
@@ -61,6 +62,7 @@ function nomsPublies(): string[] {
   publierEvaluations(fenetre, () => undefined, () => null);
   publierProgression(fenetre, () => null);
   publierExportDocument(fenetre, () => undefined);
+  publierExemple(fenetre, () => undefined, () => null, () => Promise.resolve(null));
   publierVersionsReferentiel(fenetre, { ecrireStockage: () => undefined, promotionValide: () => false, diplomeValide: () => false, maintenant: () => new Date(0) });
   return Object.keys(fenetre);
 }
