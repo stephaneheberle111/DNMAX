@@ -222,15 +222,21 @@ export function peindreFiltresDeLaListe(): void {
   etat.promotions.forEach(normaliserPromotion);
   const diplomes = Array.isArray(etat.donnees.diplomes) ? (etat.donnees.diplomes as Objet[]) : [];
   const rangDiplome = (id: unknown): number => diplomes.findIndex((diplome) => diplome.id === id);
-  const rangees = etat.promotions
-    .filter(promotionVisible)
-    .sort((une, autre) => rangDiplome(une.diplomeId) - rangDiplome(autre.diplomeId) || Number(autre.debut) - Number(une.debut));
+  const ordre = (une: Objet, autre: Objet): number => rangDiplome(une.diplomeId) - rangDiplome(autre.diplomeId) || Number(autre.debut) - Number(une.debut);
+  const rangees = etat.promotions.filter(promotionVisible).sort(ordre);
+  // Hors de ma répartition de service : proposées à part dans le filtre, masquées par défaut.
+  const horsRepartition = mesPromotions() === null ? [] : etat.promotions.filter((promotion) => !promotionVisible(promotion)).sort(ordre);
   peindreFiltres(hote, {
     filtres: () => etatDesFiltres(),
     reinitialiser: () => {
       ui().sf = filtresParDefaut();
     },
     promotions: rangees.map((promotion) => ({ id: promotion.id, nom: promotion.nom, court: nomCourt(promotion) || "", enCours: promotionEnCours(promotion) })),
+    autres: horsRepartition.map((promotion) => ({ id: promotion.id, nom: promotion.nom, court: nomCourt(promotion) || "", enCours: promotionEnCours(promotion) })),
+    autresAffichees: () => !!ui().sfAutres,
+    basculerAutres: () => {
+      ui().sfAutres = !ui().sfAutres;
+    },
     existe: (id: unknown) => etat.promotions.some((promotion) => promotion.id === id),
     nomPromotion: (id: unknown) => {
       const promotion = etat.promotions.find((candidate) => candidate.id === id);
