@@ -6,8 +6,8 @@
  *
  * Repris du fichier historique (décision 38). Le temps de la reprise, ces
  * fonctions sont publiées sur la fenêtre sous leur ancien nom ; la carte
- * (Explorer) et la planification par semestre restent dessinées dans le
- * fichier historique, qui les appelle encore.
+ * (Explorer) reste dessinée dans le fichier historique, et la planification
+ * par semestre est préparée par `interface/preferences-parametres`.
  */
 import { retirerDuReferentiel, supprimerVersion } from "../domaine/constituer";
 import { absorber, associationsProposees, referentielDe } from "../domaine/modele-donnees";
