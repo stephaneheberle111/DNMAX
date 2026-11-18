@@ -106,7 +106,7 @@ migF(F);
 {const nt=window.dnmaxPont.nettoyerDiplomesVierges(DATA,promos);
   if(nt&&nt.modifie){DATA=nt.donnees;materialize(DATA);REF=computeREF();persistData()}}
 syncItemEcs();
-ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"diplome"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
+ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"etab"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
 let dl = window.dnmaxPont.telechargements;
 
 function migF(f){return Object.assign(f,EVAL.normaliserEvaluation(f))}

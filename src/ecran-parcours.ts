@@ -243,8 +243,9 @@ function construire(): void {
     return voile;
   });
   elements.anneau = creer("div", "parcours-anneau");
-  elements.curseur = creer("div", "parcours-curseur");
+  elements.curseur = creer("div", "parcours-curseur parcours-curseur-cache");
   elements.curseur.setAttribute("aria-hidden", "true");
+  curseurPose = false;
   elements.bulle = creer("section", "parcours-bulle");
   elements.bulle.setAttribute("role", "dialog");
   elements.bulle.setAttribute("aria-modal", "false");
@@ -350,6 +351,8 @@ function aller(index: number): void {
   visite.index = suivant;
   noterReprise();
   glissement = { depart: zoneAffichee ?? centreEcran(), debut: performance.now() };
+  // Les haltes du curseur se comptent une fois la zone arrivée.
+  debutEtape = performance.now() + DUREE_GLISSEMENT;
   bulleRevelee = false;
   visite.dejaFait = etape.objectif?.(etat) ?? false;
   visite.salut = null;
@@ -763,7 +766,34 @@ function defilerVers(cible: Element | null): void {
   }
 }
 
-/** Fait glisser le curseur animé de la bulle vers la zone éclairée. */
+/** Instant où l'étape en cours a commencé. */
+let debutEtape = 0;
+
+/** Vrai une fois le curseur posé quelque part : il glisse ensuite de là, au lieu de surgir de la bulle. */
+let curseurPose = false;
+
+/** Pose le curseur ; il glisse depuis sa position précédente, sauf la première fois, où il apparaît sur place. */
+function poserCurseur(curseur: HTMLElement, x: number, y: number): void {
+  const premiere = !curseurPose;
+  if (premiere) {
+    curseur.style.transition = "none";
+  }
+  curseur.style.left = `${String(Math.round(x))}px`;
+  curseur.style.top = `${String(Math.round(y))}px`;
+  if (premiere) {
+    // Lire la taille applique la position sans transition, avant de rendre la main à la feuille de style.
+    curseur.getBoundingClientRect();
+    curseur.style.transition = "";
+    curseurPose = true;
+  }
+}
+
+/**
+ * Mène le curseur animé vers la zone éclairée, en suivant le mouvement d'une
+ * main : il part de là où il était (étape précédente, élément précédent) et
+ * glisse jusqu'à l'élément visé, où il clique ou écrit. Seul le geste
+ * « glisser » part d'un autre point, l'élément à emporter.
+ */
 function placerCurseur(trou: DOMRect | null, etape: Etape): void {
   const curseur = elements.curseur;
   const bulle = elements.bulle;
@@ -771,16 +801,19 @@ function placerCurseur(trou: DOMRect | null, etape: Etape): void {
     return;
   }
   const geste = visite !== null && (visite.dejaFait || visite.salut !== null) ? undefined : gesteDe(etape);
-  curseur.hidden = trou === null || geste === undefined;
+  // Masqué sans être retiré de l'affichage : il garde sa position, d'où il repartira.
+  const masque = trou === null || geste === undefined;
+  curseur.classList.toggle("parcours-curseur-cache", masque);
   if (trou === null || geste === undefined) {
     return;
   }
   const pointe = pointeDe(etape);
   // Haltes données dans l'ordre : le premier élément de chacune qui se voit vraiment (une carte zoomée garde hors de
   // son cadre des éléments qui ont pourtant une taille).
+  const haltes = etape.haltes === undefined ? undefined : lire(etape.haltes);
   const candidats =
-    etape.haltes !== undefined
-      ? etape.haltes.map((selecteur) => premierVisible(selecteur, true)).filter((element) => element !== null)
+    haltes !== undefined
+      ? haltes.map((selecteur) => premierVisible(selecteur, true)).filter((element) => element !== null)
       : pointe === undefined
         ? []
         : [...(cibleCourante?.querySelectorAll(pointe) ?? [])].filter((element) => estVisible(element));
@@ -789,12 +822,12 @@ function placerCurseur(trou: DOMRect | null, etape: Etape): void {
     // de l'un à l'autre) ; il ne part pas hors de l'écran, l'enseignant fait défiler à son rythme.
     const visibles = candidats.filter((element) => dansLaBande(element));
     const etapes = visibles.length > 0 ? visibles : candidats;
-    const rang = Math.floor(performance.now() / DUREE_HALTE_PARCOURS) % etapes.length;
+    // Compté depuis le début de l'étape : le curseur commence par la première halte (la case avant le bouton).
+    const rang = Math.floor(Math.max(0, performance.now() - debutEtape) / DUREE_HALTE_PARCOURS) % etapes.length;
     const halte = (etapes[rang] ?? etapes[0])?.getBoundingClientRect();
     if (halte !== undefined) {
       curseur.dataset.geste = geste;
-      curseur.style.left = `${String(Math.round(halte.left + Math.min(40, halte.width / 2)))}px`;
-      curseur.style.top = `${String(Math.round(halte.top + Math.min(24, halte.height / 2)))}px`;
+      poserCurseur(curseur, halte.left + Math.min(40, halte.width / 2), halte.top + Math.min(24, halte.height / 2));
       return;
     }
   }
@@ -809,8 +842,7 @@ function placerCurseur(trou: DOMRect | null, etape: Etape): void {
   const arriveeX = auCentre ? zone.left + zone.width / 2 : zone.left + Math.min(48, zone.width / 2);
   const arriveeY = auCentre ? zone.top + zone.height / 2 : zone.top + Math.min(36, zone.height / 2);
   curseur.dataset.geste = geste;
-  curseur.style.left = `${String(Math.round(arriveeX))}px`;
-  curseur.style.top = `${String(Math.round(arriveeY))}px`;
+  poserCurseur(curseur, arriveeX, arriveeY);
   curseur.style.setProperty("--depart-x", `${String(Math.round(depart.left + depart.width / 2 - arriveeX))}px`);
   curseur.style.setProperty("--depart-y", `${String(Math.round(depart.top + depart.height / 2 - arriveeY))}px`);
 }
@@ -918,7 +950,7 @@ function suivre(): void {
     const index = visite.index;
     visite.salut = window.setTimeout(() => {
       avancerDepuis(index);
-    }, DUREE_SALUT);
+    }, etape.delaiSalut ?? DUREE_SALUT);
     afficherBulle();
     const zone = cibleCourante?.getBoundingClientRect() ?? elements.bulle?.getBoundingClientRect();
     if (zone !== undefined) {

@@ -26,6 +26,7 @@ export interface Avancement {
   referentielValide: boolean;
   promotions: number;
   elevesInscrits: number;
+  /** Enseignants dont le prénom et le nom sont saisis. */
   enseignants: number;
   repartition: boolean;
   /** Évaluations enregistrées par l'enseignant ; les brouillons, gardés automatiquement, ne comptent pas. */
@@ -48,6 +49,29 @@ function contientUneAttribution(repartition: unknown): boolean {
       estObjet(annee) &&
       Object.values(annee).some((promotion) => estObjet(promotion) && Object.values(promotion).some((ids) => longueur(ids) > 0)),
   );
+}
+
+/** Texte non vide après suppression des espaces. */
+function rempli(valeur: unknown): boolean {
+  return typeof valeur === "string" && valeur.trim() !== "";
+}
+
+/**
+ * Enseignants nommés : prénom et nom saisis tous deux, ou, pour une fiche
+ * ancienne sans prénom ni nom séparés, un nom affiché. Une ligne qu'on vient
+ * d'ajouter, encore vide ou à moitié remplie, ne compte pas.
+ */
+function compterEnseignantsNommes(enseignants: unknown): number {
+  if (!Array.isArray(enseignants)) {
+    return 0;
+  }
+  return enseignants.filter((enseignant) => {
+    if (!estObjet(enseignant)) {
+      return false;
+    }
+    const separes = "prenom" in enseignant || "nomFam" in enseignant;
+    return separes ? rempli(enseignant.prenom) && rempli(enseignant.nomFam) : rempli(enseignant.nom);
+  }).length;
 }
 
 function compterEleves(promotion: unknown): number {
@@ -79,7 +103,7 @@ export function lireAvancement(entrees: Entrees): Avancement {
     referentielValide: etablissement.diplomes.some((diplome) => diplomeAReferentielValide(etablissement, diplome.id)),
     promotions: listePromotions.filter(estObjet).length,
     elevesInscrits: listePromotions.reduce((total: number, promotion) => total + compterEleves(promotion), 0),
-    enseignants: longueur(donnees.enseignants),
+    enseignants: compterEnseignantsNommes(donnees.enseignants),
     repartition: contientUneAttribution(donnees.affectH) || contientUneAttribution({ courant: donnees.affect }),
     evaluations: lireEvaluations(entrees[CLE_EVALUATIONS]).filter((evaluation) => evaluation.brouillon !== true).length,
     moduleEleves: modulesActifs.eleves === true,
