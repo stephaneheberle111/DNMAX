@@ -28,43 +28,11 @@ let MOD = Object.assign(modDefaults(), LS.get("dnmade.modules",{}));
 function modDeps(){window.dnmaxPont.modules.appliquerDependances(MOD)}
 modDeps();
 MOD.base=true;
-function buildData(ref,livr){
-  const T=x=>String(x==null?"":x).replace(/([A-ZÀ-Ý])-([A-ZÀ-Ý])/g,"$1$2").trim();
-  const ues=[],ecs=[],comps=[];
-  (ref.ues||[]).forEach((u,i)=>ues.push({id:"u"+i,nom:T(u.nom),couleur:u.couleur||"#9aa2ae"}));
-  const nomFam=f=>String(f||"").replace(/^EC /,"").trim();
-  const map=new Map();
-  (ref.familles||[]).forEach(f=>{
-    let ue=ues.find(u=>u.nom===T(f.ue));
-    if(!ue){ue={id:"u"+ues.length,nom:T(f.ue)||"UE",couleur:"#9aa2ae"};ues.push(ue)}
-    const nom=nomFam(f.nom);
-    if(map.has(nom))return;
-    const x={id:"e"+map.size,nom,couleur:f.couleur||"#9aa2ae",ueId:ue.id,sems:[],ects:"",codes:{}};
-    map.set(nom,x);ecs.push(x);
-  });
-  (ref.competences||[]).forEach(c=>(c.ecs||[]).forEach(e=>{
-    const nom=nomFam(e.famille);
-    let x=map.get(nom);
-    if(!x){x={id:"e"+map.size,nom,couleur:"#9aa2ae",ueId:(ues[0]||{}).id||"",sems:[],ects:"",codes:{}};map.set(nom,x);ecs.push(x)}
-    if(!x.sems.includes(e.sem))x.sems.push(e.sem);
-    const a=anneeOf(e.sem);
-    if(!x.codes[a])x.codes[a]=e.ec;
-  }));
-  ecs.forEach(e=>e.sems.sort((a,b)=>SEMS.indexOf(a)-SEMS.indexOf(b)));
-  (ref.competences||[]).forEach((c,i)=>{
-    const liens=new Map();
-    (c.ecs||[]).forEach(e=>{const x=map.get(nomFam(e.famille));if(!x)return;
-      const l=liens.get(x.id)||{id:x.id,sems:[]};
-      if(!l.sems.includes(e.sem))l.sems.push(e.sem);
-      liens.set(x.id,l)});
-    liens.forEach(l=>l.sems.sort((a,b)=>SEMS.indexOf(a)-SEMS.indexOf(b)));
-    comps.push({id:"c"+i,code:c.code,bloc:String(c.bloc||""),libelle:c.libelle||"",ecs:[...liens.values()]});
-  });
-  return {diplome:(ref.meta||{}).diplome||"",
-    blocTint:(ref.meta||{}).blocTint||"#D1F1DA",niveaux:(ref.meta||{}).niveaux||[],
-    blocs:(ref.blocs||[]).map(b=>({num:String(b.num),nom:b.nom||""})),
-    ues,ecs,competences:comps,livrables:(livr||[]).slice()};
-}
+/* Modèle des données de l'établissement (dictionnaire, référentiel de chaque diplôme, vue fusionnée du
+   référentiel actif) : règles écrites et testées dans src/domaine/modele-donnees.ts. Les identifiants neufs
+   sont tirés par newId. */
+const MODELE=window.dnmaxPont.modele;
+function buildData(ref,livr){return MODELE.donneesDuReferentiel(ref,livr)}
 /* code et libellé d'un diplôme : règles écrites et testées dans src/domaine/diplomes.ts */
 function autoDipCode(dp){return window.dnmaxPont.diplomes.codeAutomatique(dp)}
 /* Diplômes montrés à l'enseignant : le cadre vierge d'une installation neuve reste caché.
@@ -82,17 +50,8 @@ function anneeCode(a,d,dp){
   return dipCode(p)+a;
 }
 function dipLabel(dp){return window.dnmaxPont.diplomes.libelleDiplome(dp)}
-/* Dictionnaire : les éléments eux-mêmes (nom, code, couleur, intitulé), communs à tous les diplômes.
-   Référentiel : pour chaque diplôme-mention, les éléments retenus et leurs associations
-   (semestres et ECTS des UE, UE et semestres de chaque EC, bloc et EC de chaque compétence).
-   DATA.ues, DATA.ecs… sont la vue fusionnée du référentiel actif, reconstruite à chaque changement. */
-const KINDS=["ues","ecs","blocs","competences"];
-const DICO_F={ues:["nom","code","couleur"],ecs:["nom","couleur"],blocs:["num","nom"],competences:["code","libelle"]};
-const REF_F={ues:["sems"],ecs:["ueId","sems","ects","codes"],blocs:[],competences:["bloc","ecs"]};
-function emptyRef(){return {ues:[],ecs:[],blocs:[],competences:[]}}
-function refOf(d,id){d.refs=d.refs||{};return d.refs[id]||(d.refs[id]=emptyRef())}
-const cloneV=v=>Array.isArray(v)?v.map(x=>x&&typeof x==="object"?Object.assign({},x,Array.isArray(x.sems)?{sems:x.sems.slice()}:{}):x)
-  :(v&&typeof v==="object"?Object.assign({},v):v);
+const KINDS=MODELE.SORTES;
+function refOf(d,id){return MODELE.referentielDe(d,id)}
 const ANNEES=[1,2,3];
 function ecCodeAt(e,sem){const a=anneeOf(sem);return String(((e||{}).codes||{})[a]||"")}
 /* codes et rang d'un EC : règles écrites et testées dans src/domaine/constituer.ts */
@@ -101,147 +60,19 @@ function ecCodeLbl(e){const l=ecCodesList(e);return l.length?l.join(" · "):"—
 /* dans une colonne étroite : « EC 2.3 · 10.3 · 18.3 » */
 function ecCodeShort(e){const l=ecCodesList(e);if(!l.length)return "—";
   return l.map((c,i)=>i?String(c).replace(/^EC\s*/i,""):c).join(" · ")}
-function classerDico(d){
-  const dico=emptyRef(), refs={}, canon={};
-  const dips=d.diplomes.map(x=>x.id), A=d.activeDiplome;
-  dips.forEach(id=>refs[id]=emptyRef());
-  const owner=x=>dips.includes(x.diplomeId)?x.diplomeId:A;
-  const norm=t=>String(t==null?"":t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
-  const pick=(k,o,key)=>{
-    let x=dico[k].find(y=>y._k===key);
-    if(!x){x={id:o.id||newId(k[0]),_k:key};DICO_F[k].forEach(f=>x[f]=o[f]==null?"":o[f]);dico[k].push(x)}
-    if(o.id)canon[k+":"+o.id]=x.id;return x.id};
-  const ueOwner=id=>{const u=d.ues.find(x=>x.id===id);return u?owner(u):A};
-  const matOwner=id=>{const m=(d.matieres||[]).find(x=>x.id===id);return m?ueOwner(m.ueId):A};
-  const matOf=id=>(d.matieres||[]).find(x=>x.id===id)||null;
-  d.ues.forEach(u=>refs[owner(u)].ues.push({id:pick("ues",u,norm(u.nom)+"|"+norm(u.code)),
-    sems:Array.isArray(u.sems)?u.sems.slice():SEMS.slice()}));
-  const semsAnc={};
-  d.ecs.forEach(e=>{
-    const m=e.matiereId?(matOf(e.matiereId)||{}):{};
-    const ueSrc=e.matiereId?m.ueId:e.ueId;
-    const nom=String(e.nom||"").trim()||m.nom||String(e.code||"").trim();
-    const o={nom,couleur:e.couleur||m.couleur||"#9aa2ae",id:e.id};
-    const dp=e.matiereId?matOwner(e.matiereId):ueOwner(ueSrc);
-    const id=pick("ecs",o,norm(nom)+"|"+norm(ueSrc||""));
-    semsAnc[e.id]=(e.sems||[]).slice();
-    const R=refs[dp];
-    let r=R.ecs.find(x=>x.id===id);
-    if(!r){r={id,ueId:canon["ues:"+(ueSrc||"")]||"",sems:[],ects:e.ects||"",codes:{}};R.ecs.push(r)}
-    if(!r.ueId)r.ueId=canon["ues:"+(ueSrc||"")]||"";
-    if(!r.ects)r.ects=e.ects||"";
-    (e.sems||[]).forEach(sm=>{
-      if(!r.sems.includes(sm))r.sems.push(sm);
-      const a=anneeOf(sm), code=e.code||((e.codes||{})[a]||"");
-      if(!r.codes[a]&&code)r.codes[a]=code;
-    });
-    r.sems.sort((x,y)=>SEMS.indexOf(x)-SEMS.indexOf(y));
-  });
-  d.blocs.forEach(b=>refs[owner(b)].blocs.push({id:pick("blocs",b,norm(b.num)+"|"+norm(b.nom))}));
-  d.competences.forEach(c=>{
-    const liens=new Map();
-    const src=Array.isArray(c.ecs)?c.ecs:(c.ecIds||[]).map(x=>({id:x,sems:null}));
-    src.forEach(l=>{
-      const nid=canon["ecs:"+l.id];if(!nid)return;
-      const sems=(l.sems&&l.sems.length)?l.sems:(semsAnc[l.id]||[]);
-      const x=liens.get(nid)||{id:nid,sems:[]};
-      sems.forEach(sm=>{if(!x.sems.includes(sm))x.sems.push(sm)});
-      liens.set(nid,x);
-    });
-    liens.forEach(l=>l.sems.sort((a,b)=>SEMS.indexOf(a)-SEMS.indexOf(b)));
-    refs[owner(c)].competences.push({id:pick("competences",c,norm(c.code)+"|"+norm(c.libelle)),
-      bloc:String(c.bloc||""),ecs:[...liens.values()]});
-  });
-  Object.values(refs).forEach(R=>KINDS.forEach(k=>{const seen=new Set();R[k]=R[k].filter(r=>!seen.has(r.id)&&seen.add(r.id))}));
-  KINDS.forEach(k=>dico[k].forEach(x=>delete x._k));
-  d.dico=dico;d.refs=refs;
-}
-function materialize(d){
-  const A=d.activeDiplome, R=refOf(d,A);
-  KINDS.forEach(k=>{
-    d[k]=R[k].map(r=>{
-      const x=d.dico[k].find(y=>y.id===r.id);if(!x)return null;
-      const o={id:x.id};DICO_F[k].forEach(f=>o[f]=x[f]==null?"":x[f]);REF_F[k].forEach(f=>o[f]=cloneV(r[f]));
-      if(k==="ues"||k==="blocs"||k==="competences")o.diplomeId=A;
-      return o}).filter(Boolean);
-  });
-  d.ues.forEach(u=>{if(!Array.isArray(u.sems))u.sems=SEMS.slice();delete u.ects});
-  d.ecs.forEach(e=>{if(!Array.isArray(e.sems))e.sems=[];if(e.ects==null)e.ects="";
-    if(e.ueId==null)e.ueId="";if(!String(e.couleur||"").trim())e.couleur="#9aa2ae";
-    if(!e.codes||typeof e.codes!=="object")e.codes={}});
-  d.competences.forEach(c=>{
-    if(!Array.isArray(c.ecs))c.ecs=[];
-    c.ecs=c.ecs.filter(x=>x&&x.id).map(x=>({id:x.id,sems:Array.isArray(x.sems)?x.sems.slice():[]}));
-    c.ecIds=c.ecs.map(x=>x.id);
-    if(c.bloc==null)c.bloc=""});
-  d._viewOf=A;
-}
-function absorb(d){
-  const A=d._viewOf;if(!A||!d.diplomes.some(x=>x.id===A))return;
-  const R=refOf(d,A);
-  KINDS.forEach(k=>{
-    R[k]=(d[k]||[]).map(o=>{
-      if(!o.id)o.id=newId(k[0]);
-      let x=d.dico[k].find(y=>y.id===o.id);
-      if(!x){x={id:o.id};d.dico[k].push(x)}
-      DICO_F[k].forEach(f=>x[f]=o[f]==null?"":o[f]);
-      const r={id:o.id};REF_F[k].forEach(f=>r[f]=cloneV(o[f]));
-      if(k==="competences"&&!Array.isArray(r.ecs))r.ecs=(o.ecIds||[]).map(id=>({id,sems:[]}));
-      return r});
-  });
-}
-function persistData(){
-  const o=Object.assign({},DATA);KINDS.forEach(k=>delete o[k]);delete o._viewOf;
-  LS.set("dnmade.data",o);
-}
-/* associations proposées quand un élément du dictionnaire entre dans un référentiel :
-   celles qu'il a déjà dans une autre mention, ajustées à ce que contient le référentiel cible */
-function assocFor(dpId,kind,id){
-  const R=refOf(DATA,dpId);
-  let src=null;
-  Object.entries(DATA.refs).some(([k,X])=>k!==dpId&&(src=X[kind].find(r=>r.id===id)));
-  const r=Object.assign({id},src?JSON.parse(JSON.stringify(src)):{});
-  const has=(k,x)=>R[k].some(y=>y.id===x);
-  if(kind==="ues"){if(!Array.isArray(r.sems))r.sems=SEMS.slice();delete r.ects}
-  if(kind==="ecs"){if(!has("ues",r.ueId))r.ueId=(R.ues[0]||{}).id||"";if(!Array.isArray(r.sems))r.sems=[];
-    if(r.ects==null)r.ects="";if(!r.codes||typeof r.codes!=="object")r.codes={}}
-  if(kind==="competences"){r.ecs=(r.ecs||[]).filter(x=>x&&has("ecs",x.id));if(r.bloc==null)r.bloc=""}
-  return r;
-}
+function materialize(d){MODELE.materialiser(d)}
+function absorb(d){MODELE.absorber(d,newId)}
+function persistData(){LS.set("dnmade.data",MODELE.donneesAEnregistrer(DATA))}
+/* associations proposées quand un élément du dictionnaire entre dans un référentiel */
+function assocFor(dpId,kind,id){return MODELE.associationsProposees(DATA,dpId,kind,id)}
 /* retirer un élément du référentiel d'une mention : règle écrite et testée dans src/domaine/constituer.ts */
 function refRemove(R,kind,id){window.dnmaxPont.constituer.retirerDuReferentiel(R,kind,id)}
 /* Données complètes à partir de buildData (installation neuve, exemple) : un diplôme, le dictionnaire
    et le référentiel de ce diplôme, puis la vue fusionnée du référentiel actif. */
-function construireDonnees(d){
-  const full=d.diplome||"";
-  const men=(full.match(/mention\s+(.+)$/i)||[])[1]||"";
-  const nom=full.replace(/\s*mention\s+.+$/i,"").trim();
-  // sans référentiel, un diplôme-cadre caché tient lieu de diplôme actif (voir dipVisibles)
-  d.diplomes=[nom?{id:"d0",nom,mention:men.trim()}:{id:"d0",nom:"",mention:"",cadre:true}];
-  d.activeDiplome="d0";
-  d.ues.forEach(u=>{u.diplomeId="d0";if(!Array.isArray(u.sems))u.sems=SEMS.slice();
-    if(u.code===undefined)u.code="";if(u.ects===undefined)u.ects="";});
-  d.blocs.forEach(b=>{b.diplomeId="d0"});
-  d.competences.forEach(c=>{c.diplomeId="d0"});
-  classerDico(d);
-  // l'identifiant d'année se déduit du code du diplôme : le référentiel source porte « DN1 », « DN2 »…
-  (d.niveaux||[]).forEach(n=>{if(/^DN\s*\d$/i.test(String(n.code||"").trim()))n.code=""});
-  KINDS.forEach(k=>{if(!Array.isArray(d.dico[k]))d.dico[k]=[]});
-  d.livrables=(d.livrables||[]).map(x=>typeof x==="string"?{nom:x,type:""}:x);
-  d.enseignants=[];
-  delete d.diplome;
-  materialize(d);
-  return d;
-}
+function construireDonnees(d){return MODELE.construireDonnees(d,newId)}
 function livrNames(){return DATA.livrables.map(x=>x.nom).filter(Boolean)}
 function newId(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
-function addMention(srcId,nom){
-  const D=DATA, dp={id:newId("d"),nom:nom||"",mention:"",code:""};
-  absorb(D);
-  D.diplomes.push(dp);
-  D.refs[dp.id]=JSON.parse(JSON.stringify(refOf(D,srcId)));
-  return dp;
-}
+function addMention(srcId,nom){return MODELE.ajouterMention(DATA,srcId,nom,newId)}
 function projectRef(d){
   const A=d.activeDiplome;
   const ues=d.ues.filter(u=>!u.diplomeId||u.diplomeId===A);

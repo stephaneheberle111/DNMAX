@@ -42,6 +42,7 @@ import { peindreProgressionEtudiant } from "../progression/etudiant";
 import { peindreProgressionPromotion } from "../progression/promotion";
 import * as vueProgression from "../domaine/vue-progression";
 import * as exemple from "../domaine/exemple";
+import * as modele from "../domaine/modele-donnees";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
 import { brancherInterface } from "../interface/branchements";
 import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
@@ -250,6 +251,8 @@ interface Pont {
   readonly progression: typeof progressionCalculs & { peindrePromotion: typeof peindreProgressionPromotion; peindreEtudiant: typeof peindreProgressionEtudiant };
   /** Promotions et semestres proposés dans Progression (voir `domaine/vue-progression`). */
   readonly vueProgression: typeof vueProgression;
+  /** Modèle des données de l'établissement : dictionnaire, référentiels, vue fusionnée (voir `domaine/modele-donnees`). */
+  readonly modele: typeof modele;
   /** Barre des onglets et titre de la fenêtre (voir `interface/onglets`). */
   readonly interface: { afficherPage: typeof afficherPage; brancherOnglets: typeof brancherOnglets; brancherInterface: typeof brancherInterface };
   /** Modules de Paramètres > Modules (voir `domaine/modules`, `parametres/modules`). */
@@ -381,6 +384,7 @@ export async function chargerInterfaceHistorique(
     suivi: suiviEvaluation,
     progression: { ...progressionCalculs, peindrePromotion: peindreProgressionPromotion, peindreEtudiant: peindreProgressionEtudiant },
     vueProgression,
+    modele,
     interface: { afficherPage, brancherOnglets, brancherInterface },
     modules: { MODULES, modulesParDefaut, appliquerDependances, entraineDautres, peindre: peindreModules },
     preferences: { initiales: preferencesInitiales, libelleCritere, sceauActif, peindreVocabulaire, peindreSceau, peindreDossierExports },
