@@ -8,6 +8,7 @@ import {
   estIdentifiantParcours,
   lireAvancement,
   noterParcoursVu,
+  salvesBouquetFinal,
   type Avancement,
   type IdentifiantParcours,
 } from "./domaine/parcours";
@@ -404,7 +405,7 @@ function departEclats(x: number, y: number): [number, number] {
 }
 
 /** Petite gerbe d'éclats colorés en (x, y), pour saluer une étape réussie. */
-function eclater(x: number, y: number, nombre: number): void {
+function eclater(x: number, y: number, nombre: number, ampleur = 1): void {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return;
   }
@@ -416,7 +417,7 @@ function eclater(x: number, y: number, nombre: number): void {
     const eclat = creer("span");
     // Angles réguliers et distances alternées : une gerbe régulière, sans hasard.
     eclat.style.setProperty("--angle", `${String((360 / nombre) * rang)}deg`);
-    eclat.style.setProperty("--distance", `${String(46 + (rang % 3) * 22)}px`);
+    eclat.style.setProperty("--distance", `${String(Math.round((46 + (rang % 3) * 22) * ampleur))}px`);
     eclat.style.setProperty("--couleur", COULEURS_ECLATS[rang % COULEURS_ECLATS.length] ?? "#10555f");
     eclat.style.setProperty("--delai", `${String((rang % 4) * 30)}ms`);
     gerbe.append(eclat);
@@ -425,6 +426,15 @@ function eclater(x: number, y: number, nombre: number): void {
   window.setTimeout(() => {
     gerbe.remove();
   }, 1400);
+}
+
+/** Bouquet final de confettis sur toute la fenêtre, quand l'enseignant termine la visite. */
+function bouquetFinal(): void {
+  for (const salve of salvesBouquetFinal(window.innerWidth, window.innerHeight)) {
+    window.setTimeout(() => {
+      eclater(salve.x, salve.y, salve.nombre, salve.ampleur);
+    }, salve.delaiMs);
+  }
 }
 
 /** Feuille de route des grandes étapes : faites, en cours, à venir. */
@@ -512,6 +522,7 @@ function afficherBulle(): void {
   continuer.type = "button";
   continuer.addEventListener("click", () => {
     if (derniere) {
+      bouquetFinal();
       terminer();
     } else if (etape.avanceAuClic === true && !fait) {
       cliquerPourLEnseignant(etape);

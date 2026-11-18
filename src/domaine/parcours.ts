@@ -141,3 +141,35 @@ export function lireReprise(texte: string | null): Reprise | null {
   }
   return { identifiant, index };
 }
+
+/** Une salve du bouquet final : son centre, son nombre d'éclats, son départ et sa portée (multiple de la gerbe ordinaire). */
+export interface Salve {
+  x: number;
+  y: number;
+  nombre: number;
+  delaiMs: number;
+  ampleur: number;
+}
+
+/**
+ * Bouquet final de confettis, quand l'enseignant termine une visite : sept
+ * salves réparties sur la largeur de la fenêtre, dans le tiers haut, qui
+ * partent l'une après l'autre, la dernière au centre et plus ample. Sans
+ * hasard, pour rester identique d'une fois à l'autre.
+ */
+export function salvesBouquetFinal(largeur: number, hauteur: number): Salve[] {
+  const l = Math.max(0, largeur);
+  const h = Math.max(0, hauteur);
+  const positions: readonly [number, number][] = [
+    [0.2, 0.3],
+    [0.8, 0.25],
+    [0.5, 0.2],
+    [0.35, 0.4],
+    [0.65, 0.38],
+    [0.12, 0.18],
+    [0.88, 0.2],
+  ];
+  const salves = positions.map(([px, py], rang) => ({ x: Math.round(l * px), y: Math.round(h * py), nombre: 24, delaiMs: rang * 180, ampleur: 2 + (rang % 2) }));
+  salves.push({ x: Math.round(l / 2), y: Math.round(h * 0.33), nombre: 40, delaiMs: positions.length * 180 + 120, ampleur: 4 });
+  return salves;
+}
