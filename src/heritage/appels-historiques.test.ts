@@ -19,6 +19,7 @@ import { publierProgression } from "../interface/progression";
 import { publierExportDocument } from "../interface/export-document";
 import { publierExemple } from "../interface/exemple";
 import { publierConstantes } from "../interface/constantes";
+import { publierAidesCommunes } from "../interface/aides-communes";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
 import { publierEditeurEtape1 } from "../interface/editeur-etape1";
@@ -61,6 +62,7 @@ const PUBLIEES = new Set<string>(nomsPublies());
 function nomsPublies(): string[] {
   const fenetre: Record<string, unknown> = {};
   publierConstantes(fenetre);
+  publierAidesCommunes(fenetre, null);
   publierDonnees(fenetre, { ecrireStockage: () => undefined, maintenant: () => 0, hasard: () => 0 });
   publierEvaluationCourante(fenetre, () => 0);
   publierEditeurEtape1(fenetre, () => new Date(0));

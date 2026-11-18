@@ -46,6 +46,7 @@ import * as modele from "../domaine/modele-donnees";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
 import { etat, publierEtat } from "../interface/etat";
 import { publierConstantes } from "../interface/constantes";
+import { publierAidesCommunes } from "../interface/aides-communes";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
 import { brancherEtDessiner, chargerEtat, terminerDemarrage, type BranchementsDemarrage } from "../interface/demarrage";
@@ -445,6 +446,7 @@ export async function chargerInterfaceHistorique(
     // L'état est publié avant le script, qui en affecte les parties sans les déclarer.
     publierEtat(window, etat);
     publierConstantes(window as unknown as Record<string, unknown>);
+    publierAidesCommunes(window as unknown as Record<string, unknown>, document);
     publierDonnees(window as unknown as Record<string, unknown>, {
       ecrireStockage: (cle, valeur) => {
         magasin.setItem(cle, valeur);
