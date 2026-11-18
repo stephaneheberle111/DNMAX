@@ -82,6 +82,13 @@ La décision 5 est levée : le fichier historique disparaît. 0.9.1 reprend tout
 7. **Fait** (#198) : Mes évaluations, exports et actions (`paintSaved`, `exportFiche`, `offer`, `ficheExport`, `buildDocx`…).
 8. **Fait** (#199, #200, #201) : Progression (`paintProg`, `paintProgEleve`) et l'exemple (`loadDemo`, `demoMass`).
 9. **Prochain** : Démarrage et ponts vers l'application : le fichier historique ne garde plus que les deux cartes.
+   Inventaire au 18 novembre (1 476 lignes) ; à découper en trois ou quatre demandes :
+   - aides du modèle et des personnes, lignes 30 à 200 (`refOf`, `saveData`, `migF`, `studentsOf`, `lignesOf`, `uid`, `compsFor`, `itemEcs`…) ;
+   - étape 1 et compétences de l'éditeur, lignes 239 à 390 (`vierge`, `nouvelleFiche`, `paintForm`, `paintClasse`, `toggleClasse`, `contexteCompetences`, `paintPick`…) ;
+   - Préférences, Paramètres et modules, lignes 1330 à 1400 (`paintMatrice`, `paintEditor`, `paintPrefs`, `paintSet`, `appliquerModule`) ;
+   - démarrage (chargement des données, branchements, premier dessin) en fin de fichier ;
+   - constantes encore lues par TypeScript au travers des adaptateurs (`SUPPORTS_DEF`, `BLOC_TINT`, `SEMS`, `GROUPS`, `PRESETS`, `norm`, `tidy`) : les publier ou les reprendre dans `src/` avant de déplacer ce qui les lit.
+   Restent ensuite, pour la 0.9.2, la carte radiale et la chaîne (lignes 417 à 1282 : `paintExplore`, `paintRadial`, `paintChain`, `pivotWheel`, `radialWire`, `radInfo`, `paintMap` et leurs aides).
 
 La carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) et la chaîne (`paintChain`, `chainModel`, `chainWire`, `chainBind`) restent dans le fichier historique, inchangées. Pour comparer, ces deux vues ne sont pas reproductibles d'une exécution à l'autre (positions animées, hauteurs mesurées selon les polices) : neutraliser nombres, `transform` et `style` avant de comparer.
 
