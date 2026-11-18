@@ -44,6 +44,7 @@ import * as vueProgression from "../domaine/vue-progression";
 import * as exemple from "../domaine/exemple";
 import * as modele from "../domaine/modele-donnees";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
+import { etat, publierEtat } from "../interface/etat";
 import { brancherInterface } from "../interface/branchements";
 import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
 import { peindreModules } from "../parametres/modules";
@@ -424,6 +425,8 @@ export async function chargerInterfaceHistorique(
     },
   };
   await new Promise<void>((resoudre, rejeter) => {
+    // L'état est publié avant le script, qui en affecte les parties sans les déclarer.
+    publierEtat(window, etat);
     const script = document.createElement("script");
     script.src = ADRESSE_SCRIPT_HISTORIQUE;
     script.addEventListener("load", () => {

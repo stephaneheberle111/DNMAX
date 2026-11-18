@@ -56,6 +56,20 @@ L'éditeur commun, Référentiel > Constituer et Référentiel > Explorer sont f
 4. **Le reste de l'interface** : onglets, Paramètres > Modules et Préférences faits ; formulaire de l'étape 1 fait (avec retrait de deux blocs toujours masqués) ; branchements au chargement faits. Restent dans le fichier historique, outre la carte radiale et la chaîne, la préparation des données de chaque écran et les ponts vers l'application, qui suivront le modèle de données.
 5. **Le modèle de données** : dictionnaire, référentiels et vue fusionnée faits, avec la vérification renforcée décrite plus bas. La projection du référentiel actif et des versions validées est faite aussi. `computeREF` reste dans le fichier historique : il ne fait que choisir, selon l'évaluation en cours, entre le référentiel de travail et la version qu'elle suit.
 
+### 0.9.1 et 0.9.2 (décision 38)
+
+La décision 5 est levée : le fichier historique disparaît. 0.9.1 reprend tout sauf la carte radiale et la carte heuristique (chaîne) ; 0.9.2 reprend ces deux cartes, avec un contrôle visuel de l'auteur. Ordre prévu pour la 0.9.1, un groupe par demande :
+
+1. État partagé (`src/interface/etat.ts`) : fait en premier, sans changer de comportement.
+2. Promotions, années scolaires et calendrier (`asStart`, `promoDuree`, `promoNomAuto`, `promoAnneeAt`, `promoShort`, `anneeScolaire`, `semSuggere`…).
+3. Versions et validation du référentiel (`versionsOf`, `versionPourF`, `computeREF`, `validerVersion`, `askPromosVersion`, `restaurerVersion`).
+4. Mon établissement : préparation des volets (`paintOrg`, `paintEtab`, `paintAffect`, `paintPromosOrg`, `affectOf`…).
+5. Référentiel : préparation de Constituer et de l'habillage de la carte (`paintRef`, `paintConstituer`, `paintEtape`, `paintMap` hors dessin).
+6. Éditeur : enregistrement, étapes, contextes des écrans (`save`, `goStep`, `paintPick`, `paintLignes`, `paintEleves`…).
+7. Mes évaluations, exports et actions (`paintSaved`, `exportFiche`, `offer`, `ficheExport`, `buildDocx`…).
+8. Progression (`paintProg`, `paintProgEleve`) et l'exemple (`loadDemo`, `demoMass`).
+9. Démarrage et ponts vers l'application : le fichier historique ne garde plus que les deux cartes.
+
 La carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) et la chaîne (`paintChain`, `chainModel`, `chainWire`, `chainBind`) restent dans le fichier historique, inchangées. Pour comparer, ces deux vues ne sont pas reproductibles d'une exécution à l'autre (positions animées, hauteurs mesurées selon les polices) : neutraliser nombres, `transform` et `style` avant de comparer.
 
 **Consigne de l'auteur, à respecter strictement : aucun risque sur la carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) ni sur la chaîne (`paintChain`, `chainModel`, `chainWire`).** Leur dessin reste tel quel. Au plus, un calcul déjà isolé peut en sortir, avec une comparaison d'images avant et après.

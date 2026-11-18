@@ -514,3 +514,13 @@ Arbitrées par l'auteur le 15 novembre 2026, règle par règle, avec un principe
 **Pourquoi pas d'un bloc** : une réécriture complète laisserait l'éditeur cassé pendant des semaines et rendrait chaque écart introuvable ; étape par étape, l'application reste utilisable à chaque fusion.
 
 **Réalisé** (17 novembre 2026, #139 à #144) : les quatre étapes et la barre des étapes sont dans `src/editeur/`, leurs règles dans `src/domaine/` (`evaluation`, `cadre-evaluation`, `progression-competences`, `etapes-editeur`, `saisie-resultats`, `teintes-niveaux`). Le fichier historique ne garde que des adaptateurs qui construisent le contexte de chaque écran. Une particularité d'abord reprise telle quelle a été corrigée ensuite, à la demande de l'auteur : dans le résumé de l'étape 3, un regroupement ne compte comme formulé que si sa formulation est renseignée.
+
+## 38. Le fichier historique disparaît : 0.9.1 hors carte, 0.9.2 avec la carte
+
+**Retenu** (décision de l'auteur, 18 novembre 2026) : la décision 5 est levée. Après la réécriture écran par écran (décision 37, #139 à #178), le fichier historique `public/heritage/application.js` est entièrement repris en TypeScript : en 0.9.1, tout sauf la carte radiale et la carte heuristique (chaîne) ; en 0.9.2, ces deux cartes, avec un contrôle visuel de l'auteur.
+
+**Méthode** : l'état de l'interface (`DATA`, `REF`, `F`, `fiches`, `promos`, `MOD`, `PREFS`, `ui`) est tenu par `src/interface/etat.ts` et publié sur la fenêtre sous ces noms, par des accesseurs : le fichier historique les affecte sans les déclarer, et les modules TypeScript lisent le même état. Ses fonctions passent ensuite en TypeScript par groupes ; le temps de la reprise, celles que le fichier historique appelle encore sont publiées sur la fenêtre sous leur ancien nom, pour ne pas toucher à ses appels. Chaque groupe est prouvé équivalent par le banc (parcours rejoués, heure figée, stockage compris) et, pour les règles, par comparaison de l'ancien et du nouveau code sur les mêmes données.
+
+**Pourquoi pas autrement** : déclarer l'état dans un module et réécrire d'un coup les quelque 1 500 appels du fichier historique ferait un changement impossible à vérifier pas à pas. Les accesseurs ne changent aucun comportement et permettent de déplacer une fonction à la fois.
+
+**Fin** : quand le fichier historique est vide, les accesseurs, les noms publiés sur la fenêtre et l'exception du linter (décision 5) disparaissent.
