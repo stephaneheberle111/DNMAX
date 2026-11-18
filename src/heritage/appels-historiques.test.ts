@@ -11,6 +11,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
 import { publierVersionsReferentiel } from "../interface/versions-referentiel";
+import { publierEtablissement } from "../interface/etablissement";
 
 const CHEMIN = new URL("../../public/heritage/application.js", import.meta.url);
 
@@ -49,6 +50,7 @@ const PUBLIEES = new Set<string>(nomsPublies());
 function nomsPublies(): string[] {
   const fenetre: Record<string, unknown> = {};
   publierPromotionsCalendrier(fenetre, () => undefined);
+  publierEtablissement(fenetre);
   publierVersionsReferentiel(fenetre, { ecrireStockage: () => undefined, promotionValide: () => false, diplomeValide: () => false, maintenant: () => new Date(0) });
   return Object.keys(fenetre);
 }

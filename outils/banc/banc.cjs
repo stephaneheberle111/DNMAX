@@ -709,6 +709,27 @@ const normaliser = (html) => html.replace(/--stx: ?-?[0-9.]+px/g, "--stx: (mesur
     await relever("nouveau diplôme", zone, donnees);
     await page.evaluate(() => { DATA.diplomes.splice(1); DATA.activeDiplome = DATA.diplomes[0].id; paintOrg(); });
     await relever("une seule mention", zone, donnees);
+  } else if (parcours === "repartition") {
+    await page.locator("#t-org").click();
+    await page.locator('[data-opane="affect"]').click();
+    const zone = "#orgPane";
+    const donnees = () => JSON.stringify({ h: DATA.affectH, aff: ui.org.aff, affY: ui.org.affY, stocke: JSON.parse(window.dnmaxPont.stockage.getItem("dnmade.data")).affectH });
+    await relever("barre des volets", "#orgNav", donnees);
+    await relever("ouverture", zone, donnees);
+    await page.locator(zone + " [data-afp]").nth(1).click();
+    await relever("autre promotion", zone, donnees);
+    const ajout = page.locator(zone + " [data-afadd]").first();
+    const ec = await ajout.getAttribute("data-afadd");
+    await ajout.selectOption({ index: 1 });
+    await relever("enseignant ajouté", zone, donnees);
+    await page.locator(zone + ` [data-afrm^="${ec}|"]`).first().click();
+    await relever("enseignant retiré", zone, donnees);
+    await page.locator(zone + " [data-afy]").first().click();
+    await relever("année plus ancienne", zone, donnees);
+    await page.locator('[data-opane="etab"]').click();
+    await relever("volet établissement", zone, () => JSON.stringify({ etab: DATA.etab, pane: ui.org.pane, edArm }));
+    await page.locator(zone + ' [data-et="nom"]').fill("Lycée d'essai");
+    await relever("nom saisi", zone, () => JSON.stringify({ etab: DATA.etab, stocke: JSON.parse(window.dnmaxPont.stockage.getItem("dnmade.data")).etab }));
   } else if (parcours === "promotions") {
     await page.locator("#t-org").click();
     await page.locator('[data-opane="promos"]').click();
