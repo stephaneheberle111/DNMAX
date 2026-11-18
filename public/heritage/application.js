@@ -1,65 +1,15 @@
 // SPDX-License-Identifier: CECILL-2.1
-/* Interface historique de DNMAX, reprise telle quelle depuis la maquette d'origine.
-   Seules différences : le stockage et l'enregistrement de fichiers passent par
-   `window.dnmaxPont`, fourni par l'application avant le chargement de ce script. */
-const STOCKAGE = window.dnmaxPont.stockage;
-/* DATA, REF, F, fiches, promos, MOD, PREFS et ui ne sont plus déclarés ici : ce sont des accesseurs posés
-   sur la fenêtre par l'application, qui tient l'état (src/interface/etat.ts, décision 38). */
-/* Règles de la saisie des résultats : écrites et testées dans src/domaine/saisie-resultats.ts. */
-const SAISIE = window.dnmaxPont.saisie;
-/* Règles de la composition d'une évaluation : écrites et testées dans src/domaine/evaluation.ts. */
-const EVAL = window.dnmaxPont.evaluation;
-const JAUGE = window.dnmaxPont.jauge;
-/* SEMS, PRESETS, SUPPORTS_DEF, GROUPS, tidy et norm sont publiés sur la fenêtre par l'application
-   (src/interface/constantes.ts) ; BLOC_TINT est un accesseur de l'état (src/interface/etat.ts). */
+/* Interface historique de DNMAX, reprise de la maquette d'origine ; en cours de réécriture en TypeScript. */
+/* DATA, REF, F, fiches, promos, MOD, PREFS, ui et edArm ne sont plus déclarés ici : ce sont des accesseurs posés
+   sur la fenêtre par l'application, qui tient l'état (src/interface/etat.ts, décision 38). SEMS, PRESETS,
+   SUPPORTS_DEF, GROUPS, tidy et norm sont publiés par src/interface/constantes.ts ; BLOC_TINT est un accesseur
+   de l'état. Toutes les autres fonctions de l'interface sont écrites en TypeScript (src/interface/) et publiées
+   sous leur ancien nom ; le démarrage est dans src/interface/demarrage.ts, appelé juste après ce script.
+   Restent ici la carte radiale, la chaîne et leurs aides. */
 const anneeOf = sem => Math.floor(Math.max(0,SEMS.indexOf(sem))/2)+1;
-const DEF_PRESET_GET=()=>"maitrise";
-/* modules (Paramètres > Modules) : catalogue et règles dans src/domaine/modules.ts */
-const MODULES = window.dnmaxPont.modules.MODULES;
-const modDefaults = () => window.dnmaxPont.modules.modulesParDefaut();
-const LS = {
-  get(k,d){try{const v=STOCKAGE.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
-  set(k,v){try{STOCKAGE.setItem(k,JSON.stringify(v))}catch(e){}}
-};
-/* Aides du modèle de données (saveData, persistData, newId, anneeCode, ecCodeLbl…) et des préférences :
-   src/interface/donnees.ts. Aides de l'évaluation en cours (studentsOf, lignesOf, syncListe, ecsOfSem…) :
-   src/interface/evaluation-courante.ts. Les règles sont dans src/domaine/.
-   Démarrage (lecture des données enregistrées, état de départ, branchements, premier dessin, ponts vers
-   l'application) : src/interface/demarrage.ts, appelé par l'application juste après la lecture de ce script. */
-const MODELE=window.dnmaxPont.modele;
-const KINDS=MODELE.SORTES;
 const ANNEES=[1,2,3];
-/* préférences (menu « Mon compte ») : règles dans src/domaine/preferences.ts, écran dans src/preferences/ */
-const PREF=window.dnmaxPont.preferences;
-
-function paintEleveField(){
-  const fld=document.getElementById("fld-eleve"), host=document.getElementById("f-eleve");
-  if(!fld)return;
-  fld.hidden=!MOD.eleves;if(!MOD.eleves)return;
-  const all=promoElevesOf(F), many=new Set(all.map(e=>e.promo.id)).size>1;
-  if(!Array.isArray(F.eleveIds))F.eleveIds=F.eleveId?[F.eleveId]:[];
-  delete F.eleveId;
-  F.eleveIds=F.eleveIds.filter(id=>all.some(e=>e.id===id));
-  host.innerHTML=all.length?all.map(e=>`<button type="button" class="liv" data-elv="${esc(e.id)}" aria-pressed="${F.eleveIds.includes(e.id)}">${esc(e.nom)}${many?`<span class="n">${esc(promoDisp(e.promo.nom))}</span>`:""}</button>`).join("")
-    +(F.eleveIds.length?`<button type="button" class="liv add" id="elvAll">Toute la promotion</button>`:"")
-    :`<span class="hint">Choisissez d'abord une promotion.</span>`;
-  const n=F.eleveIds.length;
-  document.getElementById("eleveHint").textContent=!all.length?"":n?(n+" étudiant"+(n>1?"s":"")+" sur "+all.length+" : seuls "+(n>1?"eux sont notés":"lui est noté")+" à l'étape 4 et exporté"+(n>1?"s":"")+"."):"Toute la promotion — "+all.length+" étudiant"+(all.length>1?"s":"")+".";
-  host.querySelectorAll("[data-elv]").forEach(b=>b.onclick=()=>{const id=b.dataset.elv;
-    F.eleveIds=F.eleveIds.includes(id)?F.eleveIds.filter(x=>x!==id):[...F.eleveIds,id];
-    save();paintEleveField();paintSteps();if(ui.step===4)paintEleves()});
-  const ab=host.querySelector("#elvAll");if(ab)ab.onclick=()=>{F.eleveIds=[];save();paintEleveField();paintSteps()};
-}
 
 /* promotions, années scolaires et calendrier (promoShort, anneeScolaire, semSuggere…) : src/interface/promotions-calendrier.ts */
-function uesOfSem(sem){return [...new Set(ecsOfSem(sem).map(e=>e.ue))]}
-function ecEntry(code,sem){return ecsOfSem(sem).find(e=>e.ec===code)||null}
-function uesSelected(){
-  const u=[...(F.ues||[])];
-  F.ecCodes.forEach(c=>{const e=ecEntry(c,F.semestre);if(e&&!u.includes(e.ue))u.push(e.ue)});
-  return u;
-}
-function ecsOfUe(u,sem){return ecsOfSem(sem||F.semestre).filter(e=>e.ue===u).map(e=>e.ec)}
 function blocName(n){const b=REF.blocs.find(b=>b.num===String(n));return b?b.nom:"Bloc "+n}
 function help(html,pos){return `<span class="help ${pos||""}" tabindex="0" role="note" aria-label="Aide"><span class="hbub">${html}</span></span>`}
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
@@ -90,163 +40,9 @@ function paintTabs(){
   ui.tab=window.dnmaxPont.interface.afficherPage(document,ui.tab);
   paintEnregistrement();
 }
-/* une évaluation vierge, prête à composer */
-function vierge(){
-  const dp=DATA.diplomes.find(x=>x.id===DATA.activeDiplome)||{};
-  return migF({id:uid(),promoId:"",titre:"",livrables:[],semestre:semSuggere()||"S1",classe:"",
-    date:new Date().toISOString().slice(0,10),prof:"",ues:[],ecCodes:[],compCode:"",consignes:"",
-    ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),opts:{crit:true,obs:true},
-    eleves:"",items:[],res:{}});
-}
-function nouvelleFiche(){
-  F=vierge();
-  {const me=DATA.enseignants.find(t=>t.id===DATA.moi);if(me&&me.nom){F.profs=[me.nom];F.prof=me.nom}}save();ui.tab="new";ui.step=1;ui.sel=[];ui.eleve="";
-  paintTabs();paintForm();paintPick();paintLignes();goStep(1);
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-/* Étape 1 : champs simples dans src/editeur/formulaire.ts, autres blocs dans src/editeur/etape-evaluation.ts */
-function paintForm(){
-  REF=computeREF();
-  paintLivrables();
-  window.dnmaxPont.editeur.remplirFormulaire(document,{titre:F.titre,consignes:F.consignes,distribution:F.distribPrev||"",rendu:F.renduPrev||""});
-  paintClasse();paintEleveField();paintProf();
-  paintSems();
-  paintContexte();
-  paintSteps();
-}
-/* Étape 1, semestre, enseignants et livrables : écrans écrits en TypeScript (src/editeur/etape-evaluation.ts) */
-function paintSems(){
-  const an=anneeFiche();
-  window.dnmaxPont.editeur.peindreSemestres({semestre:F.semestre,tousLesSemestres:SEMS,autorises:an?semsOfAnnee(an):SEMS,annee:an,
-    classe:F.classe||"",niveauDn:MOD.dn?dnLabel(F.semestre):"",nombreCompetences:compsFor(F.semestre).length,
-    anneeScolaire:anneeScolaire(),choisiALaMain:!!F.semManuel,
-    choisir:sem=>{F.semManuel=true;setSemestre(sem);save();paintForm();paintPick()},
-    suivreLaDate:()=>{F.semManuel=false;applySemDate();save();paintForm();paintPick()}});
-}
-/* Étape 1, promotions : écran écrit en TypeScript (src/editeur/etape-evaluation.ts) ; même année de formation pour toutes (src/domaine/cadre-evaluation.ts) */
-function paintClasse(){
-  if(!Array.isArray(F.classes))migF(F);
-  const AS=anneeScolaire();
-  // promotions en cours de toutes les mentions du diplôme actif
-  const dipA=DATA.diplomes.find(d=>d.id===DATA.activeDiplome)||{};
-  const same=DATA.diplomes.filter(d=>norm(d.nom||"")===norm(dipA.nom||"")).map(d=>d.id);
-  const dIdx=id=>DATA.diplomes.findIndex(d=>d.id===id);
-  const ps=promos.map(migPromoCohorte).filter(pr=>same.includes(pr.diplomeId));
-  const yr=pr=>promoAnneeAt(pr,AS), enCours=pr=>{const a=yr(pr);return a>=1&&a<=promoDuree(pr)};
-  // toutes les promotions en cours : celles de ma répartition de service d'abord, les autres en retrait
-  const live=ps.filter(pr=>enCours(pr)).sort((x,y)=>(yr(x)-yr(y))||(dIdx(x.diplomeId)-dIdx(y.diplomeId)));
-  const names=[...new Set([...live.map(pr=>pr.nom),...F.classes])].filter(Boolean);
-  const bloquant=dipBloquant(F);
-  window.dnmaxPont.editeur.peindrePromotions({
-    promotions:names.map(n=>{const pr=ps.find(p=>p.nom===n);
-      return {nom:n,libelle:promoDisp(n),annee:pr?yr(pr):null,enCours:!!pr&&enCours(pr),referentielValide:!pr||promoRefValide(pr),mienne:!pr||promoVisible(pr)}}),
-    cochees:F.classes,anneeScolaire:AS,aucuneEnCours:!live.length,referentielNonValide:!!bloquant,
-    allerValidation:()=>allerValidation(bloquant),basculer:n=>toggleClasse(n)});
-}
-function paintProf(){
-  window.dnmaxPont.editeur.peindreEnseignants({evaluation:F,enseignants:DATA.enseignants.map(t=>t.nom).filter(Boolean),
-    enregistrer:()=>save(),apresChangement:()=>{paintContexte();paintSteps()}});
-}
-/* EC que les enseignants choisis assurent pour les promotions cochées (null : pas de restriction) */
-function ecsAffectes(){
-  const ids=(F.profs||[]).map(n=>(DATA.enseignants.find(t=>t.nom===n)||{}).id).filter(Boolean);
-  const prs=(F.classes||[]).map(n=>promos.find(p=>p.nom===n)).filter(Boolean);
-  if(!ids.length||!prs.length)return null;
-  const set=new Set();let any=false;
-  prs.forEach(pr=>{const A=affGet(pr.id);if(Object.keys(A).length)any=true;
-    promoEcs(pr,anneeScolaire()).forEach(e=>{if((A[e.id]||[]).some(id=>ids.includes(id)))set.add(e.code)})});
-  return any?set:null;
-}
-function toggleClasse(v){
-  const cs=F.classes||[];
-  setClasses(cs.includes(v)?cs.filter(x=>x!==v):[...cs,v]);
-  // Une promotion au référentiel non validé se coche quand même : l'enseignant en est averti.
-  {const valide=n=>{const pr=promos.find(p=>p.nom===n);return !pr||promoRefValide(pr)};
-   const aAvertir=window.dnmaxPont.referentielValide.aAvertir(cs,F.classes||[],valide);
-   if(aAvertir.length){const pr=promos.find(p=>p.nom===aAvertir[0]), dp=DATA.diplomes.find(d=>pr&&d.id===pr.diplomeId);
-     window.dnmaxPont.referentielValide.avertir(document,{promotions:aAvertir.map(promoDisp),diplome:dp?dipLabel(dp):"",
-       allerValidation:()=>allerValidation(pr?pr.diplomeId:DATA.activeDiplome)})}}
-  {const pr=F.classes.map(n=>promos.find(p=>p.nom===n)).find(Boolean);F.promoId=pr?pr.id:"";
-   if(pr&&pr.diplomeId&&pr.diplomeId!==DATA.activeDiplome&&DATA.diplomes.some(d=>d.id===pr.diplomeId)){
-     DATA.activeDiplome=pr.diplomeId;saveData(false)}}
-  const an=anneeFiche(), sems=an?semsOfAnnee(an):[];
-  if(sems.length&&(!F.semManuel||!sems.includes(F.semestre)))setSemestre(semSuggere()||sems[0]);
-  save();paintForm();paintPick();
-}
-function paintLivrables(){
-  window.dnmaxPont.editeur.peindreLivrables({evaluation:F,livrablesEtablissement:livrNames(),
-    enregistrer:()=>save(),apresChangement:()=>paintSteps(),
-    proposerAjoutEtablissement:v=>askModal(`Ajouter « ${esc(v)} » à la liste des livrables de Mon établissement, pour les prochaines évaluations ?`,
-      ()=>{DATA.livrables.push({nom:v,type:""});saveData();toast("« "+v+" » ajouté aux livrables.")})});
-}
-/* Étape 1, UE et EC : écran écrit en TypeScript (src/editeur/etape-evaluation.ts), règles dans src/domaine/cadre-evaluation.ts */
-function paintContexte(){
-  const lim=ecsAffectes();
-  window.dnmaxPont.editeur.peindreUesEtEcs({evaluation:F,
-    ecs:ecsOfSem(F.semestre).map(e=>({ec:e.ec,nom:e.nom||"",ue:e.ue,couleur:e.couleur||ecColor(e.ec)})),
-    couleurUe:u=>ueColor(u),nomUe:u=>tidy(u).replace(/^UE\s*/i,""),
-    ecsAffectes:lim?[...lim]:null,enseignants:(F.profs||[]).join(", "),promotionChoisie:(F.classes||[]).length>0,
-    apresChangement:()=>{syncItemEcs();save();paintForm();paintPick()}});
-}
-function opIndex(id){return F.ops.findIndex(o=>o.id===id)+1}
-function lignes(){return lignesOf(F)}
-function cleanOps(){Object.assign(F,EVAL.nettoyerRegroupements(F))}
-/* ---------- étape 4 : évaluation des étudiants ---------- */
-/* Niveau de maîtrise en pourcentage continu (0 à 100, sans crans visibles).
-   Règle quel que soit le nombre N de niveaux : les deux niveaux extrêmes occupent chacun 60/N %
-   (15 % pour 4 niveaux), les niveaux intermédiaires se partagent le reste à parts égales.
-   Dans le premier et le dernier niveau, la jauge ne se remplit pas progressivement :
-   elle vaut 0 dans le premier, 100 dans le dernier. r.n[k] garde l'indice du niveau, r.p[k] le pourcentage. */
-/* Seuils des niveaux, position du curseur : règles testées dans src/domaine/saisie-resultats.ts */
-function pctBounds(N){return SAISIE.bornesNiveaux(N)}
-function pctLvl(p,N){return SAISIE.niveauDuPourcentage(p,N)}
-function pctSnap(p,N){return SAISIE.aimanterPourcentage(p,N)}
-function pctOf(r,k){return SAISIE.pourcentageAffiche(r,k,(F.niveaux||[]).length)}
-/* Couleur et encre de chaque niveau : règles dans src/domaine/teintes-niveaux.ts */
-function nivColor(i,n){return window.dnmaxPont.teintes.couleurNiveau(i,n)}
-function nivEncre(i,n){return window.dnmaxPont.teintes.encreNiveau(i,n)}
-function pctTxt(p,niv){
-  niv=niv||F.niveaux||[];if(p==null)return "";
-  const N=niv.length,l=pctLvl(p,N);
-  return niv[l]||"";
-}
-/* Rendu de chaque étudiant (module Étudiants) : statut lu par les règles de src/domaine/saisie-resultats.ts */
-function estOf(r){return SAISIE.statutRendu(r)}
-function rendusManquants(f){if(!MOD.eleves)return 0;return SAISIE.etudiantsSansRendu(f.res,studentsOf(f).map(e=>e.id))}
-/* Étape 2, compétences : écran écrit en TypeScript (src/editeur/competences.ts) ; la progression de la promotion
-   (ses autres évaluations enregistrées, hors celle-ci) est calculée par src/domaine/progression-competences.ts */
-function contexteCompetences(){
-  const sem=F.semestre, dispo=compsFor(sem);
-  const lim=ecsAffectes(), codes=F.ecCodes.length?F.ecCodes:(lim?[...lim]:[]);
-  const prs=(F.classes||[]).map(n=>promos.find(p=>p.nom===n)).filter(Boolean);
-  const progression=prs.length?window.dnmaxPont.progressionCompetences({codes:dispo.map(c=>c.code),semestre:sem,
-    evaluations:fiches.filter(f=>f.id!==F.id&&!f.brouillon&&prs.some(pr=>(f.classes||[]).includes(pr.nom)||f.promoId===pr.id)),
-    idsEtudiants:prs.flatMap(pr=>migPromo(pr).liste).map(e=>e.id),estEvaluee:evalueeF,moduleEleves:!!MOD.eleves}):null;
-  return {evaluation:F,semestre:sem,
-    competences:dispo.map(c=>({code:c.code,libelle:c.libelle,bloc:String(c.bloc),nomBloc:blocName(c.bloc),dansLeCadre:ecsOf(c,sem).some(e=>codes.includes(e.ec))})),
-    cadre:codes.length?{enseignements:codes.length,unites:uesSelected().length}:null,
-    toutVoir:()=>!!ui.allComps,basculerToutVoir:()=>{ui.allComps=!ui.allComps},
-    recherche:()=>norm(ui.q.trim()),normaliser:norm,
-    progression,nomPromotions:classesDisp(F),statutDe:f=>ST_LBL[statutOf(f)].toLowerCase(),
-    filtre:()=>ui.pf||"tout",retenirFiltre:f=>{ui.pf=f},
-    ecsDe:code=>itemEcs(REF.competences.find(x=>x.code===code),sem),
-    regroupementDe:op=>({numero:opIndex(op),libelle:(F.ops.find(o=>o.id===op)||{}).libelle||""}),
-    teinteBloc:BLOC_TINT,enregistrer:()=>save(),apresChangement:()=>paintSteps()};
-}
-function paintPick(){window.dnmaxPont.editeur.peindreCompetences(contexteCompetences())}
-/* restitution : par promotion (module de base) et, avec le module Étudiants, par étudiant */
-/* Suivi d'une évaluation : saisie dans DNMAX → distribuée aux étudiants (avec date de rendu) →
-   évaluée (fiche remplie à la main hors DNMAX, ou saisie dans DNMAX) → restituée (par promotion,
-   et par étudiant avec le module Étudiants). f.suivi = {saisie, distrib, butoir, evalue, mode:"main"|"dnmax"} */
-/* Règles du suivi (statuts, libellés, frise) : src/domaine/suivi-evaluation.ts */
-const SUIVI=window.dnmaxPont.suivi;
-const ST_LBL=SUIVI.LIBELLES_STATUT;
-/* Le statut n'est jamais saisi : il découle de ce qui a été fait sur l'évaluation.
-   - Restituée (en partie) : restitution marquée pour la ou les promotions, ou, avec le module Étudiants, pour chaque étudiant ;
-   - Évaluée : tous les étudiants saisis dans DNMAX, ou évaluation marquée terminée (évaluation à la main) ;
-   - Évaluation en cours : au moins un étudiant saisi dans DNMAX, ou grille d'évaluation exportée (sans module Étudiants) ;
-   - Distribuée / Rendus à évaluer : les dates prévues de distribution / de rendu sont passées ;
-   - Préparée : sinon. */
+/* Étape 1 et compétences de l'éditeur (vierge, nouvelleFiche, paintForm, paintClasse, toggleClasse, ecsAffectes,
+   contexteCompetences, paintPick…) et aides de la grille (opIndex, cleanOps, rendusManquants) : écrits en TypeScript
+   (src/interface/editeur-etape1.ts), règles dans src/domaine/cadre-evaluation.ts. */
 /* suiviOf complète la date de saisie d'une évaluation ancienne avant de lire son statut */
 /* suivi simplifié (Paramètres > Règles d'évaluation) : affichage seul, le statut détaillé reste celui de l'évaluation */
 /* nombre d'étudiants ayant une évaluation individuelle enregistrée (niveaux, observations, appréciation ou restitution) */
@@ -1162,82 +958,6 @@ function paintMap(){
   if(svgHost)radialWire(svgHost);
 }
 
-/* Référentiel (barre Constituer / Explorer, page des cinq étapes, étapes 1 à 3, passages vers une étape ou la
-   validation) : écrit en TypeScript (src/interface/referentiel.ts). Restent ici la carte et la planification. */
-/* Mon établissement (barre des volets, Établissement, Répartition de service, Promotions) et suppression en
-   deux temps (armDel, edArm) : écrits en TypeScript (src/interface/etablissement.ts), règles dans
-   src/domaine/repartition.ts. Reste ici asOf, dont l'exemple et la progression se servent. */
-const asOf=y=>y+"-"+(+y+1);
-/* ---- Tableau du référentiel : compétences en lignes, enseignements en colonnes,
-   comme le tableau d'origine ; chaque case ouvre ou ferme un semestre ---- */
-/* Étape 4, planification par semestre : écran écrit en TypeScript (src/referentiel/planification.ts) ;
-   règles dans src/domaine/planification.ts */
-function paintMatrice(host){
-  window.dnmaxPont.referentiel.peindrePlanification(host,{vue:DATA,semestre:SEMS.includes(ui.ref.msem)?ui.ref.msem:"",
-    choisirSemestre:sem=>{ui.ref.msem=sem;edArm=null;paintRef()},teinteBlocs:BLOC_TINT,
-    enregistrer:()=>saveData(false),allerALaCompetence:code=>allerEtape("blocs",code)});
-}
-/* suppression en deux temps, partagée par les écrans de l'éditeur commun (src/etablissement/editeur-commun.ts) :
-   le premier clic arme le bouton et redessine, le second supprime */
-/* Éditeur commun de Mon établissement et des Préférences : écrans écrits en TypeScript (src/etablissement/),
-   règles dans src/domaine/ (diplomes, personnes). Seule la suppression en deux temps reste tenue ici (edArm, armDel). */
-function paintEditor(pane,host){
-  host=host||document.getElementById("refPane");
-  const D=DATA, armement={arme:edArm,armer:(id,fn)=>armDel(id,fn)};
-  const enregistrer=redessiner=>saveData(redessiner?undefined:false);
-  if(pane==="diplome")return window.dnmaxPont.etablissement.peindreDiplomes(host,{donnees:D,visibles:dipVisibles(),
-    estCadreVierge,nouvelIdentifiant:()=>newId("d"),ajouterMention:addMention,enregistrer,
-    apresChangementDuree:()=>{promos.forEach(migPromoCohorte);savePromos()},armement,annoncer:toast});
-  if(pane==="enseignants")return window.dnmaxPont.etablissement.peindreEnseignants(host,{enseignants:D.enseignants,
-    moi:()=>D.moi,definirMoi:id=>{D.moi=id;persistData()},armement,nouvelIdentifiant:()=>"t"+Date.now().toString(36),enregistrer,
-    renommerMoi:(prenom,nomFam)=>{if(window.dnmaxPont.renommerMoi)window.dnmaxPont.renommerMoi(prenom,nomFam)},annoncer:toast});
-  if(pane==="livrables")return window.dnmaxPont.etablissement.peindreLivrables(host,{livrables:()=>D.livrables,
-    remplacer:l=>{D.livrables=l},listeOrigine:SUPPORTS_DEF,retirerDeLEvaluation:nom=>{F.livrables=F.livrables.filter(x=>x!==nom)},
-    armement,enregistrer,annoncer:toast});
-}
-/* L'exemple (évaluations détaillées, jeu étendu, validation de son référentiel) : écrit en TypeScript
-   (src/interface/exemple.ts) ; son contenu et ses tirages sont dans src/domaine/exemple.ts. */
-function paintSceau(){
-  PREF.peindreSceau(document,{actif:sceauActif(),choisir:actif=>{PREFS.sceau=actif;savePrefs()}});
-  PREF.peindreDossierExports(document,window.dnmaxPont.dossierExports,toast);
-}
-function paintVocab(){
-  PREF.peindreVocabulaire(document,{libelle:critLabel(),choisir:libelle=>{PREFS.critLabel=libelle;savePrefs();paintLignes()}});
-}
-/* Préférences (menu « Mon compte ») : vocabulaire et livrables proposés ; le thème est tenu par l'application. */
-function paintPrefs(){
-  paintVocab();paintSceau();
-  paintEditor("livrables",document.getElementById("prefLivr"));
-}
-/* Paramètres > Modules : écran écrit en TypeScript (src/parametres/modules.ts) */
-function paintSet(){
-  window.dnmaxPont.modules.peindre(document.getElementById("modList"),document.getElementById("mCount"),{actifs:MOD,
-    ouvrirDocuments:()=>window.dnmaxPont.documentsModuleEleves(DATA.etab||{}),
-    confirmerEleves:()=>window.dnmaxPont.confirmerModuleEleves(DATA.etab||{}),
-    appliquer:appliquerModule});
-}
-function appliquerModule(cle,actif){
-  if(!actif&&window.dnmaxPont.modules.entraineDautres(cle,MOD))
-    toast("Niveaux d'acquisition désactivé aussi : il nécessite le module "+MODULES[cle].nom+".");
-  MOD[cle]=actif;modDeps();LS.set("dnmade.modules",MOD);
-  paintSet();paintTabs();paintForm();paintPick();paintLignes();paintVocab();paintRef();
-  toast(MODULES[cle].nom+(actif?" : activé":" : désactivé"));
-}
-
-/* ---------- construction de la fiche ---------- */
-/* colonnes des documents exportés : règle dans src/export/modele.ts */
-/* EXPORT_VIDE : export de « l'évaluation » (grille vierge) plutôt que des restitutions remplies par étudiant */
-/* En-tête des documents exportés : une ligne de contexte et l'enseignant·e, sans cartouche. */
-/* au-dessus de la ligne de contexte : l'établissement et le ou les enseignants, qui signent le document */
-
-/* ---------- exports Word, OpenDocument et tableur : écrits en TypeScript (src/export/) ---------- */
-/* L'évaluation en cours, mise en forme pour les documents : une fiche par étudiant (module Étudiants), sinon une fiche vierge. */
-/* Sceau DN MADE en tête des documents Word et OpenDocument : facultatif, réglé dans
-   Mon compte > Préférences > Documents exportés, désactivé par défaut. Image
-   public/documents/sceau-dn-made.png (voir outils/generer-sceau.ts), lue au premier export qui l'affiche. */
-
-/* ---------- Progression : écrite en TypeScript (src/interface/progression.ts) ---------- */
-
-/* ---------- téléchargements ---------- */
-/* étudiants pas encore entièrement évalués (non rendu et dispensé comptent comme terminés) */
-/* exports d'une ligne (fenêtre des actions) : l'évaluation (grille vierge) et, avec le module Étudiants, les restitutions par étudiant */
+/* Référentiel (barre Constituer / Explorer, page des cinq étapes, étapes 1 à 4, passages vers une étape ou la
+   validation), Mon établissement, éditeur commun, Préférences et Paramètres > Modules : écrits en TypeScript
+   (src/interface/referentiel.ts, etablissement.ts, preferences-parametres.ts). Reste ici la carte. */

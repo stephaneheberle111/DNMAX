@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { autresPromotionsMontrees, basculerEc, basculerUe, cadreDuSemestre, promotionsBloquees, rangEc, separerMiennes, uesRetenues } from "./cadre-evaluation";
+import {
+  autresEvaluationsDesPromotions,
+  autresPromotionsMontrees,
+  basculerEc,
+  basculerUe,
+  cadreDuSemestre,
+  ecsAssures,
+  estEnCours,
+  etudiantsVises,
+  promotionsAProposer,
+  promotionsBloquees,
+  rangEc,
+  separerMiennes,
+  uesRetenues,
+} from "./cadre-evaluation";
 
 const ECS = [
   { ec: "EC 1.1", ue: "UE 1" },
@@ -110,5 +124,108 @@ describe("autresPromotionsMontrees", () => {
 
   it("les montre toutes quand je n'ai encore aucune promotion à moi", () => {
     expect(autresPromotionsMontrees(AUTRES, [], false, false)).toEqual(AUTRES);
+  });
+});
+
+describe("estEnCours", () => {
+  it("vaut vrai pour une année de formation dans la durée du diplôme", () => {
+    expect(estEnCours({ nom: "P", annee: 3, duree: 3, rangDiplome: 0 })).toBe(true);
+  });
+
+  it("vaut faux avant l'entrée et après la sortie", () => {
+    expect(estEnCours({ nom: "P", annee: 0, duree: 3, rangDiplome: 0 })).toBe(false);
+    expect(estEnCours({ nom: "P", annee: 4, duree: 3, rangDiplome: 0 })).toBe(false);
+  });
+
+  it("vaut faux pour une année illisible", () => {
+    expect(estEnCours({ nom: "P", annee: Number.NaN, duree: 3, rangDiplome: 0 })).toBe(false);
+  });
+});
+
+describe("promotionsAProposer", () => {
+  it("range les promotions en cours par année, puis par diplôme", () => {
+    const promotions = [
+      { nom: "B2", annee: 2, duree: 3, rangDiplome: 1 },
+      { nom: "A2", annee: 2, duree: 3, rangDiplome: 0 },
+      { nom: "A1", annee: 1, duree: 3, rangDiplome: 0 },
+    ];
+    expect(promotionsAProposer(promotions, [])).toEqual({ noms: ["A1", "A2", "B2"], aucuneEnCours: false });
+  });
+
+  it("laisse de côté une promotion sortie, sauf si elle est cochée", () => {
+    const promotions = [
+      { nom: "Sortie", annee: 4, duree: 3, rangDiplome: 0 },
+      { nom: "Autre", annee: 5, duree: 3, rangDiplome: 0 },
+    ];
+    expect(promotionsAProposer(promotions, ["Sortie"])).toEqual({ noms: ["Sortie"], aucuneEnCours: true });
+  });
+
+  it("ne répète pas une promotion cochée et en cours, et retire un nom vide", () => {
+    expect(promotionsAProposer([{ nom: "A1", annee: 1, duree: 3, rangDiplome: 0 }], ["A1", ""]).noms).toEqual(["A1"]);
+  });
+});
+
+describe("etudiantsVises", () => {
+  it("garde les étudiants choisis encore présents", () => {
+    expect(etudiantsVises({ eleveIds: ["e1", "parti", "e2"] }, ["e1", "e2"])).toEqual(["e1", "e2"]);
+  });
+
+  it("reprend l'étudiant unique d'une évaluation ancienne", () => {
+    expect(etudiantsVises({ eleveId: "e1" }, ["e1"])).toEqual(["e1"]);
+  });
+
+  it("vise toute la promotion sans choix, ou si plus personne n'est présent", () => {
+    expect(etudiantsVises({}, ["e1"])).toEqual([]);
+    expect(etudiantsVises({ eleveIds: ["parti"] }, [])).toEqual([]);
+  });
+});
+
+describe("ecsAssures", () => {
+  const repartition = {
+    affectations: { ec1: ["t1"], ec2: ["t2"] },
+    ecs: [
+      { id: "ec1", code: "EC 1.1" },
+      { id: "ec2", code: "EC 1.2" },
+      { id: "ec3", code: "EC 1.3" },
+    ],
+  };
+
+  it("retient les EC assurés par l'un des enseignants choisis", () => {
+    expect(ecsAssures(["t1"], [repartition])).toEqual(new Set(["EC 1.1"]));
+  });
+
+  it("ne restreint rien sans enseignant, sans promotion ou sans répartition", () => {
+    expect(ecsAssures([], [repartition])).toBeNull();
+    expect(ecsAssures(["t1"], [])).toBeNull();
+    expect(ecsAssures(["t1"], [{ affectations: {}, ecs: repartition.ecs }])).toBeNull();
+  });
+
+  it("rend une liste vide quand l'enseignant n'assure aucun EC d'une promotion répartie", () => {
+    expect(ecsAssures(["t9"], [repartition])).toEqual(new Set());
+  });
+});
+
+describe("autresEvaluationsDesPromotions", () => {
+  const promotions = [{ nom: "P1", id: "p1" }];
+
+  it("retient les évaluations enregistrées de la promotion, par son nom ou son ancien lien", () => {
+    const evaluations = [
+      { id: "a", classes: ["P1"] },
+      { id: "b", promoId: "p1" },
+    ];
+    expect(autresEvaluationsDesPromotions(evaluations, "x", promotions).map((evaluation) => evaluation.id)).toEqual(["a", "b"]);
+  });
+
+  it("écarte l'évaluation en cours, les brouillons et les autres promotions", () => {
+    const evaluations = [
+      { id: "x", classes: ["P1"] },
+      { id: "b", classes: ["P1"], brouillon: true },
+      { id: "c", classes: ["P2"] },
+    ];
+    expect(autresEvaluationsDesPromotions(evaluations, "x", promotions)).toEqual([]);
+  });
+
+  it("ne retient rien sans promotion cochée", () => {
+    expect(autresEvaluationsDesPromotions([{ id: "a", classes: ["P1"] }], "x", [])).toEqual([]);
   });
 });

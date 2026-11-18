@@ -113,3 +113,83 @@ export function autresPromotionsMontrees<P extends { readonly nom: string }>(
 ): P[] {
   return affichees || !aDesMiennes ? [...autres] : autres.filter((promotion) => cochees.includes(promotion.nom));
 }
+
+/** Une promotion du diplôme, avec son année de formation à l'année scolaire de l'évaluation et la durée du diplôme. */
+export interface PromotionDatee {
+  readonly nom: string;
+  readonly annee: number;
+  readonly duree: number;
+  /** Rang du diplôme (de la mention) dans la liste des diplômes, pour départager deux promotions de même année. */
+  readonly rangDiplome: number;
+}
+
+/** Vrai si la promotion est en formation à l'année scolaire de l'évaluation. */
+export function estEnCours(promotion: PromotionDatee): boolean {
+  return promotion.annee >= 1 && promotion.annee <= promotion.duree;
+}
+
+/**
+ * Promotions proposées à l'étape 1 : celles en cours, par année de formation
+ * puis par diplôme, suivies de celles déjà cochées qui ne le sont plus
+ * (une évaluation ancienne garde ses promotions). Sans doublon ni nom vide.
+ */
+export function promotionsAProposer(promotions: readonly PromotionDatee[], cochees: readonly string[]): { noms: string[]; aucuneEnCours: boolean } {
+  const enCours = promotions.filter(estEnCours).sort((premiere, seconde) => premiere.annee - seconde.annee || premiere.rangDiplome - seconde.rangDiplome);
+  return {
+    noms: [...new Set([...enCours.map((promotion) => promotion.nom), ...cochees])].filter(Boolean),
+    aucuneEnCours: enCours.length === 0,
+  };
+}
+
+/**
+ * Étudiants visés par l'évaluation (module Étudiants) : la liste choisie, ou
+ * l'étudiant unique des évaluations plus anciennes, réduits à ceux qui sont
+ * encore dans ses promotions. Une liste vide vise toute la promotion.
+ */
+export function etudiantsVises(evaluation: { readonly eleveIds?: unknown; readonly eleveId?: unknown }, existants: readonly string[]): string[] {
+  const choisis: readonly unknown[] = Array.isArray(evaluation.eleveIds) ? evaluation.eleveIds : evaluation.eleveId ? [evaluation.eleveId] : [];
+  return choisis.filter((id): id is string => existants.some((existant) => existant === id));
+}
+
+/** Répartition de service d'une promotion : enseignants de chaque EC (par identifiant d'EC) et EC de l'année. */
+export interface RepartitionDePromotion {
+  readonly affectations: Readonly<Record<string, readonly string[] | undefined>>;
+  readonly ecs: readonly { readonly id: string; readonly code: string }[];
+}
+
+/**
+ * Codes des EC que les enseignants choisis assurent pour les promotions
+ * cochées, d'après la répartition de service. `null` (pas de restriction)
+ * sans enseignant, sans promotion, ou si aucune de ces promotions n'a
+ * encore de répartition.
+ */
+export function ecsAssures(enseignants: readonly string[], repartitions: readonly RepartitionDePromotion[]): Set<string> | null {
+  if (!enseignants.length || !repartitions.length) return null;
+  const codes = new Set<string>();
+  let repartie = false;
+  for (const repartition of repartitions) {
+    if (Object.keys(repartition.affectations).length) repartie = true;
+    for (const ec of repartition.ecs) {
+      if ((repartition.affectations[ec.id] || []).some((id) => enseignants.includes(id))) codes.add(ec.code);
+    }
+  }
+  return repartie ? codes : null;
+}
+
+/**
+ * Autres évaluations des promotions cochées, pour la progression de l'étape 2 :
+ * ni l'évaluation en cours, ni les brouillons. Une évaluation est d'une
+ * promotion si elle la coche, ou par son ancienne promotion liée.
+ */
+export function autresEvaluationsDesPromotions<E extends { readonly id?: unknown; readonly brouillon?: unknown; readonly classes?: unknown; readonly promoId?: unknown }>(
+  evaluations: readonly E[],
+  idCourante: unknown,
+  promotions: readonly { readonly nom?: unknown; readonly id?: unknown }[],
+): E[] {
+  return evaluations.filter(
+    (evaluation) =>
+      evaluation.id !== idCourante &&
+      !evaluation.brouillon &&
+      promotions.some((promotion) => ((evaluation.classes || []) as readonly unknown[]).includes(promotion.nom) || evaluation.promoId === promotion.id),
+  );
+}
