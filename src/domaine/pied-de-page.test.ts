@@ -21,6 +21,11 @@ describe("aideMiseAJour", () => {
   it("rappelle que la recherche ne transmet aucune donnée", () => {
     expect(aideMiseAJour("inconnu")).toContain("sans rien transmettre de vos données");
   });
+
+  it("nomme le site dnmax.fr, que la recherche interroge", () => {
+    expect(aideMiseAJour("inconnu")).toContain("dnmax.fr");
+    expect(aideMiseAJour("inconnu")).not.toContain("GitHub");
+  });
 });
 
 describe("classerLien", () => {
