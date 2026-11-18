@@ -364,12 +364,13 @@ function paintClasse(){
   const dIdx=id=>DATA.diplomes.findIndex(d=>d.id===id);
   const ps=promos.map(migPromoCohorte).filter(pr=>same.includes(pr.diplomeId));
   const yr=pr=>promoAnneeAt(pr,AS), enCours=pr=>{const a=yr(pr);return a>=1&&a<=promoDuree(pr)};
-  const live=ps.filter(pr=>enCours(pr)&&promoVisible(pr)).sort((x,y)=>(yr(x)-yr(y))||(dIdx(x.diplomeId)-dIdx(y.diplomeId)));
+  // toutes les promotions en cours : celles de ma répartition de service d'abord, les autres en retrait
+  const live=ps.filter(pr=>enCours(pr)).sort((x,y)=>(yr(x)-yr(y))||(dIdx(x.diplomeId)-dIdx(y.diplomeId)));
   const names=[...new Set([...live.map(pr=>pr.nom),...F.classes])].filter(Boolean);
   const bloquant=dipBloquant(F);
   window.dnmaxPont.editeur.peindrePromotions({
     promotions:names.map(n=>{const pr=ps.find(p=>p.nom===n);
-      return {nom:n,libelle:promoDisp(n),annee:pr?yr(pr):null,enCours:!!pr&&enCours(pr),referentielValide:!pr||promoRefValide(pr)}}),
+      return {nom:n,libelle:promoDisp(n),annee:pr?yr(pr):null,enCours:!!pr&&enCours(pr),referentielValide:!pr||promoRefValide(pr),mienne:!pr||promoVisible(pr)}}),
     cochees:F.classes,anneeScolaire:AS,aucuneEnCours:!live.length,referentielNonValide:!!bloquant,
     allerValidation:()=>allerValidation(bloquant),basculer:n=>toggleClasse(n)});
 }

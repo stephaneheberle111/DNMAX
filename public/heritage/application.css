@@ -223,6 +223,10 @@ body.dragging-now{cursor:grabbing;user-select:none}
 .liv .n{font-family:var(--fm);font-size:10px;margin-left:5px;opacity:.75}
 .liv:disabled{opacity:.35;cursor:not-allowed}
 .liv[aria-pressed="true"]{border-color:var(--signal);color:var(--signal);background:var(--signal-soft);font-weight:600}
+/* promotions hors de la répartition de service de l'enseignant : proposées, mais en retrait */
+.liv.discrete{border-style:dashed;opacity:.7}
+.liv.discrete[aria-pressed="true"]{opacity:1}
+.fl-autres{flex-basis:100%;margin-top:4px}
 .livrow{min-height:24px}
 .livnew{display:inline-flex}
 .liv.add{border-style:dashed;color:var(--muted)}
