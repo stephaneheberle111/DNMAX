@@ -36,9 +36,21 @@ jobs:
   enveloppe:
     name: Enveloppe de bureau (format, clippy, tests)
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Compilation Rust gardée d'une exécution à l'autre : sans elle, chaque exécution recompile
+      # toutes les dépendances. Renouvelée quand Cargo.lock ou la chaîne d'outils changent.
+      - name: Cache de la compilation Rust
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            src-tauri/target
+          key: rust-${{ runner.os }}-${{ hashFiles('rust-toolchain.toml', 'src-tauri/Cargo.lock') }}
+          restore-keys: rust-${{ runner.os }}-
       - name: Bibliothèques système requises par Tauri
         run: outils/installer-bibliotheques-linux.sh
       - run: cargo fmt --check
