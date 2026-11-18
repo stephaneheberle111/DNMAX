@@ -7,7 +7,7 @@
 - **Version 0.9.0** : fusionnée dans `main` (#132), **pas publiée**. L'atelier « Publication » n'a pas été lancé ; il ne se lance qu'avec le feu vert de l'auteur.
 - **Recette sur le bureau de l'auteur** : en cours de son côté, avec les installeurs d'essai de l'atelier « Installeurs », exécution n° 8 (Windows et Linux ; macOS annulé faute de machine, comme les fois précédentes), et la fiche `docs/recette-0.9.md` (parties A à J). Puis publication de la 0.9, sur son accord.
 - **0.9.1 terminée côté code** (décision 38, voir plus bas) : groupes 1 à 8 fusionnés (#184 à #201), groupe 9 fusionné (#203, #204, #206, #207, #208). Le fichier historique ne garde plus que la carte radiale, la chaîne et leurs aides : c'est la 0.9.2.
-- **Contrôles** : linter et typage sans erreur, 1 304 tests au vert sur `main`.
+- **Contrôles** : linter et typage sans erreur, 1 311 tests au vert sur `main`.
 - **Fichier historique** : 963 lignes (7 756 au départ), presque toutes pour la carte radiale et la chaîne.
 
 ## Le fichier historique
@@ -60,6 +60,8 @@
 | #206 | 0.9.1, groupe 9 : Préférences, Paramètres > Modules, éditeur commun et planification (`paintPrefs`, `paintSet`, `appliquerModule`, `paintEditor`, `paintMatrice`…) ; règle `semestreRetenu` ; `asOf` retirée | `src/interface/preferences-parametres.ts`, règle dans `src/domaine/planification.ts` |
 | #207 | 0.9.1, groupe 9 : étape 1 et compétences de l'éditeur (`paintForm`, `paintClasse`, `toggleClasse`, `contexteCompetences`, `paintPick`, `vierge`, `nouvelleFiche`…) ; cinq règles sorties de l'affichage ; dix fonctions appelées nulle part retirées | `src/interface/editeur-etape1.ts`, règles dans `src/domaine/cadre-evaluation.ts` |
 | #208 | 0.9.1, groupe 9 : démarrage (lecture des données, état de départ, branchements, premier dessin, ponts `ouvrirPreferences`, `projeterReferentiel`, `ajusterEnseignants`, `ouvrirEtablissement`), appelé par le pont juste après la lecture du script ; constantes de tête devenues inutiles retirées | `src/interface/demarrage.ts` |
+| #209, #211 | Hors reprise : Mes évaluations, promotions des collègues proposées dans le filtre (masquées par défaut) et case « Seulement mes évaluations » | `src/domaine/filtres-evaluations.ts`, `src/evaluations/filtres.ts` |
+| #212 | Intégration continue : compilation Rust gardée en cache, trente minutes pour la tâche « Enveloppe de bureau » | `.github/workflows/ci.yml` |
 
 Hors reprise, depuis #178 : fiche de recette complétée (#179), installeur Windows en français (#180), visite du référentiel simplifiée et boutons bleus de Constituer retirés (#181), évaluation possible sur un référentiel non validé avec un rappel (#182), mes promotions distinguées des autres dans une évaluation (#183), lien `node_modules` retiré (#185), `promoLabel` rétabli et garde-fou des appels (#187).
 
@@ -102,7 +104,7 @@ Suivre #186 comme modèle :
 
 Aucune pour l'instant. Étiquettes `v0.7.0` et `v0.8.0` : déplacées par l'auteur le 18 novembre sur l'historique réécrit (`d7d3bff` et `f5fd052`, même arbre que les anciens commits).
 
-Décidé le 18 novembre : dans « Mes évaluations », l'enseignant filtre selon qu'il est l'auteur de l'évaluation et selon les promotions, les siennes d'abord, celles des collègues accessibles mais masquées par défaut. Fait par #209 pour les promotions (celles des collègues masquées, affichées à la demande ; une évaluation hors répartition apparaît si l'une de ses promotions est cochée).
+Décidé le 18 novembre : dans « Mes évaluations », l'enseignant filtre selon qu'il est l'auteur de l'évaluation et selon les promotions, les siennes d'abord, celles des collègues accessibles mais masquées par défaut. Fait : #209 pour les promotions (celles des collègues masquées, affichées à la demande ; une évaluation hors répartition apparaît si l'une de ses promotions est cochée) et #211 pour la case « Seulement mes évaluations » (celles dont « C'est moi » est l'enseignant : DNMAX ne retient pas qui a créé une évaluation).
 
 ## Méthode : réécrire sans rien changer
 
@@ -171,5 +173,5 @@ En plus du banc, comparer fonction par fonction l'ancien code et le nouveau :
   - « En cours » : seulement ce sur quoi on travaille réellement. Il est vide (« Rien ») quand on attend la réponse de l'auteur ou une vérification automatique ;
   - « Ensuite, dans l'ordre » : les demandes de fusion en attente de vérification, puis la liste de « Ce qui reste » ;
   - « Déjà fait » : les demandes fusionnées (#139 à #208), avec une ligne chacune ;
-  - le nombre de tests sur `main` (1 304 au 18 novembre, à la fin de la 0.9.1) ;
+  - le nombre de tests sur `main` (1 311 au 18 novembre, à la fin de la 0.9.1) ;
   - le nombre de lignes restant dans le fichier historique (963 au 18 novembre, 7 756 au départ).
