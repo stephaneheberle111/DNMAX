@@ -15,7 +15,8 @@
  * défaut, semestres rangés de S1 à S6). Les identifiants neufs sont tirés
  * par `nouvelIdentifiant`, passé en paramètre.
  */
-import { SEMESTRES, anneeDuSemestre } from "./constituer";
+import { SEMESTRES, anneeDuSemestre, codesEc } from "./constituer";
+import { codeDiplome, libelleDiplome } from "./diplomes";
 
 export type Sorte = "ues" | "ecs" | "blocs" | "competences";
 export type Element = Record<string, unknown>;
@@ -449,4 +450,81 @@ export function construireDonnees(donnees: Donnees, nouvelIdentifiant: NouvelIde
   Reflect.deleteProperty(donnees, "diplome");
   materialiser(donnees);
   return donnees;
+}
+
+/** Code d'une année : celui que le référentiel donne au niveau, sinon le code du diplôme suivi du numéro d'année. */
+export function codeAnnee(annee: number | string, donnees: Donnees, diplome?: Element): string {
+  const niveau = liste(donnees.niveaux).find((candidat) => Number(candidat.annee) === Number(annee));
+  const code = enTexte(objet(niveau).code || "").trim();
+  if (code) return code;
+  const leDiplome = diplome ?? liste(donnees.diplomes).find((candidat) => candidat.id === donnees.activeDiplome) ?? {};
+  return codeDiplome(leDiplome) + String(annee);
+}
+
+/** Codes d'un EC, un par année ; « — » s'il n'en a aucun. */
+function libelleCodes(ec: Element): string {
+  const codes = codesEc(ec);
+  return codes.length > 0 ? codes.join(" · ") : "—";
+}
+
+/**
+ * Référentiel actif tel que l'interface le lit : diplôme, blocs, UE, EC
+ * (nom, couleur, codes, UE, semestres) et compétences, chaque compétence
+ * portant une entrée par EC et par semestre où elle est enseignée, avec le
+ * code de l'EC et celui de l'année. Les EC rattachés à une UE d'un autre
+ * diplôme, et les semestres où l'EC ou son UE n'ont pas cours, sont laissés de côté.
+ */
+export function projeterReferentiel(donnees: Donnees): Element {
+  const actif = donnees.activeDiplome;
+  const duDiplome = (element: Element): boolean => !element.diplomeId || element.diplomeId === actif;
+  const ues = liste(donnees.ues).filter(duDiplome);
+  const idsUes = ues.map((ue) => ue.id);
+  const tousLesEcs = liste(donnees.ecs);
+  const ecsDuReferentiel = tousLesEcs.filter((ec) => idsUes.includes(ec.ueId));
+  const ueDe = (id: unknown): Element | undefined => ues.find((ue) => ue.id === id);
+  const nomEc = (ec: Element): string => enTexte(ec.nom || "").trim() || libelleCodes(ec);
+  const diplome = liste(donnees.diplomes).find((candidat) => candidat.id === actif) ?? {};
+  return {
+    meta: { diplome: libelleDiplome(diplome), diplomeNom: diplome.nom || "", mention: diplome.mention || "", blocTint: donnees.blocTint, niveaux: donnees.niveaux },
+    blocs: liste(donnees.blocs)
+      .filter(duDiplome)
+      .map((bloc) => ({ num: bloc.num, nom: bloc.nom })),
+    ues: ues.map((ue) => ({ nom: ue.nom, couleur: ue.couleur, code: ue.code, sems: ue.sems })),
+    ecs: ecsDuReferentiel.map((ec) => ({
+      id: ec.id,
+      nom: nomEc(ec),
+      couleur: ec.couleur || COULEUR_PAR_DEFAUT,
+      codes: Object.assign({}, ec.codes || {}),
+      ue: ueDe(ec.ueId)?.nom || "UE non précisée",
+      sems: (liste(ec.sems) as unknown[]).slice(),
+    })),
+    competences: liste(donnees.competences)
+      .filter(duDiplome)
+      .map((competence) => {
+        const ecs: Element[] = [];
+        for (const lien of liste(competence.ecs)) {
+          const ec = tousLesEcs.find((candidat) => candidat.id === lien.id);
+          if (!ec || !idsUes.includes(ec.ueId)) continue;
+          const ue: Element = ueDe(ec.ueId) ?? { sems: SEMESTRES };
+          const semestresEc = liste(ec.sems) as unknown[];
+          const semestresUe = Array.isArray(ue.sems) ? (ue.sems as unknown[]) : (SEMESTRES as readonly unknown[]);
+          const semestres = (Array.isArray(lien.sems) && lien.sems.length > 0 ? (lien.sems as unknown[]) : semestresEc).filter(
+            (semestre) => semestresEc.includes(semestre) && semestresUe.includes(semestre),
+          );
+          for (const semestre of semestres) {
+            const annee = anneeDuSemestre(semestre as string);
+            const code = enTexte(objet(ec.codes)[annee] || "") || codesEc(ec)[0] || nomEc(ec);
+            ecs.push({ ec: code, id: ec.id, nom: nomEc(ec), couleur: ec.couleur || COULEUR_PAR_DEFAUT, ue: ue.nom || "UE non précisée", sem: semestre, dn: codeAnnee(annee, donnees, diplome) });
+          }
+        }
+        return { code: competence.code, libelle: competence.libelle, bloc: competence.bloc, ecs };
+      }),
+  };
+}
+
+/** Projection d'une version validée du référentiel d'un diplôme, sans toucher aux données tenues. */
+export function projeterVersion(donnees: Donnees, diplome: string, version: Referentiel): Element {
+  const copie: Donnees = Object.assign({}, donnees, { refs: Object.assign({}, donnees.refs, { [diplome]: version }), activeDiplome: diplome });
+  materialiser(copie);
+  return projeterReferentiel(copie);
 }
