@@ -232,35 +232,8 @@ function askModal(html,onYes,onNo){
   el.querySelector("[data-yes]").focus();
 }
 function toast(m){const d=document.createElement("div");d.className="toast";d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
-/* Chaque modification rejoint aussitôt « Mes évaluations » : rien ne se perd. Une évaluation qui y entre ainsi
-   est un brouillon (hors Progression, ni distribuée ni évaluée) jusqu'à « Enregistrer l'évaluation », seul à
-   appeler save(true). */
-function save(valide){enregistrerDansListe(valide===true);LS.set("dnmade.draft",F);paintEnregistrement()}
-/* Une nouvelle évaluation n'entre dans la liste qu'une fois commencée, pour qu'un clic sur
-   « Nouvelle évaluation » sans suite n'y laisse pas une ligne vide. */
-function evaluationCommencee(f){return SAISIE.evaluationCommencee(f)}
-/* Rend "liste" si l'évaluation en cours est dans « Mes évaluations », "bloquee" si son référentiel
-   non validé l'empêche d'y entrer, "vide" si elle n'est pas encore commencée. */
-function etatEnregistrement(){
-  // Un référentiel non validé n'empêche plus d'enregistrer (avertissement à la sélection de la promotion).
-  return EVAL.etatEnregistrement({dansLaListe:fiches.some(f=>f.id===F.id),commencee:evaluationCommencee(F),referentielBloquant:false});
-}
-function enregistrerDansListe(valide){
-  const i=fiches.findIndex(f=>f.id===F.id);
-  if(i<0&&!evaluationCommencee(F))return;
-  if(valide)delete F.brouillon;else if(i<0)F.brouillon=true;
-  suiviOf(F);
-  if(!F.refV){const v=versionPourF();if(v)F.refV=v.id}
-  const copy=structuredClone(F);
-  if(i>=0)fiches[i]=copy;else fiches.unshift(copy);
-  LS.set("dnmade.fiches",fiches);
-}
-/* Ligne d'enregistrement et barre des étapes : écrans écrits en TypeScript (src/editeur/barre-etapes.ts) */
-function paintEnregistrement(){
-  const v=versionPourF();
-  window.dnmaxPont.editeur.peindreEnregistrement({etat:etatEnregistrement(),brouillon:!!F.brouillon,
-    version:v?(REF.meta.diplome||"")+", version du "+frDate(v.date):""});
-}
+/* Enregistrement de l'évaluation en cours (save, brouillon), passage d'une étape à l'autre (goStep, paintSteps),
+   contextes de la formulation et de la saisie des étudiants : écrits en TypeScript (src/interface/editeur.ts). */
 
 /* ---------- rendu ---------- */
 /* onglets, vues et titre de la fenêtre : src/interface/onglets.ts */
@@ -357,25 +330,6 @@ function paintLivrables(){
     proposerAjoutEtablissement:v=>askModal(`Ajouter « ${esc(v)} » à la liste des livrables de Mon établissement, pour les prochaines évaluations ?`,
       ()=>{DATA.livrables.push({nom:v,type:""});saveData();toast("« "+v+" » ajouté aux livrables.")})});
 }
-function brouillonF(){return !!F.brouillon||!fiches.some(f=>f.id===F.id)}
-function goStep(n){
-  ui.step=window.dnmaxPont.etapesEditeur.etapeAffichee(+n,window.dnmaxPont.etapesEditeur.derniereEtape({moduleEleves:!!MOD.eleves,brouillon:brouillonF()}));
-  if(ui.step===3)ui.sel=[];
-  paintSteps();
-  if(ui.step===1)paintForm();
-  if(ui.step===2)paintPick();
-  if(ui.step===3)paintLignes();
-  if(ui.step===4)paintEleves();
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-function paintSteps(){
-  // un brouillon ne s'évalue pas : l'étape 4 se referme (décision 29)
-  ui.step=window.dnmaxPont.etapesEditeur.etapeAffichee(ui.step,window.dnmaxPont.etapesEditeur.derniereEtape({moduleEleves:!!MOD.eleves,brouillon:brouillonF()}));
-  const st=evalStats(F);
-  window.dnmaxPont.editeur.peindreBarreEtapes({evaluation:F,etape:ui.step,moduleEleves:!!MOD.eleves,brouillon:brouillonF(),
-    semestre:F.semestre,competencesDisponibles:compsFor(F.semestre).length,bilan:{etudiants:st.els,faits:st.faits,partiels:st.partiels}});
-  paintEnregistrement();
-}
 /* Étape 1, UE et EC : écran écrit en TypeScript (src/editeur/etape-evaluation.ts), règles dans src/domaine/cadre-evaluation.ts */
 function paintContexte(){
   const lim=ecsAffectes();
@@ -388,14 +342,6 @@ function paintContexte(){
 function opIndex(id){return F.ops.findIndex(o=>o.id===id)+1}
 function lignes(){return lignesOf(F)}
 function cleanOps(){Object.assign(F,EVAL.nettoyerRegroupements(F))}
-/* Étape 3, formulation : écran écrit en TypeScript (src/editeur/formulation.ts), qui reçoit l'évaluation en cours */
-function contexteFormulation(){
-  return {evaluation:F,libelleCritere:critLabel(),
-    libelleCompetence:code=>(REF.competences.find(x=>x.code===code)||{}).libelle||"",
-    selection:()=>ui.sel,retenirSelection:cles=>{ui.sel=[...cles]},
-    nouvelIdentifiant:uid,enregistrer:()=>save(),apresChangement:()=>paintSteps(),annoncer:m=>toast(m)};
-}
-function paintLignes(){window.dnmaxPont.editeur.peindreFormulation(contexteFormulation())}
 /* ---------- étape 4 : évaluation des étudiants ---------- */
 /* Niveau de maîtrise en pourcentage continu (0 à 100, sans crans visibles).
    Règle quel que soit le nombre N de niveaux : les deux niveaux extrêmes occupent chacun 60/N %
@@ -418,21 +364,6 @@ function pctTxt(p,niv){
 /* Rendu de chaque étudiant (module Étudiants) : statut lu par les règles de src/domaine/saisie-resultats.ts */
 function estOf(r){return SAISIE.statutRendu(r)}
 function rendusManquants(f){if(!MOD.eleves)return 0;return SAISIE.etudiantsSansRendu(f.res,studentsOf(f).map(e=>e.id))}
-/* Étape 4, saisie des étudiants : écran écrit en TypeScript (src/editeur/saisie-etudiants.ts), qui reçoit l'évaluation en cours */
-function contexteSaisie(){
-  if(!F.res||typeof F.res!=="object")F.res={};
-  return {resultats:F.res,niveaux:F.niveaux||[],etudiants:studentsOf(F),
-    lignes:lignes().map(l=>{const t=ligTitre(l);return {cle:ligKey(l),code:t.code,libelle:t.lib}}),
-    vue:{mode:ui.emode==="fiche"?"fiche":"grille",etudiant:ui.eleve||""},
-    aujourdhui:()=>new Date().toISOString().slice(0,10),
-    retenirVue:v=>{ui.emode=v.mode;ui.eleve=v.etudiant},
-    enregistrer:()=>save(),apresSaisie:()=>paintSteps(),annoncer:m=>toast(m)};
-}
-function paintEleves(){
-  const host=document.getElementById("elevesPane");if(!host)return;
-  window.dnmaxPont.editeur.peindreSaisieEtudiants(host,contexteSaisie());
-}
-function linkSelection(){window.dnmaxPont.editeur.lierSelection(contexteFormulation())}
 /* Étape 2, compétences : écran écrit en TypeScript (src/editeur/competences.ts) ; la progression de la promotion
    (ses autres évaluations enregistrées, hors celle-ci) est calculée par src/domaine/progression-competences.ts */
 function contexteCompetences(){
