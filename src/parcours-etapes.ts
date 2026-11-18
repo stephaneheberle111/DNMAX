@@ -43,6 +43,19 @@ export interface Etape {
   pointe?: Selon<string | undefined>;
   /** Pour `glisser` : élément d'où part le curseur (sélecteur cherché dans toute la page). */
   depuis?: Selon<string | undefined>;
+  /**
+   * Zone éclairée faite de plusieurs éléments réunis (le premier visible de
+   * chaque sélecteur), par exemple l'en-tête d'un tableau et sa première ligne,
+   * au lieu de la seule première cible.
+   */
+  zone?: readonly string[];
+  /**
+   * Pour `parcourir` : haltes du curseur, dans l'ordre, sur le premier élément
+   * visible de chaque sélecteur (au lieu de tous les éléments de `pointe`).
+   */
+  haltes?: readonly string[];
+  /** Après le clic de l'enseignant sur la zone (étape `avanceAuClic`), ce que la visite fait encore pour lui. */
+  apresClic?: () => void;
   /** Boutons que la bulle, rangée dans un coin, doit laisser visibles (en plus de `pointe`). */
   aDegager?: string;
   geste?: Selon<Geste>;
@@ -184,20 +197,22 @@ function pageConstituer(page: string): () => boolean {
 }
 
 /**
- * Une page de Référentiel > Constituer : le curseur passe sur les champs de la
- * première ligne, puis sur le bouton bleu du bas, qui mène à la page suivante.
+ * Une page de Référentiel > Constituer : la zone éclairée se limite à
+ * l'en-tête du tableau et à sa première ligne, où le curseur passe sur chaque champ.
  */
-function etapePageConstituer(titre: string, texte: string, champs: readonly string[], suivante: string): Etape {
-  const bouton = `.btn.primary[data-cp="${suivante}"]`;
+function etapePageConstituer(titre: string, texte: string, zone: readonly string[], haltes: readonly string[]): Etape {
+  return { titre, texte, cibles: [zone[0] ?? "#cpMain"], zone, haltes, pointe: haltes.join(", "), geste: "parcourir" };
+}
+
+/** Passage à la page suivante de « Constituer », par la barre des étapes en haut. */
+function etapeOuvrirPageConstituer(page: string, libelle: string): Etape {
   return {
-    titre,
-    texte,
-    cibles: ["#refPane"],
-    pointe: [...champs, bouton].join(", "),
-    aDegager: bouton,
-    geste: "parcourir",
-    atteinte: pageConstituer(suivante),
-    ouvrir: cliquer(`#refPane ${bouton}`),
+    titre: "1. Constituer",
+    texte: `Passez à la page suivante par la barre du haut : « ${libelle} ».`,
+    cibles: [`#refPane .steps [data-cp="${page}"]`],
+    geste: "cliquer",
+    atteinte: pageConstituer(page),
+    avanceAuClic: true,
     celebrer: true,
   };
 }
@@ -225,14 +240,14 @@ const PRISE_EN_MAIN: Parcours = {
         "la répartition de service, une première évaluation, puis vos préférences et les modules. Ce qui est déjà fait est coché au passage. " +
         "Rien n'y est obligatoire : passez une étape avec « Suivant », ou toute la visite, et relancez-la depuis « Paramètres », panneau « Visites guidées ».",
     },
-    ALLER_REFERENTIEL,
     {
-      titre: "1. Constituer",
-      texte: "Choisissez « Constituer » : vous y vérifiez le référentiel de votre mention page par page, des unités d'enseignement à la validation.",
-      cibles: ['#refNav [data-pane="constituer"]'],
-      geste: "cliquer",
+      ...ALLER_REFERENTIEL,
+      texte:
+        "Ouvrez l'onglet « Référentiel » : il contient le référentiel de votre mention. La visite vous mène à « Constituer », " +
+        "où vous le vérifiez page par page, des unités d'enseignement à la validation.",
+      // L'onglet ouvert, la visite choisit « Constituer » à la place de l'enseignant.
+      apresClic: cliquer('#refNav [data-pane="constituer"]'),
       atteinte: paneReferentiel("constituer"),
-      avanceAuClic: true,
     },
     {
       titre: "1. Constituer",
@@ -244,15 +259,15 @@ const PRISE_EN_MAIN: Parcours = {
     },
     etapePageConstituer(
       "1. Unités d'enseignement",
-      "Pour chaque UE, vérifiez sa couleur (elle la signale partout dans DNMAX), corrigez au besoin son nom et les semestres où elle est programmée. " +
-        "Cliquez ensuite le bouton bleu du bas, « 2. Enseignements constitutifs ».",
+      "Pour chaque UE, vérifiez sa couleur (elle la signale partout dans DNMAX), corrigez au besoin son nom et les semestres où elle est programmée.",
+      ["#cpMain .edhead", '#cpMain [data-row="u0"]'],
       ['[data-row="u0"] input[type="color"]', '[data-row="u0"] input[data-cf$="|nom"]', '[data-row="u0"] .sems'],
-      "ecs",
     ),
+    etapeOuvrirPageConstituer("ecs", "2. Enseignements constitutifs"),
     etapePageConstituer(
       "1. Enseignements constitutifs",
-      "Même vérification pour chaque EC : sa couleur, ses codes d'une année à l'autre, son nom, son UE et ses semestres. " +
-        "Puis le bouton bleu, « 3. Blocs et compétences ».",
+      "Même vérification pour chaque EC : sa couleur, ses codes d'une année à l'autre, son nom, son UE et ses semestres.",
+      ["#cpMain .edhead", '#cpMain [data-row="e0"]'],
       [
         '[data-row="e0"] input[type="color"]',
         '[data-row="e0"] .codes3',
@@ -260,20 +275,22 @@ const PRISE_EN_MAIN: Parcours = {
         '[data-row="e0"] [data-em]',
         '[data-row="e0"] .chips',
       ],
-      "blocs",
     ),
+    etapeOuvrirPageConstituer("blocs", "3. Blocs et compétences"),
     etapePageConstituer(
       "1. Blocs et compétences",
-      "Relisez le code et l'intitulé de chaque compétence, et le bloc auquel elle appartient. Puis le bouton bleu, « 4. Planification par semestre ».",
+      "Relisez le code et l'intitulé de chaque compétence, et le bloc auquel elle appartient.",
+      ["#cpMain .edhead", '#cpMain [data-row="c0"]'],
       ['[data-row="c0"] [data-ccode]', '[data-row="c0"] textarea', '[data-row="c0"] [data-cbloc]'],
-      "tableau",
     ),
+    etapeOuvrirPageConstituer("tableau", "4. Planification par semestre"),
     etapePageConstituer(
       "1. Planification par semestre",
-      "Chaque case rattache une compétence à un EC pour un semestre ; filtrez par semestre en haut. Vérifiez la planification, puis le bouton bleu, « 5. Validation ».",
+      "Chaque case rattache une compétence à un EC pour un semestre ; filtrez par semestre au-dessus du tableau.",
+      ["#cpMain .semfilter", "#cpMain thead", "#cpMain tbody tr:has([data-tog])"],
       [".semfilter .seg", '[data-tog="c0|e0|S1"]'],
-      "valider",
     ),
+    etapeOuvrirPageConstituer("valider", "5. Validation"),
     {
       titre: "1. Valider le référentiel",
       texte:
@@ -298,10 +315,13 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "1. La carte du référentiel",
       texte:
-        "Chaque portion de la carte est une unité d'enseignement, année par année : survolez-la pour l'éclater, cliquez pour la figer. " +
+        "Survolez un EC : la vue s'éclate autour de lui. Dézoomez (−) pour voir toute la roue, puis passez sur un point : " +
+        "chaque point est une compétence, et la carte montre à quel EC elle est associée. " +
         "La recherche retrouve une compétence par son code (C4.1, EC 11.2) ou un mot-clé.",
       cibles: ["#refExplore"],
-      geste: "regarder",
+      haltes: ['#refExplore .radial .sg[data-kind="ec"]', '#refExplore [data-rz="-1"]', "#refExplore .radial .dot"],
+      pointe: '#refExplore .radial .sg[data-kind="ec"], #refExplore [data-rz="-1"], #refExplore .radial .dot',
+      geste: "parcourir",
     },
     {
       titre: "1. Ajouter un référentiel",

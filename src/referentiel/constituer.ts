@@ -207,23 +207,6 @@ export function peindrePageConstituer(hote: HTMLElement, contexte: ContextePageC
   } else {
     navigation.append(balise("span"));
   }
-  const suivante = etapes[rangEtape + 1];
-  if (suivante !== undefined) {
-    const bouton = balise(
-      "button",
-      [
-        ["type", "button"],
-        ["class", "btn primary"],
-        ["data-cp", suivante],
-      ],
-      `${String(rangEtape + 2)}. ${ETAPES_CONSTITUER[suivante]} →`,
-    );
-    bouton.addEventListener("click", () => {
-      contexte.choisirEtape(suivante);
-    });
-    navigation.append(bouton);
-  }
-
   hote.replaceChildren(barre, liste, zone, navigation);
   if (contexte.etape === "valider") peindreValidation(zone, contexte, courant, etat, planifiees);
   else contexte.peindreEtape(contexte.etape, zone);

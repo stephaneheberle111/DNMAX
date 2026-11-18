@@ -39,24 +39,46 @@ describe("prise en main, grande étape Référentiel", () => {
     expect(cibles.some((cible) => cible.includes("definir"))).toBe(false);
   });
 
-  it("guide « Constituer » page par page, chaque page se terminant par son bouton bleu et des confettis", () => {
+  it("mène de l'onglet « Référentiel » droit à « Constituer », sans clic de plus", () => {
     const etapes = PARCOURS_DEFINIS["prise-en-main"].etapes;
-    const suivantes = ["ecs", "blocs", "tableau", "valider"];
-    const rangs = suivantes.map((suivante) =>
-      etapes.findIndex((etape) => etape.aDegager === `.btn.primary[data-cp="${suivante}"]` && etape.celebrer === true),
+    const onglet = etapes.find((etape) => etape.cibles?.includes("#t-ref") === true && etape.apresClic !== undefined);
+    expect(onglet).toBeDefined();
+    expect(etapes.some((etape) => etape.cibles?.includes('#refNav [data-pane="constituer"]') === true)).toBe(false);
+  });
+
+  it("guide « Constituer » page par page, en passant à la suivante par la barre du haut, avec des confettis", () => {
+    const etapes = PARCOURS_DEFINIS["prise-en-main"].etapes;
+    const rangs = ["ecs", "blocs", "tableau", "valider"].map((page) =>
+      etapes.findIndex((etape) => etape.cibles?.includes(`#refPane .steps [data-cp="${page}"]`) === true && etape.celebrer === true),
     );
     rangs.forEach((rang) => {
-      expect(rang).toBeGreaterThan(etapes.findIndex((etape) => etape.cibles?.includes('#refNav [data-pane="constituer"]') === true));
+      expect(rang).toBeGreaterThan(0);
     });
     expect([...rangs].sort((a, b) => a - b)).toEqual(rangs);
     expect(rangs[3]).toBeLessThan(etapes.findIndex((etape) => etape.titre === "1. Valider le référentiel"));
+    expect(etapes.some((etape) => `${String(etape.pointe)}${etape.aDegager ?? ""}`.includes(".btn.primary[data-cp"))).toBe(false);
+  });
+
+  it("n'éclaire que l'en-tête et la première ligne de chaque page de « Constituer »", () => {
+    const pages = PARCOURS_DEFINIS["prise-en-main"].etapes.filter((etape) => etape.zone !== undefined && etape.cibles?.[0]?.startsWith("#cpMain") === true);
+    expect(pages).toHaveLength(4);
+    for (const page of pages) {
+      expect(page.zone?.some((selecteur) => selecteur.includes(".edhead") || selecteur.includes("thead"))).toBe(true);
+      expect(page.zone?.some((selecteur) => selecteur.includes("[data-row=") || selecteur.includes("tbody tr"))).toBe(true);
+    }
   });
 
   it("fait vérifier les couleurs, le nom et les semestres de la première UE", () => {
-    const page = PARCOURS_DEFINIS["prise-en-main"].etapes.find((etape) => etape.aDegager === '.btn.primary[data-cp="ecs"]');
-    expect(page?.pointe).toContain('input[type="color"]');
-    expect(page?.pointe).toContain(".sems");
+    const page = PARCOURS_DEFINIS["prise-en-main"].etapes.find((etape) => etape.titre === "1. Unités d'enseignement");
+    expect(page?.haltes).toContain('[data-row="u0"] input[type="color"]');
+    expect(page?.haltes).toContain('[data-row="u0"] .sems');
     expect(page?.geste).toBe("parcourir");
+  });
+
+  it("fait éclater la carte par un EC, dézoomer, puis survoler une compétence, sans faire tourner la roue", () => {
+    const carte = PARCOURS_DEFINIS["prise-en-main"].etapes.find((etape) => etape.titre === "1. La carte du référentiel");
+    expect(carte?.haltes).toEqual(['#refExplore .radial .sg[data-kind="ec"]', '#refExplore [data-rz="-1"]', "#refExplore .radial .dot"]);
+    expect(carte?.geste).toBe("parcourir");
   });
 });
 
@@ -214,7 +236,7 @@ describe("prise en main, guidage fin", () => {
   });
 
   it("promène le curseur sur chaque page de « Constituer »", () => {
-    const pages = etapes.filter((etape) => etape.aDegager?.startsWith(".btn.primary[data-cp=") === true);
+    const pages = etapes.filter((etape) => etape.zone !== undefined && etape.cibles?.[0]?.startsWith("#cpMain") === true);
     expect(pages).toHaveLength(4);
     pages.forEach((page) => {
       expect(page.geste).toBe("parcourir");

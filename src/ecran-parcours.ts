@@ -143,6 +143,62 @@ function estVisible(element: Element): boolean {
   return rectangle.width > 0 && rectangle.height > 0;
 }
 
+/**
+ * Vrai si le centre de l'élément est à l'écran et dans le cadre de chacun de
+ * ses ancêtres qui coupent leur contenu (une carte zoomée garde hors de son
+ * cadre des éléments qui ont pourtant une taille).
+ */
+function centreApparent(element: Element): boolean {
+  const rectangle = element.getBoundingClientRect();
+  const x = rectangle.left + rectangle.width / 2;
+  const y = rectangle.top + rectangle.height / 2;
+  if (x < 0 || y < 0 || x > window.innerWidth || y > window.innerHeight) return false;
+  for (let parent = element.parentElement; parent !== null; parent = parent.parentElement) {
+    const style = getComputedStyle(parent);
+    if (style.overflowX === "visible" && style.overflowY === "visible") continue;
+    const limite = parent.getBoundingClientRect();
+    if (x < limite.left || x > limite.right || y < limite.top || y > limite.bottom) return false;
+  }
+  return true;
+}
+
+/** Premier élément visible désigné par le sélecteur, hors de la bulle ; avec `apparent`, seulement s'il se voit vraiment. */
+function premierVisible(selecteur: string, apparent = false): Element | null {
+  for (const candidat of document.querySelectorAll(selecteur)) {
+    if (!estVisible(candidat) || candidat.closest(".parcours-bulle")) continue;
+    if (!apparent || centreApparent(candidat)) return candidat;
+  }
+  return null;
+}
+
+/** Cadre visible d'un élément : coupé par ses ancêtres qui font défiler (tableau large) et par la fenêtre. */
+function cadreVisible(element: Element): DOMRect {
+  const cadre = element.getBoundingClientRect();
+  let gauche = Math.max(cadre.left, 0);
+  let droite = Math.min(cadre.right, window.innerWidth);
+  for (let parent = element.parentElement; parent !== null; parent = parent.parentElement) {
+    const debord = getComputedStyle(parent).overflowX;
+    if (debord === "auto" || debord === "scroll" || debord === "hidden") {
+      const limite = parent.getBoundingClientRect();
+      gauche = Math.max(gauche, limite.left);
+      droite = Math.min(droite, limite.right);
+    }
+  }
+  return new DOMRect(gauche, cadre.top, Math.max(0, droite - gauche), cadre.height);
+}
+
+/** Cadre de la zone éclairée : la cible, ou la réunion des éléments de `zone` quand l'étape en donne. */
+function cadreDeLaZone(etape: Etape, cible: Element): DOMRect {
+  const elements = (etape.zone ?? []).map((selecteur) => premierVisible(selecteur)).filter((element) => element !== null);
+  if (elements.length === 0) return cible.getBoundingClientRect();
+  const cadres = elements.map((element) => cadreVisible(element));
+  const gauche = Math.min(...cadres.map((cadre) => cadre.left));
+  const haut = Math.min(...cadres.map((cadre) => cadre.top));
+  const droite = Math.max(...cadres.map((cadre) => cadre.right));
+  const bas = Math.max(...cadres.map((cadre) => cadre.bottom));
+  return new DOMRect(gauche, haut, droite - gauche, bas - haut);
+}
+
 function trouverCible(etape: Etape): Element | null {
   for (const selecteur of etape.cibles ?? []) {
     for (const candidat of document.querySelectorAll(selecteur)) {
@@ -709,7 +765,14 @@ function placerCurseur(trou: DOMRect | null, etape: Etape): void {
     return;
   }
   const pointe = pointeDe(etape);
-  const candidats = pointe === undefined ? [] : [...(cibleCourante?.querySelectorAll(pointe) ?? [])].filter((element) => estVisible(element));
+  // Haltes données dans l'ordre : le premier élément de chacune qui se voit vraiment (une carte zoomée garde hors de
+  // son cadre des éléments qui ont pourtant une taille).
+  const candidats =
+    etape.haltes !== undefined
+      ? etape.haltes.map((selecteur) => premierVisible(selecteur, true)).filter((element) => element !== null)
+      : pointe === undefined
+        ? []
+        : [...(cibleCourante?.querySelectorAll(pointe) ?? [])].filter((element) => estVisible(element));
   if (geste === "parcourir" && candidats.length > 0) {
     // Le curseur se pose tour à tour sur chaque élément visible à l'écran (la transition CSS le fait glisser
     // de l'un à l'autre) ; il ne part pas hors de l'écran, l'enseignant fait défiler à son rythme.
@@ -762,7 +825,7 @@ function redessiner(): void {
   cibleCourante = cible;
   defilerVers(cible);
   const cibleDansBoite = cible !== null && boiteOuverte !== null && boiteOuverte.contains(cible);
-  const brut = cible?.getBoundingClientRect() ?? null;
+  const brut = cible === null ? null : cadreDeLaZone(etape, cible);
   const visee = brut === null ? null : new DOMRect(brut.left - MARGE, brut.top - MARGE, brut.width + MARGE * 2, brut.height + MARGE * 2);
   // La zone glisse depuis sa place précédente ; sans cible, elle se resserre au centre de l'écran.
   const { zone, enMouvement } = avancerGlissement(visee ?? centreEcran(), performance.now());
@@ -820,6 +883,7 @@ function redessiner(): void {
       ecouteClic = () => {
         // Laisse l'application traiter le clic avant de passer à la suite.
         window.setTimeout(() => {
+          etape.apresClic?.();
           avancerDepuis(index);
         }, 150);
       };
