@@ -4,7 +4,7 @@
  * attendus, les enseignants et le semestre. Les règles sont dans
  * `domaine/evaluation` ; ce module affiche et transmet.
  */
-import { basculerEc, basculerUe, cadreDuSemestre, promotionsBloquees, uesRetenues } from "../domaine/cadre-evaluation";
+import { basculerEc, basculerUe, cadreDuSemestre, promotionsBloquees, separerMiennes, uesRetenues } from "../domaine/cadre-evaluation";
 import { basculerLivrableAttendu } from "../domaine/evaluation";
 import { creer, creerBouton } from "../ecran-echange";
 
@@ -305,6 +305,8 @@ export interface PromotionProposee {
   /** Vrai si la promotion est en cours (son année est dans la durée du diplôme). */
   readonly enCours: boolean;
   readonly referentielValide: boolean;
+  /** Vrai si la promotion est dans la répartition de service de l'enseignant (ou s'il n'en a pas encore). */
+  readonly mienne: boolean;
 }
 
 /** Ce que l'éditeur confie au choix des promotions. */
@@ -315,8 +317,8 @@ export interface ContextePromotions {
   readonly anneeScolaire: string;
   /** Vrai s'il n'y a aucune promotion en cours cette année scolaire. */
   readonly aucuneEnCours: boolean;
-  /** Vrai si le référentiel de l'évaluation n'est pas validé : elle ne pourra pas être enregistrée. */
-  readonly referentielBloquant: boolean;
+  /** Vrai si le référentiel de l'évaluation n'est pas validé (elle s'enregistre quand même). */
+  readonly referentielNonValide: boolean;
   allerValidation(): void;
   basculer(nom: string): void;
 }
@@ -326,30 +328,44 @@ export function peindrePromotions(contexte: ContextePromotions): void {
   const hote = document.getElementById("f-classes");
   if (hote === null) return;
   const bloquees = promotionsBloquees(contexte.promotions, contexte.cochees);
-  const elements: HTMLElement[] = contexte.promotions.map((promotion) => {
+  const { miennes, autres } = separerMiennes(contexte.promotions);
+  const boutonPromotion = (promotion: PromotionProposee): HTMLElement => {
     const cochee = contexte.cochees.includes(promotion.nom);
     const bloquee = bloquees.has(promotion.nom);
-    const bouton = creerBouton(promotion.libelle, "liv", () => {
+    const element = creerBouton(promotion.libelle, "liv", () => {
       contexte.basculer(promotion.nom);
     });
-    bouton.dataset.classe = promotion.nom;
-    bouton.setAttribute("aria-pressed", String(cochee));
-    bouton.disabled = bloquee;
-    bouton.title =
+    element.dataset.classe = promotion.nom;
+    element.setAttribute("aria-pressed", String(cochee));
+    element.disabled = bloquee;
+    element.title =
       promotion.nom +
       (bloquee ? " — autre année de formation que la promotion déjà choisie" : "") +
       (promotion.referentielValide ? "" : " — référentiel non validé");
     if (promotion.libelle === promotion.nom && promotion.enCours && promotion.annee !== null) {
-      bouton.append(creer("span", "n", `Année ${String(promotion.annee)}`));
+      element.append(creer("span", "n", `Année ${String(promotion.annee)}`));
     }
-    if (!promotion.referentielValide) bouton.append(creer("span", "n", "référentiel à valider"));
-    return bouton;
-  });
+    if (!promotion.referentielValide) element.append(creer("span", "n", "référentiel à valider"));
+    return element;
+  };
+  const elements: HTMLElement[] = miennes.map(boutonPromotion);
+  // Les promotions hors de ma répartition de service restent proposées, à part et plus discrètes.
+  if (autres.length > 0) {
+    if (miennes.length > 0) elements.push(creer("span", "hint fl-autres", "Hors de votre répartition de service :"));
+    elements.push(
+      ...autres.map((promotion) => {
+        const element = boutonPromotion(promotion);
+        element.classList.add("discrete");
+        element.title += " — hors de votre répartition de service";
+        return element;
+      }),
+    );
+  }
   if (contexte.aucuneEnCours) {
     elements.push(creer("span", "hint", `Aucune promotion en cours en ${contexte.anneeScolaire} : crée-la dans Mon établissement > Promotions.`));
   }
-  if (contexte.referentielBloquant) {
-    const alerte = creer("span", "hint", "Le référentiel de cette évaluation n'est pas validé : elle ne pourra pas être enregistrée. ");
+  if (contexte.referentielNonValide) {
+    const alerte = creer("span", "hint", "Le référentiel de cette évaluation n'est pas validé : vous pouvez l'enregistrer, mais pensez à le vérifier et à le valider. ");
     alerte.id = "f-refnv";
     alerte.style.color = "var(--signal)";
     alerte.style.flexBasis = "100%";

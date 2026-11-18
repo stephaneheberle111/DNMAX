@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { basculerEc, basculerUe, cadreDuSemestre, promotionsBloquees, rangEc, uesRetenues } from "./cadre-evaluation";
+import { basculerEc, basculerUe, cadreDuSemestre, promotionsBloquees, rangEc, separerMiennes, uesRetenues } from "./cadre-evaluation";
 
 const ECS = [
   { ec: "EC 1.1", ue: "UE 1" },
@@ -74,5 +74,25 @@ describe("promotionsBloquees", () => {
 
   it("ne bloque rien quand l'année de la promotion cochée est inconnue", () => {
     expect(promotionsBloquees(promotions, ["Ancienne"]).size).toBe(0);
+  });
+});
+
+describe("separerMiennes", () => {
+  const promotions = [
+    { nom: "DNO1", mienne: true },
+    { nom: "DNE1", mienne: false },
+    { nom: "DNO2", mienne: true },
+  ];
+
+  it("met d'abord les promotions de ma répartition de service, dans leur ordre", () => {
+    expect(separerMiennes(promotions).miennes.map((promotion) => promotion.nom)).toEqual(["DNO1", "DNO2"]);
+  });
+
+  it("range à part les autres promotions", () => {
+    expect(separerMiennes(promotions).autres.map((promotion) => promotion.nom)).toEqual(["DNE1"]);
+  });
+
+  it("ne range rien à part quand toutes sont miennes", () => {
+    expect(separerMiennes([{ nom: "DNO1", mienne: true }]).autres).toEqual([]);
   });
 });

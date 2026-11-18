@@ -4,6 +4,8 @@
 
 ### Modifié
 
+- Nouvelle évaluation, promotions : celles de votre répartition de service viennent d'abord ; les autres promotions en cours restent proposées à part, plus discrètes, au lieu d'être cachées.
+- Une évaluation peut être créée, enregistrée et notée même si le référentiel de sa promotion n'est pas encore validé. En cochant une telle promotion, une fenêtre vous le rappelle et propose d'aller à la validation ; les UE, EC et compétences proposés sont ceux du référentiel de la promotion.
 - Référentiel > Constituer : le bouton bleu de bas de page, qui menait à la page suivante, disparaît ; on passe d'une page à l'autre par la barre des étapes, en haut.
 - L'installeur Windows s'affiche en français, sans demander la langue.
 - Module Étudiants : l'avertissement RGPD, les documents à remettre et la confirmation du mot de passe (et, s'il le faut, le choix d'un mot de passe plus solide) tiennent dans une seule fenêtre. Une fois le module activé, « Documents à remettre », dans sa carte de Paramètres > Modules, rouvre l'information aux étudiants et la note au chef d'établissement.

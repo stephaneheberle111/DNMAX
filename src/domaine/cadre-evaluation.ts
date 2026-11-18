@@ -90,3 +90,12 @@ export function promotionsBloquees(promotions: readonly PromotionDuDiplome[], co
           .map((promotion) => promotion.nom),
   );
 }
+
+/**
+ * Promotions proposées à une évaluation, en deux groupes : celles de la
+ * répartition de service de l'enseignant d'abord, puis les autres, montrées
+ * plus discrètement. L'ordre de chaque groupe est gardé.
+ */
+export function separerMiennes<P extends { readonly mienne: boolean }>(promotions: readonly P[]): { miennes: P[]; autres: P[] } {
+  return { miennes: promotions.filter((promotion) => promotion.mienne), autres: promotions.filter((promotion) => !promotion.mienne) };
+}
