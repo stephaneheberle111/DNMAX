@@ -102,7 +102,7 @@ Suivre #186 comme modèle :
 
 - Étiquettes `v0.7.0` et `v0.8.0` : l'auteur souhaite les déplacer sur l'historique réécrit (réponse du 18 novembre), mais la session ne peut pas pousser d'étiquette (refus 403). Correspondances vérifiées (même arbre, même date, même message) : `v0.7.0` → `d7d3bff`, `v0.8.0` → `f5fd052`. Les publications GitHub correspondantes ne sont pas immuables. À faire depuis un clone de l'auteur : `git tag -f v0.7.0 d7d3bff… && git tag -f v0.8.0 f5fd052… && git push --force origin refs/tags/v0.7.0 refs/tags/v0.8.0`.
 
-Décidé le 18 novembre : dans « Mes évaluations », l'enseignant filtre selon qu'il est l'auteur de l'évaluation et selon les promotions, les siennes d'abord, celles des collègues accessibles mais masquées par défaut. C'est l'objet de #209, menée dans une autre session.
+Décidé le 18 novembre : dans « Mes évaluations », l'enseignant filtre selon qu'il est l'auteur de l'évaluation et selon les promotions, les siennes d'abord, celles des collègues accessibles mais masquées par défaut. Fait par #209 pour les promotions (celles des collègues masquées, affichées à la demande ; une évaluation hors répartition apparaît si l'une de ses promotions est cochée).
 
 ## Méthode : réécrire sans rien changer
 
