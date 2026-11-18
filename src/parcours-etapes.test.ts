@@ -59,12 +59,16 @@ describe("prise en main, grande étape Référentiel", () => {
     expect(etapes.some((etape) => `${String(etape.pointe)}${etape.aDegager ?? ""}`.includes(".btn.primary[data-cp"))).toBe(false);
   });
 
-  it("n'éclaire que l'en-tête et la première ligne de chaque page de « Constituer »", () => {
-    const pages = PARCOURS_DEFINIS["prise-en-main"].etapes.filter((etape) => etape.zone !== undefined && etape.cibles?.[0]?.startsWith("#cpMain") === true);
-    expect(pages).toHaveLength(4);
+  it("éclaire toute la page de chaque étape de « Constituer », pour pouvoir corriger chaque ligne", () => {
+    const pages = PARCOURS_DEFINIS["prise-en-main"].etapes.filter((etape) => etape.geste === "parcourir" && etape.cibles?.[0] === "#cpMain");
+    expect(pages.map((page) => page.titre)).toEqual([
+      "1. Unités d'enseignement",
+      "1. Enseignements constitutifs",
+      "1. Blocs et compétences",
+      "1. Planification par semestre",
+    ]);
     for (const page of pages) {
-      expect(page.zone?.some((selecteur) => selecteur.includes(".edhead") || selecteur.includes("thead"))).toBe(true);
-      expect(page.zone?.some((selecteur) => selecteur.includes("[data-row=") || selecteur.includes("tbody tr"))).toBe(true);
+      expect(page.zone).toBeUndefined();
     }
   });
 
@@ -223,8 +227,37 @@ describe("prise en main, guidage fin", () => {
 
   it("fait cocher l'attestation puis cliquer « Valider cette version », sans saluer avant la validation", () => {
     const valider = etapes.find((etape) => etape.titre === "1. Valider le référentiel");
-    expect(valider?.pointe).toBeTypeOf("function");
+    expect(valider?.geste).toBe("parcourir");
+    // Sans navigateur : aucune case cochée, le curseur passe par la case puis par le bouton.
+    vi.stubGlobal("document", { querySelectorAll: () => [] });
+    expect(typeof valider?.haltes === "function" ? valider.haltes() : valider?.haltes).toEqual(["#cAtteste", "#cValid"]);
+    vi.unstubAllGlobals();
     expect(valider?.objectif?.({ ...RIEN_FAIT, referentiel: true })).toBe(false);
+  });
+
+  it("ne montre le lien entre compétences qu'à partir de deux compétences", () => {
+    const lier = etapes.find((etape) => etape.titre === "5. Lier des compétences");
+    vi.stubGlobal("document", { querySelectorAll: () => [{}] });
+    expect(lier?.groupeFait?.(RIEN_FAIT)).toBe(true);
+    vi.stubGlobal("document", { querySelectorAll: () => [{}, {}] });
+    expect(lier?.groupeFait?.(RIEN_FAIT)).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("passe à la suite dès l'évaluation enregistrée, avec des confettis, sans faire recliquer « Mes évaluations »", () => {
+    const rang = etapes.findIndex((etape) => etape.titre === "5. Formuler et enregistrer");
+    const formuler = etapes[rang];
+    expect(formuler?.celebrer).toBe(true);
+    expect(formuler?.atteinte).toBeTypeOf("function");
+    expect(formuler?.cibles).not.toContain("#t-saved");
+    // L'étape suivante, retour à « Mes évaluations », est sautée : l'enregistrement y mène déjà.
+    expect(etapes[rang + 1]?.cibles).toEqual(["#t-saved"]);
+    expect(etapes[rang + 1]?.atteinte).toBeTypeOf("function");
+  });
+
+  it("laisse le temps de finir de saisir le nom d'un collègue avant de passer à la suite", () => {
+    const collegues = etapes.find((etape) => etape.titre === "3. Vos collègues");
+    expect(collegues?.delaiSalut).toBeGreaterThanOrEqual(4000);
   });
 
   it("montre, avant la formulation, qu'une compétence se glisse sur une autre pour les lier", () => {
@@ -236,7 +269,7 @@ describe("prise en main, guidage fin", () => {
   });
 
   it("promène le curseur sur chaque page de « Constituer »", () => {
-    const pages = etapes.filter((etape) => etape.zone !== undefined && etape.cibles?.[0]?.startsWith("#cpMain") === true);
+    const pages = etapes.filter((etape) => etape.haltes !== undefined && etape.cibles?.[0] === "#cpMain");
     expect(pages).toHaveLength(4);
     pages.forEach((page) => {
       expect(page.geste).toBe("parcourir");

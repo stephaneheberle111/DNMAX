@@ -30,6 +30,8 @@ export interface EtatInterface {
   preferences: Objet;
   /** État d'affichage : onglet, étape, filtres… (`ui`). */
   ui: Objet;
+  /** Élément dont la suppression attend un second clic (`edArm`), ou `null`. */
+  armement: unknown;
 }
 
 /** Nom employé par le fichier historique pour chaque partie de l'état. */
@@ -42,11 +44,12 @@ export const NOMS_HISTORIQUES: Readonly<Record<string, keyof EtatInterface>> = {
   MOD: "modules",
   PREFS: "preferences",
   ui: "ui",
+  edArm: "armement",
 };
 
 /** État vide, rempli par le fichier historique à son chargement. */
 export function etatVide(): EtatInterface {
-  return { donnees: {}, referentiel: {}, evaluation: {}, evaluations: [], promotions: [], modules: {}, preferences: {}, ui: {} };
+  return { donnees: {}, referentiel: {}, evaluation: {}, evaluations: [], promotions: [], modules: {}, preferences: {}, ui: {}, armement: null };
 }
 
 /** L'état de l'application, unique. */

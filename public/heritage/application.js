@@ -106,7 +106,7 @@ migF(F);
 {const nt=window.dnmaxPont.nettoyerDiplomesVierges(DATA,promos);
   if(nt&&nt.modifie){DATA=nt.donnees;materialize(DATA);REF=computeREF();persistData()}}
 syncItemEcs();
-ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"diplome"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
+ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"etab"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
 let dl = window.dnmaxPont.telechargements;
 
 function migF(f){return Object.assign(f,EVAL.normaliserEvaluation(f))}
@@ -1479,76 +1479,10 @@ const REF_PANES={constituer:"Constituer",explorer:"Explorer"};
    et ne retire que ses propres éléments ; ceux des autres étapes y sont en lecture seule. Noms, codes et
    intitulés restent rangés dans le dictionnaire commun à toutes les mentions (DATA.dico). */
 const CON_PANES={ues:"Unités d'enseignement",ecs:"Enseignements constitutifs",blocs:"Blocs et compétences",tableau:"Planification par semestre",valider:"Validation"};
-/* les livrables proposés se règlent dans Mon compte > Préférences */
-const ORG_PANES={etab:"Établissement",diplome:"Diplômes et mentions",promos:"Promotions",enseignants:"Enseignants",affect:"Répartition de service"};
-let edArm=null;
-function paintOrg(){
-  const pane=ORG_PANES[ui.org.pane]?ui.org.pane:"diplome";
-  const nav=document.getElementById("orgNav");
-  nav.innerHTML=Object.entries(ORG_PANES).map(([k,v])=>
-    `<button type="button" data-opane="${k}" aria-pressed="${pane===k}">${esc(v)}</button>`).join("");
-  nav.querySelectorAll("[data-opane]").forEach(b=>b.onclick=()=>{
-    ui.org.pane=b.dataset.opane;edArm=null;paintOrg();window.scrollTo({top:0,behavior:"smooth"})});
-  const host=document.getElementById("orgPane");
-  if(pane==="etab")return paintEtab(host);
-  if(pane==="promos")return paintPromosOrg(host);
-  if(pane==="affect")return paintAffect(host);
-  paintEditor(pane,host);
-}
-/* Volets Établissement et Répartition de service : écrans écrits en TypeScript (src/etablissement/volets.ts) */
-function paintEtab(host){
-  DATA.etab=DATA.etab||{nom:"",uai:"",ville:"",academie:"",contactDpo:""};
-  const cal=calendrier();
-  window.dnmaxPont.etablissement.peindreVoletEtablissement(host,{etablissement:DATA.etab,calendrier:{rentree:cal.rentree,bascule:cal.bascule},enregistrer:()=>persistData()});
-}
-/* Répartition de service : pour chaque promotion, les EC de son année (dans le référentiel de sa mention)
-   et le ou les enseignants qui les assurent. rangés par année scolaire dans DATA.affectH (voir affH). */
-function promoEcs(pr,as){
-  const D=DATA, a=promoAnneeAt(pr,as||anneeScolaire(new Date())), R=refOf(D,pr.diplomeId);
-  return R.ecs.map(r=>{const x=D.dico.ecs.find(y=>y.id===r.id)||{};const code=((r.codes||{})[a])||"";
-      const u=D.dico.ues.find(y=>y.id===r.ueId)||{};
-      return code?{id:r.id,code,nom:x.nom||code,couleur:x.couleur||u.couleur||"#9aa2ae",ue:u.nom||"",ueId:r.ueId||""}:null})
-    .filter(Boolean).sort((p2,q)=>ecNum(p2.code)-ecNum(q.code));
-}
-/* Répartition de service historisée par année scolaire : DATA.affectH["2026-2027"][promoId][ecId] = [idEnseignant…]. */
+/* Mon établissement (barre des volets, Établissement, Répartition de service, Promotions) et suppression en
+   deux temps (armDel, edArm) : écrits en TypeScript (src/interface/etablissement.ts), règles dans
+   src/domaine/repartition.ts. Reste ici asOf, dont l'exemple et la progression se servent. */
 const asOf=y=>y+"-"+(+y+1);
-function affH(){DATA.affectH=DATA.affectH||{};return DATA.affectH}
-function affectOf(prId,as){const H=affH(), y=as||anneeScolaire(new Date());H[y]=H[y]||{};return H[y][prId]||(H[y][prId]={})}
-function affGet(prId,as){return ((affH()[as||anneeScolaire(new Date())])||{})[prId]||{}}
-/* l'enseignant a-t-il eu cette promotion, une année ou une autre ? (mes étudiants et mes anciens étudiants) */
-function teachesPromo(prId,tid){return !!tid&&Object.values(affH()).some(Y=>Object.values((Y||{})[prId]||{}).some(l=>(l||[]).includes(tid)))}
-function paintAffect(host){
-  const D=DATA, ASnow=anneeScolaire(new Date()), y0=asStart(ASnow);
-  const years=[0,1,2,3,4].map(k=>asOf(y0-k));
-  const AS=years.includes(ui.org.affY)?ui.org.affY:ASnow;ui.org.affY=AS;
-  const cur=promos.map(migPromoCohorte).filter(pr=>{const a=promoAnneeAt(pr,AS);return a>=1&&a<=promoDuree(pr)});
-  const dIdx=id=>D.diplomes.findIndex(d=>d.id===id);
-  cur.sort((x,y)=>(dIdx(x.diplomeId)-dIdx(y.diplomeId))||(promoAnneeAt(x,AS)-promoAnneeAt(y,AS)));
-  const vide=!D.enseignants.length||!cur.length;
-  const pr=vide?null:(cur.find(x=>x.id===ui.org.aff)||cur[0]);if(pr)ui.org.aff=pr.id;
-  const A=pr?affectOf(pr.id,AS):{}, a=pr?promoAnneeAt(pr,AS):0;
-  window.dnmaxPont.etablissement.peindreRepartition(host,{annees:years,anneeCourante:ASnow,annee:AS,
-    promotions:cur.map(x=>({id:x.id,court:promoShort(x)||"",nom:x.nom||"",diplome:dipLabel(D.diplomes.find(d=>d.id===x.diplomeId)||{})})),
-    promotion:pr?pr.id:"",ecs:pr?promoEcs(pr,AS):[],enseignants:D.enseignants.map(t=>({id:t.id,nom:t.nom})),repartition:A,
-    anneeFormation:a,semestres:pr?semsOfAnnee(a):[],manque:{enseignants:!D.enseignants.length,promotions:!cur.length},
-    nomUe:u=>tidy(u),choisirAnnee:y=>{ui.org.affY=y;paintOrg()},choisirPromotion:id=>{ui.org.aff=id;paintOrg()},
-    enregistrer:rep=>{const H=affH();H[AS]=H[AS]||{};H[AS][pr.id]=rep;persistData();paintOrg()}});
-}
-/* Volet Promotions : écran écrit en TypeScript (src/etablissement/promotions.ts) ; règles dans src/domaine/promotions.ts */
-function paintPromosOrg(host){
-  const D=DATA, AS=anneeScolaire(new Date());
-  promos.forEach(migPromoCohorte);
-  window.dnmaxPont.etablissement.peindrePromotions(host,{promotions:()=>promos,ordreDiplomes:D.diplomes.map(d=>d.id),
-    diplomes:dipVisibles().map(dp=>({id:dp.id,libelle:dipLabel(dp)})),libelleDiplome:id=>dipLabel(D.diplomes.find(d=>d.id===id)||{}),
-    anneeScolaire:AS,moduleEleves:!!MOD.eleves,ouverte:ui.org.promo||"",
-    basculer:id=>{ui.org.promo=ui.org.promo===id?"":id;paintOrg()},
-    anneeFormation:pr=>promoAnneeAt(pr,AS),duree:promoDuree,nomCourt:pr=>promoShort(pr)||"",renommer:pr=>{pr.nom=promoNomAuto(pr)},
-    ajouterPromotion:()=>{const pr={id:uid(),nom:"",debut:asStart(AS),diplomeId:D.activeDiplome,eleves:"",liste:[]};
-      pr.nom=promoNomAuto(pr);promos.push(pr);savePromos();paintOrg();return pr.id},
-    supprimerPromotion:pid=>{promos=promos.filter(x=>x.id!==pid);if(F.promoId===pid){F.promoId="";save()}},
-    nouvelIdentifiantEtudiant:()=>newId("s"),enregistrer:savePromos,redessiner:paintOrg,
-    armement:{arme:edArm,armer:(id,fn)=>armDel(id,fn)},annoncer:toast});
-}
 function paintRef(){
   if(!REF_PANES[ui.ref.pane])ui.ref.pane="explorer";
   if(!CON_PANES[ui.ref.cp])ui.ref.cp="ues";
@@ -1626,10 +1560,6 @@ function contexteEtape(D,dipL){
 }
 /* suppression en deux temps, partagée par les écrans de l'éditeur commun (src/etablissement/editeur-commun.ts) :
    le premier clic arme le bouton et redessine, le second supprime */
-function armDel(id,fn){
-  if(edArm!==id){edArm=id;(ui.tab==="org"?paintOrg:ui.tab==="pref"?paintPrefs:paintRef)();return}
-  edArm=null;fn();
-}
 /* Éditeur commun de Mon établissement et des Préférences : écrans écrits en TypeScript (src/etablissement/),
    règles dans src/domaine/ (diplomes, personnes). Seule la suppression en deux temps reste tenue ici (edArm, armDel). */
 function paintEditor(pane,host){

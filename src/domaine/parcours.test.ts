@@ -18,7 +18,10 @@ const DONNEES_COMPLETES = {
     diplomes: [{ id: "d0", nom: "DN MADE", mention: "Objet" }],
     versions: { d0: [{ id: "v1", date: "2026-09-01", attestation: "2026-09-01" }] },
     valide: { d0: "v1" },
-    enseignants: [{ id: "t1" }, { id: "t2" }],
+    enseignants: [
+      { id: "t1", prenom: "Ana", nomFam: "Roy", nom: "Ana Roy" },
+      { id: "t2", nom: "Ben Petit" },
+    ],
     affectH: { "2026-2027": { p1: { e0: ["t1"] } } },
   }),
   "dnmade.promos": JSON.stringify([
@@ -30,6 +33,15 @@ const DONNEES_COMPLETES = {
 };
 
 describe("lireAvancement", () => {
+  it("ne compte pas un enseignant qu'on vient d'ajouter, tant que son prénom et son nom ne sont pas saisis", () => {
+    const enseignants = [
+      { id: "t1", prenom: "Ana", nomFam: "Roy", nom: "Ana Roy" },
+      { id: "t2", prenom: "", nomFam: "", nom: "" },
+      { id: "t3", prenom: "Zoé", nomFam: " ", nom: "Zoé" },
+    ];
+    expect(lireAvancement({ "dnmade.data": JSON.stringify({ enseignants }) }).enseignants).toBe(1);
+  });
+
   it("compte ce qui est en place dans une installation remplie", () => {
     expect(lireAvancement(DONNEES_COMPLETES)).toEqual({
       referentiel: true,
