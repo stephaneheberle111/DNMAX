@@ -6,9 +6,9 @@
 
 - **Version 0.9.0** : fusionnée dans `main` (#132), **pas publiée**. L'atelier « Publication » n'a pas été lancé ; il ne se lance qu'avec le feu vert de l'auteur.
 - **Recette sur le bureau de l'auteur** : en cours de son côté, avec les installeurs d'essai de l'atelier « Installeurs », exécution n° 8 (Windows et Linux ; macOS annulé faute de machine, comme les fois précédentes), et la fiche `docs/recette-0.9.md` (parties A à J). Puis publication de la 0.9, sur son accord.
-- **0.9.1 en cours** (décision 38, voir plus bas) : groupes 1 et 2 fusionnés (#184, #186) ; le groupe 3 n'est pas commencé (aucune branche).
-- **Contrôles sur `main`** : linter et typage sans erreur, 1 085 tests au vert.
-- **Fichier historique** : 2 224 lignes (7 756 au départ), dont environ 710 pour la carte radiale et la chaîne.
+- **0.9.1 en cours** (décision 38, voir plus bas) : groupes 1 et 2 fusionnés (#184, #186) ; groupe 3 proposé (branche `refactor/versions-referentiel`).
+- **Contrôles sur la branche du groupe 3** : linter et typage sans erreur, 1 128 tests au vert (1 085 sur `main`).
+- **Fichier historique** : 2 115 lignes après le groupe 3 (7 756 au départ), dont environ 710 pour la carte radiale et la chaîne.
 
 ## Le fichier historique
 
@@ -46,6 +46,7 @@
 | #178 | Modèle de données : projection du référentiel actif et d'une version validée, code de chaque année | `src/domaine/modele-donnees.ts` |
 | #184 | 0.9.1, groupe 1 : état de l'interface (`DATA`, `REF`, `F`, `fiches`, `promos`, `MOD`, `PREFS`, `ui`) tenu côté TypeScript et publié sur la fenêtre par accesseurs | `src/interface/etat.ts` |
 | #186 | 0.9.1, groupe 2 : promotions, années scolaires et calendrier (24 fonctions) | `src/interface/promotions-calendrier.ts` |
+| groupe 3 | 0.9.1, groupe 3 : versions et validation du référentiel (22 fonctions ; `allerValidation` reste, à cause d'`edArm`) | `src/interface/versions-referentiel.ts`, règles dans `src/domaine/versions-referentiel.ts` |
 
 Hors reprise, depuis #178 : fiche de recette complétée (#179), installeur Windows en français (#180), visite du référentiel simplifiée et boutons bleus de Constituer retirés (#181), évaluation possible sur un référentiel non validé avec un rappel (#182), mes promotions distinguées des autres dans une évaluation (#183), lien `node_modules` retiré (#185), `promoLabel` rétabli et garde-fou des appels (#187).
 
@@ -67,8 +68,8 @@ La décision 5 est levée : le fichier historique disparaît. 0.9.1 reprend tout
 
 1. État partagé (`src/interface/etat.ts`) : **fait** (#184).
 2. Promotions, années scolaires et calendrier : **fait** (#186).
-3. **Prochain** : versions et validation du référentiel, lignes 1572 à 1687 du fichier historique (`versionsOf`, `refJSON`, `versionActive`, `refAJour`, `dipRefValide`, `promoRefValide`, `promosDeF`, `dipBloquant`, `allerValidation`, `promoDeF`, `promoVid`, `promosEnCours`, `versionPourF`, `projectSnap`, `computeREF`, `versionUsage`, `validerVersion`, `promoLabel`, `askPromosVersion`, `restaurerVersion`, `mentionDeFiche`, `vueMention`, `frDate`). Repéré : `allerValidation` remet à zéro `edArm`, un `let` du fichier historique invisible depuis TypeScript ; le laisser dans le fichier historique jusqu'au groupe 5, ou publier `edArm` dans l'état. Les règles existent déjà en partie dans `src/domaine/validation-referentiel.ts` et `src/domaine/modele-donnees.ts` (`referentielDe`, `projeterVersion`, `absorber`, `materialiser`).
-4. Mon établissement : préparation des volets (`paintOrg`, `paintEtab`, `paintAffect`, `paintPromosOrg`, `affectOf`…).
+3. **Fait (en attente de fusion)** : versions et validation du référentiel, lignes 1572 à 1687 du fichier historique (`versionsOf`, `refJSON`, `versionActive`, `refAJour`, `dipRefValide`, `promoRefValide`, `promosDeF`, `dipBloquant`, `allerValidation`, `promoDeF`, `promoVid`, `promosEnCours`, `versionPourF`, `projectSnap`, `computeREF`, `versionUsage`, `validerVersion`, `promoLabel`, `askPromosVersion`, `restaurerVersion`, `mentionDeFiche`, `vueMention`, `frDate`). Repéré : `allerValidation` remet à zéro `edArm`, un `let` du fichier historique invisible depuis TypeScript ; le laisser dans le fichier historique jusqu'au groupe 5, ou publier `edArm` dans l'état. Les règles existent déjà en partie dans `src/domaine/validation-referentiel.ts` et `src/domaine/modele-donnees.ts` (`referentielDe`, `projeterVersion`, `absorber`, `materialiser`).
+4. **Prochain** : Mon établissement : préparation des volets (`paintOrg`, `paintEtab`, `paintAffect`, `paintPromosOrg`, `affectOf`…).
 5. Référentiel : préparation de Constituer et de l'habillage de la carte (`paintRef`, `paintConstituer`, `paintEtape`, `paintMap` hors dessin).
 6. Éditeur : enregistrement, étapes, contextes des écrans (`save`, `goStep`, `paintPick`, `paintLignes`, `paintEleves`…).
 7. Mes évaluations, exports et actions (`paintSaved`, `exportFiche`, `offer`, `ficheExport`, `buildDocx`…).
