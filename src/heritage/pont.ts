@@ -46,6 +46,8 @@ import * as modele from "../domaine/modele-donnees";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
 import { etat, publierEtat } from "../interface/etat";
 import { publierConstantes } from "../interface/constantes";
+import { publierDonnees } from "../interface/donnees";
+import { publierEvaluationCourante } from "../interface/evaluation-courante";
 import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
 import { publierVersionsReferentiel } from "../interface/versions-referentiel";
 import { publierEtablissement } from "../interface/etablissement";
@@ -440,6 +442,14 @@ export async function chargerInterfaceHistorique(
     // L'état est publié avant le script, qui en affecte les parties sans les déclarer.
     publierEtat(window, etat);
     publierConstantes(window as unknown as Record<string, unknown>);
+    publierDonnees(window as unknown as Record<string, unknown>, {
+      ecrireStockage: (cle, valeur) => {
+        magasin.setItem(cle, valeur);
+      },
+      maintenant: () => Date.now(),
+      hasard: () => Math.random(),
+    });
+    publierEvaluationCourante(window as unknown as Record<string, unknown>, () => Math.random());
     publierPromotionsCalendrier(window as unknown as Record<string, unknown>, (cle, valeur) => {
       magasin.setItem(cle, valeur);
     });

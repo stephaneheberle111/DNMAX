@@ -22,71 +22,24 @@ const LS = {
   set(k,v){try{STOCKAGE.setItem(k,JSON.stringify(v))}catch(e){}}
 };
 MOD = Object.assign(modDefaults(), LS.get("dnmade.modules",{}));
-// un module qui en requiert un autre ne reste pas actif sans lui (Niveaux d'acquisition → Étudiants)
-function modDeps(){window.dnmaxPont.modules.appliquerDependances(MOD)}
+/* Aides du modèle de données (saveData, persistData, newId, anneeCode, ecCodeLbl…) et des préférences :
+   src/interface/donnees.ts. Aides de l'évaluation en cours (studentsOf, lignesOf, syncListe, ecsOfSem…) :
+   src/interface/evaluation-courante.ts. Les règles sont dans src/domaine/. */
 modDeps();
 MOD.base=true;
-/* Modèle des données de l'établissement (dictionnaire, référentiel de chaque diplôme, vue fusionnée du
-   référentiel actif) : règles écrites et testées dans src/domaine/modele-donnees.ts. Les identifiants neufs
-   sont tirés par newId. */
 const MODELE=window.dnmaxPont.modele;
-function buildData(ref,livr){return MODELE.donneesDuReferentiel(ref,livr)}
-/* code et libellé d'un diplôme : règles écrites et testées dans src/domaine/diplomes.ts */
-function autoDipCode(dp){return window.dnmaxPont.diplomes.codeAutomatique(dp)}
-/* Diplômes montrés à l'enseignant : le cadre vierge d'une installation neuve reste caché.
-   Le premier référentiel reçu, ou le premier diplôme créé à la main, le réutilise. */
-function estCadreVierge(id){return window.dnmaxPont.estCadreVierge(DATA,id,promos)}
-function dipVisibles(){return DATA.diplomes.filter(dp=>!estCadreVierge(dp.id))}
-function dipCode(dp){return window.dnmaxPont.diplomes.codeDiplome(dp)}
-/* identifiant d'une année : celui du diplôme suivi du numéro d'année, sauf si on l'a réécrit */
-function anneeCode(a,d,dp){return MODELE.codeAnnee(a,d||DATA,dp||undefined)}
-function dipLabel(dp){return window.dnmaxPont.diplomes.libelleDiplome(dp)}
 const KINDS=MODELE.SORTES;
-function refOf(d,id){return MODELE.referentielDe(d,id)}
 const ANNEES=[1,2,3];
-function ecCodeAt(e,sem){const a=anneeOf(sem);return String(((e||{}).codes||{})[a]||"")}
-/* codes et rang d'un EC : règles écrites et testées dans src/domaine/constituer.ts */
-function ecCodesList(e){return window.dnmaxPont.constituer.codesEc(e||{})}
-function ecCodeLbl(e){const l=ecCodesList(e);return l.length?l.join(" · "):"—"}
-/* dans une colonne étroite : « EC 2.3 · 10.3 · 18.3 » */
-function ecCodeShort(e){const l=ecCodesList(e);if(!l.length)return "—";
-  return l.map((c,i)=>i?String(c).replace(/^EC\s*/i,""):c).join(" · ")}
-function materialize(d){MODELE.materialiser(d)}
-function absorb(d){MODELE.absorber(d,newId)}
-function persistData(){LS.set("dnmade.data",MODELE.donneesAEnregistrer(DATA))}
-/* associations proposées quand un élément du dictionnaire entre dans un référentiel */
-function assocFor(dpId,kind,id){return MODELE.associationsProposees(DATA,dpId,kind,id)}
-/* retirer un élément du référentiel d'une mention : règle écrite et testée dans src/domaine/constituer.ts */
-function refRemove(R,kind,id){window.dnmaxPont.constituer.retirerDuReferentiel(R,kind,id)}
-/* Données complètes à partir de buildData (installation neuve, exemple) : un diplôme, le dictionnaire
-   et le référentiel de ce diplôme, puis la vue fusionnée du référentiel actif. */
-function construireDonnees(d){return MODELE.construireDonnees(d,newId)}
-function livrNames(){return DATA.livrables.map(x=>x.nom).filter(Boolean)}
-function newId(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
-function addMention(srcId,nom){return MODELE.ajouterMention(DATA,srcId,nom,newId)}
-/* référentiel actif tel que l'interface le lit */
-function projectRef(d){return MODELE.projeterReferentiel(d)}
 /* Une installation neuve démarre sans référentiel : l'enseignant en reçoit un ou construit le sien.
    Sans référentiel, l'exemple installe celui de la mention Objet livré avec DNMAX (src/heritage/exemple.ts). */
 const REF_VIDE = {meta:{diplome:"",niveaux:[],blocTint:"#D1F1DA"},blocs:[],ues:[],familles:[],competences:[]};
 DATA = LS.get("dnmade.data",null);
 if(DATA)materialize(DATA);else DATA=construireDonnees(buildData(REF_VIDE,SUPPORTS_DEF));
 REF = projectRef(DATA);
-function saveData(repaint,fromDico){
-  if(fromDico)materialize(DATA);
-  else{absorb(DATA);if(DATA.activeDiplome!==DATA._viewOf)materialize(DATA)}
-  persistData();
-  REF=computeREF();
-  F.items=F.items.filter(it=>REF.competences.some(c=>c.code===it.code));
-  cleanOps();syncItemEcs();save();
-  if(repaint!==false){paintForm();paintPick();paintLignes();paintRef();if(ui.tab==="org")paintOrg();if(ui.tab==="pref")paintPrefs()}
-}
 fiches = LS.get("dnmade.fiches",[]);
 /* préférences (menu « Mon compte ») : règles dans src/domaine/preferences.ts, écran dans src/preferences/ */
 const PREF=window.dnmaxPont.preferences;
 PREFS = PREF.initiales(LS.get("dnmade.prefs",{}));
-function critLabel(){return PREF.libelleCritere(PREFS)}
-function savePrefs(){LS.set("dnmade.prefs",PREFS)}
 promos = LS.get("dnmade.promos",[]);
 
 /* brouillon de départ : une évaluation vide (vierge() ne peut pas servir ici, elle lit F) */
@@ -104,42 +57,6 @@ migF(F);
 syncItemEcs();
 ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"etab"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
 
-function migF(f){return Object.assign(f,EVAL.normaliserEvaluation(f))}
-/* Prénom et nom se saisissent à part (prenom, nomFam) ; « nom » reste le nom affiché
-   « Prénom Nom ». Règles écrites et testées dans src/domaine/personnes.ts. */
-function separerPrenomNom(s){return window.dnmaxPont.personnes.separerPrenomNom(s)}
-function composerNom(prenom,nomFam){return window.dnmaxPont.personnes.composerNom(prenom,nomFam)}
-function nouvellePersonne(id,ligne){return window.dnmaxPont.personnes.nouvellePersonne(id,ligne)}
-function completerPersonne(e){return window.dnmaxPont.personnes.completerPersonne(e)}
-function lignesNoms(txt){return window.dnmaxPont.personnes.lignesNoms(txt)}
-function syncListe(pr,txt){
-  const lignes=txt==null?(pr.liste||[]).map(e=>e.nom):lignesNoms(txt);
-  const old=(pr.liste||[]).slice();
-  pr.liste=lignes.map(l=>{const nom=composerNom(...Object.values(separerPrenomNom(l)));const i=old.findIndex(e=>e.nom===nom);
-    return i>=0?completerPersonne(old.splice(i,1)[0]):nouvellePersonne(newId("s"),l)});
-  pr.eleves=pr.liste.map(e=>e.nom).join("\n");
-  return pr;
-}
-/* liste des étudiants d'une promotion : règle écrite et testée dans src/domaine/promotions.ts */
-function migPromo(pr){return window.dnmaxPont.promotions.rafraichirListe(pr)}
-/* étudiants de l'évaluation : ceux des promotions choisies (ou de l'ancienne promotion liée),
-   réduits à un seul si l'évaluation vise un étudiant */
-function promoElevesOf(ff){
-  let prs=(ff.classes||[]).map(n=>promos.find(p=>p.nom===n)).filter(Boolean);
-  if(!prs.length){const pr=promos.find(p=>p.id===ff.promoId);if(pr)prs=[pr]}
-  const seen=new Set(), out=[];
-  prs.forEach(pr=>migPromo(pr).liste.forEach(e=>{if(!seen.has(e.id)){seen.add(e.id);out.push({id:e.id,nom:e.nom,promo:pr})}}));
-  return out;
-}
-function studentsOf(f){
-  const ff=f||F;
-  let L=promoElevesOf(ff).map(e=>({id:e.id,nom:e.nom}));
-  if(!L.length)L=String(ff.eleves||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean)
-    .map((nom,i)=>({id:"libre"+i,nom}));
-  const ids=Array.isArray(ff.eleveIds)?ff.eleveIds:(ff.eleveId?[ff.eleveId]:[]);
-  if(ids.length){const sel=L.filter(e=>ids.includes(e.id));if(sel.length)return sel}
-  return L;
-}
 function paintEleveField(){
   const fld=document.getElementById("fld-eleve"), host=document.getElementById("f-eleve");
   if(!fld)return;
@@ -159,45 +76,7 @@ function paintEleveField(){
   const ab=host.querySelector("#elvAll");if(ab)ab.onclick=()=>{F.eleveIds=[];save();paintEleveField();paintSteps()};
 }
 
-/* lignes de la grille, sous la forme qu'attend l'affichage : {k:"op",o,its} ou {k:"one",it} ;
-   ce sont les objets mêmes de l'évaluation, que la saisie de la formulation modifie */
-function lignesOf(f){
-  const parCode=new Map((f.items||[]).map(i=>[i.code,i])), parId=new Map((f.ops||[]).map(o=>[o.id,o]));
-  return EVAL.lignesDe(f).map(l=>l.regroupement?{k:"op",o:parId.get(l.regroupement.id),its:l.competences.map(c=>parCode.get(c.code))}
-    :{k:"one",it:parCode.get(l.competence.code)});
-}
-function ligKey(l){return l.k==="op"?"op:"+l.o.id:"one:"+l.it.code}
-function ligTitre(l){
-  if(l.k==="op")return {code:l.its.map(i=>i.code).join(" + "),
-    lib:l.o.libelle||"(compétence opérationnelle à formuler)",op:true};
-  const c=REF.competences.find(x=>x.code===l.it.code)||{};
-  return {code:l.it.code,lib:l.it.libelle||c.libelle||"",op:false};
-}
-function resOf(f,eid){
-  const ff=f||F;
-  if(!ff.res||typeof ff.res!=="object")ff.res={};
-  const r=ff.res[eid]||(ff.res[eid]={n:{},obs:{},appr:""});
-  if(!r.n)r.n={};if(!r.obs)r.obs={};if(r.appr==null)r.appr="";
-  return r;
-}
-function evalStats(f){
-  const ff=f||F, els=studentsOf(ff), keys=lignesOf(ff).map(ligKey);
-  return {els:els.length,lignes:keys.length,...SAISIE.bilanSaisie(ff.res,els.map(e=>e.id),keys)};
-}
-function setClasses(list){Object.assign(F,EVAL.classesNettoyees(list||[]))}
-function uid(){return Math.random().toString(36).slice(2,9)}
 /* promotions, années scolaires et calendrier (promoShort, anneeScolaire, semSuggere…) : src/interface/promotions-calendrier.ts */
-function setSemestre(sem){F.semestre=sem;syncItemEcs()}
-function ecsOf(c,sem){return (c.ecs||[]).filter(e=>e.sem===sem)}
-function compsFor(sem){return REF.competences.filter(c=>ecsOf(c,sem).length>0)}
-/* une UE retenue vaut tous ses EC du semestre */
-function itemEcs(c,sem){return EVAL.ecsRetenus(ecsOf(c,sem).map(e=>e.ec),[...F.ecCodes,...(F.ues||[]).flatMap(u=>ecsOfUe(u,sem))])}
-function syncItemEcs(){F.items.forEach(it=>{const c=REF.competences.find(x=>x.code===it.code);it.ecs=c?itemEcs(c,F.semestre):[]})}
-function ecsOfSem(sem){
-  const m=new Map();
-  REF.competences.forEach(c=>ecsOf(c,sem).forEach(e=>{if(!m.has(e.ec))m.set(e.ec,{ec:e.ec,nom:e.nom,ue:e.ue,couleur:e.couleur})}));
-  return [...m.values()].sort((a,b)=>ecNum(a.ec)-ecNum(b.ec));
-}
 function uesOfSem(sem){return [...new Set(ecsOfSem(sem).map(e=>e.ue))]}
 function ecEntry(code,sem){return ecsOfSem(sem).find(e=>e.ec===code)||null}
 function uesSelected(){
