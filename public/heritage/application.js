@@ -1569,122 +1569,13 @@ function allerEtape(cp,q){
   ui.ref.pane="constituer";ui.ref.cp=cp;ui.ref.cq=q||"";edArm=null;paintRef();
   const t=document.getElementById("cq");if(t)t.scrollIntoView({block:"center",behavior:"smooth"});
 }
-/* ---- versions datées du référentiel d'une mention ---- */
-function versionsOf(dip){const D=DATA;D.versions=D.versions||{};D.versions[dip]=D.versions[dip]||[];return D.versions[dip]}
-function refJSON(dip){const R=refOf(DATA,dip);return JSON.stringify(KINDS.map(k=>R[k]))}
-function versionActive(dip){const v=versionsOf(dip);return v.find(x=>x.id===((DATA.valide||{})[dip]))||null}
-function refAJour(dip){const v=versionActive(dip);return !!v&&JSON.stringify(KINDS.map(k=>v.snap[k]))===refJSON(dip)}
-/* Validation par l'enseignant, qui est responsable du référentiel sur lequel il évalue : seule une version
-   qu'il a attestée lui-même (v.attestation, date) permet de créer ou d'enregistrer une évaluation et de
-   saisir des résultats. Une version reçue, livrée avec l'application ou validée avant l'attestation n'en a pas.
-   La règle est tenue par l'application (src/domaine/validation-referentiel.ts) et passe par le pont. */
-function dipRefValide(dip){return window.dnmaxPont.referentielValide.diplome(DATA,dip)}
-function promoRefValide(pr){return window.dnmaxPont.referentielValide.promotion(DATA,pr)}
-function promosDeF(f){
-  const l=[promos.find(p=>p.id===f.promoId),...(f.classes||[]).map(n=>promos.find(p=>p.nom===n))].filter(Boolean);
-  return [...new Set(l)];
-}
-/* diplôme dont le référentiel bloque l'évaluation, ou "" si rien ne la bloque ; sans promotion, le diplôme affiché */
-function dipBloquant(f){
-  const l=promosDeF(f);
-  if(!l.length)return dipRefValide(DATA.activeDiplome)?"":DATA.activeDiplome;
-  const pr=l.find(p=>!promoRefValide(p));return pr?(pr.diplomeId||DATA.activeDiplome):"";
-}
+/* Versions et validation du référentiel : écrites en TypeScript (src/interface/versions-referentiel.ts),
+   règles dans src/domaine/versions-referentiel.ts. Reste ici le passage à la validation, qui remet edArm à zéro. */
 function allerValidation(dip){
   if(dip&&dip!==DATA.activeDiplome&&DATA.diplomes.some(d=>d.id===dip))vueMention(dip);
   ui.tab="ref";ui.ref.pane="constituer";ui.ref.cp="valider";edArm=null;
   paintTabs();paintRef();window.scrollTo({top:0,behavior:"smooth"});
 }
-/* Versions du référentiel par promotion : une promo utilise la version validée qui lui est appliquée
-   (pr.refV) ; sans choix explicite, la version en vigueur de sa mention. Une évaluation enregistrée
-   garde la version sur laquelle elle a été faite (f.refV) : appliquer une nouvelle version à une promo
-   ne touche pas à ses évaluations passées. */
-function promoDeF(f){return promos.find(p=>p.id===f.promoId)||(f.classes||[]).map(n=>promos.find(p=>p.nom===n)).find(Boolean)||null}
-function promoVid(pr){if(!pr)return "";const vs=versionsOf(pr.diplomeId);
-  if(pr.refV&&vs.some(v=>v.id===pr.refV))return pr.refV;return (DATA.valide||{})[pr.diplomeId]||""}
-function promosEnCours(dip){const AS=anneeScolaire(new Date().toISOString().slice(0,10));
-  return promos.map(migPromoCohorte).filter(pr=>{if(pr.diplomeId!==dip)return false;const a=promoAnneeAt(pr,AS);return a>=1&&a<=promoDuree(pr)})}
-function versionPourF(){
-  const A=DATA.activeDiplome, vs=versionsOf(A), pr=promoDeF(F);
-  if(!pr||pr.diplomeId!==A)return null;
-  const id=(F.refV&&vs.some(v=>v.id===F.refV))?F.refV:promoVid(pr);
-  return vs.find(v=>v.id===id)||null;
-}
-function projectSnap(d,A,snap){return MODELE.projeterVersion(d,A,snap)}
-function computeREF(){try{const v=versionPourF();return v?projectSnap(DATA,DATA.activeDiplome,v.snap):projectRef(DATA)}catch(e){return projectRef(DATA)}}
-function versionUsage(dip,vid){
-  const ps=promos.filter(p=>p.diplomeId===dip&&promoVid(p)===vid);
-  const fs=fiches.filter(f=>f.refV===vid);
-  return {ps,fs};
-}
-/* Appelée seulement une fois l'attestation cochée : la version validée la porte. */
-function validerVersion(date,note){
-  absorb(DATA);
-  const dip=DATA.activeDiplome, R=refOf(DATA,dip), prevId=(DATA.valide||{})[dip]||"", today=new Date().toISOString().slice(0,10);
-  // version en vigueur identique au référentiel, mais jamais attestée (reçue, installée) : on l'atteste
-  // sans en créer une copie, pour que promotions et évaluations qui la suivent n'aient pas à changer de version
-  const va=versionActive(dip);
-  if(va&&!va.attestation&&refAJour(dip)){
-    va.attestation=today;persistData();REF=computeREF();paintRef();
-    toast("Référentiel validé — version du "+frDate(va.date)+", vérifiée par vous.");return;
-  }
-  const v={id:newId("v"),date:date||today,note:String(note||"").trim(),attestation:today,
-    snap:JSON.parse(JSON.stringify({ues:R.ues,ecs:R.ecs,blocs:R.blocs,competences:R.competences}))};
-  // ce qui suivait l'ancienne version y reste attaché : promos sans choix explicite, évaluations enregistrées
-  if(prevId){
-    promos.forEach(p=>{if(p.diplomeId===dip&&!p.refV)p.refV=prevId});
-    fiches.forEach(f=>{if(!f.refV){const p=promoDeF(f);if(p&&p.diplomeId===dip)f.refV=prevId}});
-    savePromos();LS.set("dnmade.fiches",fiches);
-  }
-  versionsOf(dip).unshift(v);
-  DATA.valide=Object.assign({},DATA.valide||{});DATA.valide[dip]=v.id;
-  persistData();REF=computeREF();paintRef();
-  const enc=promosEnCours(dip);
-  if(prevId&&enc.length)askPromosVersion(dip,v,enc);
-  else toast("Référentiel validé — version du "+frDate(v.date)+(enc.length?", appliquée aux promotions de cette mention.":"."));
-}
-/* libellé d'une promotion dans le choix des promotions qui passent à une nouvelle version :
-   nom court, nom, année de formation, année scolaire et nombre d'étudiants */
-function promoLabel(pr){promoLive(pr);const sh=promoShort(pr);return (sh?sh+" — ":"")+(pr.nom||"Sans nom")+" · Année "+pr.annee+(pr.as?" · "+pr.as:"")+
-  " ("+String(pr.eleves||"").split(/\r?\n/).filter(x=>x.trim()).length+")"}
-function askPromosVersion(dip,v,enc){
-  const prev=document.activeElement, el=document.createElement("div");el.className="modal";
-  const vdate=id=>{const x=versionsOf(dip).find(y=>y.id===id);return x?frDate(x.date):"référentiel non validé"};
-  el.innerHTML=`<div class="card" role="dialog" aria-modal="true" aria-labelledby="pvT" style="max-width:480px;width:100%">
-    <p id="pvT"><b>Version du ${esc(frDate(v.date))} validée</b> — à quelles promotions en cours l'appliquer ?</p>
-    <div style="display:flex;flex-direction:column;gap:6px;margin:6px 0 10px">
-      ${enc.map(p=>`<label class="sw" style="align-items:flex-start"><input type="checkbox" data-pv="${esc(p.id)}" checked>
-        <span>${esc(promoLabel(p))}<br><span class="hint" style="font-size:11.5px">actuellement : version du ${esc(vdate(p.refV))}</span></span></label>`).join("")}
-    </div>
-    <p class="hint" style="font-size:12.5px">Les évaluations déjà enregistrées gardent le référentiel sur lequel elles ont été faites. Les nouvelles promotions utiliseront cette version.</p>
-    <div class="row"><button class="btn ghost" data-no>N'appliquer à aucune</button><button class="btn primary" data-yes>Appliquer</button></div></div>`;
-  const close=()=>{el.remove();document.removeEventListener("keydown",key);if(prev&&prev.focus)prev.focus();REF=computeREF();paintRef();paintForm();paintPick()};
-  const key=e=>{if(e.key==="Escape"){close();toast("Version validée, appliquée à aucune promotion en cours.")}};
-  el.querySelector("[data-no]").onclick=()=>{close();toast("Version validée, appliquée à aucune promotion en cours.")};
-  el.querySelector("[data-yes]").onclick=()=>{
-    let n=0;el.querySelectorAll("[data-pv]").forEach(c=>{if(c.checked){const p=promos.find(x=>x.id===c.dataset.pv);if(p){p.refV=v.id;n++}}});
-    savePromos();close();toast("Version du "+frDate(v.date)+" appliquée à "+n+" promotion"+(n>1?"s":"")+".")};
-  document.addEventListener("keydown",key);document.body.appendChild(el);
-}
-function restaurerVersion(id){
-  const dip=DATA.activeDiplome, v=versionsOf(dip).find(x=>x.id===id);if(!v)return;
-  const R=refOf(DATA,dip);KINDS.forEach(k=>R[k]=JSON.parse(JSON.stringify(v.snap[k]||[])));
-  DATA.valide=Object.assign({},DATA.valide||{});DATA.valide[dip]=v.id;
-  materialize(DATA);REF=computeREF();persistData();
-  paintRef();paintForm();paintPick();paintLignes();
-  toast("Version du "+frDate(v.date)+" rétablie."+(v.attestation?"":" Validez-la avant d'évaluer avec."));
-}
-/* afficher le référentiel de la mention d'une promotion : chaque mention a le sien,
-   et une évaluation suit toujours la mention de sa promotion */
-function mentionDeFiche(f){
-  const pr=promos.find(p=>p.id===f.promoId)||(f.classes||[]).map(n=>promos.find(p=>p.nom===n)).find(Boolean);
-  const d=pr&&pr.diplomeId;return d&&DATA.diplomes.some(x=>x.id===d)?d:"";
-}
-function vueMention(dip){
-  if(!dip||dip===DATA.activeDiplome)return;
-  absorb(DATA);DATA.activeDiplome=dip;materialize(DATA);REF=computeREF();persistData();
-}
-function frDate(d){const t=new Date(d+"T12:00:00");return isNaN(t)?d:t.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}
 /* ---- Tableau du référentiel : compétences en lignes, enseignements en colonnes,
    comme le tableau d'origine ; chaque case ouvre ou ferme un semestre ---- */
 /* Étape 4, planification par semestre : écran écrit en TypeScript (src/referentiel/planification.ts) ;

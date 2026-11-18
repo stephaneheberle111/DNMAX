@@ -46,6 +46,7 @@ import * as modele from "../domaine/modele-donnees";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
 import { etat, publierEtat } from "../interface/etat";
 import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
+import { publierVersionsReferentiel } from "../interface/versions-referentiel";
 import { brancherInterface } from "../interface/branchements";
 import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
 import { peindreModules } from "../parametres/modules";
@@ -364,6 +365,11 @@ export async function chargerInterfaceHistorique(
 ): Promise<void> {
   window.XLSX = XLSX;
   window.JSZip = JSZip;
+  // Données non typées : elles sont relues prudemment, et tout ce qui est illisible vaut « non validé ».
+  const promotionValide = (donnees: unknown, promotion: unknown): boolean =>
+    estObjet(promotion) && promotionAReferentielValide(lireDonneesEtablissementDe(donnees), lirePromotion(promotion));
+  const diplomeValide = (donnees: unknown, diplomeId: unknown): boolean =>
+    typeof diplomeId === "string" && diplomeAReferentielValide(lireDonneesEtablissementDe(donnees), diplomeId);
   window.dnmaxPont = {
     stockage: magasin,
     telechargements: { save: (demande) => enregistrerPourInterfaceHistorique(demande, surExport, avantExportEleves) },
@@ -415,12 +421,9 @@ export async function chargerInterfaceHistorique(
     documentsModuleEleves: (etablissement) => {
       montrerDocumentsEleves(contexteDocumentsEleves(etablissement));
     },
-    // Données non typées : elles sont relues prudemment, et tout ce qui est illisible vaut « non validé ».
     referentielValide: {
-      promotion: (donnees, promotion) =>
-        estObjet(promotion) && promotionAReferentielValide(lireDonneesEtablissementDe(donnees), lirePromotion(promotion)),
-      diplome: (donnees, diplomeId) =>
-        typeof diplomeId === "string" && diplomeAReferentielValide(lireDonneesEtablissementDe(donnees), diplomeId),
+      promotion: promotionValide,
+      diplome: diplomeValide,
       aAvertir: promotionsAAvertir,
       avertir: avertirReferentielNonValide,
     },
@@ -430,6 +433,14 @@ export async function chargerInterfaceHistorique(
     publierEtat(window, etat);
     publierPromotionsCalendrier(window as unknown as Record<string, unknown>, (cle, valeur) => {
       magasin.setItem(cle, valeur);
+    });
+    publierVersionsReferentiel(window as unknown as Record<string, unknown>, {
+      ecrireStockage: (cle, valeur) => {
+        magasin.setItem(cle, valeur);
+      },
+      promotionValide,
+      diplomeValide,
+      maintenant: () => new Date(),
     });
     const script = document.createElement("script");
     script.src = ADRESSE_SCRIPT_HISTORIQUE;
