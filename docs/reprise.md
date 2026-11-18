@@ -1,17 +1,18 @@
 # Reprise du travail en cours
 
-État au 17 novembre 2026, à la fusion de #148, pour reprendre le chantier sans rien perdre. À lire avec `CLAUDE.md` (règles du projet), `DECISIONS.md` (décisions 36 et 37 surtout) et `docs/revue-coherence.md`.
+État au 18 novembre 2026, à la fusion de #186, pour reprendre le chantier sans rien perdre. À lire avec `CLAUDE.md` (règles du projet), `DECISIONS.md` (décisions 36 à 38 surtout) et `docs/revue-coherence.md`.
 
 ## Où en est le projet
 
-- **Version 0.9.0** : fusionnée dans `main` (#132), datée du 17 novembre dans le CHANGELOG, **pas publiée**. L'atelier « Publication » n'a pas été lancé.
-- **Recette et publication** : l'auteur les fera **en une seule fois, à la fin de l'optimisation du fichier historique**. Préparer alors une fiche de recette ciblée sur ce qui a changé (partir de `docs/recette-0.9.md`), refaire la revue de cohérence, redater la version, puis attendre le feu vert pour lancer « Publication ».
-- **Installeurs de test** : la dernière exécution de l'atelier « Installeurs » (n° 6) a produit Windows et Linux ; macOS a été annulé faute de machine disponible, comme les deux fois précédentes.
-- **Contrôles** : linter et typage sans erreur, 810 tests, `verifier:saisie` et `verifier:vide` passent sur `main`.
+- **Version 0.9.0** : fusionnée dans `main` (#132), **pas publiée**. L'atelier « Publication » n'a pas été lancé ; il ne se lance qu'avec le feu vert de l'auteur.
+- **Recette sur le bureau de l'auteur** : en cours de son côté, avec les installeurs d'essai de l'atelier « Installeurs », exécution n° 8 (Windows et Linux ; macOS annulé faute de machine, comme les fois précédentes), et la fiche `docs/recette-0.9.md` (parties A à J). Puis publication de la 0.9, sur son accord.
+- **0.9.1 en cours** (décision 38, voir plus bas) : groupes 1 et 2 fusionnés (#184, #186) ; le groupe 3 n'est pas commencé (aucune branche).
+- **Contrôles sur `main`** : linter et typage sans erreur, 1 085 tests au vert.
+- **Fichier historique** : 2 224 lignes (7 756 au départ), dont environ 710 pour la carte radiale et la chaîne.
 
 ## Le fichier historique
 
-`public/heritage/application.js` est passé de 7 756 à 3 714 lignes. Ce qui en est sorti, dans l'ordre des demandes de fusion :
+`public/heritage/application.js` est passé de 7 756 à 2 224 lignes. Ce qui en est sorti, dans l'ordre des demandes de fusion :
 
 | Demande | Ce qui est sorti | Où |
 |---|---|---|
@@ -42,7 +43,11 @@
 | #174 | Étape 1 : intitulé, consignes, dates ; retrait du panneau « Étudiants et promotions » et du choix du diplôme, toujours masqués | `src/editeur/formulaire.ts` |
 | #176 | Branchements des boutons et champs fixes au chargement ; retrait du bouton d'export JSON absent de la page | `src/interface/branchements.ts` |
 | #177 | Modèle de données : dictionnaire, référentiel de chaque diplôme, vue fusionnée, associations proposées, nouvelle mention, données d'une installation neuve | `src/domaine/modele-donnees.ts` |
-| (cette demande) | Modèle de données : projection du référentiel actif et d'une version validée, code de chaque année | `src/domaine/modele-donnees.ts` |
+| #178 | Modèle de données : projection du référentiel actif et d'une version validée, code de chaque année | `src/domaine/modele-donnees.ts` |
+| #184 | 0.9.1, groupe 1 : état de l'interface (`DATA`, `REF`, `F`, `fiches`, `promos`, `MOD`, `PREFS`, `ui`) tenu côté TypeScript et publié sur la fenêtre par accesseurs | `src/interface/etat.ts` |
+| #186 | 0.9.1, groupe 2 : promotions, années scolaires et calendrier (24 fonctions) | `src/interface/promotions-calendrier.ts` |
+
+Hors reprise, depuis #178 : fiche de recette complétée (#179), installeur Windows en français (#180), visite du référentiel simplifiée et boutons bleus de Constituer retirés (#181), évaluation possible sur un référentiel non validé avec un rappel (#182), mes promotions distinguées des autres dans une évaluation (#183), lien `node_modules` retiré (#185), `promoLabel` rétabli et garde-fou des appels (#187).
 
 Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
 
@@ -60,9 +65,9 @@ L'éditeur commun, Référentiel > Constituer et Référentiel > Explorer sont f
 
 La décision 5 est levée : le fichier historique disparaît. 0.9.1 reprend tout sauf la carte radiale et la carte heuristique (chaîne) ; 0.9.2 reprend ces deux cartes, avec un contrôle visuel de l'auteur. Ordre prévu pour la 0.9.1, un groupe par demande :
 
-1. État partagé (`src/interface/etat.ts`) : fait en premier, sans changer de comportement.
-2. Promotions, années scolaires et calendrier (`asStart`, `promoDuree`, `promoNomAuto`, `promoAnneeAt`, `promoShort`, `anneeScolaire`, `semSuggere`…).
-3. Versions et validation du référentiel (`versionsOf`, `versionPourF`, `computeREF`, `validerVersion`, `askPromosVersion`, `restaurerVersion`).
+1. État partagé (`src/interface/etat.ts`) : **fait** (#184).
+2. Promotions, années scolaires et calendrier : **fait** (#186).
+3. **Prochain** : versions et validation du référentiel, lignes 1572 à 1687 du fichier historique (`versionsOf`, `refJSON`, `versionActive`, `refAJour`, `dipRefValide`, `promoRefValide`, `promosDeF`, `dipBloquant`, `allerValidation`, `promoDeF`, `promoVid`, `promosEnCours`, `versionPourF`, `projectSnap`, `computeREF`, `versionUsage`, `validerVersion`, `promoLabel`, `askPromosVersion`, `restaurerVersion`, `mentionDeFiche`, `vueMention`, `frDate`). Repéré : `allerValidation` remet à zéro `edArm`, un `let` du fichier historique invisible depuis TypeScript ; le laisser dans le fichier historique jusqu'au groupe 5, ou publier `edArm` dans l'état. Les règles existent déjà en partie dans `src/domaine/validation-referentiel.ts` et `src/domaine/modele-donnees.ts` (`referentielDe`, `projeterVersion`, `absorber`, `materialiser`).
 4. Mon établissement : préparation des volets (`paintOrg`, `paintEtab`, `paintAffect`, `paintPromosOrg`, `affectOf`…).
 5. Référentiel : préparation de Constituer et de l'habillage de la carte (`paintRef`, `paintConstituer`, `paintEtape`, `paintMap` hors dessin).
 6. Éditeur : enregistrement, étapes, contextes des écrans (`save`, `goStep`, `paintPick`, `paintLignes`, `paintEleves`…).
@@ -74,9 +79,19 @@ La carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) et la ch
 
 **Consigne de l'auteur, à respecter strictement : aucun risque sur la carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) ni sur la chaîne (`paintChain`, `chainModel`, `chainWire`).** Leur dessin reste tel quel. Au plus, un calcul déjà isolé peut en sortir, avec une comparaison d'images avant et après.
 
+### Comment reprendre un groupe
+
+Suivre #186 comme modèle :
+
+- un module `src/interface/<sujet>.ts` qui lit l'état par `etat` (`src/interface/etat.ts`) et appelle ce qui reste dans le fichier historique par la fenêtre (fonction `historique()`) ;
+- une fonction `publier<Sujet>(fenetre, …)` qui pose les fonctions sous leurs anciens noms ; l'appeler dans `src/heritage/pont.ts`, avant le chargement du fichier historique, à côté de `publierPromotionsCalendrier` ;
+- **ajouter cet appel à `nomsPublies()`** dans `src/heritage/appels-historiques.test.ts` : ce garde-fou échoue si le fichier historique appelle une fonction définie nulle part (c'est lui qui aurait repéré le retrait à tort de `promoLabel` par #174) ;
+- retirer les fonctions du fichier historique, tests du module, banc des 21 parcours identique, ligne au CHANGELOG.
+
 ## Questions en attente de l'auteur
 
-Aucune pour le moment.
+- Dans « Mes évaluations » (la liste et son filtre Promotions), faut-il aussi montrer, plus discrètement, les promotions hors de sa répartition de service, comme dans l'étape 1 depuis #183 ?
+- Étiquettes `v0.7.0` et `v0.8.0` : l'historique de `main` a été réécrit (nom de l'outil retiré des auteurs et des messages) ; ces deux étiquettes pointent encore sur les anciens commits. Les déplacer sur l'historique réécrit (le déplacement depuis la session a été refusé, l'auteur le fera ou l'autorisera), ou les laisser.
 
 ## Méthode : réécrire sans rien changer
 
@@ -89,9 +104,11 @@ Chaque morceau suit la décision 37 :
 
 ### Banc de comparaison
 
+Le banc est dans `outils/banc/` : `banc.cjs` (les 21 parcours) et `comparer.sh`, qui rejoue chaque parcours deux fois sur `main` et une fois sur la branche, heure figée, stockage final compris, et affiche pour chacun `repro` / `NON-REPRO` puis `EGAL` / `DIFFERENT` (`PARCOURS="promotions liste" outils/banc/comparer.sh` pour n'en jouer que quelques-uns). Pour la planification, neutraliser `--h1` / `--h2` ; pour Préférences, l'élément actif après redessin (voir les pièges).
+
 - Servir une copie de `main` à côté de la branche :
-  - `git worktree add --detach <dossier> origin/main` ;
-  - lien symbolique vers `node_modules` ;
+  - `git worktree add --detach <dossier> origin/main` hors du dépôt ;
+  - dans la copie, `npm ci` (**pas de lien symbolique vers `node_modules`** : voir les pièges) ;
   - `npx vite --port 1421 --strictPort` dans la copie, et la branche sur le port 1420.
 - Un script Playwright joue le parcours sur les deux ports et écrit un JSON par port. Il fixe l'heure et le hasard avant le chargement (`addInitScript`), y compris `crypto.randomUUID`, dont l'exemple tire l'identifiant de la version livrée :
   - `Date.now` et `new Date()` sans argument rendent une date fixe ;
@@ -123,6 +140,10 @@ En plus du banc, comparer fonction par fonction l'ancien code et le nouveau :
 - **Différences de sérialisation sans effet** : `class=""` posé par `creer`, `selected` posé par propriété, `0px` au lieu de `0`. Normaliser avant de comparer, ou éviter (`document.createElement` quand l'attribut doit rester absent).
 - **Identifiants tirés de l'horloge** (`newId`, identifiants des mentions et des étudiants) : le banc avance l'heure d'une milliseconde à chaque `Date.now`. Une réécriture qui appelle l'horloge un nombre de fois différent change ces identifiants sans rien changer d'autre. Pour l'exemple, rejouer avec l'heure figée (et plusieurs dates) ; ailleurs, neutraliser ces identifiants avant de comparer.
 - **Focus après un redessin** : quand le champ qui a le focus est masqué par le redessin, l'élément actif relevé varie d'une exécution à l'autre, sur `main` aussi. Comparer sans le focus à cette étape.
+- **Lien `node_modules` commité** (#183, retiré par #185) : un lien symbolique créé dans une copie de travail a été entraîné par une fusion et a remplacé `node_modules` par un lien vers lui-même. `.gitignore` ignore désormais `node_modules` sous toutes ses formes ; après une récupération malheureuse, supprimer `node_modules` et relancer `npm ci`.
+- **Fonction retirée encore appelée** (`promoLabel`, #174 → #187) : seul l'écran qui l'appelle la révèle. Le garde-fou `src/heritage/appels-historiques.test.ts` le voit maintenant ; le tenir à jour à chaque groupe.
+- **Serveurs et tâches de fond arrêtés** de temps en temps dans l'environnement de travail : jouer le banc par lots de moins de dix minutes, au premier plan, et relancer les serveurs Vite avant chaque lot.
+- **Intégration continue : tâche « Enveloppe de bureau » annulée après 20 minutes** (#186) : relancée une fois, elle passe en quatre minutes. Ne pas la relancer plus d'une fois sans chercher la cause.
 - **CHANGELOG** : il entre en conflit à presque chaque fusion ; garder les deux entrées.
 - **Demandes empilées puis fusionnées par écrasement** : en intégrant `main` dans la branche suivante, les conflits se règlent par la version de la branche, qui contient déjà le contenu fusionné.
 
@@ -131,10 +152,11 @@ En plus du banc, comparer fonction par fonction l'ancien code et le nouveau :
 - Une branche par changement (`refactor/…`, `fix/…`, `docs/…`), fusion par écrasement une fois l'intégration continue verte. Ne pas fusionner sans accord : publication, changement notable du site, migration de données.
 - Identité git du dépôt : `Stéphane Héberlé <contact@dnmax.fr>`, à régler en début de session.
 - Aucune mention d'outil d'assistance dans le code, les commits, les branches ou les demandes de fusion ; retirer tout pied de page ajouté automatiquement aux demandes de fusion.
-- **Plan d'avancement à recréer** : l'ancien plan ne peut pas être partagé, il faut en publier un nouveau dès la reprise et le tenir à jour à chaque fusion. L'auteur y suit le travail ; il contient, dans cet ordre :
+- **Plan d'avancement à recréer** : le plan publié jusqu'ici appartient à l'ancien compte ; en publier un nouveau dès la reprise et le tenir à jour à chaque fusion. Garder les messages de discussion courts : le plan porte le suivi. L'auteur y suit le travail ; il contient, dans cet ordre :
   - l'heure de la dernière mise à jour (heure de Paris) ;
   - « À vous » : ce qui attend l'auteur (questions ci-dessus, recette et publication en fin d'optimisation) ;
   - « En cours » : seulement ce sur quoi on travaille réellement. Il est vide (« Rien ») quand on attend la réponse de l'auteur ou une vérification automatique ;
   - « Ensuite, dans l'ordre » : les demandes de fusion en attente de vérification, puis la liste de « Ce qui reste » ;
-  - « Déjà fait » : les demandes fusionnées (#139 à #149), avec une ligne chacune ;
-  - le nombre de lignes restant dans le fichier historique (3 714 au 17 novembre, 7 756 au départ).
+  - « Déjà fait » : les demandes fusionnées (#139 à #187), avec une ligne chacune ;
+  - le nombre de tests sur `main` (1 085 au 18 novembre) ;
+  - le nombre de lignes restant dans le fichier historique (2 224 au 18 novembre, 7 756 au départ).
