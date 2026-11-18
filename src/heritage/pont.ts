@@ -48,6 +48,7 @@ import { etat, publierEtat } from "../interface/etat";
 import { publierConstantes } from "../interface/constantes";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
+import { publierPreferencesParametres } from "../interface/preferences-parametres";
 import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
 import { publierVersionsReferentiel } from "../interface/versions-referentiel";
 import { publierEtablissement } from "../interface/etablissement";
@@ -450,6 +451,12 @@ export async function chargerInterfaceHistorique(
       hasard: () => Math.random(),
     });
     publierEvaluationCourante(window as unknown as Record<string, unknown>, () => Math.random());
+    publierPreferencesParametres(window as unknown as Record<string, unknown>, {
+      ecrireStockage: (cle, valeur) => {
+        magasin.setItem(cle, valeur);
+      },
+      maintenant: () => Date.now(),
+    });
     publierPromotionsCalendrier(window as unknown as Record<string, unknown>, (cle, valeur) => {
       magasin.setItem(cle, valeur);
     });
