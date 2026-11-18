@@ -1,18 +1,18 @@
 # Reprise du travail en cours
 
-État au 18 novembre 2026, à la fusion de #186, pour reprendre le chantier sans rien perdre. À lire avec `CLAUDE.md` (règles du projet), `DECISIONS.md` (décisions 36 à 38 surtout) et `docs/revue-coherence.md`.
+État au 18 novembre 2026, à la fusion de #208 (fin de la 0.9.1), pour reprendre le chantier sans rien perdre. À lire avec `CLAUDE.md` (règles du projet), `DECISIONS.md` (décisions 36 à 38 surtout) et `docs/revue-coherence.md`.
 
 ## Où en est le projet
 
 - **Version 0.9.0** : fusionnée dans `main` (#132), **pas publiée**. L'atelier « Publication » n'a pas été lancé ; il ne se lance qu'avec le feu vert de l'auteur.
 - **Recette sur le bureau de l'auteur** : en cours de son côté, avec les installeurs d'essai de l'atelier « Installeurs », exécution n° 8 (Windows et Linux ; macOS annulé faute de machine, comme les fois précédentes), et la fiche `docs/recette-0.9.md` (parties A à J). Puis publication de la 0.9, sur son accord.
-- **0.9.1 en cours** (décision 38, voir plus bas) : groupes 1 et 2 fusionnés (#184, #186) ; groupe 3 fusionné (#189) ; groupe 4 fusionné (#193) ; groupe 5 fusionné (#196) ; groupe 6 fusionné (#197) ; groupe 7 fusionné (#198) ; groupe 8 : Progression fusionnée (#199), export d'un document fusionné (#200), exemple fusionné (#201). Groupe 9 à faire.
-- **Contrôles** : linter et typage sans erreur, 1 188 tests au vert sur `main`.
-- **Fichier historique** : 1 476 lignes après l'exemple (7 756 au départ), dont environ 710 pour la carte radiale et la chaîne.
+- **0.9.1 terminée côté code** (décision 38, voir plus bas) : groupes 1 à 8 fusionnés (#184 à #201), groupe 9 fusionné (#203, #204, #206, #207, #208). Le fichier historique ne garde plus que la carte radiale, la chaîne et leurs aides : c'est la 0.9.2.
+- **Contrôles** : linter et typage sans erreur, 1 304 tests au vert sur `main`.
+- **Fichier historique** : 963 lignes (7 756 au départ), presque toutes pour la carte radiale et la chaîne.
 
 ## Le fichier historique
 
-`public/heritage/application.js` est passé de 7 756 à 2 224 lignes. Ce qui en est sorti, dans l'ordre des demandes de fusion :
+`public/heritage/application.js` est passé de 7 756 à 963 lignes. Ce qui en est sorti, dans l'ordre des demandes de fusion :
 
 | Demande | Ce qui est sorti | Où |
 |---|---|---|
@@ -54,6 +54,12 @@
 | #199 | 0.9.1, groupe 8 : Progression, vues « Promotion » et « Étudiant » (`paintProg`, `paintProgEleve`, `dnPalier`). Restent l'exemple (`loadDemo`, `demoMass`, `validerExemple`) et l'export d'un document | `src/interface/progression.ts` |
 | #200 | 0.9.1, groupe 8 : export d'un document (lignes, colonnes, en-tête, nom du fichier, sceau, Word, OpenDocument, tableur, avertissement avant restitution, remise à l'enveloppe) ; `ligneEnseignant`, jamais appelée, est retirée. Reste l'exemple (`loadDemo`, `demoMass`, `validerExemple`) | `src/interface/export-document.ts` |
 | #201 | 0.9.1, groupe 8 : l'exemple (évaluations détaillées, jeu étendu, validation de son référentiel), l'ordre des tirages gardé à l'identique ; vérifié au banc à trois dates | `src/interface/exemple.ts` |
+| #203 | 0.9.1, groupe 9 : constantes lues par les adaptateurs (`SEMS`, `PRESETS`, `SUPPORTS_DEF`, `GROUPS`, `norm`, `tidy`) publiées depuis TypeScript ; `BLOC_TINT` devient un accesseur de l'état (`etat.teinteBlocs`) | `src/interface/constantes.ts`, `src/interface/etat.ts` |
+| #204 | 0.9.1, groupe 9 : aides du modèle (`saveData`, `persistData`, `newId`, `anneeCode`, codes des EC, préférences) et de l'évaluation en cours (`studentsOf`, `lignesOf`, `syncListe`, `ecsOfSem`…) ; cinq fonctions appelées nulle part retirées | `src/interface/donnees.ts`, `src/interface/evaluation-courante.ts` |
+| #205 | Intégration continue : quinze minutes pour la tâche « Interface » (installation de Playwright plus lente) | `.github/workflows/ci.yml` |
+| #206 | 0.9.1, groupe 9 : Préférences, Paramètres > Modules, éditeur commun et planification (`paintPrefs`, `paintSet`, `appliquerModule`, `paintEditor`, `paintMatrice`…) ; règle `semestreRetenu` ; `asOf` retirée | `src/interface/preferences-parametres.ts`, règle dans `src/domaine/planification.ts` |
+| #207 | 0.9.1, groupe 9 : étape 1 et compétences de l'éditeur (`paintForm`, `paintClasse`, `toggleClasse`, `contexteCompetences`, `paintPick`, `vierge`, `nouvelleFiche`…) ; cinq règles sorties de l'affichage ; dix fonctions appelées nulle part retirées | `src/interface/editeur-etape1.ts`, règles dans `src/domaine/cadre-evaluation.ts` |
+| #208 | 0.9.1, groupe 9 : démarrage (lecture des données, état de départ, branchements, premier dessin, ponts `ouvrirPreferences`, `projeterReferentiel`, `ajusterEnseignants`, `ouvrirEtablissement`), appelé par le pont juste après la lecture du script ; constantes de tête devenues inutiles retirées | `src/interface/demarrage.ts` |
 
 Hors reprise, depuis #178 : fiche de recette complétée (#179), installeur Windows en français (#180), visite du référentiel simplifiée et boutons bleus de Constituer retirés (#181), évaluation possible sur un référentiel non validé avec un rappel (#182), mes promotions distinguées des autres dans une évaluation (#183), lien `node_modules` retiré (#185), `promoLabel` rétabli et garde-fou des appels (#187).
 
@@ -61,13 +67,7 @@ Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui 
 
 ## Ce qui reste, dans l'ordre convenu avec l'auteur
 
-L'éditeur commun, Référentiel > Constituer et Référentiel > Explorer sont faits (voir le tableau). L'auteur préfère une v1 propre à une sortie rapide : la réécriture continue, dans cet ordre.
-
-1. **Mes évaluations** : fait. Restent dans le fichier historique l'export d'une évaluation (`exportFiche`) et l'avertissement avant de restituer (`askRestitWarn`), que la fenêtre des actions appelle.
-2. **Progression** : fait. Le fichier historique ne garde que la préparation des données (`paintProg`, `paintProgEleve`).
-3. **L'exemple** : fait. Le fichier historique garde l'enchaînement (`loadDemo`, `demoMass`, `validerExemple`), qui écrit dans le modèle de données ; son contenu et ses tirages sont dans `src/domaine/exemple.ts`.
-4. **Le reste de l'interface** : onglets, Paramètres > Modules et Préférences faits ; formulaire de l'étape 1 fait (avec retrait de deux blocs toujours masqués) ; branchements au chargement faits. Restent dans le fichier historique, outre la carte radiale et la chaîne, la préparation des données de chaque écran et les ponts vers l'application, qui suivront le modèle de données.
-5. **Le modèle de données** : dictionnaire, référentiels et vue fusionnée faits, avec la vérification renforcée décrite plus bas. La projection du référentiel actif et des versions validées est faite aussi. `computeREF` reste dans le fichier historique : il ne fait que choisir, selon l'évaluation en cours, entre le référentiel de travail et la version qu'elle suit.
+L'auteur préfère une v1 propre à une sortie rapide. Toute l'interface, hors des deux cartes, est écrite en TypeScript (voir le tableau) : Mes évaluations, Progression, l'exemple, l'éditeur, Référentiel, Mon établissement, Préférences, Paramètres, le modèle de données et le démarrage. Le fichier historique ne garde que la carte radiale, la chaîne et leurs aides, reprises par la 0.9.2 ci-dessous.
 
 ### 0.9.1 et 0.9.2 (décision 38)
 
@@ -81,14 +81,9 @@ La décision 5 est levée : le fichier historique disparaît. 0.9.1 reprend tout
 6. **Fait** (#197) : Éditeur : enregistrement, étapes, contextes des écrans (`save`, `goStep`, `paintPick`, `paintLignes`, `paintEleves`…).
 7. **Fait** (#198) : Mes évaluations, exports et actions (`paintSaved`, `exportFiche`, `offer`, `ficheExport`, `buildDocx`…).
 8. **Fait** (#199, #200, #201) : Progression (`paintProg`, `paintProgEleve`) et l'exemple (`loadDemo`, `demoMass`).
-9. **Prochain** : Démarrage et ponts vers l'application : le fichier historique ne garde plus que les deux cartes.
-   Inventaire au 18 novembre (1 476 lignes) ; à découper en trois ou quatre demandes :
-   - aides du modèle et des personnes, lignes 30 à 200 (`refOf`, `saveData`, `migF`, `studentsOf`, `lignesOf`, `uid`, `compsFor`, `itemEcs`…) ;
-   - étape 1 et compétences de l'éditeur, lignes 239 à 390 (`vierge`, `nouvelleFiche`, `paintForm`, `paintClasse`, `toggleClasse`, `contexteCompetences`, `paintPick`…) ;
-   - Préférences, Paramètres et modules, lignes 1330 à 1400 (`paintMatrice`, `paintEditor`, `paintPrefs`, `paintSet`, `appliquerModule`) ;
-   - démarrage (chargement des données, branchements, premier dessin) en fin de fichier ;
-   - constantes encore lues par TypeScript au travers des adaptateurs (`SUPPORTS_DEF`, `BLOC_TINT`, `SEMS`, `GROUPS`, `PRESETS`, `norm`, `tidy`) : les publier ou les reprendre dans `src/` avant de déplacer ce qui les lit.
-   Restent ensuite, pour la 0.9.2, la carte radiale et la chaîne (lignes 417 à 1282 : `paintExplore`, `paintRadial`, `paintChain`, `pivotWheel`, `radialWire`, `radInfo`, `paintMap` et leurs aides).
+9. **Fait** (#203, #204, #206, #207, #208) : constantes, aides du modèle et de l'évaluation en cours, Préférences et Paramètres, étape 1 de l'éditeur, démarrage.
+
+**0.9.2, prochain chantier** : la carte radiale et la chaîne (`paintExplore`, `paintRadial`, `paintChain`, `pivotWheel`, `radialWire`, `radInfo`, `paintMap` et leurs aides : `esc`, `help`, `askModal`, `toast`, `paintTabs`, `blocName`, `hueOf`, `ecColor`, `ueColor`, `ueOrd`, `ecNum`, `lienEc`, `ecOrd`, `anneeOf`, `ANNEES`), avec le contrôle visuel de l'auteur. Ce qui reste hors des deux cartes (`paintTabs`, `toast`, `askModal`, `help`, `esc`) peut sortir d'abord, sans risque pour leur dessin.
 
 La carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) et la chaîne (`paintChain`, `chainModel`, `chainWire`, `chainBind`) restent dans le fichier historique, inchangées. Pour comparer, ces deux vues ne sont pas reproductibles d'une exécution à l'autre (positions animées, hauteurs mesurées selon les polices) : neutraliser nombres, `transform` et `style` avant de comparer.
 
@@ -105,8 +100,9 @@ Suivre #186 comme modèle :
 
 ## Questions en attente de l'auteur
 
-- Dans « Mes évaluations » (la liste et son filtre Promotions), faut-il aussi montrer, plus discrètement, les promotions hors de sa répartition de service, comme dans l'étape 1 depuis #183 ?
-- Étiquettes `v0.7.0` et `v0.8.0` : l'historique de `main` a été réécrit (nom de l'outil retiré des auteurs et des messages) ; ces deux étiquettes pointent encore sur les anciens commits. Les déplacer sur l'historique réécrit (le déplacement depuis la session a été refusé, l'auteur le fera ou l'autorisera), ou les laisser.
+- Étiquettes `v0.7.0` et `v0.8.0` : l'auteur souhaite les déplacer sur l'historique réécrit (réponse du 18 novembre), mais la session ne peut pas pousser d'étiquette (refus 403). Correspondances vérifiées (même arbre, même date, même message) : `v0.7.0` → `d7d3bff`, `v0.8.0` → `f5fd052`. Les publications GitHub correspondantes ne sont pas immuables. À faire depuis un clone de l'auteur : `git tag -f v0.7.0 d7d3bff… && git tag -f v0.8.0 f5fd052… && git push --force origin refs/tags/v0.7.0 refs/tags/v0.8.0`.
+
+Décidé le 18 novembre : dans « Mes évaluations », le filtre Promotions ne montre que les promotions de la répartition de service de l'enseignant, sans les autres.
 
 ## Méthode : réécrire sans rien changer
 
@@ -160,6 +156,8 @@ En plus du banc, comparer fonction par fonction l'ancien code et le nouveau :
 - **Serveurs et tâches de fond arrêtés** de temps en temps dans l'environnement de travail : jouer le banc par lots de moins de dix minutes, au premier plan, et relancer les serveurs Vite avant chaque lot.
 - **Intégration continue : tâche « Enveloppe de bureau » annulée après 20 minutes** (#186) : relancée une fois, elle passe en quatre minutes. Ne pas la relancer plus d'une fois sans chercher la cause.
 - **CHANGELOG** : il entre en conflit à presque chaque fusion ; garder les deux entrées.
+- **Banc qui appelait une constante du fichier historique** (#208) : deux gestes écrivaient les réglages par `LS`, retiré avec le démarrage. Le banc ne doit appeler que ce que l'application publie (`window.dnmaxPont`, fonctions publiées sous leur ancien nom).
+- **Travail en parallèle** (#206, #207) : deux reprises menées en même temps, dans deux copies du dépôt, avec chacune son banc sur d'autres ports (1430/1431, 1440/1441 : copier `comparer.sh` en changeant les ports). Les conflits se limitent au pont et au garde-fou (garder les deux côtés) ; rejouer au banc les parcours communs sur le résultat combiné.
 - **Demandes empilées puis fusionnées par écrasement** : en intégrant `main` dans la branche suivante, les conflits se règlent par la version de la branche, qui contient déjà le contenu fusionné.
 
 ## Règles de travail à garder
@@ -167,11 +165,11 @@ En plus du banc, comparer fonction par fonction l'ancien code et le nouveau :
 - Une branche par changement (`refactor/…`, `fix/…`, `docs/…`), fusion par écrasement une fois l'intégration continue verte. Ne pas fusionner sans accord : publication, changement notable du site, migration de données.
 - Identité git du dépôt : `Stéphane Héberlé <contact@dnmax.fr>`, à régler en début de session.
 - Aucune mention d'outil d'assistance dans le code, les commits, les branches ou les demandes de fusion ; retirer tout pied de page ajouté automatiquement aux demandes de fusion.
-- **Plan d'avancement à recréer** : le plan publié jusqu'ici appartient à l'ancien compte ; en publier un nouveau dès la reprise et le tenir à jour à chaque fusion. Garder les messages de discussion courts : le plan porte le suivi. L'auteur y suit le travail ; il contient, dans cet ordre :
+- **Plan d'avancement** : le tenir à jour à chaque fusion (plan « Plan DNMAX 0.9.1 »). Garder les messages de discussion courts : le plan porte le suivi. L'auteur y suit le travail ; il contient, dans cet ordre :
   - l'heure de la dernière mise à jour (heure de Paris) ;
   - « À vous » : ce qui attend l'auteur (questions ci-dessus, recette et publication en fin d'optimisation) ;
   - « En cours » : seulement ce sur quoi on travaille réellement. Il est vide (« Rien ») quand on attend la réponse de l'auteur ou une vérification automatique ;
   - « Ensuite, dans l'ordre » : les demandes de fusion en attente de vérification, puis la liste de « Ce qui reste » ;
-  - « Déjà fait » : les demandes fusionnées (#139 à #187), avec une ligne chacune ;
-  - le nombre de tests sur `main` (1 085 au 18 novembre) ;
-  - le nombre de lignes restant dans le fichier historique (2 224 au 18 novembre, 7 756 au départ).
+  - « Déjà fait » : les demandes fusionnées (#139 à #208), avec une ligne chacune ;
+  - le nombre de tests sur `main` (1 304 au 18 novembre, à la fin de la 0.9.1) ;
+  - le nombre de lignes restant dans le fichier historique (963 au 18 novembre, 7 756 au départ).
