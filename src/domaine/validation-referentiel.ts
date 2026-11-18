@@ -38,12 +38,22 @@ export function versionSuivie(donnees: DonneesEtablissement, promotion: Pick<Pro
 }
 
 /**
- * Vrai si l'on peut créer une évaluation ou saisir des résultats pour cette
- * promotion : la version qu'elle suit doit être attestée par l'enseignant.
+ * Vrai si la version que suit la promotion est attestée par l'enseignant.
+ * Sans attestation, on peut évaluer quand même : DNMAX avertit l'enseignant
+ * quand il coche la promotion (voir `promotionsAAvertir`).
  */
 export function promotionAReferentielValide(
   donnees: DonneesEtablissement,
   promotion: Pick<Promotion, "diplomeId" | "versionId">,
 ): boolean {
   return versionAttestee(donnees, promotion.diplomeId, versionSuivie(donnees, promotion));
+}
+
+/**
+ * Promotions à signaler quand l'enseignant change les promotions d'une
+ * évaluation : celles qu'il vient de cocher et dont le référentiel n'est pas
+ * validé. Décocher, ou recocher une promotion déjà cochée, n'avertit pas.
+ */
+export function promotionsAAvertir(avant: readonly string[], apres: readonly string[], referentielValide: (promotion: string) => boolean): string[] {
+  return apres.filter((promotion) => !avant.includes(promotion) && !referentielValide(promotion));
 }
