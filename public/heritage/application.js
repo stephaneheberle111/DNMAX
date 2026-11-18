@@ -41,14 +41,7 @@ function estCadreVierge(id){return window.dnmaxPont.estCadreVierge(DATA,id,promo
 function dipVisibles(){return DATA.diplomes.filter(dp=>!estCadreVierge(dp.id))}
 function dipCode(dp){return window.dnmaxPont.diplomes.codeDiplome(dp)}
 /* identifiant d'une année : celui du diplôme suivi du numéro d'année, sauf si on l'a réécrit */
-function anneeCode(a,d,dp){
-  d=d||DATA;
-  const n=((d||{}).niveaux||[]).find(x=>+x.annee===+a);
-  const c=String((n||{}).code||"").trim();
-  if(c)return c;
-  const p=dp||((d||{}).diplomes||[]).find(x=>x.id===d.activeDiplome)||{};
-  return dipCode(p)+a;
-}
+function anneeCode(a,d,dp){return MODELE.codeAnnee(a,d||DATA,dp||undefined)}
 function dipLabel(dp){return window.dnmaxPont.diplomes.libelleDiplome(dp)}
 const KINDS=MODELE.SORTES;
 function refOf(d,id){return MODELE.referentielDe(d,id)}
@@ -73,34 +66,8 @@ function construireDonnees(d){return MODELE.construireDonnees(d,newId)}
 function livrNames(){return DATA.livrables.map(x=>x.nom).filter(Boolean)}
 function newId(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,5)}
 function addMention(srcId,nom){return MODELE.ajouterMention(DATA,srcId,nom,newId)}
-function projectRef(d){
-  const A=d.activeDiplome;
-  const ues=d.ues.filter(u=>!u.diplomeId||u.diplomeId===A);
-  const ueIds=ues.map(u=>u.id);
-  const ecsRef=d.ecs.filter(e=>ueIds.includes(e.ueId));
-  const uById=id=>ues.find(u=>u.id===id);
-  const nomEc=e=>String(e.nom||"").trim()||ecCodeLbl(e);
-  const dp=d.diplomes.find(x=>x.id===A)||{};
-  return {
-    meta:{diplome:dipLabel(dp),diplomeNom:dp.nom||"",mention:dp.mention||"",blocTint:d.blocTint,niveaux:d.niveaux},
-    blocs:d.blocs.filter(b=>!b.diplomeId||b.diplomeId===A).map(b=>({num:b.num,nom:b.nom})),
-    ues:ues.map(u=>({nom:u.nom,couleur:u.couleur,code:u.code,sems:u.sems})),
-    ecs:ecsRef.map(e=>({id:e.id,nom:nomEc(e),couleur:e.couleur||"#9aa2ae",codes:Object.assign({},e.codes||{}),
-      ue:(uById(e.ueId)||{}).nom||"UE non précisée",sems:(e.sems||[]).slice()})),
-    competences:d.competences.filter(c=>!c.diplomeId||c.diplomeId===A).map(c=>{
-      const ecs=[];
-      (c.ecs||[]).forEach(lien=>{
-        const e=d.ecs.find(x=>x.id===lien.id);if(!e||!ueIds.includes(e.ueId))return;
-        const u=uById(e.ueId)||{sems:SEMS};
-        const sems=((lien.sems&&lien.sems.length?lien.sems:e.sems)||[])
-          .filter(sem=>(e.sems||[]).includes(sem)&&(u.sems||SEMS).includes(sem));
-        sems.forEach(sem=>{const code=ecCodeAt(e,sem)||ecCodesList(e)[0]||nomEc(e);
-          ecs.push({ec:code,id:e.id,nom:nomEc(e),couleur:e.couleur||"#9aa2ae",
-            ue:u.nom||"UE non précisée",sem,dn:anneeCode(anneeOf(sem),d,dp)})});
-      });
-      return {code:c.code,libelle:c.libelle,bloc:c.bloc,ecs};
-    })};
-}
+/* référentiel actif tel que l'interface le lit */
+function projectRef(d){return MODELE.projeterReferentiel(d)}
 /* Une installation neuve démarre sans référentiel : l'enseignant en reçoit un ou construit le sien.
    Sans référentiel, l'exemple installe celui de la mention Objet livré avec DNMAX (src/heritage/exemple.ts). */
 const REF_VIDE = {meta:{diplome:"",niveaux:[],blocTint:"#D1F1DA"},blocs:[],ues:[],familles:[],competences:[]};
@@ -1710,7 +1677,7 @@ function versionPourF(){
   const id=(F.refV&&vs.some(v=>v.id===F.refV))?F.refV:promoVid(pr);
   return vs.find(v=>v.id===id)||null;
 }
-function projectSnap(d,A,snap){const o=Object.assign({},d,{refs:Object.assign({},d.refs,{[A]:snap}),activeDiplome:A});materialize(o);return projectRef(o)}
+function projectSnap(d,A,snap){return MODELE.projeterVersion(d,A,snap)}
 function computeREF(){try{const v=versionPourF();return v?projectSnap(DATA,DATA.activeDiplome,v.snap):projectRef(DATA)}catch(e){return projectRef(DATA)}}
 function versionUsage(dip,vid){
   const ps=promos.filter(p=>p.diplomeId===dip&&promoVid(p)===vid);

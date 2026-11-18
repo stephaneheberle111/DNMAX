@@ -5,10 +5,13 @@ import {
   ajouterMention,
   associationsProposees,
   classerDictionnaire,
+  codeAnnee,
   construireDonnees,
   donneesAEnregistrer,
   donneesDuReferentiel,
   materialiser,
+  projeterReferentiel,
+  projeterVersion,
   referentielDe,
   type Donnees,
   type Element,
@@ -246,5 +249,58 @@ describe("construireDonnees", () => {
   it("crée un diplôme-cadre caché quand le référentiel ne nomme pas de diplôme", () => {
     const donnees = construireDonnees(donneesDuReferentiel({}, []), compteur());
     expect(donnees.diplomes).toEqual([{ id: "d0", nom: "", mention: "", cadre: true }]);
+  });
+});
+
+describe("codeAnnee", () => {
+  const donnees: Donnees = { activeDiplome: "d1", diplomes: [{ id: "d1", nom: "DN MADE", mention: "Objet", code: "DNO" }], niveaux: [{ annee: 1, code: " A1 " }, { annee: 2, code: "" }] };
+
+  it("prend le code que le référentiel donne à l'année", () => {
+    expect(codeAnnee(1, donnees)).toBe("A1");
+  });
+
+  it("compose sinon le code du diplôme et le numéro d'année", () => {
+    expect(codeAnnee(2, donnees)).toBe("DNO2");
+    expect(codeAnnee("3", donnees)).toBe("DNO3");
+  });
+});
+
+describe("projeterReferentiel", () => {
+  function projetable(): Donnees {
+    const donnees = classees();
+    materialiser(donnees);
+    return donnees;
+  }
+
+  it("donne à chaque compétence une entrée par EC et par semestre enseigné", () => {
+    const projection = projeterReferentiel(projetable());
+    const competences = projection.competences as Element[];
+    expect(competences[0]?.ecs).toEqual([{ ec: "EC 1.1", id: "e1", nom: "Projet", couleur: "#9aa2ae", ue: "Ateliers", sem: "S1", dn: "DNO1" }]);
+  });
+
+  it("écarte un semestre où l'UE de l'EC n'a pas cours", () => {
+    const donnees = projetable();
+    const competence = (donnees.competences as Element[])[1] as Element;
+    competence.ecs = [{ id: "e1", sems: ["S3"] }];
+    expect(((projeterReferentiel(donnees).competences as Element[])[1] as Element).ecs).toEqual([]);
+  });
+
+  it("nomme « — » un EC sans nom ni code", () => {
+    const donnees = projetable();
+    const ec = (donnees.ecs as Element[])[0] as Element;
+    ec.nom = "";
+    ec.codes = {};
+    expect(((projeterReferentiel(donnees).ecs as Element[])[0] as Element).nom).toBe("—");
+  });
+});
+
+describe("projeterVersion", () => {
+  it("projette une version sans modifier les données tenues", () => {
+    const donnees = classees();
+    materialiser(donnees);
+    const avant = JSON.stringify(donnees);
+    const projection = projeterVersion(donnees, "d1", { ues: [], ecs: [], blocs: [], competences: [] });
+    expect(projection.competences).toEqual([]);
+    expect(JSON.stringify(donnees)).toBe(avant);
   });
 });
