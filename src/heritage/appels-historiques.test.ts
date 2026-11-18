@@ -19,6 +19,8 @@ import { publierProgression } from "../interface/progression";
 import { publierExportDocument } from "../interface/export-document";
 import { publierExemple } from "../interface/exemple";
 import { publierConstantes } from "../interface/constantes";
+import { publierDonnees } from "../interface/donnees";
+import { publierEvaluationCourante } from "../interface/evaluation-courante";
 
 const CHEMIN = new URL("../../public/heritage/application.js", import.meta.url);
 
@@ -57,6 +59,8 @@ const PUBLIEES = new Set<string>(nomsPublies());
 function nomsPublies(): string[] {
   const fenetre: Record<string, unknown> = {};
   publierConstantes(fenetre);
+  publierDonnees(fenetre, { ecrireStockage: () => undefined, maintenant: () => 0, hasard: () => 0 });
+  publierEvaluationCourante(fenetre, () => 0);
   publierPromotionsCalendrier(fenetre, () => undefined);
   publierEtablissement(fenetre);
   publierReferentiel(fenetre);
