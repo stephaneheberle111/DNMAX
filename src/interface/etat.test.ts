@@ -34,4 +34,13 @@ describe("publierEtat", () => {
     fenetre.edArm = "ens1";
     expect(source.armement).toBe("ens1");
   });
+
+  it("publie la teinte des blocs, vide jusqu'à ce que le fichier historique la relève", () => {
+    const source = etatVide();
+    const fenetre: Record<string, unknown> = {};
+    publierEtat(fenetre, source);
+    expect(fenetre.BLOC_TINT).toBe("");
+    fenetre.BLOC_TINT = "#D1F1DA";
+    expect(source.teinteBlocs).toBe("#D1F1DA");
+  });
 });

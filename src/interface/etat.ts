@@ -32,6 +32,11 @@ export interface EtatInterface {
   ui: Objet;
   /** Élément dont la suppression attend un second clic (`edArm`), ou `null`. */
   armement: unknown;
+  /**
+   * Teinte des blocs de compétences (`BLOC_TINT`), relevée une fois au
+   * chargement dans le référentiel affiché ; vide avant.
+   */
+  teinteBlocs: string;
 }
 
 /** Nom employé par le fichier historique pour chaque partie de l'état. */
@@ -45,11 +50,12 @@ export const NOMS_HISTORIQUES: Readonly<Record<string, keyof EtatInterface>> = {
   PREFS: "preferences",
   ui: "ui",
   edArm: "armement",
+  BLOC_TINT: "teinteBlocs",
 };
 
 /** État vide, rempli par le fichier historique à son chargement. */
 export function etatVide(): EtatInterface {
-  return { donnees: {}, referentiel: {}, evaluation: {}, evaluations: [], promotions: [], modules: {}, preferences: {}, ui: {}, armement: null };
+  return { donnees: {}, referentiel: {}, evaluation: {}, evaluations: [], promotions: [], modules: {}, preferences: {}, ui: {}, armement: null, teinteBlocs: "" };
 }
 
 /** L'état de l'application, unique. */
