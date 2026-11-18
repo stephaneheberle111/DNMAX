@@ -47,6 +47,8 @@
     },
     "windows": {
       "nsis": {
+        "languages": ["French"],
+        "displayLanguageSelector": false,
         "installerHooks": "windows/crochets-installeur.nsh"
       }
     }

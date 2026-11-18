@@ -5,6 +5,7 @@
 ### Modifié
 
 - Référentiel > Constituer : le bouton bleu de bas de page, qui menait à la page suivante, disparaît ; on passe d'une page à l'autre par la barre des étapes, en haut.
+- L'installeur Windows s'affiche en français, sans demander la langue.
 - Module Étudiants : l'avertissement RGPD, les documents à remettre et la confirmation du mot de passe (et, s'il le faut, le choix d'un mot de passe plus solide) tiennent dans une seule fenêtre. Une fois le module activé, « Documents à remettre », dans sa carte de Paramètres > Modules, rouvre l'information aux étudiants et la note au chef d'établissement.
 - Niveaux : ce qui est évalué et exporté s'appelle partout « Niveau de maîtrise » (colonne et consigne des documents Word, OpenDocument et tableur). Le module « Niveaux DN MADE » devient « Niveaux d'acquisition » (Initié, Guidé, Autonome selon l'année), présenté comme facultatif car absent du référentiel du diplôme ; sa carte, dans Paramètres > Modules, rappelle à partir de quel niveau de maîtrise le niveau de l'année est validé, et cette règle quitte Règles d'évaluation. Les référentiels livrés nomment le niveau de 3e année « Autonome » au lieu de « Autonomie ».
 - Site dnmax.fr aux couleurs de l'application : crème et pétrole, fond à la teinte « Douce », mêmes polices, nom « DNMA » suivi du signe X. La reconstitution de l'application et ses exemples passent aux niveaux de maîtrise.
