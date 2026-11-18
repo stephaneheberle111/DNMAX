@@ -47,8 +47,7 @@ fn enregistrer_fichier(
     let Some(chemin) = demander_emplacement(&application, &nom_propose) else {
         return Ok(false);
     };
-    export::ecrire_export(&chemin, &contenu)
-        .map_err(|erreur| format!("écriture impossible : {erreur}"))?;
+    export::ecrire_export(&chemin, &contenu).map_err(|erreur| export::message_ecriture(&erreur))?;
     // Retenu pour pouvoir proposer d'ouvrir le document, sans que la page n'en connaisse le chemin.
     *dernier_export.verrou() = Some(chemin);
     Ok(true)
