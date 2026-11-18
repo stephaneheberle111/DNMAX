@@ -14,7 +14,7 @@ const outils = (changements: Partial<OutilsFiltres> = {}): OutilsFiltres => ({
 
 describe("filtresParDefaut et filtresActifs", () => {
   it("montre par défaut les promotions en cours, et ne compte pas ce réglage comme un filtre posé", () => {
-    expect(filtresParDefaut()).toEqual({ per: ["cur"], mine: true, sem: [], st: [], q: "" });
+    expect(filtresParDefaut()).toEqual({ per: ["cur"], mine: true, sem: [], st: [], q: "", miennes: false });
     expect(filtresActifs(filtresParDefaut())).toBe(false);
     expect(filtresActifs({ ...filtresParDefaut(), q: "maquette" })).toBe(true);
   });
@@ -24,7 +24,12 @@ describe("normaliserFiltres", () => {
   it("ramène une ancienne valeur unique à une liste, et « all » à aucune sélection", () => {
     const filtres: Record<string, unknown> = { per: "p1", sem: "all", st: undefined, q: "" };
     normaliserFiltres(filtres);
-    expect(filtres).toMatchObject({ per: ["p1"], sem: [], st: [] });
+    expect(filtres).toMatchObject({ per: ["p1"], sem: [], st: [], miennes: false });
+  });
+
+  it("garde « Seulement mes évaluations » quand il est posé", () => {
+    const filtres: Record<string, unknown> = { per: [], sem: [], st: [], q: "", miennes: true };
+    expect(normaliserFiltres(filtres).miennes).toBe(true);
   });
 });
 
@@ -39,7 +44,7 @@ describe("correspondFiltres", () => {
   });
 
   it("filtre par semestre, suivi et intitulé, sans tenir compte de la casse", () => {
-    const filtres = { per: [], mine: true, sem: ["S3"], st: ["eval"], q: "MAQ" };
+    const filtres = { per: [], mine: true, sem: ["S3"], st: ["eval"], q: "MAQ", miennes: false };
     expect(correspondFiltres({ semestre: "S3", statut: "eval", titre: "Maquette" }, filtres, outils())).toBe(true);
     expect(correspondFiltres({ semestre: "S1", statut: "eval", titre: "Maquette" }, filtres, outils())).toBe(false);
     expect(correspondFiltres({ semestre: "S3", statut: "prep", titre: "Maquette" }, filtres, outils())).toBe(false);
@@ -48,19 +53,19 @@ describe("correspondFiltres", () => {
 
   it("ne montre que les promotions de la répartition de service, ou les évaluations dont je suis l'enseignant", () => {
     const vue = outils({ visibles: new Set(["p2"]) });
-    const tout = { per: [], mine: true, sem: [], st: [], q: "" };
+    const tout = { per: [], mine: true, sem: [], st: [], q: "", miennes: false };
     expect(correspondFiltres({ promoId: "p1" }, tout, vue)).toBe(false);
     expect(correspondFiltres({ promoId: "p1", profs: ["Camille Durand"] }, tout, vue)).toBe(true);
   });
 
   it("montre les évaluations d'une autre promotion quand je la choisis explicitement", () => {
     const vue = outils({ visibles: new Set(["p2"]) });
-    expect(correspondFiltres({ promoId: "p1" }, { per: ["p1"], mine: true, sem: [], st: [], q: "" }, vue)).toBe(true);
+    expect(correspondFiltres({ promoId: "p1" }, { per: ["p1"], mine: true, sem: [], st: [], q: "", miennes: false }, vue)).toBe(true);
   });
 
   it("ne montre pas une autre promotion par le seul choix « Promotions en cours »", () => {
     const vue = outils({ visibles: new Set(["p2"]) });
-    expect(correspondFiltres({ promoId: "p1" }, { per: ["cur"], mine: true, sem: [], st: [], q: "" }, vue)).toBe(false);
+    expect(correspondFiltres({ promoId: "p1" }, { per: ["cur"], mine: true, sem: [], st: [], q: "", miennes: false }, vue)).toBe(false);
   });
 });
 
@@ -87,5 +92,28 @@ describe("resumeFiltre", () => {
     expect(resumeFiltre("st", ["eval"], noms)).toBe("Évaluée");
     expect(resumeFiltre("st", ["eval", "prep"], noms)).toBe("2 suivis");
     expect(resumeFiltre("st", [], noms)).toBe("Tous les suivis");
+  });
+});
+
+describe("Seulement mes évaluations", () => {
+  const miennes = { ...filtresParDefaut(), per: [], miennes: true };
+
+  it("garde une évaluation dont je suis l'enseignant, dans la liste ou dans l'ancien champ texte", () => {
+    expect(correspondFiltres({ profs: ["Camille Durand", "Alex Martin"] }, miennes, outils())).toBe(true);
+    expect(correspondFiltres({ prof: "Alex Martin, Camille Durand" }, miennes, outils())).toBe(true);
+  });
+
+  it("écarte une évaluation d'un collègue, ou sans enseignant", () => {
+    expect(correspondFiltres({ profs: ["Alex Martin"] }, miennes, outils())).toBe(false);
+    expect(correspondFiltres({}, miennes, outils())).toBe(false);
+  });
+
+  it("ne retire rien sans « C'est moi »", () => {
+    expect(correspondFiltres({ profs: ["Alex Martin"] }, miennes, outils({ moi: "" }))).toBe(true);
+  });
+
+  it("compte comme un filtre posé", () => {
+    expect(filtresActifs(miennes)).toBe(true);
+    expect(filtresActifs({ ...filtresParDefaut(), miennes: true })).toBe(true);
   });
 });
