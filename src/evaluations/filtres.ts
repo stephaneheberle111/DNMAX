@@ -24,6 +24,11 @@ export interface ContexteFiltres {
   reinitialiser(): void;
   /** Promotions visibles, rangées. */
   readonly promotions: readonly PromotionFiltre[];
+  /** Promotions hors de la répartition de service, proposées à part, masquées tant qu'on ne les demande pas. */
+  readonly autres?: readonly PromotionFiltre[];
+  /** Les promotions hors répartition sont-elles affichées ? */
+  autresAffichees?(): boolean;
+  basculerAutres?(): void;
   /** Toutes les promotions connues, visibles ou non. */
   existe(id: string): boolean;
   nomPromotion(id: string): string;
@@ -121,6 +126,35 @@ export function peindreFiltres(hote: HTMLElement, contexte: ContexteFiltres): vo
   }
   if (autres.length > 0) {
     promotions.push(balise("span", [["class", "xh"]], "Terminées ou à venir"), ...autres.map((promotion) => caseACocher(filtres, "per", promotion.id, promotion.nom)));
+  }
+  // Promotions hors de ma répartition de service : accessibles, mais masquées par défaut (sauf celles déjà choisies).
+  const horsRepartition = contexte.autres ?? [];
+  if (horsRepartition.length > 0) {
+    const affichees = contexte.autresAffichees?.() ?? false;
+    const montrees = affichees ? horsRepartition : horsRepartition.filter((promotion) => filtres.per.includes(promotion.id));
+    const bascule = balise(
+      "button",
+      [
+        ["type", "button"],
+        ["class", "sfautres"],
+        ["data-sfautres", ""],
+        ["aria-expanded", String(affichees)],
+      ],
+      affichees ? "− Masquer les autres promotions" : `+ Autres promotions (${String(horsRepartition.length - montrees.length)})`,
+    );
+    bascule.addEventListener("click", () => {
+      contexte.basculerAutres?.();
+      contexte.retenirOuvert("per");
+      contexte.redessiner();
+    });
+    promotions.push(balise("span", [["class", "xh"]], "Hors de votre répartition de service"), bascule);
+    promotions.push(
+      ...montrees.map((promotion) => {
+        const ligne = caseACocher(filtres, "per", promotion.id, (promotion.court === "" ? "" : `${promotion.court} — `) + promotion.nom);
+        ligne.classList.add("discrete");
+        return ligne;
+      }),
+    );
   }
   const recherche = balise("input", [
     ["type", "search"],
