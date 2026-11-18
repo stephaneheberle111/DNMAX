@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { basculerLien, blocsPlanification, colonnesPlanification, groupesPlanification, liensVisibles } from "./planification";
+import { basculerLien, blocsPlanification, colonnesPlanification, groupesPlanification, liensVisibles, semestreRetenu } from "./planification";
 
 const ues = [
   { id: "u1", nom: "Humanités", couleur: "#111111" },
@@ -89,5 +89,19 @@ describe("basculerLien", () => {
     const competence: Record<string, unknown> = { ecs: [{ id: "e1", sems: ["S1"] }, { id: "e2", sems: ["S2"] }] };
     expect(basculerLien(competence, "e1", "S1")).toBe(false);
     expect(competence).toEqual({ ecs: [{ id: "e2", sems: ["S2"] }], ecIds: ["e2"] });
+  });
+});
+
+describe("semestreRetenu", () => {
+  it("garde un semestre du diplôme", () => {
+    expect(semestreRetenu("S4")).toBe("S4");
+  });
+
+  it("rend tous les semestres (texte vide) pour un semestre inconnu", () => {
+    expect(semestreRetenu("S7")).toBe("");
+  });
+
+  it("rend tous les semestres pour une valeur absente, vide ou d'un autre type", () => {
+    expect([semestreRetenu(undefined), semestreRetenu(""), semestreRetenu(4), semestreRetenu(["S1"]), semestreRetenu("s1")]).toEqual(["", "", "", "", ""]);
   });
 });

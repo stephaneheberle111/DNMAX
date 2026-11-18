@@ -21,6 +21,7 @@ import { publierExemple } from "../interface/exemple";
 import { publierConstantes } from "../interface/constantes";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
+import { publierPreferencesParametres } from "../interface/preferences-parametres";
 
 const CHEMIN = new URL("../../public/heritage/application.js", import.meta.url);
 
@@ -61,6 +62,7 @@ function nomsPublies(): string[] {
   publierConstantes(fenetre);
   publierDonnees(fenetre, { ecrireStockage: () => undefined, maintenant: () => 0, hasard: () => 0 });
   publierEvaluationCourante(fenetre, () => 0);
+  publierPreferencesParametres(fenetre, { ecrireStockage: () => undefined, maintenant: () => 0 });
   publierPromotionsCalendrier(fenetre, () => undefined);
   publierEtablissement(fenetre);
   publierReferentiel(fenetre);

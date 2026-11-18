@@ -1188,85 +1188,9 @@ function paintMap(){
   if(svgHost)radialWire(svgHost);
 }
 
-/* Référentiel (barre Constituer / Explorer, page des cinq étapes, étapes 1 à 3, passages vers une étape ou la
-   validation) : écrit en TypeScript (src/interface/referentiel.ts). Restent ici la carte et la planification. */
-/* Mon établissement (barre des volets, Établissement, Répartition de service, Promotions) et suppression en
-   deux temps (armDel, edArm) : écrits en TypeScript (src/interface/etablissement.ts), règles dans
-   src/domaine/repartition.ts. Reste ici asOf, dont l'exemple et la progression se servent. */
-const asOf=y=>y+"-"+(+y+1);
-/* ---- Tableau du référentiel : compétences en lignes, enseignements en colonnes,
-   comme le tableau d'origine ; chaque case ouvre ou ferme un semestre ---- */
-/* Étape 4, planification par semestre : écran écrit en TypeScript (src/referentiel/planification.ts) ;
-   règles dans src/domaine/planification.ts */
-function paintMatrice(host){
-  window.dnmaxPont.referentiel.peindrePlanification(host,{vue:DATA,semestre:SEMS.includes(ui.ref.msem)?ui.ref.msem:"",
-    choisirSemestre:sem=>{ui.ref.msem=sem;edArm=null;paintRef()},teinteBlocs:BLOC_TINT,
-    enregistrer:()=>saveData(false),allerALaCompetence:code=>allerEtape("blocs",code)});
-}
-/* suppression en deux temps, partagée par les écrans de l'éditeur commun (src/etablissement/editeur-commun.ts) :
-   le premier clic arme le bouton et redessine, le second supprime */
-/* Éditeur commun de Mon établissement et des Préférences : écrans écrits en TypeScript (src/etablissement/),
-   règles dans src/domaine/ (diplomes, personnes). Seule la suppression en deux temps reste tenue ici (edArm, armDel). */
-function paintEditor(pane,host){
-  host=host||document.getElementById("refPane");
-  const D=DATA, armement={arme:edArm,armer:(id,fn)=>armDel(id,fn)};
-  const enregistrer=redessiner=>saveData(redessiner?undefined:false);
-  if(pane==="diplome")return window.dnmaxPont.etablissement.peindreDiplomes(host,{donnees:D,visibles:dipVisibles(),
-    estCadreVierge,nouvelIdentifiant:()=>newId("d"),ajouterMention:addMention,enregistrer,
-    apresChangementDuree:()=>{promos.forEach(migPromoCohorte);savePromos()},armement,annoncer:toast});
-  if(pane==="enseignants")return window.dnmaxPont.etablissement.peindreEnseignants(host,{enseignants:D.enseignants,
-    moi:()=>D.moi,definirMoi:id=>{D.moi=id;persistData()},armement,nouvelIdentifiant:()=>"t"+Date.now().toString(36),enregistrer,
-    renommerMoi:(prenom,nomFam)=>{if(window.dnmaxPont.renommerMoi)window.dnmaxPont.renommerMoi(prenom,nomFam)},annoncer:toast});
-  if(pane==="livrables")return window.dnmaxPont.etablissement.peindreLivrables(host,{livrables:()=>D.livrables,
-    remplacer:l=>{D.livrables=l},listeOrigine:SUPPORTS_DEF,retirerDeLEvaluation:nom=>{F.livrables=F.livrables.filter(x=>x!==nom)},
-    armement,enregistrer,annoncer:toast});
-}
-/* L'exemple (évaluations détaillées, jeu étendu, validation de son référentiel) : écrit en TypeScript
-   (src/interface/exemple.ts) ; son contenu et ses tirages sont dans src/domaine/exemple.ts. */
-function paintSceau(){
-  PREF.peindreSceau(document,{actif:sceauActif(),choisir:actif=>{PREFS.sceau=actif;savePrefs()}});
-  PREF.peindreDossierExports(document,window.dnmaxPont.dossierExports,toast);
-}
-function paintVocab(){
-  PREF.peindreVocabulaire(document,{libelle:critLabel(),choisir:libelle=>{PREFS.critLabel=libelle;savePrefs();paintLignes()}});
-}
-/* Préférences (menu « Mon compte ») : vocabulaire et livrables proposés ; le thème est tenu par l'application. */
-function paintPrefs(){
-  paintVocab();paintSceau();
-  paintEditor("livrables",document.getElementById("prefLivr"));
-}
-/* Paramètres > Modules : écran écrit en TypeScript (src/parametres/modules.ts) */
-function paintSet(){
-  window.dnmaxPont.modules.peindre(document.getElementById("modList"),document.getElementById("mCount"),{actifs:MOD,
-    ouvrirDocuments:()=>window.dnmaxPont.documentsModuleEleves(DATA.etab||{}),
-    confirmerEleves:()=>window.dnmaxPont.confirmerModuleEleves(DATA.etab||{}),
-    appliquer:appliquerModule});
-}
-function appliquerModule(cle,actif){
-  if(!actif&&window.dnmaxPont.modules.entraineDautres(cle,MOD))
-    toast("Niveaux d'acquisition désactivé aussi : il nécessite le module "+MODULES[cle].nom+".");
-  MOD[cle]=actif;modDeps();LS.set("dnmade.modules",MOD);
-  paintSet();paintTabs();paintForm();paintPick();paintLignes();paintVocab();paintRef();
-  toast(MODULES[cle].nom+(actif?" : activé":" : désactivé"));
-}
-
-/* ---------- construction de la fiche ---------- */
-/* colonnes des documents exportés : règle dans src/export/modele.ts */
-/* EXPORT_VIDE : export de « l'évaluation » (grille vierge) plutôt que des restitutions remplies par étudiant */
-/* En-tête des documents exportés : une ligne de contexte et l'enseignant·e, sans cartouche. */
-/* au-dessus de la ligne de contexte : l'établissement et le ou les enseignants, qui signent le document */
-
-/* ---------- exports Word, OpenDocument et tableur : écrits en TypeScript (src/export/) ---------- */
-/* L'évaluation en cours, mise en forme pour les documents : une fiche par étudiant (module Étudiants), sinon une fiche vierge. */
-/* Sceau DN MADE en tête des documents Word et OpenDocument : facultatif, réglé dans
-   Mon compte > Préférences > Documents exportés, désactivé par défaut. Image
-   public/documents/sceau-dn-made.png (voir outils/generer-sceau.ts), lue au premier export qui l'affiche. */
-
-/* ---------- Progression : écrite en TypeScript (src/interface/progression.ts) ---------- */
-
-/* ---------- téléchargements ---------- */
-/* étudiants pas encore entièrement évalués (non rendu et dispensé comptent comme terminés) */
-/* exports d'une ligne (fenêtre des actions) : l'évaluation (grille vierge) et, avec le module Étudiants, les restitutions par étudiant */
+/* Référentiel (barre Constituer / Explorer, page des cinq étapes, étapes 1 à 4, passages vers une étape ou la
+   validation), Mon établissement, éditeur commun, Préférences et Paramètres > Modules : écrits en TypeScript
+   (src/interface/referentiel.ts, etablissement.ts, preferences-parametres.ts). Reste ici la carte. */
 
 /* ---------- événements ---------- */
 window.dnmaxPont.interface.brancherOnglets(document,page=>{

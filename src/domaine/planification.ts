@@ -113,3 +113,8 @@ export function basculerLien(competence: Element, idEc: string, semestre: string
   const apres = lienEc(competence, idEc);
   return apres !== null && semestresDe(apres).includes(semestre);
 }
+
+/** Semestre retenu pour la planification : celui demandé s'il est l'un des six, sinon tous (texte vide). */
+export function semestreRetenu(demande: unknown): string {
+  return typeof demande === "string" && (SEMESTRES as readonly string[]).includes(demande) ? demande : "";
+}
