@@ -9,6 +9,7 @@
 import { readFileSync } from "node:fs";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
 
 const CHEMIN = new URL("../../public/heritage/application.js", import.meta.url);
 
@@ -41,7 +42,14 @@ const NAVIGATEUR = new Set([
 ]);
 
 /** Fonctions publiées sur la fenêtre par l'application, sous leur ancien nom, le temps de la reprise. */
-const PUBLIEES = new Set<string>();
+const PUBLIEES = new Set<string>(nomsPublies());
+
+/** Noms réellement posés sur la fenêtre par les modules repris : la liste suit le code au lieu d'être recopiée. */
+function nomsPublies(): string[] {
+  const fenetre: Record<string, unknown> = {};
+  publierPromotionsCalendrier(fenetre, () => undefined);
+  return Object.keys(fenetre);
+}
 
 /** Noms appelés comme fonctions (`nom(...)`) et noms déclarés (fonctions, variables, paramètres) dans le fichier. */
 function analyser(source: string): { appels: Map<string, number>; declares: Set<string> } {
