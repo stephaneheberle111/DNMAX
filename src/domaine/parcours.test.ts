@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
 import {
+  salvesBouquetFinal,
   CLE_PARCOURS,
   colleguesDeclares,
   doitLancerAuDemarrage,
@@ -155,5 +156,33 @@ describe("colleguesDeclares", () => {
 
   it("ne voit rien de déclaré dans une liste vide", () => {
     expect(colleguesDeclares({ enseignants: 0 })).toBe(false);
+  });
+});
+
+describe("bouquet final", () => {
+  it("tire des salves dans la fenêtre, l'une après l'autre, la dernière au centre et plus ample", () => {
+    const salves = salvesBouquetFinal(1200, 800);
+    expect(salves.length).toBeGreaterThan(5);
+    for (const salve of salves) {
+      expect(salve.x).toBeGreaterThanOrEqual(0);
+      expect(salve.x).toBeLessThanOrEqual(1200);
+      expect(salve.y).toBeGreaterThanOrEqual(0);
+      expect(salve.y).toBeLessThanOrEqual(800);
+    }
+    const delais = salves.map((salve) => salve.delaiMs);
+    expect(delais).toEqual([...delais].sort((a, b) => a - b));
+    const derniere = salves[salves.length - 1];
+    expect(derniere).toMatchObject({ x: 600 });
+    expect(derniere?.ampleur).toBe(Math.max(...salves.map((salve) => salve.ampleur)));
+  });
+
+  it("donne le même bouquet à chaque fois", () => {
+    expect(salvesBouquetFinal(1000, 700)).toEqual(salvesBouquetFinal(1000, 700));
+  });
+
+  it("reste dans une fenêtre de taille nulle ou négative", () => {
+    for (const salve of salvesBouquetFinal(-10, 0)) {
+      expect([salve.x, salve.y]).toEqual([0, 0]);
+    }
   });
 });

@@ -26,6 +26,7 @@
 
 ### Ajouté
 
+- Visites guidées : un bouquet final de confettis salue la fin de la visite, au clic sur « Terminer » (sauf si le système demande de réduire les animations).
 - Paramètres > Règles d'évaluation : suivi simplifié dans Mes évaluations, « À faire » puis « Faite » une fois la fiche distribuée. Ce n'est qu'un affichage : le suivi détaillé reste enregistré, et se retrouve en décochant la case.
 - Paramètres > Mises à jour : recherche automatique, une fois par jour à l'ouverture, désactivée par défaut. La recherche interroge désormais dnmax.fr, hébergé en France, et non plus GitHub ; la mise à jour Windows s'y télécharge aussi.
 - Envoyer : un fichier ou un envoi en direct sans étudiants peut aussi être protégé par un mot de passe (désactivé par défaut). Avec des étudiants, la protection reste obligatoire.
