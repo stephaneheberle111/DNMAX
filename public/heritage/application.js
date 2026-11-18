@@ -1474,42 +1474,12 @@ function paintMap(){
   if(svgHost)radialWire(svgHost);
 }
 
-const REF_PANES={constituer:"Constituer",explorer:"Explorer"};
-/* Constituer le référentiel de la mention active, une étape par niveau : chaque étape ne crée, ne renomme
-   et ne retire que ses propres éléments ; ceux des autres étapes y sont en lecture seule. Noms, codes et
-   intitulés restent rangés dans le dictionnaire commun à toutes les mentions (DATA.dico). */
-const CON_PANES={ues:"Unités d'enseignement",ecs:"Enseignements constitutifs",blocs:"Blocs et compétences",tableau:"Planification par semestre",valider:"Validation"};
+/* Référentiel (barre Constituer / Explorer, page des cinq étapes, étapes 1 à 3, passages vers une étape ou la
+   validation) : écrit en TypeScript (src/interface/referentiel.ts). Restent ici la carte et la planification. */
 /* Mon établissement (barre des volets, Établissement, Répartition de service, Promotions) et suppression en
    deux temps (armDel, edArm) : écrits en TypeScript (src/interface/etablissement.ts), règles dans
    src/domaine/repartition.ts. Reste ici asOf, dont l'exemple et la progression se servent. */
 const asOf=y=>y+"-"+(+y+1);
-function paintRef(){
-  if(!REF_PANES[ui.ref.pane])ui.ref.pane="explorer";
-  if(!CON_PANES[ui.ref.cp])ui.ref.cp="ues";
-  const pane=ui.ref.pane;
-  const nav=document.getElementById("refNav");
-  const nb=([k,v])=>`<button type="button" data-pane="${k}" aria-pressed="${pane===k}">${esc(v)}</button>`;
-  const E=Object.entries(REF_PANES);
-  nav.innerHTML=E.map(nb).join("");
-  nav.querySelectorAll("[data-pane]").forEach(b=>b.onclick=()=>{
-    ui.ref.pane=b.dataset.pane;edArm=null;paintRef();window.scrollTo({top:0,behavior:"smooth"})});
-  document.getElementById("refExplore").hidden = pane!=="explorer";
-  document.getElementById("refPane").hidden = pane==="explorer";
-  if(pane==="explorer")return paintExplore();
-  paintConstituer(document.getElementById("refPane"));
-}
-/* Ouvre une étape de Constituer, filtrée sur un nom ou un code (depuis Explorer ou la planification). */
-function allerEtape(cp,q){
-  ui.ref.pane="constituer";ui.ref.cp=cp;ui.ref.cq=q||"";edArm=null;paintRef();
-  const t=document.getElementById("cq");if(t)t.scrollIntoView({block:"center",behavior:"smooth"});
-}
-/* Versions et validation du référentiel : écrites en TypeScript (src/interface/versions-referentiel.ts),
-   règles dans src/domaine/versions-referentiel.ts. Reste ici le passage à la validation, qui remet edArm à zéro. */
-function allerValidation(dip){
-  if(dip&&dip!==DATA.activeDiplome&&DATA.diplomes.some(d=>d.id===dip))vueMention(dip);
-  ui.tab="ref";ui.ref.pane="constituer";ui.ref.cp="valider";edArm=null;
-  paintTabs();paintRef();window.scrollTo({top:0,behavior:"smooth"});
-}
 /* ---- Tableau du référentiel : compétences en lignes, enseignements en colonnes,
    comme le tableau d'origine ; chaque case ouvre ou ferme un semestre ---- */
 /* Étape 4, planification par semestre : écran écrit en TypeScript (src/referentiel/planification.ts) ;
@@ -1518,45 +1488,6 @@ function paintMatrice(host){
   window.dnmaxPont.referentiel.peindrePlanification(host,{vue:DATA,semestre:SEMS.includes(ui.ref.msem)?ui.ref.msem:"",
     choisirSemestre:sem=>{ui.ref.msem=sem;edArm=null;paintRef()},teinteBlocs:BLOC_TINT,
     enregistrer:()=>saveData(false),allerALaCompetence:code=>allerEtape("blocs",code)});
-}
-/* Constituer le référentiel d'une mention, en 5 étapes comme une évaluation : 1. les UE retenues, 2. les EC,
-   3. les blocs et leurs compétences, 4. la planification par semestre (tableau compétences × EC), 5. la validation datée. */
-function paintConstituer(host){
-  /* page et étape 5 : écran écrit en TypeScript (src/referentiel/constituer.ts) ; règles dans src/domaine/constituer.ts */
-  const D=DATA, dip=D.activeDiplome;
-  window.dnmaxPont.referentiel.peindrePageConstituer(host,{vue:D,diplomes:D.diplomes,actif:dip,etape:ui.ref.cp,
-    versions:versionsOf(dip),versionActive:versionActive(dip),aJour:refAJour(dip),
-    usage:vid=>{const u=versionUsage(dip,vid);return {promotions:u.ps.map(p=>p.nom||"promo"),evaluations:u.fs.length}},
-    aujourdhui:new Date().toISOString().slice(0,10),
-    choisirEtape:cp=>{ui.ref.cp=cp;ui.ref.cq="";edArm=null;paintRef();window.scrollTo({top:0,behavior:"smooth"})},
-    choisirDiplome:nom=>{const dp=D.diplomes.find(x=>norm(x.nom||"")===norm(nom));
-      if(dp){D.activeDiplome=dp.id;ui.ref.filter={kind:"",value:""};saveData()}},
-    choisirMention:id=>{D.activeDiplome=id;ui.ref.filter={kind:"",value:""};saveData()},
-    peindreEtape:(cp,main)=>cp==="tableau"?paintMatrice(main):paintEtape(cp,main),
-    valider:validerVersion,
-    attester:vid=>{const v=versionsOf(dip).find(x=>x.id===vid);if(!v)return;
-      v.attestation=new Date().toISOString().slice(0,10);persistData();REF=computeREF();paintRef()},
-    retablir:restaurerVersion,
-    supprimerVersion:i=>{window.dnmaxPont.constituer.supprimerVersion(D,dip,i);persistData();paintRef()},
-    armement:{arme:edArm,armer:(id,fn)=>armDel(id,fn)},annoncer:toast});
-}
-/* Étapes 1 à 3 de Constituer : écrans écrits en TypeScript (src/referentiel/etapes.ts) ;
-   règles dans src/domaine/constituer.ts */
-function paintEtape(kind,host){
-  const D=DATA, dipL=REF.meta.diplome||"—", R=window.dnmaxPont.referentiel;
-  (kind==="ues"?R.peindreEtapeUes:kind==="ecs"?R.peindreEtapeEcs:R.peindreEtapeBlocs)(host,contexteEtape(D,dipL));
-}
-/* contexte des étapes de Constituer écrites en TypeScript : la vue du référentiel actif et de quoi l'enregistrer */
-function contexteEtape(D,dipL){
-  return {vue:D,diplome:dipL,nouvelIdentifiant:newId,enregistrer:redessiner=>saveData(redessiner?undefined:false),
-    filtre:ui.ref.cq||"",filtrer:texte=>{ui.ref.cq=texte;paintRef()},viderFiltre:()=>{ui.ref.cq=""},
-    reprendre:(k,v)=>{const R=refOf(D,D.activeDiplome);if(!R[k].some(r=>r.id===v))R[k].push(assocFor(D.activeDiplome,k,v));saveData(true,true)},
-    retirer:(k,id)=>{absorb(D);refRemove(refOf(D,D.activeDiplome),k,id);saveData(true,true)},
-    renumeroterBloc:(id,v)=>{absorb(D);const r=window.dnmaxPont.renumeroterBloc(D,id,v);
-      if(r.modifie){D.dico=r.donnees.dico;D.refs=r.donnees.refs;if(r.donnees.versions)D.versions=r.donnees.versions;saveData(true,true)}
-      return r},
-    redessiner:paintRef,
-    armement:{arme:edArm,armer:(id,fn)=>armDel(id,fn)},annoncer:toast};
 }
 /* suppression en deux temps, partagée par les écrans de l'éditeur commun (src/etablissement/editeur-commun.ts) :
    le premier clic arme le bouton et redessine, le second supprime */
