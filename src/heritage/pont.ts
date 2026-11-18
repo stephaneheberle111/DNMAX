@@ -48,6 +48,7 @@ import { etat, publierEtat } from "../interface/etat";
 import { publierConstantes } from "../interface/constantes";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
+import { brancherEtDessiner, chargerEtat, terminerDemarrage, type BranchementsDemarrage } from "../interface/demarrage";
 import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
 import { publierVersionsReferentiel } from "../interface/versions-referentiel";
 import { publierEtablissement } from "../interface/etablissement";
@@ -486,7 +487,23 @@ export async function chargerInterfaceHistorique(
     const script = document.createElement("script");
     script.src = ADRESSE_SCRIPT_HISTORIQUE;
     script.addEventListener("load", () => {
-      resoudre();
+      // Le démarrage suit la lecture du script, dans l'ordre où le script l'exécutait (décision 38).
+      try {
+        const fenetre = window as unknown as Record<string, unknown>;
+        const branchementsDemarrage: BranchementsDemarrage = {
+          lireStockage: (cle) => magasin.getItem(cle),
+          ecrireStockage: (cle, valeur) => {
+            magasin.setItem(cle, valeur);
+          },
+          maintenant: () => new Date(),
+        };
+        chargerEtat(fenetre, branchementsDemarrage);
+        const ponts = brancherEtDessiner(fenetre, document, branchementsDemarrage);
+        if (window.dnmaxPont) Object.assign(window.dnmaxPont, ponts);
+        terminerDemarrage();
+      } finally {
+        resoudre();
+      }
     });
     script.addEventListener("error", () => {
       rejeter(new Error("le script de l'interface n'a pas pu être chargé"));

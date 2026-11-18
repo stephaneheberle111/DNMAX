@@ -21,41 +21,16 @@ const LS = {
   get(k,d){try{const v=STOCKAGE.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
   set(k,v){try{STOCKAGE.setItem(k,JSON.stringify(v))}catch(e){}}
 };
-MOD = Object.assign(modDefaults(), LS.get("dnmade.modules",{}));
 /* Aides du modèle de données (saveData, persistData, newId, anneeCode, ecCodeLbl…) et des préférences :
    src/interface/donnees.ts. Aides de l'évaluation en cours (studentsOf, lignesOf, syncListe, ecsOfSem…) :
-   src/interface/evaluation-courante.ts. Les règles sont dans src/domaine/. */
-modDeps();
-MOD.base=true;
+   src/interface/evaluation-courante.ts. Les règles sont dans src/domaine/.
+   Démarrage (lecture des données enregistrées, état de départ, branchements, premier dessin, ponts vers
+   l'application) : src/interface/demarrage.ts, appelé par l'application juste après la lecture de ce script. */
 const MODELE=window.dnmaxPont.modele;
 const KINDS=MODELE.SORTES;
 const ANNEES=[1,2,3];
-/* Une installation neuve démarre sans référentiel : l'enseignant en reçoit un ou construit le sien.
-   Sans référentiel, l'exemple installe celui de la mention Objet livré avec DNMAX (src/heritage/exemple.ts). */
-const REF_VIDE = {meta:{diplome:"",niveaux:[],blocTint:"#D1F1DA"},blocs:[],ues:[],familles:[],competences:[]};
-DATA = LS.get("dnmade.data",null);
-if(DATA)materialize(DATA);else DATA=construireDonnees(buildData(REF_VIDE,SUPPORTS_DEF));
-REF = projectRef(DATA);
-fiches = LS.get("dnmade.fiches",[]);
 /* préférences (menu « Mon compte ») : règles dans src/domaine/preferences.ts, écran dans src/preferences/ */
 const PREF=window.dnmaxPont.preferences;
-PREFS = PREF.initiales(LS.get("dnmade.prefs",{}));
-promos = LS.get("dnmade.promos",[]);
-
-/* brouillon de départ : une évaluation vide (vierge() ne peut pas servir ici, elle lit F) */
-F = LS.get("dnmade.draft",null) || {id:uid(),promoId:"",titre:"",livrables:[],semestre:"S1",classe:"",
-  date:new Date().toISOString().slice(0,10),prof:"",ues:[],ecCodes:[],compCode:"",consignes:"",
-  ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),opts:{crit:true,obs:true},
-  eleves:"",items:[],res:{}};
-/* Une évaluation de la liste est sa propre référence : un brouillon qui s'en écartait (modifications
-   laissées sans « Enregistrer » avant l'enregistrement automatique) ne doit pas l'écraser à la première retouche. */
-{const enregistree=fiches.find(f=>f&&f.id===F.id);if(enregistree)F=structuredClone(enregistree)}
-migF(F);
-/* un diplôme-cadre vierge resté à côté d'un vrai diplôme n'a plus lieu d'être */
-{const nt=window.dnmaxPont.nettoyerDiplomesVierges(DATA,promos);
-  if(nt&&nt.modifie){DATA=nt.donnees;materialize(DATA);REF=computeREF();persistData()}}
-syncItemEcs();
-ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"etab"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
 
 function paintEleveField(){
   const fld=document.getElementById("fld-eleve"), host=document.getElementById("f-eleve");
@@ -285,7 +260,6 @@ const ST_LBL=SUIVI.LIBELLES_STATUT;
    règles dans src/domaine/filtres-evaluations.ts */
 /* liste de Mes évaluations : écran écrit en TypeScript (src/evaluations/liste.ts), règles de la frise dans
    src/domaine/frise-suivi.ts ; la fenêtre des actions est dans src/evaluations/actions.ts. */
-BLOC_TINT = (REF.meta&&REF.meta.blocTint)||"#D1F1DA";
 function hueOf(k){let h=0;for(const ch of String(k||""))h=(h*31+ch.charCodeAt(0))%360;return `hsl(${h} 52% 60%)`}
 function refEcByCode(code){return (REF.ecs||[]).find(x=>ANNEES.some(a=>(x.codes||{})[a]===code))||null}
 function ecColor(code){const e=refEcByCode(code);return (e&&e.couleur)||hueOf(code)}
@@ -1267,81 +1241,3 @@ function appliquerModule(cle,actif){
 /* ---------- téléchargements ---------- */
 /* étudiants pas encore entièrement évalués (non rendu et dispensé comptent comme terminés) */
 /* exports d'une ligne (fenêtre des actions) : l'évaluation (grille vierge) et, avec le module Étudiants, les restitutions par étudiant */
-
-/* ---------- événements ---------- */
-window.dnmaxPont.interface.brancherOnglets(document,page=>{
-  ui.tab=page;paintTabs();
-  if(ui.tab==="new"){paintForm();paintPick();paintLignes()}
-  if(ui.tab==="saved")paintSaved();if(ui.tab==="prog")paintProg();if(ui.tab==="ref")paintRef();if(ui.tab==="org")paintOrg();
-  if(ui.tab==="set")paintSet()});
-window.dnmaxPont.editeur.brancherFormulaire(document,{
-  changerTitre:v=>{F.titre=v;save()},changerConsignes:v=>{F.consignes=v;save()},
-  changerDistribution:v=>{F.distribPrev=v;applySemDate();save();paintForm();paintPick()},
-  changerRendu:v=>{F.renduPrev=v;save();paintForm()}});
-/* boutons et champs fixes de la page : src/interface/branchements.ts */
-window.dnmaxPont.interface.brancherInterface(document,{
-  chargerExemple:loadDemo,
-  nouvelleEvaluation:nouvelleFiche,
-  revenirALaListe:()=>{ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"})},
-  remettreModulesParDefaut:()=>{MOD=modDefaults();LS.set("dnmade.modules",MOD);
-    paintSet();paintTabs();paintForm();paintPick();paintRef();toast("Modules remis par défaut.")},
-  chercherCompetence:q=>{ui.q=q;paintPick()},
-  viderSelection:()=>{F.items=[];F.ops=[];ui.sel=[];save();paintPick();paintSteps()},
-  allerALEtape:goStep,
-  regrouperSelection:linkSelection,
-  annulerSelection:()=>{ui.sel=[];paintLignes()},
-  /* L'évaluation est déjà enregistrée, modification après modification : le bouton ne fait que ramener à la liste
-     (un brouillon complet en sort). */
-  terminer:()=>{
-    const brouillon=!!F.brouillon||!fiches.some(f=>f.id===F.id);
-    if(brouillon){
-      const manque=EVAL.manquesPourEnregistrer(F);
-      if(manque.length){toast("Pour enregistrer l'évaluation, il lui manque "+EVAL.enumerer(manque)+".");return}
-    }
-    save(true);
-    ui.tab="saved";paintTabs();paintSaved();window.scrollTo({top:0,behavior:"smooth"});
-    toast((brouillon?"Évaluation enregistrée — ":"")+"Le Word et l'Excel se génèrent d'ici, quand vous voulez.");
-  },
-  choisirModeSaisie:mode=>{ui.emode=mode;paintEleves()},
-  chercherDansReferentiel:q=>{ui.ref.q=q;paintRef()},
-  regrouperReferentiel:g=>{ui.ref.group=g;paintRef()},
-  filtrerAnneeReferentiel:a=>{ui.ref.annee=a;paintRef()},
-  effacerFiltresReferentiel:()=>{Object.assign(ui.ref,{q:"",group:"bloc",annee:"*",sems:[]});paintRef()}});
-
-paintTabs();paintForm();paintPick();paintSaved();paintRef();paintSet();paintPrefs();
-
-/* Pont vers l'application : le menu « Mon compte » ouvre les Préférences. */
-window.dnmaxPont.ouvrirPreferences=()=>{
-  ui.tab="pref";edArm=null;paintTabs();paintPrefs();window.scrollTo({top:0,behavior:"smooth"});
-};
-
-/* Pont vers l'application : contenu lisible (sans identifiants internes) du référentiel d'un diplôme,
-   pour l'une de ses versions validées ou, si `versionId` est vide ou inconnu, pour son référentiel de travail.
-   Sert à vérifier que deux enseignants travaillent sur la même base. */
-window.dnmaxPont.projeterReferentiel=(diplomeId,versionId)=>{
-  if(!DATA.diplomes.some(d=>d.id===diplomeId))return null;
-  const v=versionsOf(diplomeId).find(x=>x.id===versionId);
-  return projectSnap(DATA,diplomeId,JSON.parse(JSON.stringify(v?v.snap:refOf(DATA,diplomeId))));
-};
-
-/* Pont vers l'application : elle fait appliquer ses règles aux enseignants (déclarer l'enseignant de
-   l'installation, reporter son changement de nom). La règle reçoit les données et rend les nouvelles, ou null. */
-window.dnmaxPont.ajusterEnseignants=regle=>{
-  const r=regle({enseignants:DATA.enseignants.slice(),moi:DATA.moi});
-  if(!r||!Array.isArray(r.enseignants))return;
-  DATA.enseignants=r.enseignants.slice();DATA.moi=typeof r.moi==="string"?r.moi:DATA.moi;persistData();
-  if(ui.tab==="org")paintOrg();
-};
-
-/* Pont vers l'application : les documents RGPD du module Étudiants demandent le nom de l'établissement et le contact
-   du délégué à la protection des données. Mène à leur saisie, curseur sur le premier des deux qui est vide. */
-window.dnmaxPont.ouvrirEtablissement=()=>{
-  ui.tab="org";ui.org.pane="etab";paintTabs();paintOrg();window.scrollTo({top:0,behavior:"smooth"});
-  const E=DATA.etab||{}, k=!(E.nom||"").trim()?"nom":"contactDpo";
-  const inp=document.getElementById("et-"+k);if(inp)inp.focus();
-};
-
-/* Pont vers l'application : les données de l'établissement (diplômes, dictionnaire, référentiels) ne sont
-   enregistrées qu'à leur première modification. L'échange entre enseignants les lit dans le stockage :
-   on les y inscrit dès le chargement, pour qu'une installation neuve connaisse aussi son diplôme par défaut. */
-persistData();
