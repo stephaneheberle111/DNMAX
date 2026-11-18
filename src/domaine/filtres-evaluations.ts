@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: CECILL-2.1
 /**
  * Mes évaluations : les filtres de la liste (promotions, semestres, suivi,
- * intitulé). Par défaut, les promotions en cours. Un enseignant ne voit que
- * les promotions de sa répartition de service, et les évaluations dont il
- * est l'enseignant. Règles reprises telles quelles de l'interface historique.
+ * intitulé). Par défaut, les promotions en cours. Un enseignant voit
+ * d'emblée les promotions de sa répartition de service et les évaluations
+ * dont il est l'enseignant ; les autres promotions restent accessibles en les
+ * choisissant dans le filtre.
  */
 import { SEMESTRES } from "./constituer";
 
@@ -56,7 +57,11 @@ export interface OutilsFiltres {
 export function correspondFiltres(evaluation: Element, filtres: Filtres, outils: OutilsFiltres): boolean {
   if (outils.visibles !== null) {
     const visibles = outils.visibles;
-    if (!(outils.promotionsDe(evaluation).some((promotion) => visibles.has(promotion.id)) || profsDe(evaluation).includes(outils.moi))) return false;
+    const promotions = outils.promotionsDe(evaluation);
+    const mienne = promotions.some((promotion) => visibles.has(promotion.id)) || profsDe(evaluation).includes(outils.moi);
+    // Une promotion hors de ma répartition reste accessible : ses évaluations se montrent quand je la choisis moi-même.
+    const choisie = promotions.some((promotion) => filtres.per.includes(String(promotion.id)));
+    if (!mienne && !choisie) return false;
   }
   if (filtres.per.length > 0) {
     const promotions = outils.promotionsDe(evaluation);
