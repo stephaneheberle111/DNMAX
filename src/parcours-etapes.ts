@@ -220,14 +220,6 @@ function etapeOuvrirPageConstituer(page: string, libelle: string): Etape {
 /** Vrai une fois la boîte « Échanger » ouverte pendant la visite : sa fermeture fait passer à la suite. */
 let boiteEchangeOuverte = false;
 
-/**
- * Créer une évaluation n'a pas lieu d'être tant que le référentiel n'est pas validé (création refusée).
- * Une évaluation déjà enregistrée ne fait pas sauter ces étapes : la visite montre l'assistant en entier.
- */
-function creationSansObjet(avancement: Avancement): boolean {
-  return !avancement.referentielValide;
-}
-
 function sansEvaluation(avancement: Avancement): boolean {
   return avancement.evaluations === 0;
 }
@@ -303,7 +295,7 @@ const PRISE_EN_MAIN: Parcours = {
       titre: "1. Valider le référentiel",
       texte:
         "Avant une première évaluation, vérifiez le référentiel : vous en êtes responsable, même s'il est livré avec DNMAX. " +
-        "Cochez la case par laquelle vous attestez l'avoir vérifié et en assumer le contenu, puis cliquez « Valider cette version ». Sans validation, aucune évaluation ne peut être créée.",
+        "Cochez la case par laquelle vous attestez l'avoir vérifié et en assumer le contenu, puis cliquez « Valider cette version ». Sans validation, vous pouvez évaluer, mais DNMAX vous le rappellera à chaque promotion cochée.",
       texteFait: "Votre référentiel est validé : vous pouvez évaluer avec.",
       cibles: ["#cpMain .panel", "#t-ref"],
       // D'abord la case d'attestation, puis le bouton : la réussite ne vient qu'une fois la version validée.
@@ -393,33 +385,24 @@ const PRISE_EN_MAIN: Parcours = {
     ALLER_EVALUATIONS,
     {
       titre: "5. Créer une évaluation",
-      texte:
-        "Une évaluation se construit sur un référentiel validé : DNMAX refuse « Nouvelle évaluation » tant que le vôtre ne l'est pas. " +
-        "Validez-le dans Référentiel > Constituer > Validation, puis revenez ici.",
-      cibles: ["#bNew"],
-      geste: "regarder",
-      groupeFait: (avancement) => avancement.referentielValide,
-    },
-    {
-      titre: "5. Créer une évaluation",
       texte: "Cliquez « Nouvelle évaluation ».",
       cibles: ["#bNew"],
       geste: "cliquer",
       atteinte: ongletOuvert("v-new"),
-      groupeFait: creationSansObjet,
       avanceAuClic: true,
     },
     {
       titre: "5. L'évaluation",
       texte:
-        "Donnez un intitulé et une consigne, cochez la ou les promotions concernées, les livrables attendus et au moins un EC (ou une UE). Tout cela est nécessaire pour enregistrer. Passez ensuite à l'étape 2, « Compétences ».",
+        "Donnez un intitulé et une consigne, cochez la ou les promotions concernées, les livrables attendus et au moins un EC (ou une UE). Tout cela est nécessaire pour enregistrer. " +
+        "Les UE, EC et compétences proposés sont ceux du référentiel de la promotion cochée ; s'il n'est pas encore validé, DNMAX vous le rappelle, et vous pouvez continuer. " +
+        "Passez ensuite à l'étape 2, « Compétences ».",
       cibles: ["#step1"],
       // Le curseur passe de l'intitulé à la consigne, aux livrables, aux promotions, au semestre et aux EC, puis au bouton de l'étape 2.
       pointe: '#f-titre, #f-consignes, #f-livr, #f-classes, #f-sem, #row-ec, [data-go="2"]',
       aDegager: '[data-go="2"]',
       geste: "parcourir",
       atteinte: () => visible("#step2") || visible("#step3"),
-      groupeFait: creationSansObjet,
       ouvrir: cliquer('[data-go="2"]'),
       celebrer: true,
     },
@@ -432,7 +415,6 @@ const PRISE_EN_MAIN: Parcours = {
       aDegager: '[data-go="3"]',
       geste: "cliquer",
       atteinte: () => visible("#step3"),
-      groupeFait: creationSansObjet,
       ouvrir: cliquer('[data-go="3"]'),
       celebrer: true,
     },
@@ -446,7 +428,6 @@ const PRISE_EN_MAIN: Parcours = {
       depuis: "#lignes [data-dragcomp]",
       pointe: "#lignes .lg ~ .lg",
       geste: "glisser",
-      groupeFait: creationSansObjet,
     },
     {
       titre: "5. Formuler et enregistrer",
@@ -460,7 +441,6 @@ const PRISE_EN_MAIN: Parcours = {
       pointe: () => ({ glisser: "#lignes .livrow", remplir: "#lignes input[data-lib]", cliquer: "#bSave3" })[etapeFormulation()],
       depuis: "#palLivr [data-dragliv]",
       objectif: (avancement) => avancement.evaluations > 0,
-      groupeFait: (avancement) => !avancement.referentielValide,
     },
     ALLER_EVALUATIONS,
     {

@@ -59,9 +59,10 @@ import { peindreEnseignants, peindreLivrables, peindrePromotions, peindreSemestr
 import { lierSelection, peindreFormulation } from "../editeur/formulation";
 import { progressionDesCompetences } from "../domaine/progression-competences";
 import { peindreSaisieEtudiants } from "../editeur/saisie-etudiants";
+import { avertirReferentielNonValide } from "../editeur/avertissement-referentiel";
 import { brancherFormulaire, remplirFormulaire } from "../editeur/formulaire";
 import type { EnseignantsEtMoi } from "../domaine/enseignant-moi";
-import { diplomeAReferentielValide, promotionAReferentielValide } from "../domaine/validation-referentiel";
+import { diplomeAReferentielValide, promotionAReferentielValide, promotionsAAvertir } from "../domaine/validation-referentiel";
 import type { MagasinMemoire } from "../domaine/magasin-memoire";
 import { lireSaisieEtablissement } from "../domaine/documents-rgpd";
 import {
@@ -157,6 +158,10 @@ interface Pont {
   readonly referentielValide: {
     promotion(donnees: unknown, promotion: unknown): boolean;
     diplome(donnees: unknown, diplomeId: unknown): boolean;
+    /** Promotions qui viennent d'être cochées et dont le référentiel n'est pas validé. */
+    aAvertir: typeof promotionsAAvertir;
+    /** Fenêtre d'avertissement à la sélection d'une telle promotion (voir `editeur/avertissement-referentiel`). */
+    avertir: typeof avertirReferentielNonValide;
   };
   /** Le diplôme-cadre vierge, à cacher à l'enseignant (voir `domaine/diplome-vierge`). */
   readonly estCadreVierge: typeof estCadreVierge;
@@ -414,6 +419,8 @@ export async function chargerInterfaceHistorique(
         estObjet(promotion) && promotionAReferentielValide(lireDonneesEtablissementDe(donnees), lirePromotion(promotion)),
       diplome: (donnees, diplomeId) =>
         typeof diplomeId === "string" && diplomeAReferentielValide(lireDonneesEtablissementDe(donnees), diplomeId),
+      aAvertir: promotionsAAvertir,
+      avertir: avertirReferentielNonValide,
     },
   };
   await new Promise<void>((resoudre, rejeter) => {

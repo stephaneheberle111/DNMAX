@@ -142,10 +142,10 @@ describe("visite rejouée quand tout est déjà fait", () => {
     }
   });
 
-  it("sans référentiel validé, ne clique pas « Nouvelle évaluation », que l'application refuserait", () => {
+  it("sans référentiel validé, fait quand même créer une évaluation, que l'application permet désormais", () => {
     const etapes = etapesRejouees("prise-en-main", { ...RIEN_FAIT, referentiel: true });
-    expect(etapes.some((etape) => etape.avanceAuClic === true && etape.cibles?.includes("#bNew") === true)).toBe(false);
-    expect(etapes.some((etape) => etape.cibles?.includes("#bNew") === true)).toBe(true);
+    expect(etapes.some((etape) => etape.avanceAuClic === true && etape.cibles?.includes("#bNew") === true)).toBe(true);
+    expect(etapes.some((etape) => etape.titre === "5. L'évaluation" && etape.texte.includes("pas encore validé"))).toBe(true);
   });
 
   it("avec un référentiel validé et sans évaluation, fait créer la première", () => {

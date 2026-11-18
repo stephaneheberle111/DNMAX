@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { lireDonneesEtablissementDe } from "./echange/modele";
 import {
   diplomeAReferentielValide,
-  promotionAReferentielValide,
+  promotionAReferentielValide, promotionsAAvertir,
   versionAttestee,
   versionSuivie,
 } from "./validation-referentiel";
@@ -90,5 +90,21 @@ describe("promotionAReferentielValide", () => {
   it("tient pour non validées des données illisibles", () => {
     const vides = lireDonneesEtablissementDe("pas des données");
     expect(promotionAReferentielValide(vides, { diplomeId: "d0", versionId: "" })).toBe(false);
+  });
+});
+
+describe("promotionsAAvertir", () => {
+  const valide = (promotion: string): boolean => promotion === "DNO-2025-2028";
+
+  it("signale une promotion cochée dont le référentiel n'est pas validé", () => {
+    expect(promotionsAAvertir([], ["DNE-2025-2028"], valide)).toEqual(["DNE-2025-2028"]);
+  });
+
+  it("ne signale pas une promotion au référentiel validé", () => {
+    expect(promotionsAAvertir([], ["DNO-2025-2028"], valide)).toEqual([]);
+  });
+
+  it("ne signale rien quand on décoche, ni une promotion déjà cochée", () => {
+    expect(promotionsAAvertir(["DNE-2025-2028", "DNE-2024-2027"], ["DNE-2025-2028"], valide)).toEqual([]);
   });
 });
