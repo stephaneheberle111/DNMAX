@@ -1643,6 +1643,10 @@ function validerVersion(date,note){
   if(prevId&&enc.length)askPromosVersion(dip,v,enc);
   else toast("Référentiel validé — version du "+frDate(v.date)+(enc.length?", appliquée aux promotions de cette mention.":"."));
 }
+/* libellé d'une promotion dans le choix des promotions qui passent à une nouvelle version :
+   nom court, nom, année de formation, année scolaire et nombre d'étudiants */
+function promoLabel(pr){promoLive(pr);const sh=promoShort(pr);return (sh?sh+" — ":"")+(pr.nom||"Sans nom")+" · Année "+pr.annee+(pr.as?" · "+pr.as:"")+
+  " ("+String(pr.eleves||"").split(/\r?\n/).filter(x=>x.trim()).length+")"}
 function askPromosVersion(dip,v,enc){
   const prev=document.activeElement, el=document.createElement("div");el.className="modal";
   const vdate=id=>{const x=versionsOf(dip).find(y=>y.id===id);return x?frDate(x.date):"référentiel non validé"};

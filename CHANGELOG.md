@@ -38,6 +38,7 @@
 
 ### Corrigé
 
+- Référentiel > Constituer > Validation : valider une nouvelle version, quand une version validée existait déjà et que des promotions sont en cours, ouvre de nouveau le choix des promotions qui passent à cette version (une erreur l'empêchait).
 - Mon établissement > Promotions : sans le module Étudiants, l'aide renvoie au module « Étudiants » sous son nom actuel.
 - Évaluation, étape 3 : le résumé sous l'étape ne compte plus comme formulé un regroupement dont la formulation n'est pas renseignée.
 - Même icône partout : « À propos » et l'onglet du navigateur reprennent l'icône de la barre des tâches (le signe X sur pavé pétrole) ; l'en-tête garde le nom « DNMA » suivi du signe.
