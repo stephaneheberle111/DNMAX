@@ -6,8 +6,8 @@
 //! choisit l'emplacement dans la boîte de dialogue du système.
 
 use std::fs;
-use std::io;
-use std::path::Path;
+use std::io::{self, Write};
+use std::path::{Path, PathBuf};
 
 /// Longueur maximale conservée pour un nom proposé, extension comprise.
 const LONGUEUR_MAXIMALE_NOM: usize = 120;
@@ -39,13 +39,65 @@ pub fn nettoyer_nom_fichier(nom_propose: &str) -> String {
     }
 }
 
-/// Écrit le contenu exporté à l'emplacement choisi par l'enseignant.
+/// Écrit le contenu exporté à l'emplacement choisi par l'enseignant, en
+/// remplaçant le fichier qui s'y trouve déjà.
+///
+/// Le contenu est d'abord écrit dans un fichier temporaire du même dossier,
+/// qui remplace ensuite l'ancien : si l'écriture échoue (disque plein,
+/// document ouvert dans un autre logiciel), l'ancien fichier reste intact au
+/// lieu d'être tronqué.
 ///
 /// # Errors
 ///
 /// Rend l'erreur du système si l'emplacement n'est pas accessible en écriture.
 pub fn ecrire_export(chemin: &Path, contenu: &[u8]) -> io::Result<()> {
-    fs::write(chemin, contenu)
+    let temporaire = chemin_temporaire(chemin);
+    let resultat = ecrire_puis_remplacer(&temporaire, chemin, contenu);
+    if resultat.is_err() {
+        // Le fichier temporaire peut ne pas exister : l'échec de son effacement ne dit rien de plus.
+        let _ = fs::remove_file(&temporaire);
+    }
+    resultat
+}
+
+fn ecrire_puis_remplacer(temporaire: &Path, chemin: &Path, contenu: &[u8]) -> io::Result<()> {
+    let mut fichier = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(temporaire)?;
+    fichier.write_all(contenu)?;
+    fichier.sync_all()?;
+    drop(fichier);
+    fs::rename(temporaire, chemin)
+}
+
+/// Fichier caché voisin de `chemin`, propre à ce processus.
+fn chemin_temporaire(chemin: &Path) -> PathBuf {
+    let nom = chemin
+        .file_name()
+        .map(|nom| nom.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    chemin.with_file_name(format!(".{nom}.{}.dnmax-tmp", std::process::id()))
+}
+
+/// Message rendu à l'interface quand l'écriture échoue.
+///
+/// Un document ouvert dans Word ou LibreOffice est verrouillé sous Windows :
+/// le remplacer échoue (accès refusé, ou partage refusé, codes 32 et 33).
+/// L'enseignant doit alors savoir quoi faire, plutôt que lire l'erreur brute.
+pub fn message_ecriture(erreur: &io::Error) -> String {
+    if fichier_occupe(erreur) {
+        "le fichier est ouvert dans un autre logiciel (Word, LibreOffice…) ou en lecture seule : fermez-le puis réessayez, ou choisissez un autre nom".to_owned()
+    } else {
+        format!("écriture impossible : {erreur}")
+    }
+}
+
+fn fichier_occupe(erreur: &io::Error) -> bool {
+    if erreur.kind() == io::ErrorKind::PermissionDenied {
+        return true;
+    }
+    cfg!(windows) && matches!(erreur.raw_os_error(), Some(32 | 33))
 }
 
 #[cfg(test)]
@@ -99,6 +151,36 @@ mod tests {
         let chemin = dossier.path().join("fiche.docx");
         ecrire_export(&chemin, b"contenu").expect("écriture");
         assert_eq!(fs::read(&chemin).expect("lecture"), b"contenu");
+    }
+
+    #[test]
+    fn remplace_un_fichier_existant_sans_laisser_de_fichier_temporaire() {
+        let dossier = tempfile::tempdir().expect("dossier temporaire");
+        let chemin = dossier.path().join("fiche.docx");
+        fs::write(&chemin, b"ancien contenu, plus long").expect("fichier existant");
+        ecrire_export(&chemin, b"nouveau").expect("remplacement");
+        assert_eq!(fs::read(&chemin).expect("lecture"), b"nouveau");
+        let restants: Vec<_> = fs::read_dir(dossier.path()).expect("liste").collect();
+        assert_eq!(restants.len(), 1);
+    }
+
+    #[test]
+    fn explique_un_fichier_ouvert_ailleurs_ou_en_lecture_seule() {
+        let message = message_ecriture(&io::Error::from(io::ErrorKind::PermissionDenied));
+        assert!(message.contains("ouvert dans un autre logiciel"));
+    }
+
+    #[test]
+    fn garde_l_erreur_du_systeme_dans_les_autres_cas() {
+        let message = message_ecriture(&io::Error::new(io::ErrorKind::StorageFull, "disque plein"));
+        assert_eq!(message, "écriture impossible : disque plein");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn reconnait_le_partage_refuse_par_windows() {
+        let message = message_ecriture(&io::Error::from_raw_os_error(32));
+        assert!(message.contains("ouvert dans un autre logiciel"));
     }
 
     #[test]

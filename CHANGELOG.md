@@ -38,6 +38,7 @@
 
 ### Corrigé
 
+- Enregistrer un document (Word, OpenDocument, tableur, PDF, fichier d'échange) à la place d'un fichier existant : si l'écriture échoue, l'ancien fichier reste intact ; quand il est ouvert dans un autre logiciel (Word, LibreOffice…), DNMAX dit de le fermer ou de choisir un autre nom, au lieu d'afficher l'erreur brute du système.
 - Référentiel > Constituer > Validation : valider une nouvelle version, quand une version validée existait déjà et que des promotions sont en cours, ouvre de nouveau le choix des promotions qui passent à cette version (une erreur l'empêchait).
 - Mon établissement > Promotions : sans le module Étudiants, l'aide renvoie au module « Étudiants » sous son nom actuel.
 - Évaluation, étape 3 : le résumé sous l'étape ne compte plus comme formulé un regroupement dont la formulation n'est pas renseignée.
