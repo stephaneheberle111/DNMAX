@@ -45,6 +45,7 @@ import * as exemple from "../domaine/exemple";
 import * as modele from "../domaine/modele-donnees";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
 import { etat, publierEtat } from "../interface/etat";
+import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
 import { brancherInterface } from "../interface/branchements";
 import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
 import { peindreModules } from "../parametres/modules";
@@ -427,6 +428,9 @@ export async function chargerInterfaceHistorique(
   await new Promise<void>((resoudre, rejeter) => {
     // L'état est publié avant le script, qui en affecte les parties sans les déclarer.
     publierEtat(window, etat);
+    publierPromotionsCalendrier(window as unknown as Record<string, unknown>, (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    });
     const script = document.createElement("script");
     script.src = ADRESSE_SCRIPT_HISTORIQUE;
     script.addEventListener("load", () => {

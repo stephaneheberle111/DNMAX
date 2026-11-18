@@ -191,38 +191,7 @@ function evalStats(f){
 }
 function setClasses(list){Object.assign(F,EVAL.classesNettoyees(list||[]))}
 function uid(){return Math.random().toString(36).slice(2,9)}
-function asStart(as){const m=String(as||"").match(/(\d{4})/);return m?+m[1]:null}
-function dipDuree(id){return +((DATA.diplomes.find(d=>d.id===id)||{}).duree)||3}
-function promoDuree(pr){return dipDuree(pr.diplomeId)}
-function promoNomAuto(pr){const dp=DATA.diplomes.find(d=>d.id===pr.diplomeId)||{};
-  return (dipCode(dp)||"DN")+"-"+pr.debut+"-"+(+pr.debut+promoDuree(pr))}
-function migPromoCohorte(pr){
-  pr.debut=+pr.debut;
-  if(!pr.diplomeId||!DATA.diplomes.some(d=>d.id===pr.diplomeId))pr.diplomeId=DATA.activeDiplome;
-  pr.nom=promoNomAuto(pr);
-  if(!Array.isArray(pr.liste))migPromo(pr);
-  return pr;
-}
-function promoAnneeAt(pr,as){migPromoCohorte(pr);const y=asStart(as);return y==null?1:y-pr.debut+1}
-function promoLive(pr,as){
-  as=as||anneeScolaire();
-  const a=promoAnneeAt(pr,as);
-  pr.as=as;pr.annee=Math.min(promoDuree(pr),Math.max(1,a));
-  return pr;
-}
-function curPromo(){const p=promos.find(x=>x.id===F.promoId);return p?promoLive(p):null}
-/* nom simplifié (DNO2, DNE1…) pour une promotion en cours à la date du jour ; sinon nom complet */
-function promoShort(pr){
-  migPromoCohorte(pr);
-  const a=promoAnneeAt(pr,anneeScolaire(new Date()));
-  if(a<1||a>promoDuree(pr))return "";
-  const dp=DATA.diplomes.find(d=>d.id===pr.diplomeId)||{};
-  return dp.id===DATA.activeDiplome?anneeCode(a):dipCode(dp)+a;
-}
-function promoDisp(name){const pr=promos.find(x=>x.nom===name);return pr?(promoShort(pr)||pr.nom):name}
-function classesDisp(f){f=f||F;const l=Array.isArray(f.classes)?f.classes:String(f.classe||"").split(/,\s*/).filter(Boolean);
-  return l.map(promoDisp).join(", ")}
-function savePromos(){LS.set("dnmade.promos",promos)}
+/* promotions, années scolaires et calendrier (promoShort, anneeScolaire, semSuggere…) : src/interface/promotions-calendrier.ts */
 function setSemestre(sem){F.semestre=sem;syncItemEcs()}
 function ecsOf(c,sem){return (c.ecs||[]).filter(e=>e.sem===sem)}
 function compsFor(sem){return REF.competences.filter(c=>ecsOf(c,sem).length>0)}
@@ -243,22 +212,6 @@ function uesSelected(){
 }
 function ecsOfUe(u,sem){return ecsOfSem(sem||F.semestre).filter(e=>e.ue===u).map(e=>e.ec)}
 function blocName(n){const b=REF.blocs.find(b=>b.num===String(n));return b?b.nom:"Bloc "+n}
-function dnOf(sem){const i=SEMS.indexOf(sem);return i<0?"":anneeCode(Math.floor(i/2)+1)}
-function dnLabel(sem){if(!MOD.dn)return "";const d=(REF.meta.niveaux||[]).find(n=>+n.annee===anneeOf(sem));return d&&d.label?dnOf(sem)+" · "+d.label:dnOf(sem)}
-function anneeLabel(a){return "Année "+a+(MOD.dn?" — "+anneeCode(a):"")}
-function semsOfAnnee(a){return EVAL.semestresDeLAnnee(a)}
-function dateFiche(d){const t=new Date(d||F.distribPrev||F.date||Date.now());return isNaN(t)?new Date():t}
-/* calendrier de l'établissement (Mon établissement > Établissement) */
-function calendrier(){return EVAL.lireCalendrier(DATA.etab)}
-function anneeScolaire(d){return EVAL.anneeScolaire(dateFiche(d),calendrier())}
-function rangSemestre(d){return EVAL.rangSemestre(dateFiche(d),calendrier())}
-function semSuggere(d){return EVAL.semestreSuggere(anneeFiche(),dateFiche(d),calendrier())}
-function applySemDate(){
-  if(F.semManuel)return false;
-  const sug=semSuggere();
-  if(sug&&sug!==F.semestre){setSemestre(sug);return true}
-  return false;
-}
 function help(html,pos){return `<span class="help ${pos||""}" tabindex="0" role="note" aria-label="Aide"><span class="hbub">${html}</span></span>`}
 function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
 function askModal(html,onYes,onNo){
@@ -338,14 +291,6 @@ function paintForm(){
   paintSems();
   paintContexte();
   paintSteps();
-}
-function anneeOfClasse(t){return EVAL.anneeDeClasse(t)}
-function anneeFiche(){
-  const pr=curPromo();if(pr&&pr.annee)return +pr.annee;
-  const ofC=c=>{const p2=promos.find(x=>x.nom===c);if(p2){const a=promoAnneeAt(p2,anneeScolaire());return a>=1&&a<=promoDuree(p2)?a:0}
-    return anneeOfClasse(c)};
-  const ys=[...new Set((F.classes||[]).map(ofC).filter(Boolean))];
-  return ys.length===1?ys[0]:0;
 }
 /* Étape 1, semestre, enseignants et livrables : écrans écrits en TypeScript (src/editeur/etape-evaluation.ts) */
 function paintSems(){
