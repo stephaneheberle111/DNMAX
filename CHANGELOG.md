@@ -4,6 +4,7 @@
 
 ### Modifié
 
+- Mes évaluations, filtre « Promotions » : vos promotions et vos évaluations d'abord ; « + Autres promotions » propose, plus discrètes, celles hors de votre répartition de service, dont les évaluations s'affichent quand vous en cochez une.
 - Visite guidée : les pages de « Constituer » sont éclairées en entier, pour corriger chaque UE, EC, bloc ou compétence pendant la visite ; le curseur se déplace d'un geste à l'autre comme une main, au lieu de repartir de la bulle (à la validation, il coche la case puis va sur « Valider cette version ») ; un collègue ajouté compte une fois son prénom et son nom saisis, et la visite laisse quelques secondes pour finir ; le lien entre compétences n'est montré qu'à partir de deux compétences ; « Enregistrer l'évaluation » fait passer à la suite, avec des confettis, sans recliquer « Mes évaluations ».
 - « Mon établissement » s'ouvre sur le volet « Établissement ».
 - Nouvelle évaluation, promotions : seules celles de votre répartition de service sont proposées d'emblée ; « Autres promotions » affiche les autres promotions en cours, plus discrètes, pour en choisir une malgré tout. Les UE et EC n'apparaissent qu'une fois une promotion choisie, puisqu'ils viennent du référentiel de sa mention.

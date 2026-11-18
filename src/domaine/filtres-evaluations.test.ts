@@ -52,6 +52,16 @@ describe("correspondFiltres", () => {
     expect(correspondFiltres({ promoId: "p1" }, tout, vue)).toBe(false);
     expect(correspondFiltres({ promoId: "p1", profs: ["Camille Durand"] }, tout, vue)).toBe(true);
   });
+
+  it("montre les évaluations d'une autre promotion quand je la choisis explicitement", () => {
+    const vue = outils({ visibles: new Set(["p2"]) });
+    expect(correspondFiltres({ promoId: "p1" }, { per: ["p1"], mine: true, sem: [], st: [], q: "" }, vue)).toBe(true);
+  });
+
+  it("ne montre pas une autre promotion par le seul choix « Promotions en cours »", () => {
+    const vue = outils({ visibles: new Set(["p2"]) });
+    expect(correspondFiltres({ promoId: "p1" }, { per: ["cur"], mine: true, sem: [], st: [], q: "" }, vue)).toBe(false);
+  });
 });
 
 describe("profsDe", () => {

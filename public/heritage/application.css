@@ -134,6 +134,9 @@ textarea{resize:vertical;min-height:62px}
 .sfpop .sfo{display:flex;gap:8px;align-items:center;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:13px;white-space:nowrap}
 .sfpop .sfo:hover{background:var(--accent-soft)}
 .sfpop .sfo input{width:auto!important;margin:0}
+.sfpop .sfo.discrete{opacity:.7}
+.sfpop .sfautres{display:block;margin:2px 10px 4px;padding:4px 8px;border:1px dashed var(--line);border-radius:999px;background:none;color:var(--muted);font-size:12.5px;cursor:pointer}
+.sfpop .sfautres:hover{border-color:var(--accent);color:var(--accent)}
 .pick-head h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:600;padding:0;border:0}
 .count{font-family:var(--fm);font-size:12px;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:99px}
 .pick-head input[type=text]{width:auto;flex:1 1 150px;min-width:120px}
