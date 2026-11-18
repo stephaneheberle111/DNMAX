@@ -3,6 +3,8 @@
    Seules différences : le stockage et l'enregistrement de fichiers passent par
    `window.dnmaxPont`, fourni par l'application avant le chargement de ce script. */
 const STOCKAGE = window.dnmaxPont.stockage;
+/* DATA, REF, F, fiches, promos, MOD, PREFS et ui ne sont plus déclarés ici : ce sont des accesseurs posés
+   sur la fenêtre par l'application, qui tient l'état (src/interface/etat.ts, décision 38). */
 /* Règles de la saisie des résultats : écrites et testées dans src/domaine/saisie-resultats.ts. */
 const SAISIE = window.dnmaxPont.saisie;
 /* Règles de la composition d'une évaluation : écrites et testées dans src/domaine/evaluation.ts. */
@@ -23,7 +25,7 @@ const LS = {
   get(k,d){try{const v=STOCKAGE.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
   set(k,v){try{STOCKAGE.setItem(k,JSON.stringify(v))}catch(e){}}
 };
-let MOD = Object.assign(modDefaults(), LS.get("dnmade.modules",{}));
+MOD = Object.assign(modDefaults(), LS.get("dnmade.modules",{}));
 // un module qui en requiert un autre ne reste pas actif sans lui (Niveaux d'acquisition → Étudiants)
 function modDeps(){window.dnmaxPont.modules.appliquerDependances(MOD)}
 modDeps();
@@ -71,9 +73,9 @@ function projectRef(d){return MODELE.projeterReferentiel(d)}
 /* Une installation neuve démarre sans référentiel : l'enseignant en reçoit un ou construit le sien.
    Sans référentiel, l'exemple installe celui de la mention Objet livré avec DNMAX (src/heritage/exemple.ts). */
 const REF_VIDE = {meta:{diplome:"",niveaux:[],blocTint:"#D1F1DA"},blocs:[],ues:[],familles:[],competences:[]};
-let DATA = LS.get("dnmade.data",null);
+DATA = LS.get("dnmade.data",null);
 if(DATA)materialize(DATA);else DATA=construireDonnees(buildData(REF_VIDE,SUPPORTS_DEF));
-let REF = projectRef(DATA);
+REF = projectRef(DATA);
 function saveData(repaint,fromDico){
   if(fromDico)materialize(DATA);
   else{absorb(DATA);if(DATA.activeDiplome!==DATA._viewOf)materialize(DATA)}
@@ -83,16 +85,16 @@ function saveData(repaint,fromDico){
   cleanOps();syncItemEcs();save();
   if(repaint!==false){paintForm();paintPick();paintLignes();paintRef();if(ui.tab==="org")paintOrg();if(ui.tab==="pref")paintPrefs()}
 }
-let fiches = LS.get("dnmade.fiches",[]);
+fiches = LS.get("dnmade.fiches",[]);
 /* préférences (menu « Mon compte ») : règles dans src/domaine/preferences.ts, écran dans src/preferences/ */
 const PREF=window.dnmaxPont.preferences;
-let PREFS = PREF.initiales(LS.get("dnmade.prefs",{}));
+PREFS = PREF.initiales(LS.get("dnmade.prefs",{}));
 function critLabel(){return PREF.libelleCritere(PREFS)}
 function savePrefs(){LS.set("dnmade.prefs",PREFS)}
-let promos = LS.get("dnmade.promos",[]);
+promos = LS.get("dnmade.promos",[]);
 
 /* brouillon de départ : une évaluation vide (vierge() ne peut pas servir ici, elle lit F) */
-let F = LS.get("dnmade.draft",null) || {id:uid(),promoId:"",titre:"",livrables:[],semestre:"S1",classe:"",
+F = LS.get("dnmade.draft",null) || {id:uid(),promoId:"",titre:"",livrables:[],semestre:"S1",classe:"",
   date:new Date().toISOString().slice(0,10),prof:"",ues:[],ecCodes:[],compCode:"",consignes:"",
   ops:[],preset:DEF_PRESET_GET(),niveaux:PRESETS[DEF_PRESET_GET()].niveaux.slice(),opts:{crit:true,obs:true},
   eleves:"",items:[],res:{}};
@@ -104,7 +106,7 @@ migF(F);
 {const nt=window.dnmaxPont.nettoyerDiplomesVierges(DATA,promos);
   if(nt&&nt.modifie){DATA=nt.donnees;materialize(DATA);REF=computeREF();persistData()}}
 syncItemEcs();
-let ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"diplome"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
+ui = {tab:"saved",step:1,sel:[],q:"",org:{pane:"diplome"},ref:{pane:"explorer",chain:"",cq:"",q:"",group:"bloc",annee:"*",sems:[]}};
 let dl = window.dnmaxPont.telechargements;
 
 function migF(f){return Object.assign(f,EVAL.normaliserEvaluation(f))}
