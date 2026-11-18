@@ -12,6 +12,9 @@ export default defineConfig(
       // Interface historique reprise telle quelle (environ 7 800 lignes de JavaScript non typé).
       // Elle est exclue en bloc en attendant sa reprise progressive en TypeScript : voir DECISIONS.md.
       "public/heritage/",
+      // Banc de comparaison lancé à la main pendant la reprise (script Playwright en CommonJS, hors
+      // application) : voir docs/reprise.md. Il disparaîtra avec le fichier historique.
+      "outils/banc/",
     ],
   },
   js.configs.recommended,
