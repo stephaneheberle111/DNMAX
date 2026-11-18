@@ -15,6 +15,7 @@ import { publierEtablissement } from "../interface/etablissement";
 import { publierReferentiel } from "../interface/referentiel";
 import { publierEditeur } from "../interface/editeur";
 import { publierEvaluations } from "../interface/evaluations";
+import { publierProgression } from "../interface/progression";
 
 const CHEMIN = new URL("../../public/heritage/application.js", import.meta.url);
 
@@ -57,6 +58,7 @@ function nomsPublies(): string[] {
   publierReferentiel(fenetre);
   publierEditeur(fenetre, () => undefined);
   publierEvaluations(fenetre, () => undefined, () => null);
+  publierProgression(fenetre, () => null);
   publierVersionsReferentiel(fenetre, { ecrireStockage: () => undefined, promotionValide: () => false, diplomeValide: () => false, maintenant: () => new Date(0) });
   return Object.keys(fenetre);
 }
