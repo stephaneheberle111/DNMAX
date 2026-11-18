@@ -38,6 +38,7 @@
 
 ### Corrigé
 
+- Bas de page : la bulle d'aide de la version dit que la recherche de mise à jour interroge le site dnmax.fr (elle nommait à tort GitHub).
 - Référentiel > Constituer > Validation : valider une nouvelle version, quand une version validée existait déjà et que des promotions sont en cours, ouvre de nouveau le choix des promotions qui passent à cette version (une erreur l'empêchait).
 - Mon établissement > Promotions : sans le module Étudiants, l'aide renvoie au module « Étudiants » sous son nom actuel.
 - Évaluation, étape 3 : le résumé sous l'étape ne compte plus comme formulé un regroupement dont la formulation n'est pas renseignée.

@@ -31,7 +31,7 @@ export function indicationMiseAJour(etat: EtatMiseAJour): string {
 export function aideMiseAJour(etat: EtatMiseAJour): string {
   return etat === "disponible"
     ? "Une nouvelle version vous est proposée : cliquez pour revoir l'annonce."
-    : "Rechercher une mise à jour : DNMAX interroge alors le dépôt du projet sur GitHub, sans rien transmettre de vos données.";
+    : "Rechercher une mise à jour : DNMAX interroge alors le site dnmax.fr, sans rien transmettre de vos données.";
 }
 
 /** Ce que devient un lien de la documentation affichée dans l'application. */
