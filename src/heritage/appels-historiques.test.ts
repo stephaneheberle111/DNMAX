@@ -18,6 +18,7 @@ import { publierEvaluations } from "../interface/evaluations";
 import { publierProgression } from "../interface/progression";
 import { publierExportDocument } from "../interface/export-document";
 import { publierExemple } from "../interface/exemple";
+import { publierConstantes } from "../interface/constantes";
 
 const CHEMIN = new URL("../../public/heritage/application.js", import.meta.url);
 
@@ -55,6 +56,7 @@ const PUBLIEES = new Set<string>(nomsPublies());
 /** Noms réellement posés sur la fenêtre par les modules repris : la liste suit le code au lieu d'être recopiée. */
 function nomsPublies(): string[] {
   const fenetre: Record<string, unknown> = {};
+  publierConstantes(fenetre);
   publierPromotionsCalendrier(fenetre, () => undefined);
   publierEtablissement(fenetre);
   publierReferentiel(fenetre);

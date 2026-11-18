@@ -10,16 +10,12 @@ const SAISIE = window.dnmaxPont.saisie;
 /* Règles de la composition d'une évaluation : écrites et testées dans src/domaine/evaluation.ts. */
 const EVAL = window.dnmaxPont.evaluation;
 const JAUGE = window.dnmaxPont.jauge;
-const SEMS = ["S1","S2","S3","S4","S5","S6"];
+/* SEMS, PRESETS, SUPPORTS_DEF, GROUPS, tidy et norm sont publiés sur la fenêtre par l'application
+   (src/interface/constantes.ts) ; BLOC_TINT est un accesseur de l'état (src/interface/etat.ts). */
 const anneeOf = sem => Math.floor(Math.max(0,SEMS.indexOf(sem))/2)+1;
-/* une seule échelle pour tous, celle des niveaux de maîtrise (voir src/domaine/evaluation.ts) */
-const PRESETS = {maitrise:{nom:EVAL.ECHELLE.nom,niveaux:[...EVAL.ECHELLE.niveaux]}};
 const DEF_PRESET_GET=()=>"maitrise";
 /* modules (Paramètres > Modules) : catalogue et règles dans src/domaine/modules.ts */
 const MODULES = window.dnmaxPont.modules.MODULES;
-const SUPPORTS_DEF = ["Carnet de projet","Catalogue d'expérimentation","Planches de projet",
-  "Maquettes de recherches","Frise chronologique","Fiche de lecture","Devoir réflexif",
-  "Carnet d'exposition","Diaporama","Oral de présentation de projet"];
 const modDefaults = () => window.dnmaxPont.modules.modulesParDefaut();
 const LS = {
   get(k,d){try{const v=STOCKAGE.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
@@ -410,17 +406,13 @@ const ST_LBL=SUIVI.LIBELLES_STATUT;
    règles dans src/domaine/filtres-evaluations.ts */
 /* liste de Mes évaluations : écran écrit en TypeScript (src/evaluations/liste.ts), règles de la frise dans
    src/domaine/frise-suivi.ts ; la fenêtre des actions est dans src/evaluations/actions.ts. */
-const GROUPS = {bloc:"Par bloc de compétences",ue:"Par unité d'enseignement",ec:"Par enseignement constitutif",
-  annee:"Par année",semestre:"Par semestre",liste:"Liste à plat"};
-const tidy = s => String(s==null?"":s).replace(/([A-ZÀ-Ý])-([A-ZÀ-Ý])/g,"$1$2").trim();
-const BLOC_TINT = (REF.meta&&REF.meta.blocTint)||"#D1F1DA";
+BLOC_TINT = (REF.meta&&REF.meta.blocTint)||"#D1F1DA";
 function hueOf(k){let h=0;for(const ch of String(k||""))h=(h*31+ch.charCodeAt(0))%360;return `hsl(${h} 52% 60%)`}
 function refEcByCode(code){return (REF.ecs||[]).find(x=>ANNEES.some(a=>(x.codes||{})[a]===code))||null}
 function ecColor(code){const e=refEcByCode(code);return (e&&e.couleur)||hueOf(code)}
 function ecNomRef(code){const e=refEcByCode(code);return (e&&e.nom)||code}
 function ueColor(ue){const u=(REF.ues||[]).find(x=>tidy(x.nom)===tidy(ue));return (u&&u.couleur)||hueOf(ue)}
 const ueOrd = ue => {const i=(REF.ecs||[]).findIndex(e=>tidy(e.ue)===ue);return i<0?99:i};
-const norm = s => String(s==null?"":s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 function ecNum(ec){return window.dnmaxPont.constituer.numeroCode(ec)}
 function lienEc(c,id){return ((c||{}).ecs||[]).find(x=>x.id===id)||null}
 function ecOrd(e){return window.dnmaxPont.constituer.ordreEc(e||{})}
