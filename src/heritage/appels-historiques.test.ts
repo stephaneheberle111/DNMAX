@@ -20,6 +20,7 @@ import { publierExportDocument } from "../interface/export-document";
 import { publierExemple } from "../interface/exemple";
 import { publierConstantes } from "../interface/constantes";
 import { publierAidesCommunes } from "../interface/aides-communes";
+import { publierCarteDonnees } from "../interface/carte-donnees";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
 import { publierEditeurEtape1 } from "../interface/editeur-etape1";
@@ -63,6 +64,7 @@ function nomsPublies(): string[] {
   const fenetre: Record<string, unknown> = {};
   publierConstantes(fenetre);
   publierAidesCommunes(fenetre, null);
+  publierCarteDonnees(fenetre);
   publierDonnees(fenetre, { ecrireStockage: () => undefined, maintenant: () => 0, hasard: () => 0 });
   publierEvaluationCourante(fenetre, () => 0);
   publierEditeurEtape1(fenetre, () => new Date(0));

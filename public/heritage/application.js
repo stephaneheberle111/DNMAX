@@ -12,6 +12,9 @@ const ANNEES=[1,2,3];
 /* promotions, années scolaires et calendrier (promoShort, anneeScolaire, semSuggere…) : src/interface/promotions-calendrier.ts */
 /* Aides communes (esc, toast, askModal, paintTabs, blocName, hueOf, ecColor, ecNomRef, ueColor, ueOrd, ecNum, lienEc,
    ecOrd, refEcByCode) : écrites en TypeScript (src/interface/aides-communes.ts) et publiées sous leur ancien nom. */
+/* Calculs des cartes (arcPath, polar, wrapN, fitN : src/domaine/carte-geometrie.ts) et données qu'elles affichent
+   (refFilter, filtUes, filtEcs, filtComps, radialGroups, compsOfEc, semItems, semLie, ecName :
+   src/interface/carte-donnees.ts) : écrits en TypeScript et publiés sous leur ancien nom. */
 /* Explorer : la carte (radiale ou chaîne) reste dessinée ici ; la vue « Recherche » est écrite en TypeScript
    (src/referentiel/recherche.ts), ses règles dans src/domaine/exploration.ts */
 function paintExplore(){
@@ -25,76 +28,18 @@ function paintExplore(){
     sousTitreSemestre:p=>"Année "+p.annee+(MOD.dn?" · "+p.dn:""),diplome:REF.meta.diplome||"",redessiner:paintRef});
 }
 
-function arcPath(cx,cy,r0,r1,a0,a1){
-  const P=(r,a)=>[(cx+r*Math.cos(a)).toFixed(2),(cy+r*Math.sin(a)).toFixed(2)];
-  const big=(a1-a0)>Math.PI?1:0;
-  const [x0,y0]=P(r1,a0),[x1,y1]=P(r1,a1),[x2,y2]=P(r0,a1),[x3,y3]=P(r0,a0);
-  return `M${x0} ${y0}A${r1} ${r1} 0 ${big} 1 ${x1} ${y1}L${x2} ${y2}A${r0} ${r0} 0 ${big} 0 ${x3} ${y3}Z`;
-}
-function lab(cx,cy,r,a,txt,cls,size){
-  const x=cx+r*Math.cos(a), y=cy+r*Math.sin(a);
-  let deg=a*180/Math.PI;
-  const flip=deg>90||deg<-90;
-  if(flip)deg+=180;
-  return `<text class="${cls}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" transform="rotate(${deg.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})"
-    text-anchor="middle" dominant-baseline="middle" font-size="${size}">${esc(txt)}</text>`;
-}
-function refFilter(){
-  const f=ui.ref.filter;
-  if(!f||!f.kind||!["ue","ec","bloc","comp"].includes(f.kind))return (ui.ref.filter={kind:"",value:""});
-  // un filtre « EC » retenu d'une version antérieure portait un code, il porte maintenant un identifiant
-  if(f.kind==="ec"&&!DATA.ecs.some(e=>e.id===f.value))return (ui.ref.filter={kind:"",value:""});
-  return f;
-}
-function filtUes(ues){const f=refFilter(),D=DATA;
-  if(f.kind==="ue")return ues.filter(u=>u.nom===f.value);
-  if(f.kind==="ec"){const e=D.ecs.find(x=>x.id===f.value)||{};return ues.filter(u=>u.id===e.ueId)}
-  return ues}
-function filtEcs(ecs){const f=refFilter();return f.kind==="ec"?ecs.filter(e=>e.id===f.value):ecs}
-function filtComps(cs){const f=refFilter();
-  if(f.kind==="bloc")return cs.filter(c=>String(c.bloc)===f.value);
-  if(f.kind==="comp")return cs.filter(c=>c.code===f.value);
-  return cs}
-function radialGroups(){
-  const D=DATA;
-  const g=filtUes(D.ues).map(u=>({u,ecs:filtEcs(D.ecs.filter(e=>e.ueId===u.id)).sort((a,b)=>ecOrd(a)-ecOrd(b))}))
-    .filter(x=>x.ecs.length);
-  const orph=filtEcs(D.ecs.filter(e=>!D.ues.some(u=>u.id===e.ueId)));
-  if(orph.length&&refFilter().kind!=="ue")g.push({u:{id:"",nom:"Sans UE",couleur:"#9aa2ae"},ecs:orph});
-  return g;
-}
-function compsOfEc(id){
-  return DATA.competences.filter(c=>(c.ecIds||[]).includes(id));
-}
 let wheelAngle=0, wheelRaf=0;
 // carte radiale : nouvelle mise à l'échelle quand la colonne ou la fenêtre change de taille
 let radRedim=null, radObs=null;
 window.addEventListener("resize",()=>{if(radRedim)radRedim()});
 // Z0 : zoom de départ (quart bas-droit de la roue) ; ZMAX : grossissement le plus fort permis
 const RAD={RARR:505,Z0:1.65,ZMAX:2.5,S:760,c:380,PAD:100,HUB:84,RB:360,RL:380,DIST:[9,17,25,33]};
-function wrapN(txt,n,max,cut){
-  const raw=String(txt==null?"":txt).split(/\s+/),ws=[];
-  raw.forEach(w=>{
-    if(cut){ws.push(w.length>n?w.slice(0,Math.max(1,n-1))+"…":w);return}
-    while(w.length>n){ws.push(w.slice(0,n-1)+"-");w=w.slice(n-1)}if(w)ws.push(w)});
-  const L=[];let cur="";
-  ws.forEach(w=>{if((cur+" "+w).trim().length>n){if(cur)L.push(cur.trim());cur=w}else cur+=" "+w});
-  if(cur.trim())L.push(cur.trim());
-  if(L.length>max){const out=L.slice(0,max);out[max-1]=out[max-1].slice(0,Math.max(1,n-1))+"…";return out}
-  return L;
-}
-function fitN(txt,size,lh,box,maxl){
-  const n=Math.max(3,Math.round(box/(size*0.55)));
-  const max=maxl||Math.max(1,Math.floor(box/lh));
-  return wrapN(txt,n,max,true);
-}
 function tlabel(x,y,lines,cls,size,lh){
   if(!lines.length)return "";
   return `<text class="lbl ${cls}" data-x="${x.toFixed(1)}" data-y="${y.toFixed(1)}" font-size="${size}" text-anchor="middle">`+
     lines.map((t,i)=>`<tspan x="${x.toFixed(1)}" y="${(y+(i-(lines.length-1)/2)*lh).toFixed(1)}">${esc(t)}</tspan>`).join("")+
     `</text>`;
 }
-function polar(c,r,a){return [c+r*Math.cos(a),c+r*Math.sin(a)]}
 function paintRadial(){
   const D=DATA, m=REF.meta||{};
   const groups=radialGroups();
@@ -191,17 +136,10 @@ function chainSvgNode(o,w){
     <rect x="${o.x}" y="${o.y.toFixed(1)}" width="4" height="${o.h.toFixed(1)}" rx="2" fill="${esc(o.col)}"/>
     ${t}</g>`;
 }
-function ecName(e){return e?(String(e.nom||"").trim()||ecCodeLbl(e)):""}
 /* ---- Carte heuristique : cinq colonnes, l'une verrouillée en roue, les autres montrent ce qui lui est associé.
    Le semestre s'intercale entre la compétence et l'EC : c'est lui qui porte le code de l'année. ---- */
 const CH_KINDS=["comp","sem","ec","ue","dip"];
 const CH_LBL={comp:"Compétence",sem:"Semestre",ec:"Enseignement constitutif",ue:"Unité d'enseignement",dip:"Diplôme"};
-/* un élément « semestre » : S1…S6, ceux où au moins un des EC retenus est assuré */
-function semItems(ecs){
-  return SEMS.filter(sm=>(ecs||[]).some(e=>(e.sems||[]).includes(sm)))
-    .map(sm=>({id:sm,sem:sm,annee:anneeOf(sm),num:sm.slice(1)}));
-}
-function semLie(c,x){return ((c||{}).ecs||[]).some(l=>(l.sems||[]).includes(x.sem))}
 const CH_WH=236;
 function chainModel(){
   const D=DATA, f=refFilter();
