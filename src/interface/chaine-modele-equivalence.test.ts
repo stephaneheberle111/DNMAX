@@ -14,6 +14,10 @@
  * - B. Diplôme verrouillé : l'ancien modèle gardait toutes les UE, même sans
  *   chemin réel (alors qu'elles disparaissent avec tout autre pivot), et
  *   écartait les EC sans UE (alors qu'ils figurent avec tout autre pivot).
+ *
+ * L'ordre des cases dans chaque colonne n'est plus comparé : il est désormais
+ * donné par le barycentre des voisins reliés (`domaine/chaine-barycentre`,
+ * testé à part). On compare ce que montre chaque colonne et les liens.
  */
 import { describe, expect, it } from "vitest";
 import { semItems, semLie, refFilter, ecsMiens } from "./carte-donnees";
@@ -250,14 +254,14 @@ function tirer(alea: () => number): void {
   etat.ui = { ref };
 }
 
-/** Ce qui se voit : pivot, colonnes (identifiants, dans l'ordre) et liens entre colonnes voisines. */
+/** Ce qui se voit : pivot, colonnes (identifiants, triés : l'ordre se range au barycentre) et liens entre colonnes voisines. */
 function vue(modele: Vue | null): unknown {
   if (modele === null) return null;
-  const colonnes = CH_KINDS.map((_k, i) => (modele.sets[i] ?? []).map((x) => x.id));
+  const colonnes = CH_KINDS.map((_k, i) => (modele.sets[i] ?? []).map((x) => String(x.id)).sort());
   const liens: string[] = [];
   for (let i = 0; i < CH_KINDS.length - 1; i++)
     for (const a of modele.sets[i] ?? []) for (const b of modele.sets[i + 1] ?? []) if (modele.rel(CH_KINDS[i] as string, a, b)) liens.push(`${String(i)}:${String(a.id)}>${String(b.id)}`);
-  return { kind: modele.kind, p: modele.p, piv: modele.piv.id, items: modele.items.map((x) => x.id), colonnes, liens };
+  return { kind: modele.kind, p: modele.p, piv: modele.piv.id, items: modele.items.map((x) => x.id), colonnes, liens: liens.sort() };
 }
 
 /** Rejoue un tirage : l'état d'affichage est remis à neuf avant chaque modèle, qui écrit le pivot retenu. */
@@ -275,7 +279,7 @@ function comparer(graine: number): { ancien: ReturnType<typeof ancienChainModel>
 const TIRAGES = 4000;
 
 describe("chainModel par chemins réels, ordre par défaut", () => {
-  it("rend les mêmes colonnes, les mêmes liens et le même ordre que l'ancien modèle, hors des deux défauts corrigés", () => {
+  it("rend les mêmes colonnes et les mêmes liens que l'ancien modèle, hors des deux défauts corrigés", () => {
     const comptes = { identiques: 0, ecartA: 0, ecartB: 0 };
     for (let graine = 1; graine <= TIRAGES; graine++) {
       const { ancien, ancienneVue, nouvelleVue, nouveau } = comparer(graine);
@@ -348,7 +352,7 @@ describe("défauts de l'ancien modèle corrigés par les chemins réels", () => 
     };
     etat.ui = { ref: { filter: { kind: "", value: "" } } };
   };
-  const ids = (modele: Vue | null, i: number): unknown[] => (modele?.sets[i] ?? []).map((x) => x.id);
+  const ids = (modele: Vue | null, i: number): string[] => (modele?.sets[i] ?? []).map((x) => String(x.id)).sort();
 
   it("A : une compétence rattachée sans semestre ne montre plus d'EC, comme l'EC ne la montre pas", () => {
     base();
@@ -369,7 +373,7 @@ describe("défauts de l'ancien modèle corrigés par les chemins réels", () => 
     (etat.ui.ref as Objet).piv = { kind: "dip", id: "d1" };
     const nouveau = chainModel();
     expect(ids(nouveau, 3)).toEqual(["u1"]);
-    expect(ids(nouveau, 2)).toEqual(["e3", "e1"]);
+    expect(ids(nouveau, 2)).toEqual(["e1", "e3"]);
     (etat.ui.ref as Objet).piv = { kind: "comp", id: "c3" };
     expect(ids(chainModel(), 2)).toEqual(["e3"]);
   });

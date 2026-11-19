@@ -17,6 +17,7 @@ import { ecCodeLbl } from "./donnees";
 import { etat, type Objet } from "./etat";
 import { SEMESTRES } from "../domaine/constituer";
 import { cheminsReels, estSorteChaine, passagesParLePivot, SORTES_CHAINE, type SorteChaine } from "../domaine/chaine";
+import { ordonnerParBarycentre } from "../domaine/chaine-barycentre";
 import { ordreChaine } from "../domaine/preferences";
 
 /** Les cinq colonnes de la chaîne dans l'ordre par défaut, de gauche à droite : le semestre d'abord, demande de l'auteur. */
@@ -157,18 +158,20 @@ export function chainModel(): ModeleChaine | null {
     const i = (ordre as string[]).indexOf(k);
     return i >= 0 && i < ordre.length - 1 && passages.relie(i, String(gauche.id), String(droite.id));
   };
-  // Ordre des cases : celui de chaque liste (semestres dans l'ordre, compétences par bloc puis code, EC par UE puis code,
-  // UE du référentiel) ; les compétences voisines des semestres se rangent au barycentre de leurs semestres.
+  // Ordre des cases : semestres dans l'ordre chronologique ; les autres colonnes partent de l'ordre de leur liste
+  // (compétences par bloc puis code, EC par UE puis code, UE du référentiel) et se rangent au barycentre de leurs
+  // voisins reliés, de proche en proche, pour croiser le moins de liens possible.
   const iSem = ordre.indexOf("sem");
-  const iComp = ordre.indexOf("comp");
   if ((sets[iSem] as Element[]).length > 1) (sets[iSem] as Element[]).sort((a, b) => cmp(ecKey(a), ecKey(b)));
-  if (p !== iComp && Math.abs(iComp - iSem) === 1 && (sets[iComp] as Element[]).length > 1) {
-    const ix = (c: Element): number => {
-      const l = (sets[iSem] as Element[]).map((e, i) => (semLie(c, e as { sem: unknown }) ? i : -1)).filter((i) => i >= 0);
-      return l.length ? l.reduce((somme, i) => somme + i, 0) / l.length : 999;
-    };
-    (sets[iComp] as Element[]).sort((a, b) => ix(a) - ix(b) || Number(a.bloc) - Number(b.bloc) || ecNum(a.code) - ecNum(b.code));
-  }
+  const parId = ordre.map((_k, i) => new Map((sets[i] as Element[]).map((x) => [String(x.id), x])));
+  const rangees = ordonnerParBarycentre(
+    ordre.map((_k, i) => (sets[i] as Element[]).map((x) => String(x.id))),
+    (rang, gauche, droite) => passages.relie(rang, gauche, droite),
+    new Set([p, iSem]),
+  );
+  rangees.forEach((ids, i) => {
+    sets[i] = ids.map((id) => (parId[i] as Map<string, Element>).get(id) as Element);
+  });
   return { kind, p, piv, sets, items: kind === "dip" ? (lists.dip as Element[]) : items, rel: pair, dip, ueOfE, ordre };
 }
 
