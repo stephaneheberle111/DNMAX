@@ -4,6 +4,7 @@
 
 ### Modifié
 
+- Référentiel > Explorer, carte heuristique : le semestre devient la première colonne, avant la compétence (semestre, compétence, EC, UE, diplôme).
 - Mes évaluations, filtre « Promotions » : vos promotions et vos évaluations d'abord ; « + Autres promotions » propose, plus discrètes, celles hors de votre répartition de service, dont les évaluations s'affichent quand vous en cochez une.
 - Mes évaluations : la case « Seulement mes évaluations », dans la barre des filtres, ne garde que les évaluations dont vous êtes l'enseignant ; elle se combine avec les autres filtres. Elle n'apparaît qu'une fois « C'est moi » choisi dans Mon établissement > Enseignants.
 - Visite guidée : les pages de « Constituer » sont éclairées en entier, pour corriger chaque UE, EC, bloc ou compétence pendant la visite ; le curseur se déplace d'un geste à l'autre comme une main, au lieu de repartir de la bulle (à la validation, il coche la case puis va sur « Valider cette version ») ; un collègue ajouté compte une fois son prénom et son nom saisis, et la visite laisse quelques secondes pour finir ; le lien entre compétences n'est montré qu'à partir de deux compétences ; « Enregistrer l'évaluation » fait passer à la suite, avec des confettis, sans recliquer « Mes évaluations ».

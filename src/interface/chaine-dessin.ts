@@ -121,7 +121,8 @@ export function paintChain(): string {
     W = X(LAST) + (widths[LAST] as number) + PADX;
   const nid = (k: string, x: Objet): string => k + ":" + String(x.id);
   // un seul semestre en vue (colonne verrouillée dessus, ou filtrée à un seul) : les EC portent son code
-  const semFix = kind === "sem" ? (piv.sem as string) : (sets[1] || []).length === 1 ? ((sets[1] as Objet[])[0] as Objet).sem as string : "";
+  const iSem = (CH_KINDS as readonly string[]).indexOf("sem");
+  const semFix = kind === "sem" ? (piv.sem as string) : (sets[iSem] || []).length === 1 ? ((sets[iSem] as Objet[])[0] as Objet).sem as string : "";
   const node = (k: string, x: Objet, i: number): CaseChaine => {
     const col = k === "comp" ? "#10555F" : k === "dip" ? "#7c8698" : (x.couleur as string) || "#9aa2ae";
     let o = { id: nid(k, x), kind: k, sel: x.id, col, x: X(i) } as Omit<CaseChaine, "y" | "h">;
