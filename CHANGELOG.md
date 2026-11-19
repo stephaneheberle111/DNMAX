@@ -4,6 +4,7 @@
 
 ### Modifié
 
+- Référentiel > Explorer, carte radiale : « Ajuster » montre la roue entière, avec la place des compétences éclatées et les flèches de rotation, quelle que soit la taille de la fenêtre ; dans un cadre étroit, la carte s'ouvre aussi sur la roue entière. Avant, il revenait au quart de la roue de départ.
 - Référentiel > Explorer, carte heuristique : le semestre devient la première colonne, avant la compétence (semestre, compétence, EC, UE, diplôme).
 - Mes évaluations, filtre « Promotions » : vos promotions et vos évaluations d'abord ; « + Autres promotions » propose, plus discrètes, celles hors de votre répartition de service, dont les évaluations s'affichent quand vous en cochez une.
 - Mes évaluations : la case « Seulement mes évaluations », dans la barre des filtres, ne garde que les évaluations dont vous êtes l'enseignant ; elle se combine avec les autres filtres. Elle n'apparaît qu'une fois « C'est moi » choisi dans Mon établissement > Enseignants.
