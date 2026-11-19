@@ -78,7 +78,7 @@ const AIDES: Readonly<Record<string, string>> = {
     "Une ligne par compétence, groupée par bloc : chaque case donne les EC qui la portent à ce semestre. Vide = la compétence n'est pas mobilisable ce semestre-là. Un clic sur une pastille d'EC l'ouvre dans Constituer ; un clic sur la compétence bascule sur « Recherche ».",
   search: "Recherche par code, UE ou mot-clé, regroupement au choix, filtres d'année et de semestres.",
   radial:
-    "Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que vous survoliez une flèche de rotation. La roue tourne quand vous survolez l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment en douceur, la roue glissant toujours le long de la même diagonale ; « Ajuster » revient à la vue de départ.",
+    "Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que vous survoliez une flèche de rotation. La roue tourne quand vous survolez l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment en douceur, la roue glissant toujours le long de la même diagonale ; « Ajuster » montre la roue entière, avec la place des compétences éclatées et les flèches de rotation.",
 };
 
 function texte(valeur: unknown): string {
@@ -315,7 +315,7 @@ function cadreRadial(contexte: ContexteHabillage): HTMLElement {
         ["type", "button"],
         ["class", "btn ghost"],
         ["data-rz", "0"],
-        ["title", "Revenir à la vue de départ (0)"],
+        ["title", "Montrer la roue entière (0)"],
       ],
       "Ajuster",
     ),
