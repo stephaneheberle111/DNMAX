@@ -172,6 +172,26 @@ function extraireReferentiels(
   return referentiels;
 }
 
+/** Avance admise d'une date reçue sur l'heure du poste : les horloges de deux ordinateurs ne sont jamais d'accord. */
+export const AVANCE_HORLOGE_ADMISE_MS = 24 * 60 * 60_000;
+
+/**
+ * Date de modification reçue, ou texte vide si elle n'en est pas une.
+ *
+ * Elle est ensuite comparée à la date locale pour dire quelle version est la
+ * plus récente : un texte libre ou une date lointaine dans le futur
+ * feraient taire l'alerte « votre version est plus récente ».
+ */
+function lireDateModification(valeur: unknown, maintenant: Date | null): string {
+  if (typeof valeur !== "string" || !estDateIso(valeur)) {
+    return "";
+  }
+  if (maintenant !== null && new Date(valeur).getTime() > maintenant.getTime() + AVANCE_HORLOGE_ADMISE_MS) {
+    return "";
+  }
+  return valeur;
+}
+
 function lireReferentiel(valeur: unknown): ReferentielEchange | null {
   const base = lireBase(valeur);
   if (base === null || !estObjet(valeur)) {
@@ -211,11 +231,13 @@ function lireBase(valeur: unknown): BaseReferentiel | null {
  * reçu repasse par `extraireModele` pour qu'un fichier trafiqué ne puisse pas
  * injecter des résultats d'étudiants ni des identifiants locaux.
  *
+ * @param maintenant l'heure du poste ; une date de modification reçue qui la dépasse de plus de
+ *   `AVANCE_HORLOGE_ADMISE_MS` est oubliée. `null` : pas de contrôle (contenus livrés avec l'application).
  * @param protege vrai si le texte vient d'un fichier protégé par mot de passe ;
  *   les données d'étudiants ne sont lues que dans ce cas, pour qu'un fichier en
  *   clair ne puisse jamais en faire entrer.
  */
-export function lirePaquet(texte: string, protege = false): Paquet | ErreurPaquet {
+export function lirePaquet(texte: string, protege = false, maintenant: Date | null = null): Paquet | ErreurPaquet {
   const valeur = analyserJson(texte);
   if (!estObjet(valeur)) {
     return "illisible";
@@ -243,7 +265,7 @@ export function lirePaquet(texte: string, protege = false): Paquet | ErreurPaque
     evaluations.push({
       modele: extraireModele(element.modele),
       // Comparée ensuite comme un texte à la date locale : un texte libre fausserait « la plus récente ».
-      modifieLe: typeof element.modifieLe === "string" && estDateIso(element.modifieLe) ? element.modifieLe : "",
+      modifieLe: lireDateModification(element.modifieLe, maintenant),
       modifiePar: typeof element.modifiePar === "string" ? nettoyerNom(element.modifiePar) : "",
       base: lireBase(element.base),
       donneesEleves: protege ? lireDonneesEleves(element.donneesEleves) : null,
