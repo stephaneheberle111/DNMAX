@@ -39,6 +39,7 @@ import { moduleElevesActif } from "./domaine/securite";
 import { installerSauvegardes } from "./ecran-sauvegardes";
 import {
   attendreAvantFermeture,
+  installerFermeture,
   changerMotDePasse,
   enregistrerCoffre,
   estDansEnveloppe,
@@ -96,7 +97,7 @@ async function creerMagasinProtege(): Promise<{
       signalerEnregistrement(resultat.reussi, resultat.reussi ? undefined : resultat.erreur);
     },
   );
-  await attendreAvantFermeture(() => enregistreur.vider());
+  attendreAvantFermeture(() => enregistreur.vider());
 
   // Un coffre créé avant l'identification des enseignants n'a pas encore d'identité.
   const identiteConnue = lireIdentite(entrees[CLE_IDENTITE]);
@@ -196,6 +197,7 @@ async function demarrer(): Promise<void> {
     installerCompte(null);
     return;
   }
+  await installerFermeture();
   const { magasin, acces, reprendreNom, ecrireEnAttente, installationExistante, etablissementSaisi } = await creerMagasinProtege();
   surveillerInactivite({ verrouillageExige: () => moduleElevesActif(magasin.entrees()), ecrireEnAttente });
   document.documentElement.classList.remove(CLASSE_COFFRE_FERME);

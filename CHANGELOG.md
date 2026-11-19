@@ -50,6 +50,7 @@
 
 ### Corrigé
 
+- Après un verrouillage pour inactivité, la fenêtre de DNMAX se ferme de nouveau depuis l'écran du mot de passe (la fermeture restait sans effet).
 - Référentiel > Explorer, carte heuristique : l'en-tête « Enseignement constitutif » n'est plus coupé ; la colonne des EC est un peu plus large.
 - Carte heuristique : un clic sur un élément voisin dans la roue de la colonne verrouillée le choisit bien ; la roue se repliait avant le clic. Une compétence rattachée à un EC sans semestre ne montre plus cet EC comme s'ils étaient liés, et, diplôme verrouillé, les UE sans compétence rattachée disparaissent tandis que les EC sans UE apparaissent, comme avec les autres colonnes.
 - Thème sombre : l'état « Restituée », la pastille « en dessous » de Progression et les pastilles « À évaluer », « Vue au S… » et « Évalué(e) » gardaient les couleurs du thème clair, parfois peu lisibles ; elles ont désormais leurs teintes sombres.

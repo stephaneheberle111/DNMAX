@@ -137,14 +137,27 @@ export async function enregistrerCoffre(entrees: Entrees): Promise<void> {
   await appelerCoffre("enregistrer_coffre", { entrees });
 }
 
+/** Travail à terminer avant que la fenêtre se ferme ; rien tant que le coffre n'est pas ouvert. */
+let travailAvantFermeture: () => Promise<void> = () => Promise.resolve();
+
 /**
- * Fait exécuter `avantFermeture` quand l'enseignant ferme la fenêtre, et
- * n'autorise la fermeture qu'une fois ce travail terminé.
+ * Prend en charge la fermeture de la fenêtre, dès le démarrage et avant l'écran
+ * du mot de passe. Une fois un gestionnaire inscrit, Tauri ne ferme plus la
+ * fenêtre de lui-même : il attend que la page le fasse. Le gestionnaire d'une
+ * page rechargée (verrouillage après inactivité) reste inscrit sans plus
+ * pouvoir agir ; inscrit seulement après l'ouverture du coffre, celui de la
+ * nouvelle page manquait sur l'écran du mot de passe, et la fenêtre ne se
+ * fermait plus.
  */
-export async function attendreAvantFermeture(avantFermeture: () => Promise<void>): Promise<void> {
+export async function installerFermeture(): Promise<void> {
   await getCurrentWindow().onCloseRequested(async () => {
-    await avantFermeture();
+    await travailAvantFermeture();
   });
+}
+
+/** Fait terminer `travail` (l'écriture en attente) avant que la fenêtre se ferme. */
+export function attendreAvantFermeture(travail: () => Promise<void>): void {
+  travailAvantFermeture = travail;
 }
 
 /**
