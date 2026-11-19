@@ -130,6 +130,8 @@ Le formulaire « Idées et bugs » de la page ouvre, au choix, un ticket prérem
 
 Les boutons Windows, macOS et `.deb` pointent sur `telechargements/DNMAX-windows.exe`, `DNMAX-macos.dmg` et `DNMAX-linux.deb`, déposés sur dnmax.fr par l'atelier « Téléchargements » ; le bouton Linux pointe sur `releases/latest/download/DNMAX-linux.AppImage` sur GitHub. L'atelier « Publication » joint ces quatre copies à nom fixe à chaque version.
 
+L'atelier « Surveillance » (`.github/workflows/surveillance.yml`) tourne chaque jour, sans secret : il compare les installeurs servis par dnmax.fr à ceux de la dernière version publiée (et l'empreinte `SHA256SUMS.txt` affichée sur le site), puis audite les dépendances livrées (`npm audit --omit=dev`, `cargo audit`). S'il échoue, GitHub prévient par courriel : un installeur différent en ligne est à traiter comme un accès OVH compromis (changer le mot de passe SFTP, relancer « Téléchargements »). Une alerte de dépendance acceptée après examen s'ajoute à `ALERTES_ADMISES` dans `outils/audit-npm.ts`, avec sa raison.
+
 ## Organisation du code
 
 ```mermaid

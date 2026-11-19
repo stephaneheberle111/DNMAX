@@ -452,6 +452,9 @@ svg.dim .dot.off{opacity:.1}
 .sys p{margin:0;color:var(--ink-2);font-size:15px}
 .sys .fmt{font-family:var(--mono);font-size:13px;color:var(--ink)}
 /* Tous les boutons de téléchargement de la page ont la même taille. */
+.sys .empreinte{grid-column:1/-1;font-size:12px;color:var(--ink-2);overflow-wrap:anywhere}
+.sys .empreinte code{font-family:var(--mono);font-size:12px;color:var(--ink);user-select:all}
+.empreintes-note{margin:14px 0 0;font-size:14px;color:var(--ink-2)}
 .sys>.btn,.referentiel>.btn{width:280px;justify-content:center;text-align:center}
 @media (max-width:760px){.sys>.btn,.referentiel>.btn{width:100%}}
 @media (max-width:760px){.sys{grid-template-columns:1fr;gap:10px}}
@@ -937,6 +940,7 @@ footer a{color:var(--ink-2)}
           <a class="btn primary" href="https://github.com/stephaneheberle111/DNMAX/releases/latest/download/DNMAX-linux.AppImage">Télécharger pour Linux</a>
         </div>
       </div>
+      <p class="empreintes-note" id="empreintes-note" hidden>Sous chaque installeur, son empreinte SHA-256, pour vérifier votre téléchargement. Les installeurs sont construits sur GitHub à partir du code public, puis copiés ici&nbsp;: la <a href="https://github.com/stephaneheberle111/DNMAX/releases/latest">page de la version</a> y montre la même empreinte, et une vérification automatique compare les deux chaque jour.</p>
       <div class="referentiel">
         <div>
           <h3>Référentiel DN MADE mention Objet</h3>
@@ -1966,6 +1970,32 @@ npm run dev</code></pre>
 </script>
 <script>
 document.addEventListener("click",function(e){if(e.target.closest("[data-imprimer]"))window.print()});
+</script>
+<script>
+/* Empreintes des installeurs : lues dans le fichier déposé avec eux, affichées sous chaque lien. Sans fichier, rien ne s'affiche. */
+(function(){
+  var note=document.getElementById("empreintes-note");
+  if(!note||!window.fetch)return;
+  fetch("telechargements/SHA256SUMS.txt",{cache:"no-store"}).then(function(r){return r.ok?r.text():""}).then(function(texte){
+    var trouvees=0;
+    texte.split("\n").forEach(function(ligne){
+      var m=/^([0-9a-f]{64})  (DNMAX-[A-Za-z0-9.-]+)$/.exec(ligne.trim());
+      if(!m)return;
+      var lien=document.querySelector('#systemes a[href="telechargements/'+m[2]+'"]');
+      var bloc=lien&&lien.closest(".sys");
+      if(!bloc)return;
+      var p=document.createElement("p");
+      p.className="empreinte";
+      p.textContent="SHA-256 ("+m[2]+") : ";
+      var code=document.createElement("code");
+      code.textContent=m[1];
+      p.appendChild(code);
+      bloc.appendChild(p);
+      trouvees++;
+    });
+    if(trouvees>0)note.hidden=false;
+  }).catch(function(){});
+})();
 </script>
 </body>
 </html>

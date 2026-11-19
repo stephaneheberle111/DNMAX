@@ -1,0 +1,96 @@
+name: Surveillance
+
+# Chaque jour, vérifie deux choses que rien d'autre ne surveille entre deux versions :
+#
+# 1. Les installeurs servis par dnmax.fr sont bien ceux de la dernière version
+#    publiée. Ils sont construits ici puis copiés chez OVH : si la copie en
+#    ligne différait un jour de l'original (accès à l'hébergement compromis,
+#    dépôt interrompu), l'atelier échoue et GitHub prévient par courriel.
+# 2. Aucune faille connue n'a été publiée sur une dépendance livrée dans
+#    l'application, hors celles déjà acceptées (outils/audit-npm.ts).
+#
+# Aucun secret requis. GitHub ne lance un atelier planifié que depuis la
+# branche principale, et le suspend après 60 jours sans activité du dépôt.
+on:
+  schedule:
+    # 5 h 23 en temps universel : hors des heures pleines des machines de GitHub.
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: surveillance
+  cancel-in-progress: true
+
+jobs:
+  installeurs:
+    name: Installeurs en ligne conformes à la version publiée
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      FICHIERS: "DNMAX-windows.exe DNMAX-macos.dmg DNMAX-linux.deb"
+      ADRESSE: "https://dnmax.fr/telechargements"
+    steps:
+      - name: Comparaison des empreintes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p publies en-ligne
+          ecarts=0
+          for fichier in $FICHIERS; do
+            # Une version peut paraître sans les Mac : l'installeur absent n'a pas d'original à comparer.
+            if ! gh release download --repo "$GITHUB_REPOSITORY" --pattern "$fichier" --dir publies 2>/dev/null; then
+              echo "::warning::$fichier absent de la dernière version publiée : non comparé."
+              continue
+            fi
+            curl -sS --fail --max-time 300 -o "en-ligne/$fichier" "$ADRESSE/$fichier"
+            publie="$(sha256sum "publies/$fichier" | cut -d' ' -f1)"
+            en_ligne="$(sha256sum "en-ligne/$fichier" | cut -d' ' -f1)"
+            if [ "$publie" = "$en_ligne" ]; then
+              echo "$fichier : conforme ($publie)"
+            else
+              echo "::error::$fichier : l'installeur servi par dnmax.fr ($en_ligne) n'est pas celui de la version publiée ($publie)."
+              ecarts=1
+            fi
+            # L'empreinte affichée sur le site doit être celle du fichier servi.
+            affichee="$(curl -sS --fail --max-time 30 "$ADRESSE/SHA256SUMS.txt" | grep -E "^[0-9a-f]{64}  $fichier\$" | cut -d' ' -f1 || true)"
+            if [ -z "$affichee" ]; then
+              echo "::warning::$fichier : aucune empreinte affichée sur le site (elle paraît au prochain dépôt des installeurs)."
+            elif [ "$affichee" != "$publie" ]; then
+              echo "::error::$fichier : l'empreinte affichée sur dnmax.fr ($affichee) n'est pas celle de la version publiée ($publie)."
+              ecarts=1
+            fi
+          done
+          exit "$ecarts"
+
+  dependances:
+    name: Dépendances sans faille connue
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22.23.4"
+      - name: Bibliothèques de l'interface livrées dans l'application
+        run: |
+          # --omit=dev : ce qui part chez les enseignants. Les outils de développement sont listés à part, sans faire échouer.
+          npm audit --omit=dev --json > audit-livre.json || true
+          node outils/verifier-audit-npm.ts < audit-livre.json
+      - name: Outils de développement (pour information)
+        run: |
+          npm audit --json > audit-complet.json || true
+          node outils/verifier-audit-npm.ts < audit-complet.json || echo "::warning::Des outils de développement ont une alerte : voir ci-dessus. Ils ne sont pas livrés."
+      - name: Outil d'audit Rust
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: outil-audit
+        with:
+          path: ~/.cargo/bin/cargo-audit
+          key: cargo-audit-0.23.0-${{ runner.os }}
+      - if: steps.outil-audit.outputs.cache-hit != 'true'
+        run: cargo install cargo-audit --locked --version 0.23.0
+      - name: Bibliothèques de l'enveloppe de bureau
+        run: cargo audit
+        working-directory: src-tauri
