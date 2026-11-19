@@ -160,10 +160,6 @@ export function libelleAnnee(annee: number): string {
   return `Année ${String(annee)}${etat.modules.dn ? ` — ${codeAnnee(annee, etat.donnees)}` : ""}`;
 }
 
-export function anneeDeLaClasse(nom: unknown): number {
-  return anneeDeClasse(nom);
-}
-
 /** Année de formation de l'évaluation en cours : celle de sa promotion, sinon celle, unique, de ses classes ; 0 si elle n'est pas unique. */
 export function anneeDeLEvaluation(): number {
   const promotion = promotionCourante();

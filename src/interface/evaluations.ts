@@ -7,7 +7,7 @@
  * Repris du fichier historique (décision 38). L'export d'un document et
  * l'avertissement avant de restituer sont dans `interface/export-document`.
  */
-import { correspondFiltres, filtresActifs, filtresParDefaut, normaliserFiltres } from "../domaine/filtres-evaluations";
+import { correspondFiltres, filtresParDefaut, normaliserFiltres } from "../domaine/filtres-evaluations";
 import { avancementSaisie, estEvaluee, LIBELLES_STATUT, promotionsVisees, restitutionsEtudiants, statutEvaluation } from "../domaine/suivi-evaluation";
 import { apresDessinListe, ouvrirActions, type ContexteActions } from "../evaluations/actions";
 import { peindreFiltres, type ContexteFiltres } from "../evaluations/filtres";
@@ -186,10 +186,6 @@ export function correspondAuxFiltres(evaluation: Objet): boolean {
     moi: nomDeMoi(),
     statut: statutDe,
   });
-}
-
-export function filtresEnPlace(): boolean {
-  return filtresActifs(etatDesFiltres());
 }
 
 /** Barre des filtres de Mes évaluations. */

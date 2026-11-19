@@ -81,12 +81,6 @@ export function versionsDe(diplome: string): Objet[] {
   return parDiplome[diplome];
 }
 
-/** Référentiel de travail du diplôme, sorte par sorte, en texte. */
-export function referentielEnTexte(diplome: string): string {
-  const referentiel = referentielDe(donnees(), diplome);
-  return JSON.stringify(SORTES.map((sorte) => referentiel[sorte]));
-}
-
 /** Version en vigueur du diplôme, ou `null`. */
 export function versionActive(diplome: string): Objet | null {
   return versionsDe(diplome).find((version) => version.id === enVigueur(diplome)) ?? null;
