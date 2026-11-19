@@ -9,7 +9,7 @@
  * compris. Le dessin de la chaîne reste dans ce fichier (0.9.2) et appelle
  * ces fonctions par leur ancien nom, publié sur la fenêtre.
  */
-import { semItems, semLie, refFilter, ecName } from "./carte-donnees";
+import { semItems, semLie, refFilter, ecName, ecsMiens } from "./carte-donnees";
 import { ecNum, ecOrd } from "./aides-communes";
 import { ecCodeLbl } from "./donnees";
 import { etat, type Objet } from "./etat";
@@ -106,6 +106,15 @@ export function chainModel(): ModeleChaine | null {
     dip: diplomes.slice(),
   };
   Object.keys(lists).forEach((k) => (lists[k] = (lists[k] as Element[]).filter((x) => ok(k, x))));
+  // « Seulement ma répartition » : mes EC, les compétences qu'ils portent, leurs UE et leurs semestres.
+  const miens = ecsMiens();
+  if (miens !== null) {
+    lists.ec = (lists.ec as Element[]).filter((e) => miens.has(e.id as string));
+    lists.comp = (lists.comp as Element[]).filter((c) => ((c.ecIds || []) as string[]).some((id) => miens.has(id)));
+    lists.ue = (lists.ue as Element[]).filter((u) => (lists.ec as Element[]).some((e) => e.ueId === u.id));
+    const semestres = new Set(semItems(lists.ec).map((x) => x.id));
+    lists.sem = (lists.sem as Element[]).filter((x) => semestres.has(x.id as string));
+  }
   const rel = (k: string, a: Element, b: Element): boolean =>
     k === "comp" ? semLie(a, b as { sem: unknown }) : k === "sem" ? ((b.sems || []) as unknown[]).includes(a.sem) : k === "ec" ? a.ueId === b.id : true;
   // Pivot.

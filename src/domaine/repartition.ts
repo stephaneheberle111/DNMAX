@@ -71,3 +71,20 @@ export function aEuLaPromotion(historique: Objet, promotion: unknown, enseignant
     Object.values((((annee ?? {}) as Objet)[promotion as string] ?? {}) as Objet).some((enseignants) => liste(enseignants).includes(enseignant as Objet)),
   );
 }
+
+/**
+ * EC qu'un enseignant assure l'année scolaire donnée, toutes promotions
+ * confondues, d'après la répartition de service. Ensemble vide sans
+ * enseignant, sans cette année ou sans affectation.
+ */
+export function ecsDeLEnseignant(historique: Objet, anneeScolaire: string, enseignant: unknown): Set<string> {
+  const ecs = new Set<string>();
+  if (!enseignant) return ecs;
+  const parPromotion = (historique[anneeScolaire] ?? {}) as Objet;
+  for (const parEc of Object.values(parPromotion)) {
+    for (const [ec, enseignants] of Object.entries((parEc ?? {}) as Objet)) {
+      if (liste(enseignants).includes(enseignant as Objet)) ecs.add(ec);
+    }
+  }
+  return ecs;
+}

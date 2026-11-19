@@ -11,6 +11,7 @@ import {
   competencesDuGroupe,
   pairesRecherche,
   regrouperPaires,
+  restreindreAuxEcs,
   surligner,
   type OutilsRegroupement,
 } from "../domaine/exploration";
@@ -41,6 +42,8 @@ export interface ContexteRecherche extends OutilsRegroupement {
   readonly teinteBlocs: string;
   nomEcReferentiel(code: string): string;
   redessiner(): void;
+  /** EC auxquels se limiter (« Seulement ma répartition de service »), ou `null`. */
+  readonly ecsRetenus?: ReadonlySet<string> | null;
 }
 
 function element(id: string): HTMLElement {
@@ -100,7 +103,7 @@ export function peindreRecherche(contexte: ContexteRecherche): void {
   );
   (element("r-search") as HTMLInputElement).value = recherche.q;
 
-  const paires = pairesRecherche(contexte.competences, contexte.filtre, recherche, (numero) => contexte.nomBloc(numero));
+  const paires = pairesRecherche(restreindreAuxEcs(contexte.competences, contexte.ecsRetenus ?? null), contexte.filtre, recherche, (numero) => contexte.nomBloc(numero));
   if (!(recherche.group in contexte.modes)) recherche.group = "bloc";
   const groupes = regrouperPaires(paires, recherche.group, contexte);
   const vues = new Set(paires.map((paire) => paire.c.code));

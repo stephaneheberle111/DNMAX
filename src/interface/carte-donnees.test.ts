@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { compsOfEc, ecName, filtComps, filtEcs, filtUes, publierCarteDonnees, radialGroups, refFilter, semItems, semLie } from "./carte-donnees";
+import { compsOfEc, ecName, ecsMiens, filtComps, filtEcs, filtUes, publierCarteDonnees, radialGroups, refFilter, repartitionCarte, semItems, semLie } from "./carte-donnees";
+import { anneeScolaire } from "./promotions-calendrier";
 
 function filtrer(kind: string, value: string): void {
   (etat.ui.ref as Objet).filter = { kind, value };
@@ -109,5 +110,48 @@ describe("compétences, semestres et noms", () => {
     expect(ecName(ecs[0])).toBe("Volume");
     expect(ecName(ecs[2])).toBe("EC 9.1");
     expect(ecName(null)).toBe("");
+  });
+});
+
+describe("Seulement ma répartition de service", () => {
+  beforeEach(() => {
+    etat.donnees.moi = "t1";
+    etat.donnees.affectH = { [anneeScolaire()]: { p1: { e2: ["t1"], e1: ["t2"] } } };
+  });
+
+  it("ne retire rien tant que la case n'est pas cochée", () => {
+    expect(ecsMiens()).toBeNull();
+    expect(radialGroups().flatMap((groupe) => groupe.ecs.map((ec) => ec.id))).toEqual(["e1", "e2", "e3"]);
+  });
+
+  it("limite les EC, les UE, les compétences et les secteurs à mes EC de l'année", () => {
+    (etat.ui.ref as Objet).mine = true;
+    expect(filtEcs(etat.donnees.ecs as Objet[]).map((ec) => ec.id)).toEqual(["e2"]);
+    expect(filtUes(etat.donnees.ues as Objet[]).map((ue) => ue.id)).toEqual(["u1"]);
+    expect(filtComps(etat.donnees.competences as Objet[]).map((competence) => competence.code)).toEqual(["C2"]);
+    expect(radialGroups().map((groupe) => [groupe.u.nom, groupe.ecs.map((ec) => ec.id)])).toEqual([["UE 1", ["e2"]]]);
+  });
+
+  it("ne propose pas la case sans « C'est moi » ou sans affectation cette année", () => {
+    expect(repartitionCarte(() => undefined).disponible).toBe(true);
+    etat.donnees.moi = "";
+    expect(repartitionCarte(() => undefined).disponible).toBe(false);
+    etat.donnees.moi = "t1";
+    etat.donnees.affectH = { "2001-2002": { p1: { e2: ["t1"] } } };
+    expect(repartitionCarte(() => undefined).disponible).toBe(false);
+  });
+
+  it("ignore une case restée cochée quand il n'y a plus de répartition", () => {
+    (etat.ui.ref as Objet).mine = true;
+    etat.donnees.affectH = {};
+    expect(ecsMiens()).toBeNull();
+    expect(filtEcs(etat.donnees.ecs as Objet[])).toHaveLength(3);
+  });
+
+  it("bascule la case et redessine", () => {
+    let redessins = 0;
+    repartitionCarte(() => (redessins += 1)).basculer();
+    expect((etat.ui.ref as Objet).mine).toBe(true);
+    expect(redessins).toBe(1);
   });
 });

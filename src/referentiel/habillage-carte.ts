@@ -7,7 +7,7 @@
  * fournit leur balisage tel quel, et les anime ensuite.
  */
 import { codeAuSemestre, codesEc, mentionsDuDiplome, nomEc, nomsDiplomes, sansAccents, SEMESTRES, ANNEES } from "../domaine/constituer";
-import { blocsTableau, casesEc, competencesTableau, ecsAuSemestre, titreBloc } from "../domaine/exploration";
+import { blocsTableau, casesEc, competencesTableau, ecsAuSemestre, restreindreAuxEcs, titreBloc } from "../domaine/exploration";
 import { balise } from "../etablissement/editeur-commun";
 import { bulleAide } from "../etablissement/volets";
 import { dateEnLettres } from "./constituer";
@@ -49,6 +49,11 @@ export interface ContexteHabillage {
   choisirDiplome(nom: string): boolean;
   allerALEc(nom: string): void;
   rechercher(texte: string, parUe: boolean): void;
+  /**
+   * Case « Seulement ma répartition de service » : proposée si « C'est moi »
+   * assure des EC cette année ; `ecs` est l'ensemble retenu quand elle est cochée.
+   */
+  readonly repartition?: { readonly disponible: boolean; readonly active: boolean; readonly ecs: ReadonlySet<string> | null; basculer(): void };
 }
 
 const AIDES: Readonly<Record<string, string>> = {
@@ -97,13 +102,26 @@ function videCase(): HTMLElement {
 export function peindreHabillageCarte(hote: HTMLElement, contexte: ContexteHabillage): void {
   const { filtre, vue } = contexte;
   const courant = contexte.diplomes.find((diplome) => diplome.id === contexte.actif) ?? {};
-  const noeuds: Node[] = [barreDiplome(contexte, courant), tuiles(contexte), barreVues(contexte)];
+  const noeuds: Node[] = [barreDiplome(contexte, courant), tuiles(contexte)];
+  if (contexte.repartition?.disponible) noeuds.push(caseRepartition(contexte.repartition));
+  noeuds.push(barreVues(contexte));
   if (vue === "radial") noeuds.push(cadreRadial(contexte));
   if (vue === "chain") noeuds.push(fragment(contexte.carteChaine()));
   if (contexte.niveaux !== null) noeuds.push(balise("div", [["class", "hint"]], contexte.niveaux));
   if (vue === "table") noeuds.push(tableauEcs(contexte));
   if (vue === "tablec") noeuds.push(tableauCompetences(contexte, filtre));
   hote.replaceChildren(...noeuds);
+}
+
+/** Case « Seulement ma répartition de service », sous les tuiles. */
+function caseRepartition(repartition: NonNullable<ContexteHabillage["repartition"]>): HTMLElement {
+  const etiquette = balise("label", [["class", "refmine"]]);
+  const caseACocher = balise("input", [["type", "checkbox"], ["id", "refMine"], ...(repartition.active ? [["checked", ""] as const] : [])]);
+  caseACocher.addEventListener("change", () => {
+    repartition.basculer();
+  });
+  etiquette.append(caseACocher, " ", balise("span", [], "Seulement ma répartition de service"));
+  return etiquette;
 }
 
 function barreDiplome(contexte: ContexteHabillage, courant: Element): HTMLElement {
@@ -423,7 +441,7 @@ function tableauEcs(contexte: ContexteHabillage): HTMLElement {
 }
 
 function tableauCompetences(contexte: ContexteHabillage, filtre: { readonly kind: string; readonly value: string }): HTMLElement {
-  const competences = competencesTableau(contexte.competences, filtre);
+  const competences = competencesTableau(restreindreAuxEcs(contexte.competences, contexte.repartition?.ecs ?? null), filtre);
   if (competences.length === 0) return balise("div", [["class", "empty"]], "Aucune compétence ne correspond au filtre.");
   const tableau = balise("table", [["class", "mx"]]);
   const corps = balise("tbody");

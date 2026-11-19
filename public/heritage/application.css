@@ -409,6 +409,8 @@ svg.chain.dim .clink{opacity:.1}
 svg.chain.dim .clink.hot{opacity:.95;stroke-width:2.8}
 @media (prefers-reduced-motion:no-preference){svg.chain .cnode,svg.chain .clink{transition:opacity .13s}}
 .tiles{display:flex;gap:9px;flex-wrap:wrap}
+.refmine{display:inline-flex;gap:6px;align-items:center;margin:2px 0 10px;font-size:13px;cursor:pointer}
+.refmine input{width:auto!important;margin:0}
 .tile{flex:1 1 110px;min-width:0;border:1px solid var(--line);border-radius:var(--radius);padding:8px 11px;background:var(--surface-2);display:flex;flex-direction:column;gap:2px;text-align:left;font:inherit;color:inherit}
 .tile.on{border-color:var(--accent);background:var(--accent-soft)}
 .tile.on .k{color:var(--accent)}

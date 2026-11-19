@@ -25,7 +25,8 @@ function paintExplore(){
     annees:(m.niveaux||[]).map(n=>({annee:String(n.annee),libelle:anneeLabel(n.annee)})),teinteBlocs:BLOC_TINT,
     nomBloc:blocName,rangUe:ueOrd,couleurUe:ueColor,couleurEc:ecColor,nomEcReferentiel:ecNomRef,
     sousTitreAnnee:p=>MOD.dn?(p.dn+" · "+(((REF.meta.niveaux||[]).find(n=>+n.annee===p.annee)||{}).label||"")):("Semestres "+semsOfAnnee(p.annee).join(" et ")),
-    sousTitreSemestre:p=>"Année "+p.annee+(MOD.dn?" · "+p.dn:""),diplome:REF.meta.diplome||"",redessiner:paintRef});
+    sousTitreSemestre:p=>"Année "+p.annee+(MOD.dn?" · "+p.dn:""),diplome:REF.meta.diplome||"",redessiner:paintRef,
+    ecsRetenus:ecsMiens()});
 }
 
 let wheelAngle=0, wheelRaf=0;
@@ -535,7 +536,8 @@ function paintMap(){
     choisirDiplome:nom=>{const dp=D.diplomes.find(x=>norm(x.nom||"")===norm(nom));if(!dp)return false;
       D.activeDiplome=dp.id;ui.ref.filter={kind:"",value:""};saveData();return true},
     allerALEc:nom=>allerEtape("ecs",nom),
-    rechercher:(texte,parUe)=>{if(parUe)ui.ref.group="ue";toSearch(texte)}});
+    rechercher:(texte,parUe)=>{if(parUe)ui.ref.group="ue";toSearch(texte)},
+    repartition:repartitionCarte(paintRef)});
   if(host.querySelector(".chainbox"))chainBind(host);
   const svgHost=host.querySelector(".radwrap");
   if(svgHost)radialWire(svgHost);
