@@ -10,7 +10,7 @@ export default defineConfig(
       "node_modules/",
       "src-tauri/",
       // Banc de comparaison lancé à la main pendant la reprise (script Playwright en CommonJS, hors
-      // application) : voir docs/reprise.md. Il disparaîtra avec le fichier historique.
+      // application) : voir docs/reprise.md. Ce qu'il appelle dans la page est publié par src/heritage/noms-banc.ts.
       "outils/banc/",
     ],
   },
