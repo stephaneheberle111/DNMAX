@@ -4,7 +4,7 @@
  * suivi (frise de cinq étapes, ou suivi simplifié) et la petite fenêtre de
  * chaque étape. Les règles sont dans `domaine/frise-suivi`,
  * `domaine/suivi-evaluation` et `domaine/suivi-simplifie`. La fenêtre des
- * actions reste ouverte par l'interface historique.
+ * actions est ouverte par `interface/evaluations`.
  */
 import { derniereDate, etatEtape, infobulleSuivi, pointsFrise, prochaineEtape } from "../domaine/frise-suivi";
 import { ETAPES_FRISE, LIBELLES_STATUT } from "../domaine/suivi-evaluation";
@@ -60,7 +60,7 @@ export interface ContexteListe {
 }
 
 const AIDE_SUIVI =
-  "Chaque évaluation avance sur 5 étapes : <b>Préparée → Distribuée → Rendue → Évaluée → Restituée</b>. Point plein = étape franchie, point à moitié plein = étape commencée. Distribuée et Rendue avancent seules avec les dates prévues ; les suivantes avec vos actions (saisie ou export de la grille, « Terminer », « Marquer restituée »). La ligne grise indique la prochaine chose à faire.";
+  "Chaque évaluation avance sur 5 étapes : <b>Préparée → Distribuée → Rendue → Évaluée → Restituée</b>. Point plein = étape franchie, point à moitié plein = étape commencée. Distribuée et Rendue avancent seules avec les dates prévues ; les suivantes avec vos actions (saisie ou export de la grille, « Terminer l'évaluation », « Marquer restituée »). La ligne grise indique la prochaine chose à faire.";
 
 let fermeturesInstallees = false;
 

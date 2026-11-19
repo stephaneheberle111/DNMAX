@@ -5,7 +5,7 @@ export type Entrees = Readonly<Record<string, string>>;
 
 /**
  * Magasin clé → texte tenu en mémoire, à l'interface synchrone attendue par
- * l'interface historique (`getItem`, `setItem`, `removeItem`).
+ * l'interface (`getItem`, `setItem`, `removeItem`).
  *
  * Il ne touche ni au disque ni au navigateur : `surChangement` prévient
  * l'appelant, qui décide quoi faire des données.

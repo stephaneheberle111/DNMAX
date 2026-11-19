@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
 import {
+  ANGLE_BAS_DROITE,
+  plusProcheDeLAngle,
   salvesBouquetFinal,
   CLE_PARCOURS,
   colleguesDeclares,
@@ -231,5 +233,29 @@ describe("moment du bouquet final", () => {
   it("ne part pas pour une visite sans étape ou réduite à sa page d'ouverture", () => {
     expect(doitLancerBouquet({ index: 0, nombreEtapes: 0, dejaLance: false })).toBe(false);
     expect(doitLancerBouquet({ index: 0, nombreEtapes: 1, dejaLance: false })).toBe(false);
+  });
+});
+
+describe("plusProcheDeLAngle", () => {
+  it("retient l'élément le plus proche du bas-droit de la roue", () => {
+    const elements = [
+      { id: "haut", angle: -Math.PI / 2 },
+      { id: "bas-droite", angle: 0.9 },
+      { id: "gauche", angle: Math.PI },
+    ];
+    expect(plusProcheDeLAngle(elements, ANGLE_BAS_DROITE)).toBe("bas-droite");
+  });
+
+  it("compte l'écart à un tour près", () => {
+    const elements = [
+      { id: "un-tour-plus-loin", angle: ANGLE_BAS_DROITE + 2 * Math.PI + 0.01 },
+      { id: "loin", angle: ANGLE_BAS_DROITE + 1 },
+    ];
+    expect(plusProcheDeLAngle(elements, ANGLE_BAS_DROITE)).toBe("un-tour-plus-loin");
+  });
+
+  it("ne retient rien sans élément ni angle lisible", () => {
+    expect(plusProcheDeLAngle([], ANGLE_BAS_DROITE)).toBeNull();
+    expect(plusProcheDeLAngle([{ id: "x", angle: Number.NaN }], ANGLE_BAS_DROITE)).toBeNull();
   });
 });

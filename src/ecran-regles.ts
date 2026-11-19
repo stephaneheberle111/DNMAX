@@ -5,7 +5,7 @@ import type { AccesDonnees } from "./ecran-echange";
 
 /**
  * Réglages d'affichage de ce poste, rangés dans le coffre sous `dnmade.reglages`.
- * L'interface historique les lit au moment d'afficher (Progression).
+ * L'interface les lit au moment d'afficher (Progression).
  */
 export const CLE_REGLAGES = "dnmade.reglages";
 

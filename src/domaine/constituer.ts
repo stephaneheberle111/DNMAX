@@ -2,7 +2,7 @@
 /**
  * Référentiel > Constituer, étapes 1 à 3 : nommer, créer, retenir et retirer
  * les UE, les EC, les blocs et les compétences d'un référentiel. Règles
- * reprises telles quelles de l'interface historique ; les éléments sont
+ * reprises telles quelles de l'ancienne interface ; les éléments sont
  * modifiés sur place, comme elle les tient.
  */
 
@@ -12,7 +12,7 @@ type Element = Record<string, unknown>;
 /** Les six semestres, dans l'ordre. */
 export const SEMESTRES = ["S1", "S2", "S3", "S4", "S5", "S6"] as const;
 
-/** Comme `String(x||"")` dans l'interface historique, pour du texte ou un nombre. */
+/** Comme `String(x||"")` dans l'interface, pour du texte ou un nombre. */
 function texte(valeur: unknown): string {
   if (typeof valeur === "string") return valeur;
   return typeof valeur === "number" && valeur !== 0 && !Number.isNaN(valeur) ? String(valeur) : "";
@@ -139,7 +139,7 @@ export function ecsAffiches(ecs: readonly Element[], filtre: string): Element[] 
     .filter((ec) => cherche === "" || sansAccents([codesEc(ec).join(" "), texteJoint(ec.nom)].join(" ")).includes(cherche));
 }
 
-/** Comme `Array.join` dans l'interface historique : une valeur absente s'écrit vide. */
+/** Comme `Array.join` dans l'interface : une valeur absente s'écrit vide. */
 function texteJoint(valeur: unknown): string {
   if (typeof valeur === "string") return valeur;
   return typeof valeur === "number" || typeof valeur === "boolean" ? String(valeur) : "";
@@ -154,7 +154,7 @@ export function changerCodeEc(ec: Element, annee: string, saisie: string): void 
   else codes[annee] = code;
 }
 
-/** Comme `a+" "+b` dans l'interface historique : une valeur absente s'écrit « undefined ». */
+/** Comme `a+" "+b` dans l'interface : une valeur absente s'écrit « undefined ». */
 function concatene(...valeurs: unknown[]): string {
   return valeurs.map((valeur) => (typeof valeur === "string" ? valeur : typeof valeur === "number" || valeur === undefined || valeur === null ? String(valeur) : "")).join(" ");
 }

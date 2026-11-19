@@ -55,7 +55,7 @@ export function separerNom(nom: string): { prenom: string; nomFamille: string } 
  * Identité de l'enseignant après correction de son prénom et de son nom,
  * saisis sur sa ligne « C'est moi » de « Mon établissement ». L'identifiant de
  * l'installation ne change pas. Les valeurs ne sont pas typées : elles
- * viennent de l'interface historique.
+ * viennent de l'interface.
  *
  * @returns la nouvelle identité, ou `null` si le prénom ou le nom est vide ou
  *   n'est pas du texte, ou si rien ne change.

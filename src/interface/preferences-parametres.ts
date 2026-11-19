@@ -6,9 +6,7 @@
  * Livrables), des Préférences (vocabulaire, sceau, dossier des exports) et de
  * Paramètres > Modules, et activation d'un module.
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom, que le fichier
- * historique appelle encore ; les écrans sont dans `referentiel/`,
+ * Repris du fichier historique (décision 38) ; les écrans sont dans `referentiel/`,
  * `etablissement/`, `preferences/` et `parametres/`, les règles dans
  * `domaine/`.
  */
@@ -20,32 +18,16 @@ import { peindreLivrables, type Livrable } from "../etablissement/livrables";
 import { peindreModules } from "../parametres/modules";
 import { peindreDossierExports, peindreSceau, peindreVocabulaire, type DossierExports } from "../preferences/preferences";
 import { peindrePlanification, type ContextePlanification } from "../referentiel/planification";
+import { paintTabs, toast } from "./aides-communes";
 import { LIVRABLES_ORIGINE } from "./constantes";
+import { addMention, critLabel, dipVisibles, estCadreVierge, modDeps, newId, persistData, saveData, savePrefs } from "./donnees";
+import { peindreLignes } from "./editeur";
+import { peindreCompetencesChoisies, peindreFormulaire } from "./editeur-etape1";
+import { armerSuppression } from "./etablissement";
 import { etat, type Objet } from "./etat";
-
-/** Ce que le module appelle encore dans le fichier historique, ou dans d'autres modules repris. */
-interface FonctionsHistoriques {
-  toast: (message: string) => void;
-  paintTabs(): void;
-  paintForm(): void;
-  paintPick(): void;
-  paintLignes(): void;
-  paintRef(): void;
-  saveData(redessiner?: boolean, depuisDictionnaire?: boolean): void;
-  persistData(): void;
-  savePrefs(): void;
-  critLabel(): string;
-  sceauActif(): boolean;
-  modDeps(): void;
-  allerEtape(etape: string, filtre?: string): void;
-  armDel(id: unknown, supprimer: () => void): void;
-  dipVisibles(): Objet[];
-  estCadreVierge: (id: unknown) => boolean;
-  addMention: (source: unknown, nom: string) => Objet;
-  newId(prefixe: string): string;
-  migPromoCohorte(promotion: Objet): Objet;
-  savePromos(): void;
-}
+import { sceauActif } from "./export-document";
+import { enregistrerPromotions, normaliserPromotion } from "./promotions-calendrier";
+import { allerALEtape, peindreReferentiel } from "./referentiel";
 
 /** Ce que l'application pose sous `window.dnmaxPont` et que ces écrans lisent au moment voulu. */
 interface PontLu {
@@ -66,10 +48,6 @@ type Fenetre = Record<string, unknown>;
 let fenetre: Fenetre = {};
 let branchements: BranchementsPreferences = { ecrireStockage: () => undefined, maintenant: () => 0 };
 
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
-
 function pont(): PontLu {
   return fenetre.dnmaxPont as PontLu;
 }
@@ -88,14 +66,14 @@ export function paintMatrice(hote: HTMLElement): void {
     choisirSemestre: (semestre) => {
       (etat.ui.ref as Objet).msem = semestre;
       etat.armement = null;
-      historique().paintRef();
+      peindreReferentiel();
     },
     teinteBlocs: etat.teinteBlocs,
     enregistrer: () => {
-      historique().saveData(false);
+      saveData(false);
     },
     allerALaCompetence: (code) => {
-      historique().allerEtape("blocs", code);
+      allerALEtape("blocs", code);
     },
   });
 }
@@ -111,26 +89,26 @@ export function paintEditor(volet: string, hoteDemande?: HTMLElement | null): vo
   const armement = {
     arme: etat.armement as string | null,
     armer: (id: string, supprimer: () => void) => {
-      historique().armDel(id, supprimer);
+      armerSuppression(id, supprimer);
     },
   };
   const enregistrer = (redessiner: boolean): void => {
-    historique().saveData(redessiner ? undefined : false);
+    saveData(redessiner ? undefined : false);
   };
   const annoncer = (texte: string): void => {
-    historique().toast(texte);
+    toast(texte);
   };
   if (volet === "diplome") {
     peindreDiplomes(hote, {
       donnees: donnees as unknown as DonneesDiplomes,
-      visibles: historique().dipVisibles(),
-      estCadreVierge: historique().estCadreVierge,
-      nouvelIdentifiant: () => historique().newId("d"),
-      ajouterMention: historique().addMention,
+      visibles: dipVisibles(),
+      estCadreVierge,
+      nouvelIdentifiant: () => newId("d"),
+      ajouterMention: addMention,
       enregistrer,
       apresChangementDuree: () => {
-        etat.promotions.forEach((promotion) => historique().migPromoCohorte(promotion));
-        historique().savePromos();
+        etat.promotions.forEach((promotion) => normaliserPromotion(promotion));
+        enregistrerPromotions();
       },
       armement,
       annoncer,
@@ -143,7 +121,7 @@ export function paintEditor(volet: string, hoteDemande?: HTMLElement | null): vo
       moi: () => donnees.moi as string,
       definirMoi: (id) => {
         donnees.moi = id;
-        historique().persistData();
+        persistData();
       },
       armement,
       nouvelIdentifiant: () => "t" + branchements.maintenant().toString(36),
@@ -176,23 +154,23 @@ export function paintEditor(volet: string, hoteDemande?: HTMLElement | null): vo
 /** Préférences > Documents exportés : sceau DN MADE et dossier proposé à l'enregistrement. */
 export function paintSceau(): void {
   peindreSceau(document, {
-    actif: historique().sceauActif(),
+    actif: sceauActif(),
     choisir: (actif) => {
       etat.preferences.sceau = actif;
-      historique().savePrefs();
+      savePrefs();
     },
   });
-  peindreDossierExports(document, pont().dossierExports, historique().toast);
+  peindreDossierExports(document, pont().dossierExports, toast);
 }
 
 /** Préférences : nom du champ d'évaluation ; les lignes de l'évaluation le reprennent. */
 export function paintVocab(): void {
   peindreVocabulaire(document, {
-    libelle: historique().critLabel(),
+    libelle: critLabel(),
     choisir: (libelle) => {
       etat.preferences.critLabel = libelle;
-      historique().savePrefs();
-      historique().paintLignes();
+      savePrefs();
+      peindreLignes();
     },
   });
 }
@@ -228,36 +206,30 @@ function nomDuModule(cle: string): string {
  */
 export function appliquerModule(cle: string, actif: boolean): void {
   if (!actif && entraineDautres(cle, etat.modules)) {
-    historique().toast("Niveaux d'acquisition désactivé aussi : il nécessite le module " + nomDuModule(cle) + ".");
+    toast("Niveaux d'acquisition désactivé aussi : il nécessite le module " + nomDuModule(cle) + ".");
   }
   etat.modules[cle] = actif;
-  historique().modDeps();
+  modDeps();
   try {
     branchements.ecrireStockage("dnmade.modules", JSON.stringify(etat.modules));
   } catch {
     // Comme avant : une écriture refusée n'interrompt pas l'interface.
   }
   paintSet();
-  historique().paintTabs();
-  historique().paintForm();
-  historique().paintPick();
-  historique().paintLignes();
+  paintTabs();
+  peindreFormulaire();
+  peindreCompetencesChoisies();
+  peindreLignes();
   paintVocab();
-  historique().paintRef();
-  historique().toast(nomDuModule(cle) + (actif ? " : activé" : " : désactivé"));
+  peindreReferentiel();
+  toast(nomDuModule(cle) + (actif ? " : activé" : " : désactivé"));
 }
 
-/** Pose ces fonctions sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierPreferencesParametres(cible: Fenetre, branchementsReels: BranchementsPreferences): void {
+/**
+ * Donne au module la fenêtre, où il lit le pont de l'application
+ * (`dnmaxPont`) au moment voulu, ainsi que le stockage et l'horloge.
+ */
+export function brancherPreferencesParametres(cible: Fenetre, branchementsReels: BranchementsPreferences): void {
   fenetre = cible;
   branchements = branchementsReels;
-  Object.assign(cible, {
-    paintMatrice,
-    paintEditor,
-    paintSceau,
-    paintVocab,
-    paintPrefs,
-    paintSet,
-    appliquerModule,
-  });
 }

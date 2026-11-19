@@ -3,8 +3,9 @@
  * Référentiel > Explorer : l'habillage autour de la carte. Choix du diplôme
  * et de la mention, état de la version, tuiles de filtre, barre des vues, et
  * les deux tableaux (EC × semestres, compétences × semestres). La carte
- * radiale et la chaîne ne sont pas dessinées ici : l'interface historique
- * fournit leur balisage tel quel, et les anime ensuite.
+ * radiale et la chaîne ne sont pas dessinées ici : `interface/explorer`
+ * fournit leur balisage tel quel (`interface/radiale-dessin`,
+ * `interface/chaine-dessin`), et les anime ensuite.
  */
 import { codeAuSemestre, codesEc, mentionsDuDiplome, nomEc, nomsDiplomes, sansAccents, SEMESTRES, ANNEES } from "../domaine/constituer";
 import { blocsTableau, casesEc, competencesTableau, ecsAuSemestre, restreindreAuxEcs, titreBloc } from "../domaine/exploration";
@@ -39,7 +40,7 @@ export interface ContexteHabillage {
   readonly teinteBlocs: string;
   /** Années et niveaux d'acquisition, quand le module est actif ; sinon `null`. */
   readonly niveaux: string | null;
-  /** Balisage de la carte radiale (sans son cadre de zoom) et de la chaîne, produits par l'interface historique. */
+  /** Balisage de la carte radiale (sans son cadre de zoom) et de la chaîne, produits par `interface/radiale-dessin` et `interface/chaine-dessin`. */
   carteRadiale(): string;
   carteChaine(): string;
   choisirVue(vue: string): void;
@@ -77,7 +78,7 @@ const AIDES: Readonly<Record<string, string>> = {
     "Une ligne par compétence, groupée par bloc : chaque case donne les EC qui la portent à ce semestre. Vide = la compétence n'est pas mobilisable ce semestre-là. Un clic sur une pastille d'EC l'ouvre dans Constituer ; un clic sur la compétence bascule sur « Recherche ».",
   search: "Recherche par code, UE ou mot-clé, regroupement au choix, filtres d'année et de semestres.",
   radial:
-    "Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que vous survoliez une flèche de rotation. La roue tourne quand vous survolez l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment en douceur, la roue glissant toujours le long de la même diagonale ; « Ajuster » revient à la vue de départ.",
+    "Trois couronnes : unités d'enseignement, enseignements constitutifs, puis années de diplôme — une part par année, ses deux semestres réunis, le code de l'EC pour cette année-là s'affichant dans l'encadré de droite. Les points extérieurs sont les compétences. Pendant qu'une portion est éclatée la roue s'immobilise : ce qui est éclaté reste sous le curseur, et elle repart quand on s'éloigne. Survoler éclate la portion : ses EC affichent leur nom et ses compétences s'étalent autour de la roue. Un clic fige la carte jusqu'à ce que vous survoliez une flèche de rotation. La roue tourne quand vous survolez l'une des deux flèches qui l'entourent, en haut à droite et en bas à gauche de la carte ; ailleurs, elle reste immobile. La molette, le pincement ou les boutons au-dessus de la carte zooment et dézooment en douceur, la roue glissant toujours le long de la même diagonale ; « Ajuster » montre la roue entière, avec la place des compétences éclatées et les flèches de rotation.",
 };
 
 function texte(valeur: unknown): string {
@@ -85,18 +86,18 @@ function texte(valeur: unknown): string {
   return typeof valeur === "number" && valeur !== 0 ? String(valeur) : "";
 }
 
-/** Comme la concaténation de l'interface historique : une valeur absente s'écrit « undefined ». */
+/** Comme la concaténation de l'interface : une valeur absente s'écrit « undefined ». */
 function brut(valeur: unknown): string {
   return typeof valeur === "string" ? valeur : typeof valeur === "number" || valeur === undefined || valeur === null ? String(valeur) : "";
 }
 
-/** Comme `esc(x)` dans l'interface historique : une valeur absente s'écrit vide. */
+/** Comme `esc(x)` dans l'interface : une valeur absente s'écrit vide. */
 function affiche(valeur: unknown): string {
   if (typeof valeur === "string") return valeur;
   return typeof valeur === "number" || typeof valeur === "boolean" ? String(valeur) : "";
 }
 
-/** Balisage HTML fourni par l'interface historique (carte radiale, chaîne), inséré tel quel. */
+/** Balisage HTML fourni par l'interface (carte radiale, chaîne), inséré tel quel. */
 function fragment(html: string): DocumentFragment {
   const modele = document.createElement("template");
   modele.innerHTML = html;
@@ -314,7 +315,7 @@ function cadreRadial(contexte: ContexteHabillage): HTMLElement {
         ["type", "button"],
         ["class", "btn ghost"],
         ["data-rz", "0"],
-        ["title", "Revenir à la vue de départ (0)"],
+        ["title", "Montrer la roue entière (0)"],
       ],
       "Ajuster",
     ),

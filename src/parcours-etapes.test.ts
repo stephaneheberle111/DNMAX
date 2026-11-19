@@ -79,9 +79,29 @@ describe("prise en main, grande étape Référentiel", () => {
     expect(page?.geste).toBe("parcourir");
   });
 
-  it("fait éclater la carte par un EC, dézoomer, puis survoler une compétence, sans faire tourner la roue", () => {
+  it("commence par la compétence et l'EC du bas-droit de la roue, puis fait dézoomer", () => {
     const carte = PARCOURS_DEFINIS["prise-en-main"].etapes.find((etape) => etape.titre === "1. La carte du référentiel");
-    expect(carte?.haltes).toEqual(['#refExplore .radial .sg[data-kind="ec"]', '#refExplore [data-rz="-1"]', "#refExplore .radial .dot"]);
+    // Positions à l'écran, autour du moyeu centré en (500, 500) : la roue a pu tourner. Le point du bas-droit
+    // hors de la fenêtre (1 200, 1 200) ne compte pas.
+    const element = (id: string, x: number, y: number) => ({
+      closest: () => null,
+      getAttribute: (nom: string) => (nom === "data-id" ? id : null),
+      getBoundingClientRect: () => ({ left: x, top: y, width: 0, height: 0 }),
+    });
+    vi.stubGlobal("window", { innerWidth: 1000, innerHeight: 1000 });
+    vi.stubGlobal("document", {
+      querySelector: () => element("moyeu", 500, 500),
+      querySelectorAll: (selecteur: string) =>
+        selecteur.endsWith(".dot")
+          ? [element("c-haut", 500, 400), element("c-bas-droite", 570, 575), element("c-hors-cadre", 1200, 1200)]
+          : [element("e-gauche", 420, 500), element("e-bas-droite", 560, 550)],
+    });
+    expect(typeof carte?.haltes === "function" ? carte.haltes() : carte?.haltes).toEqual([
+      '#refExplore .radial .dot[data-id="c-bas-droite"]',
+      '#refExplore .radial .sg[data-kind="ec"][data-id="e-bas-droite"]',
+      '#refExplore [data-rz="-1"]',
+    ]);
+    vi.unstubAllGlobals();
     expect(carte?.geste).toBe("parcourir");
   });
 });
@@ -260,12 +280,26 @@ describe("prise en main, guidage fin", () => {
     expect(collegues?.delaiSalut).toBeGreaterThanOrEqual(4000);
   });
 
-  it("montre, avant la formulation, qu'une compétence se glisse sur une autre pour les lier", () => {
+  it("montre, avant la formulation, compétence sur compétence, livrable sur compétence, puis la rédaction", () => {
     const rang = etapes.findIndex((etape) => etape.titre === "5. Lier des compétences");
     const lier = etapes[rang];
-    expect(lier?.geste).toBe("glisser");
-    expect(lier?.depuis).toContain("[data-dragcomp]");
+    vi.stubGlobal("document", { querySelector: (selecteur: string) => (selecteur.includes("data-unlink") ? null : {}), querySelectorAll: () => [{}, {}] });
+    const gestes = typeof lier?.enchainement === "function" ? lier.enchainement() : lier?.enchainement;
+    vi.unstubAllGlobals();
+    expect(gestes?.map((mouvement) => [mouvement.geste, mouvement.depuis])).toEqual([
+      ["glisser", "#lignes [data-dragcomp]"],
+      ["glisser", "#palLivr [data-dragliv]"],
+      ["remplir", undefined],
+    ]);
     expect(rang).toBeLessThan(etapes.findIndex((etape) => etape.titre === "5. Formuler et enregistrer"));
+  });
+
+  it("ne montre plus le lien entre compétences une fois des compétences liées", () => {
+    const lier = etapes.find((etape) => etape.titre === "5. Lier des compétences");
+    vi.stubGlobal("document", { querySelector: () => ({}), querySelectorAll: () => [{}, {}] });
+    const gestes = typeof lier?.enchainement === "function" ? lier.enchainement() : lier?.enchainement;
+    vi.unstubAllGlobals();
+    expect(gestes?.map((mouvement) => mouvement.depuis)).toEqual(["#palLivr [data-dragliv]", undefined]);
   });
 
   it("promène le curseur sur chaque page de « Constituer »", () => {

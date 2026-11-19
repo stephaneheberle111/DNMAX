@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 
 /**
- * Lecture prudente des données tenues par l'interface historique.
+ * Lecture prudente des données tenues par l'interface.
  *
  * Ces données sont du JSON sans schéma, écrit par un code non typé : rien
  * n'est supposé, chaque valeur est vérifiée, et ce qui n'a pas la forme
@@ -80,7 +80,7 @@ export function lireEvaluations(texte: string | null | undefined): Evaluation[] 
   return Array.isArray(valeur) ? valeur.filter(estEvaluation) : [];
 }
 
-/** Lit une promotion telle que l'interface historique la tient ; les champs absents valent texte vide. */
+/** Lit une promotion telle que l'interface la tient ; les champs absents valent texte vide. */
 export function lirePromotion(promotion: ObjetJson): Promotion {
   return {
     id: lireTexte(promotion.id),
@@ -106,7 +106,7 @@ export function lireDonneesEtablissement(texte: string | null | undefined): Donn
   return lireDonneesEtablissementDe(analyserJson(texte));
 }
 
-/** Comme `lireDonneesEtablissement`, à partir de données déjà analysées (celles que tient l'interface historique). */
+/** Comme `lireDonneesEtablissement`, à partir de données déjà analysées (celles que tient l'interface). */
 export function lireDonneesEtablissementDe(racine: unknown): DonneesEtablissement {
   const donnees = estObjet(racine) ? racine : {};
   const diplomes = (Array.isArray(donnees.diplomes) ? donnees.diplomes : []).filter(estObjet).map((diplome) => ({
@@ -130,7 +130,7 @@ export function lireDonneesEtablissementDe(racine: unknown): DonneesEtablissemen
 
 /**
  * Promotion à laquelle une évaluation est rattachée : par son identifiant,
- * sinon par le nom de l'une de ses classes (même règle que l'interface historique).
+ * sinon par le nom de l'une de ses classes (même règle que l'interface).
  */
 export function trouverPromotion(evaluation: Evaluation, promotions: Promotion[]): Promotion | null {
   const parIdentifiant = promotions.find((promotion) => promotion.id !== "" && promotion.id === evaluation.promoId);

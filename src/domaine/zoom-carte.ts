@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: CECILL-2.1
 /*
  * Zoom de la carte radiale du référentiel : calculs seuls, sans accès au
- * document. L'interface historique les appelle par `window.dnmaxPont.zoomCarte`.
+ * document. Les gestes de la carte (`interface/radiale-gestes`) les appellent
+ * par `window.dnmaxPont.zoomCarte`.
  *
  * Toutes les longueurs sont en unités du dessin (le `viewBox` du SVG), sauf
  * mention contraire. Une « vue » est le rectangle du dessin montré dans le cadre :
@@ -82,16 +83,24 @@ export function tailleVue(zoom: number, cote: number, rapport: number): { largeu
  * la roue dans son coin haut-gauche, pas au-delà. Entre le zoom 1 et le zoom de
  * départ, la plage s'élargit progressivement : aucun saut quand on traverse un seuil.
  */
+/**
+ * Zoom à partir duquel la vue quitte la roue entière centrée pour glisser vers
+ * son quart bas-droit : 1 (le dessin entier). Le zoom minimal peut descendre
+ * plus bas pour montrer en plus la zone d'éclatement (« Ajuster ») ; la roue
+ * reste alors centrée, même si ce minimum bouge d'un cheveu avec le cadre.
+ */
+function zoomPlancher(geometrie: GeometrieCarte): number {
+  return Math.max(1, geometrie.zoomMin);
+}
+
 function plageAxe(taille: number, zoom: number, geometrie: GeometrieCarte): [number, number] {
   const debut = geometrie.origine;
   const fin = geometrie.origine + geometrie.cote;
   const bas = Math.min(debut, fin - taille);
   const hautStrict = Math.max(debut, fin - taille);
   const hautCoeur = Math.max(hautStrict, geometrie.centreRoue - geometrie.rayonCoeur);
-  const ouverture =
-    geometrie.zoomDepart > geometrie.zoomMin
-      ? Math.min(1, Math.max(0, (zoom - geometrie.zoomMin) / (geometrie.zoomDepart - geometrie.zoomMin)))
-      : 1;
+  const plancher = zoomPlancher(geometrie);
+  const ouverture = geometrie.zoomDepart > plancher ? Math.min(1, Math.max(0, (zoom - plancher) / (geometrie.zoomDepart - plancher))) : 1;
   return [bas, hautStrict + (hautCoeur - hautStrict) * ouverture];
 }
 
@@ -109,17 +118,30 @@ export function bornerVue(vue: VueCarte, rapport: number, geometrie: GeometrieCa
 }
 
 /**
+ * Zoom qui fait tenir un disque de diamètre `diametre` (la roue avec sa zone
+ * d'éclatement) dans le cadre, quelles que soient ses proportions : la vue,
+ * de hauteur `cote / zoom` et de largeur `rapport` fois plus grande, doit
+ * couvrir le diamètre dans les deux sens. Peut descendre sous 1.
+ */
+export function zoomEnsemble(rapport: number, cote: number, diametre: number): number {
+  const largeurUtile = Number.isFinite(rapport) && rapport > 0 ? rapport : 1;
+  if (!(diametre > 0) || !(cote > 0)) return 1;
+  return cote / Math.max(diametre, diametre / largeurUtile);
+}
+
+/**
  * Vue de départ : au zoom de départ, le cœur de la roue en haut à gauche et son
  * quart bas-droit qui remplit la vue ; au zoom 1 (téléphone, cadre étroit), la roue entière, centrée.
  */
 export function vueDepart(rapport: number, geometrie: GeometrieCarte, zoom: number = geometrie.zoomDepart): VueCarte {
   const z = bornerZoom(zoom, geometrie.zoomMin, geometrie.zoomMax);
   const { largeur, hauteur } = tailleVue(z, geometrie.cote, rapport);
-  if (z <= geometrie.zoomMin) {
+  const plancher = zoomPlancher(geometrie);
+  if (z <= plancher) {
     return bornerVue({ zoom: z, centreX: geometrie.centreRoue, centreY: geometrie.centreRoue }, rapport, geometrie);
   }
   const coin = geometrie.centreRoue - geometrie.rayonCoeur;
-  const t = Math.min(1, (z - geometrie.zoomMin) / Math.max(1e-9, geometrie.zoomDepart - geometrie.zoomMin));
+  const t = Math.min(1, (z - plancher) / Math.max(1e-9, geometrie.zoomDepart - plancher));
   const gauche = geometrie.origine + t * (coin - geometrie.origine);
   return bornerVue({ zoom: z, centreX: gauche + largeur / 2, centreY: gauche + hauteur / 2 }, rapport, geometrie);
 }

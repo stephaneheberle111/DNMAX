@@ -154,7 +154,7 @@ async function creerMagasinProtege(): Promise<{
         }
       }
       await enregistreur.vider();
-      // L'interface historique ne lit ses données qu'au chargement.
+      // L'interface ne lit ses données qu'au chargement.
       window.location.reload();
     },
   };

@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: CECILL-2.1
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as aides from "./aides-communes";
+import * as donnees from "./donnees";
+import * as editeur from "./editeur";
+import * as etape1 from "./editeur-etape1";
+import * as referentielAffichage from "./referentiel";
 import { etat, etatVide } from "./etat";
-import { publierPromotionsCalendrier } from "./promotions-calendrier";
+import { brancherPromotionsCalendrier } from "./promotions-calendrier";
 import {
   afficherMention,
   dateEnLettres,
   diplomeQuiBloque,
   libellePromotion,
-  publierVersionsReferentiel,
+  brancherVersionsReferentiel,
   referentielAffiche,
   referentielAJour,
   restaurerVersion,
@@ -20,7 +25,6 @@ import {
 const JOUR = new Date("2026-11-18T10:00:00Z");
 
 interface Banc {
-  fenetre: Record<string, unknown>;
   stockage: Map<string, string>;
   appels: string[];
   messages: string[];
@@ -30,7 +34,7 @@ function referentiel(nom: string): Record<string, unknown> {
   return { ues: [{ id: "u1", nom }], ecs: [], blocs: [], competences: [] };
 }
 
-/** État d'un établissement à une mention, sans version validée, et fenêtre où noter les appels au fichier historique. */
+/** État d'un établissement à une mention, sans version validée ; les appels aux autres modules sont notés. */
 function preparer(): Banc {
   Object.assign(etat, etatVide());
   etat.donnees = {
@@ -44,22 +48,20 @@ function preparer(): Banc {
   };
   etat.promotions = [{ id: "p1", debut: 2025, diplomeId: "d1", eleves: "Ana\nBen" }];
   etat.evaluations = [{ id: "f1", promoId: "p1" }];
-  const banc: Banc = { fenetre: {}, stockage: new Map(), appels: [], messages: [] };
+  const banc: Banc = { stockage: new Map(), appels: [], messages: [] };
   let compteur = 0;
-  Object.assign(banc.fenetre, {
-    newId: (prefixe: string) => `${prefixe}${String(++compteur)}`,
-    persistData: () => banc.appels.push("persistData"),
-    toast: (message: string) => banc.messages.push(message),
-    paintRef: () => banc.appels.push("paintRef"),
-    paintForm: () => banc.appels.push("paintForm"),
-    paintPick: () => banc.appels.push("paintPick"),
-    paintLignes: () => banc.appels.push("paintLignes"),
-  });
+  vi.spyOn(donnees, "newId").mockImplementation((prefixe: string) => `${prefixe}${String(++compteur)}`);
+  vi.spyOn(donnees, "persistData").mockImplementation(() => banc.appels.push("persistData"));
+  vi.spyOn(aides, "toast").mockImplementation((message: string) => banc.messages.push(message));
+  vi.spyOn(referentielAffichage, "peindreReferentiel").mockImplementation(() => banc.appels.push("paintRef"));
+  vi.spyOn(etape1, "peindreFormulaire").mockImplementation(() => banc.appels.push("paintForm"));
+  vi.spyOn(etape1, "peindreCompetencesChoisies").mockImplementation(() => banc.appels.push("paintPick"));
+  vi.spyOn(editeur, "peindreLignes").mockImplementation(() => banc.appels.push("paintLignes"));
   const ecrire = (cle: string, valeur: string): void => {
     banc.stockage.set(cle, valeur);
   };
-  publierPromotionsCalendrier(banc.fenetre, ecrire);
-  publierVersionsReferentiel(banc.fenetre, {
+  brancherPromotionsCalendrier(ecrire);
+  brancherVersionsReferentiel({
     ecrireStockage: ecrire,
     promotionValide: (_donnees, promotion) => promotion.id !== "p2",
     diplomeValide: (_donnees, diplome) => diplome === "d1",
@@ -71,6 +73,10 @@ function preparer(): Banc {
 let banc: Banc;
 beforeEach(() => {
   banc = preparer();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("versions d'une mention", () => {
@@ -189,13 +195,5 @@ describe("textes", () => {
   it("libelle une promotion avec son nom, son année et son année scolaire", () => {
     // Le nom court dépend du jour : seule la partie stable est vérifiée.
     expect(libellePromotion(etat.promotions[0] ?? {})).toMatch(/DNO-2025-2028 · Année \d · \d{4}-\d{4} \(\d+\)$/);
-  });
-});
-
-describe("publication", () => {
-  it("pose les fonctions sous leurs anciens noms", () => {
-    expect(typeof banc.fenetre.computeREF).toBe("function");
-    expect(typeof banc.fenetre.frDate).toBe("function");
-    expect(banc.fenetre.allerValidation).toBeUndefined();
   });
 });

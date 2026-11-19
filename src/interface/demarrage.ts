@@ -6,51 +6,36 @@
  * boutons fixes, premier dessin, puis ponts offerts à l'application.
  *
  * Repris du fichier historique (décision 38), dans le même ordre : il
- * s'exécutait à la lecture du script ; il s'exécute maintenant juste après,
- * appelé par le pont. Rien entre-temps ne lisait ces données, hormis la
- * teinte des blocs (`BLOC_TINT`), relevée ici au même moment.
+ * s'exécutait à la lecture de l'ancien script ; il est maintenant appelé par
+ * le pont (`heritage/pont`). La teinte des blocs (`BLOC_TINT`) est relevée
+ * ici, au même moment qu'avant.
  */
 import { nettoyerDiplomesVierges } from "../domaine/diplome-vierge";
 import { ECHELLE, enumerer, manquesPourEnregistrer } from "../domaine/evaluation";
 import { appliquerDependances, modulesParDefaut } from "../domaine/modules";
 import { preferencesInitiales } from "../domaine/preferences";
+import type { Referentiel } from "../domaine/modele-donnees";
 import { brancherInterface } from "./branchements";
 import { brancherOnglets } from "./onglets";
 import { brancherFormulaire } from "../editeur/formulaire";
+import { paintTabs, toast } from "./aides-communes";
 import { LIVRABLES_ORIGINE } from "./constantes";
 import { buildData, construireDonnees, materialize, persistData, projectRef, refOf } from "./donnees";
+import { allerALEtape, enregistrer, lierLaSelection, peindreEtapes, peindreEtudiants, peindreLignes } from "./editeur";
+import { nouvelleEvaluation, peindreCompetencesChoisies, peindreFormulaire } from "./editeur-etape1";
+import { peindreEtablissement } from "./etablissement";
 import { migF, syncItemEcs, uid } from "./evaluation-courante";
 import { etat, type Objet } from "./etat";
+import { peindreEvaluations } from "./evaluations";
+import { chargerExemple } from "./exemple";
+import { paintPrefs, paintSet } from "./preferences-parametres";
+import { peindreProgression } from "./progression";
+import { caleSemestreSurLaDate } from "./promotions-calendrier";
+import { peindreReferentiel } from "./referentiel";
+import { projeterCopie, referentielAffiche, versionsDe } from "./versions-referentiel";
 
 /** Référentiel d'une installation neuve : rien, sinon la teinte des blocs. */
 const REFERENTIEL_VIDE = { meta: { diplome: "", niveaux: [], blocTint: "#D1F1DA" }, blocs: [], ues: [], familles: [], competences: [] };
-
-/** Ce que le démarrage appelle encore dans le fichier historique, ou dans les modules repris, par la fenêtre. */
-interface FonctionsHistoriques {
-  computeREF(): Objet;
-  paintTabs(): void;
-  paintForm(): void;
-  paintPick(): void;
-  paintLignes(): void;
-  paintSaved(): void;
-  paintProg(): void;
-  paintRef(): void;
-  paintOrg(): void;
-  paintSet(): void;
-  paintPrefs(): void;
-  paintSteps(): void;
-  paintEleves(): void;
-  applySemDate(): void;
-  save(fin?: boolean): void;
-  toast(message: string): void;
-  loadDemo: () => void;
-  nouvelleFiche: () => void;
-  goStep: (etape: unknown) => void;
-  linkSelection: () => void;
-  versionsOf(diplomeId: string): Objet[];
-  projectSnap(donnees: Objet, diplomeId: string, instantane: unknown): unknown;
-  scrollTo(options: ScrollToOptions): void;
-}
 
 /** Ce que le démarrage demande à l'extérieur. */
 export interface BranchementsDemarrage {
@@ -92,8 +77,7 @@ function ecrire(branchements: BranchementsDemarrage, cle: string, valeur: unknow
 }
 
 /** Lit les données enregistrées et pose l'état de départ (lignes de tête de l'ancien script). */
-export function chargerEtat(fenetre: Record<string, unknown>, branchements: BranchementsDemarrage): void {
-  const historique = fenetre as unknown as FonctionsHistoriques;
+export function chargerEtat(branchements: BranchementsDemarrage): void {
   etat.modules = Object.assign(modulesParDefaut(), lire(branchements, "dnmade.modules", {}));
   appliquerDependances(etat.modules);
   etat.modules.base = true;
@@ -141,7 +125,7 @@ export function chargerEtat(fenetre: Record<string, unknown>, branchements: Bran
     if (nettoyage && nettoyage.modifie) {
       etat.donnees = nettoyage.donnees;
       materialize(etat.donnees);
-      etat.referentiel = historique.computeREF();
+      etat.referentiel = referentielAffiche();
       persistData();
     }
   }
@@ -152,85 +136,86 @@ export function chargerEtat(fenetre: Record<string, unknown>, branchements: Bran
 }
 
 /** Branche onglets, formulaire et boutons, dessine la page et rend les ponts (lignes de fin de l'ancien script). */
-export function brancherEtDessiner(fenetre: Record<string, unknown>, document: Document, branchements: BranchementsDemarrage): PontsDemarrage {
-  const historique = fenetre as unknown as FonctionsHistoriques;
+export function brancherEtDessiner(fenetre: Pick<Window, "scrollTo">, document: Document, branchements: BranchementsDemarrage): PontsDemarrage {
   const ui = (): Objet => etat.ui;
   const evaluation = (): Objet => etat.evaluation;
   brancherOnglets(document, (page) => {
     ui().tab = page;
-    historique.paintTabs();
+    paintTabs();
     if (ui().tab === "new") {
-      historique.paintForm();
-      historique.paintPick();
-      historique.paintLignes();
+      peindreFormulaire();
+      peindreCompetencesChoisies();
+      peindreLignes();
     }
-    if (ui().tab === "saved") historique.paintSaved();
-    if (ui().tab === "prog") historique.paintProg();
-    if (ui().tab === "ref") historique.paintRef();
-    if (ui().tab === "org") historique.paintOrg();
-    if (ui().tab === "set") historique.paintSet();
+    if (ui().tab === "saved") peindreEvaluations();
+    if (ui().tab === "prog") peindreProgression();
+    if (ui().tab === "ref") peindreReferentiel();
+    if (ui().tab === "org") peindreEtablissement();
+    if (ui().tab === "set") paintSet();
   });
   brancherFormulaire(document, {
     changerTitre: (titre) => {
       evaluation().titre = titre;
-      historique.save();
+      enregistrer();
     },
     changerConsignes: (consignes) => {
       evaluation().consignes = consignes;
-      historique.save();
+      enregistrer();
     },
     changerDistribution: (date) => {
       evaluation().distribPrev = date;
-      historique.applySemDate();
-      historique.save();
-      historique.paintForm();
-      historique.paintPick();
+      caleSemestreSurLaDate();
+      enregistrer();
+      peindreFormulaire();
+      peindreCompetencesChoisies();
     },
     changerRendu: (date) => {
       evaluation().renduPrev = date;
-      historique.save();
-      historique.paintForm();
+      enregistrer();
+      peindreFormulaire();
     },
   });
   const revenirEnHaut = (): void => {
-    historique.scrollTo({ top: 0, behavior: "smooth" });
+    fenetre.scrollTo({ top: 0, behavior: "smooth" });
   };
   brancherInterface(document, {
-    chargerExemple: historique.loadDemo,
-    nouvelleEvaluation: historique.nouvelleFiche,
+    chargerExemple: () => {
+      void chargerExemple();
+    },
+    nouvelleEvaluation,
     revenirALaListe: () => {
       ui().tab = "saved";
-      historique.paintTabs();
-      historique.paintSaved();
+      paintTabs();
+      peindreEvaluations();
       revenirEnHaut();
     },
     remettreModulesParDefaut: () => {
       etat.modules = modulesParDefaut();
       ecrire(branchements, "dnmade.modules", etat.modules);
-      historique.paintSet();
-      historique.paintTabs();
-      historique.paintForm();
-      historique.paintPick();
-      historique.paintRef();
-      historique.toast("Modules remis par défaut.");
+      paintSet();
+      paintTabs();
+      peindreFormulaire();
+      peindreCompetencesChoisies();
+      peindreReferentiel();
+      toast("Modules remis par défaut.");
     },
     chercherCompetence: (texte) => {
       ui().q = texte;
-      historique.paintPick();
+      peindreCompetencesChoisies();
     },
     viderSelection: () => {
       evaluation().items = [];
       evaluation().ops = [];
       ui().sel = [];
-      historique.save();
-      historique.paintPick();
-      historique.paintSteps();
+      enregistrer();
+      peindreCompetencesChoisies();
+      peindreEtapes();
     },
-    allerALEtape: historique.goStep,
-    regrouperSelection: historique.linkSelection,
+    allerALEtape,
+    regrouperSelection: lierLaSelection,
     annulerSelection: () => {
       ui().sel = [];
-      historique.paintLignes();
+      peindreLignes();
     },
     // L'évaluation est déjà enregistrée, modification après modification : le bouton ne fait que ramener à la liste.
     terminer: () => {
@@ -239,62 +224,62 @@ export function brancherEtDessiner(fenetre: Record<string, unknown>, document: D
       if (brouillon) {
         const manque = manquesPourEnregistrer(courante);
         if (manque.length) {
-          historique.toast("Pour enregistrer l'évaluation, il lui manque " + enumerer(manque) + ".");
+          toast("Pour enregistrer l'évaluation, il lui manque " + enumerer(manque) + ".");
           return;
         }
       }
-      historique.save(true);
+      enregistrer(true);
       ui().tab = "saved";
-      historique.paintTabs();
-      historique.paintSaved();
+      paintTabs();
+      peindreEvaluations();
       revenirEnHaut();
-      historique.toast((brouillon ? "Évaluation enregistrée — " : "") + "Le Word et l'Excel se génèrent d'ici, quand vous voulez.");
+      toast((brouillon ? "Évaluation enregistrée — " : "") + "Le Word et l'Excel se génèrent d'ici, quand vous voulez.");
     },
     choisirModeSaisie: (mode) => {
       ui().emode = mode;
-      historique.paintEleves();
+      peindreEtudiants();
     },
     chercherDansReferentiel: (texte) => {
       (ui().ref as Objet).q = texte;
-      historique.paintRef();
+      peindreReferentiel();
     },
     regrouperReferentiel: (groupe) => {
       (ui().ref as Objet).group = groupe;
-      historique.paintRef();
+      peindreReferentiel();
     },
     filtrerAnneeReferentiel: (annee) => {
       (ui().ref as Objet).annee = annee;
-      historique.paintRef();
+      peindreReferentiel();
     },
     effacerFiltresReferentiel: () => {
       Object.assign(ui().ref as Objet, { q: "", group: "bloc", annee: "*", sems: [] });
-      historique.paintRef();
+      peindreReferentiel();
     },
   });
 
-  historique.paintTabs();
-  historique.paintForm();
-  historique.paintPick();
-  historique.paintSaved();
-  historique.paintRef();
-  historique.paintSet();
-  historique.paintPrefs();
+  paintTabs();
+  peindreFormulaire();
+  peindreCompetencesChoisies();
+  peindreEvaluations();
+  peindreReferentiel();
+  paintSet();
+  paintPrefs();
 
   const ponts: PontsDemarrage = {
     // Le menu « Mon compte » ouvre les Préférences.
     ouvrirPreferences: () => {
       ui().tab = "pref";
       etat.armement = null;
-      historique.paintTabs();
-      historique.paintPrefs();
+      paintTabs();
+      paintPrefs();
       revenirEnHaut();
     },
     // Contenu lisible du référentiel d'un diplôme, pour une version validée ou le référentiel de travail.
     projeterReferentiel: (diplomeId, versionId) => {
       const donnees = etat.donnees;
       if (!(donnees.diplomes as Objet[]).some((diplome) => diplome.id === diplomeId)) return null;
-      const version = historique.versionsOf(diplomeId).find((candidate) => candidate.id === versionId);
-      return historique.projectSnap(donnees, diplomeId, JSON.parse(JSON.stringify(version ? version.snap : refOf(donnees, diplomeId))));
+      const version = versionsDe(diplomeId).find((candidate) => candidate.id === versionId);
+      return projeterCopie(donnees, diplomeId, JSON.parse(JSON.stringify(version ? version.snap : refOf(donnees, diplomeId))) as Referentiel);
     },
     // L'application fait appliquer ses règles aux enseignants (déclarer l'enseignant, reporter son changement de nom).
     ajusterEnseignants: (regle) => {
@@ -304,14 +289,14 @@ export function brancherEtDessiner(fenetre: Record<string, unknown>, document: D
       donnees.enseignants = resultat.enseignants.slice();
       donnees.moi = typeof resultat.moi === "string" ? resultat.moi : donnees.moi;
       persistData();
-      if (ui().tab === "org") historique.paintOrg();
+      if (ui().tab === "org") peindreEtablissement();
     },
     // Les documents RGPD demandent le nom de l'établissement et le contact du délégué : mène à leur saisie.
     ouvrirEtablissement: () => {
       ui().tab = "org";
       (ui().org as Objet).pane = "etab";
-      historique.paintTabs();
-      historique.paintOrg();
+      paintTabs();
+      peindreEtablissement();
       revenirEnHaut();
       const etablissement = (etat.donnees.etab || {}) as Objet;
       const cle = !((etablissement.nom as string | undefined) || "").trim() ? "nom" : "contactDpo";

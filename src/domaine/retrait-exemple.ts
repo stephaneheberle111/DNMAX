@@ -7,7 +7,7 @@ import type { Entrees } from "./magasin-memoire";
 /** Clé du magasin où est gardé l'état d'avant et d'après le chargement de l'exemple. */
 export const CLE_INSTANTANE_EXEMPLE = "dnmax.exemple";
 
-/** Préfixe des clés tenues par l'interface historique : les seules que l'exemple modifie. */
+/** Préfixe des clés tenues par l'interface : les seules que l'exemple modifie. */
 const PREFIXE_DONNEES = "dnmade.";
 
 /**

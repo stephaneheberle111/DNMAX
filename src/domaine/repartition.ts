@@ -3,7 +3,7 @@
  * Répartition de service, telle que l'interface la tient : EC de l'année
  * d'une promotion dans le référentiel de sa mention, années scolaires
  * proposées, et si un enseignant a eu une promotion. Règles reprises de
- * l'interface historique (décision 38), appliquées aux données non typées.
+ * l'ancienne interface (décision 38), appliquées aux données non typées.
  */
 import { numeroCode } from "./constituer";
 import { anneeScolaireDe } from "./etablissement";

@@ -189,8 +189,3 @@ export function chainNode<T extends { code?: unknown; t: unknown[]; sub?: unknow
   const h = Math.max(34, (o.code ? 13 : 0) + o.t.length * lh + (o.sub ? 13 : 0) + pad * 2 - 4);
   return { ...o, h };
 }
-
-/** Pose ces fonctions et constantes sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierChaineModele(cible: Record<string, unknown>): void {
-  Object.assign(cible, { chainModel, chainItemText, chainNode, CH_KINDS: [...CH_KINDS], CH_LBL: { ...CH_LBL } });
-}

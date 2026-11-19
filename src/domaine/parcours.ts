@@ -220,3 +220,22 @@ export function salvesBouquetFinal(largeur: number, hauteur: number): Salve[] {
   salves.push({ x: Math.round(l / 2), y: Math.round(h * 0.33), nombre: 40, delaiMs: positions.length * 180 + 120, ampleur: 4 });
   return salves;
 }
+
+/** Direction du bas-droit de la roue, en radians : à l'écran, les ordonnées croissent vers le bas. */
+export const ANGLE_BAS_DROITE = Math.PI / 4;
+
+/**
+ * Parmi des éléments de la roue repérés par leur angle (radians), l'identifiant
+ * du plus proche de la direction `cible`, à un tour près ; `null` sans élément
+ * dont l'angle soit un nombre.
+ */
+export function plusProcheDeLAngle(elements: readonly { id: string; angle: number }[], cible: number): string | null {
+  const tour = 2 * Math.PI;
+  let meilleur: { id: string; ecart: number } | null = null;
+  for (const element of elements) {
+    if (!Number.isFinite(element.angle)) continue;
+    const ecart = Math.abs((((element.angle - cible) % tour) + tour + Math.PI) % tour - Math.PI);
+    if (meilleur === null || ecart < meilleur.ecart) meilleur = { id: element.id, ecart };
+  }
+  return meilleur?.id ?? null;
+}

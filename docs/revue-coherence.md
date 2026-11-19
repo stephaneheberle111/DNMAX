@@ -10,8 +10,8 @@ Le compte rendu (points relevés, corrections faites, points laissés) est joint
 | --- | --- |
 | Page de bienvenue : conseils, nom et établissement, mot de passe, code de secours, mention | `src/ecran-coffre.ts`, `src/ecran-bienvenue.ts`, `src/main.ts`, `src/referentiels-embarques.ts` |
 | Visite guidée (textes, étapes, cibles encore présentes) | `src/parcours-etapes.ts` |
-| Menus, onglets, Mon compte, Préférences, Paramètres, pied de page | `index.html`, `src/ecran-*.ts`, `public/heritage/application.js` |
-| Modules et leurs avertissements (Élèves : RGPD, mot de passe, verrouillage) | `public/heritage/application.js` (`MODULES`), `src/ecran-avertissement-eleves.ts` |
+| Menus, onglets, Mon compte, Préférences, Paramètres, pied de page | `index.html`, `src/ecran-*.ts`, `src/interface/` |
+| Modules et leurs avertissements (Étudiants : RGPD, mot de passe, verrouillage) | `src/domaine/modules.ts` (`MODULES`), `src/ecran-avertissement-eleves.ts` |
 | Documents produits : information aux étudiants, note au chef d'établissement, exports Word/Excel/OpenDocument | `src/domaine/documents-rgpd.ts`, exports de l'interface historique |
 | Échange (fichier, en direct) et réception (« Ce que ce fichier changerait ») | `src/ecran-echange*.ts` |
 | Site : accueil et présentation, Télécharger, documentation, Confidentialité, fiches RGPD | `site/index.html` |

@@ -1,23 +1,13 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it } from "vitest";
 import { etat, etatVide } from "./etat";
-import { publierExemple, remplirResultats, validerExemple } from "./exemple";
-import { publierVersionsReferentiel, versionActive } from "./versions-referentiel";
-
-let fenetre: Record<string, unknown>;
+import { brancherExemple, remplirResultats, validerExemple } from "./exemple";
+import { brancherVersionsReferentiel, versionActive } from "./versions-referentiel";
 
 beforeEach(() => {
   Object.assign(etat, etatVide());
-  let compteur = 0;
-  fenetre = {
-    studentsOf: () => [{ id: "a" }, { id: "b" }],
-    lignesOf: () => ["l1"],
-    ligKey: (ligne: string) => ligne,
-    newId: (prefixe: string) => `${prefixe}${String(++compteur)}`,
-    persistData: () => undefined,
-  };
-  publierVersionsReferentiel(fenetre, { ecrireStockage: () => undefined, promotionValide: () => false, diplomeValide: () => false, maintenant: () => new Date(0) });
-  publierExemple(fenetre, () => undefined, () => null, () => Promise.resolve(null));
+  brancherVersionsReferentiel({ ecrireStockage: () => undefined, promotionValide: () => false, diplomeValide: () => false, maintenant: () => new Date(0) });
+  brancherExemple(() => undefined, () => null, () => Promise.resolve(null));
 });
 
 describe("résultats de l'exemple", () => {

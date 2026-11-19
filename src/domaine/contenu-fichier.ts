@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 
-/** Formes sous lesquelles l'interface historique fournit un fichier à enregistrer. */
+/** Formes sous lesquelles l'interface fournit un fichier à enregistrer. */
 export type ContenuFichier = string | Blob | ArrayBuffer | Uint8Array;
 
 /** Convertit un contenu en octets ; un texte est encodé en UTF-8. */

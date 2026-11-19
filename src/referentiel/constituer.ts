@@ -5,7 +5,7 @@
  * avec le choix du diplôme et de la mention, l'état de la validation, et la
  * cinquième étape : valider une version datée, l'attester, la rétablir ou la
  * supprimer. Les règles sont dans `domaine/constituer` ; la création d'une
- * version et son rétablissement restent faits par l'interface historique.
+ * version et son rétablissement sont faits par `interface/versions-referentiel`.
  */
 import { libelleDiplome } from "../domaine/diplomes";
 import {

@@ -2,7 +2,7 @@
 /**
  * Mon établissement > Diplômes et mentions : code et libellé d'un diplôme,
  * regroupement des mentions, création et suppression. Règles reprises telles
- * quelles de l'interface historique ; les données sont modifiées sur place,
+ * quelles de l'ancienne interface ; les données sont modifiées sur place,
  * comme elle les tient.
  */
 

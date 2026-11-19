@@ -24,17 +24,9 @@ import { esc } from "./aides-communes";
 import { ecName, refFilter } from "./carte-donnees";
 import { CH_LBL, chainItemText, chainModel, chainNode, type ModeleChaine } from "./chaine-modele";
 import { norm } from "./constantes";
-import { anneeCode, ecCodeAt, ecCodeShort } from "./donnees";
+import { anneeCode, ecCodeAt, ecCodeShort, saveData, savePrefs } from "./donnees";
 import { etat, type Objet } from "./etat";
-
-/** Ce que le module appelle encore par la fenêtre. */
-interface FonctionsHistoriques {
-  paintRef(): void;
-  saveData(redessiner?: boolean, depuisDictionnaire?: boolean): void;
-  savePrefs(): void;
-}
-
-type Fenetre = Record<string, unknown>;
+import { peindreReferentiel } from "./referentiel";
 
 /** Hauteur minimale de la roue du pivot, en pixels. */
 export const CH_WH = 236;
@@ -65,12 +57,7 @@ export interface ElementRoue {
   label?: unknown;
 }
 
-let fenetre: Fenetre = {};
 let documentCourant: Document | null = null;
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function page(): Document {
   if (documentCourant === null) throw new Error("chaîne : document absent");
@@ -382,10 +369,10 @@ export function chainSetPivot(kind: string, id: unknown): void {
   if (kind === "dip" && id && id !== D.activeDiplome) {
     D.activeDiplome = id;
     carte().filter = { kind: "", value: "" };
-    historique().saveData();
+    saveData();
     return;
   }
-  historique().paintRef();
+  peindreReferentiel();
 }
 
 /** Branche la roue du pivot, les cadenas des colonnes et le clic sur les cases de la chaîne dessinée dans `host`. */
@@ -457,29 +444,29 @@ function libellesOrdre(ordre: readonly string[]): string {
  */
 export function chainSetOrder(ordre: readonly SorteChaine[], sorte: SorteChaine | null, annonce: string): void {
   etat.preferences.chaineOrdre = [...ordre];
-  historique().savePrefs();
+  savePrefs();
   carte().chFocus = sorte ? "lock:" + sorte : "";
   carte().chAnnonce = annonce;
-  historique().paintRef();
+  peindreReferentiel();
 }
 
 /** Passe des colonnes côte à côte aux rangées superposées, ou l'inverse ; choix enregistré. */
 export function chainSetVertical(verticale: boolean): void {
   etat.preferences.chaineVerticale = verticale;
-  historique().savePrefs();
+  savePrefs();
   carte().chFocus = "vue";
   carte().chAnnonce = verticale ? "Carte en rangées superposées." : "Carte en colonnes côte à côte.";
-  historique().paintRef();
+  peindreReferentiel();
 }
 
 /** Rétablit l'ordre par défaut des colonnes et la vue en colonnes côte à côte. */
 export function chainResetOrder(): void {
   etat.preferences.chaineOrdre = [...SORTES_CHAINE];
   etat.preferences.chaineVerticale = false;
-  historique().savePrefs();
+  savePrefs();
   carte().chFocus = "vue";
   carte().chAnnonce = "Ordre par défaut rétabli : " + libellesOrdre(SORTES_CHAINE) + ".";
-  historique().paintRef();
+  peindreReferentiel();
 }
 
 /**
@@ -908,9 +895,7 @@ export function chainWire(host: HTMLElement): void {
   });
 }
 
-/** Pose ces fonctions sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierChaineDessin(cible: Fenetre, document: Document | null): void {
-  fenetre = cible;
+/** Donne au dessin de la chaîne le document où il dessine. */
+export function brancherChaineDessin(document: Document | null): void {
   documentCourant = document;
-  Object.assign(cible, { chainSvgNode, paintChain, chainSetPivot, chainBind, pivotWheel, chainWire, chainSetOrder, chainSetVertical, chainResetOrder });
 }

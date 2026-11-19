@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CECILL-2.1
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   consigneEtudiants,
   contexteCompetences,
@@ -7,55 +7,79 @@ import {
   ecsDesEnseignants,
   evaluationVierge,
   nettoyerLesRegroupements,
-  publierEditeurEtape1,
+  brancherEditeurEtape1,
   rangRegroupement,
   rendusManquants,
   uesChoisies,
 } from "./editeur-etape1";
 import { ECHELLE } from "../domaine/evaluation";
 import { etat, etatVide, type Objet } from "./etat";
-import { publierEvaluationCourante } from "./evaluation-courante";
+import { brancherEvaluationCourante } from "./evaluation-courante";
 
-let fenetre: Record<string, unknown> = {};
-let appels: string[] = [];
+/** Doubles des fonctions des autres modules, remplaçables dans un test. */
+const doubles = vi.hoisted(() => ({
+  appels: [] as string[],
+  ecsOfSem: (semestre: unknown): Record<string, unknown>[] => (semestre === "S1" ? ECS_S1 : []),
+  semSuggere: (): string => {
+    doubles.appels.push("semSuggere");
+    return "S3";
+  },
+}));
+const appels = doubles.appels;
 
-const ECS_S1: Objet[] = [
+const ECS_S1: Objet[] = vi.hoisted(() => [
   { ec: "EC 1.1", nom: "Un", ue: "UE 1", couleur: "#111" },
   { ec: "EC 1.2", nom: "Deux", ue: "UE 1", couleur: "" },
   { ec: "EC 2.1", nom: "Trois", ue: "UE 2", couleur: "#333" },
-];
+]);
+
+vi.mock("./evaluation-courante", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./evaluation-courante")>()),
+  ecsOfSem: (semestre: unknown) => doubles.ecsOfSem(semestre),
+}));
+vi.mock("./promotions-calendrier", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./promotions-calendrier")>()),
+  semestrePropose: () => doubles.semSuggere(),
+  anneeScolaire: () => {
+    doubles.appels.push("anneeScolaire");
+    return "2026-2027";
+  },
+  promotionsAffichees: () => "Promo 1",
+}));
+vi.mock("./etablissement", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./etablissement")>()),
+  repartitionLue: (id: unknown) => {
+    doubles.appels.push("affGet " + String(id));
+    return id === "p1" ? { ec1: ["t1"] } : {};
+  },
+  ecsDeLaPromotion: () => [
+    { id: "ec1", code: "EC 1.1" },
+    { id: "ec2", code: "EC 1.2" },
+  ],
+}));
+vi.mock("./aides-communes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./aides-communes")>()),
+  blocName: (numero: unknown) => "Bloc " + String(numero),
+}));
+vi.mock("./evaluations", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./evaluations")>()),
+  statutDe: () => "eval",
+  estEvalueeDonnee: () => true,
+}));
+vi.mock("./editeur", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./editeur")>()),
+  enregistrer: () => doubles.appels.push("save"),
+  peindreEtapes: () => doubles.appels.push("paintSteps"),
+}));
+
+const semSuggereDeDepart = doubles.semSuggere;
 
 beforeEach(() => {
   Object.assign(etat, etatVide());
-  appels = [];
-  fenetre = {};
-  publierEvaluationCourante(fenetre, () => 0.5);
-  Object.assign(fenetre, {
-    ecsOfSem: (semestre: unknown) => (semestre === "S1" ? ECS_S1 : []),
-    semSuggere: () => {
-      appels.push("semSuggere");
-      return "S3";
-    },
-    anneeScolaire: () => {
-      appels.push("anneeScolaire");
-      return "2026-2027";
-    },
-    affGet: (id: unknown) => {
-      appels.push("affGet " + String(id));
-      return id === "p1" ? { ec1: ["t1"] } : {};
-    },
-    promoEcs: () => [
-      { id: "ec1", code: "EC 1.1" },
-      { id: "ec2", code: "EC 1.2" },
-    ],
-    blocName: (numero: unknown) => "Bloc " + String(numero),
-    classesDisp: () => "Promo 1",
-    statutOf: () => "eval",
-    evalueeF: () => true,
-    save: () => appels.push("save"),
-    paintSteps: () => appels.push("paintSteps"),
-  });
-  publierEditeurEtape1(fenetre, () => new Date("2026-11-18T10:00:00Z"));
+  appels.length = 0;
+  doubles.semSuggere = semSuggereDeDepart;
+  brancherEvaluationCourante(() => 0.5);
+  brancherEditeurEtape1(() => new Date("2026-11-18T10:00:00Z"));
   etat.donnees = { diplomes: [{ id: "d1" }], activeDiplome: "d1", enseignants: [{ id: "t1", nom: "Ada" }], moi: "t1" };
   etat.ui = { q: "", step: 1 };
   etat.modules = { eleves: true };
@@ -68,14 +92,6 @@ beforeEach(() => {
   etat.teinteBlocs = "#D1F1DA";
   etat.promotions = [{ id: "p1", nom: "P1", liste: [{ id: "e1", nom: "Ana" }, { id: "e2", nom: "Bob" }] }];
   etat.evaluation = { id: "f1", semestre: "S1", ues: [], ecCodes: [], classes: [], profs: [], ops: [], items: [], res: {} };
-});
-
-describe("publierEditeurEtape1", () => {
-  it("publie les fonctions sous leurs noms historiques", () => {
-    for (const nom of ["paintForm", "paintPick", "vierge", "nouvelleFiche", "toggleClasse", "ecsOfUe", "opIndex", "cleanOps", "rendusManquants", "contexteCompetences"]) {
-      expect(typeof fenetre[nom]).toBe("function");
-    }
-  });
 });
 
 describe("évaluation vierge", () => {
@@ -91,7 +107,7 @@ describe("évaluation vierge", () => {
   });
 
   it("prend le premier semestre quand aucun n'est suggéré", () => {
-    fenetre.semSuggere = () => "";
+    doubles.semSuggere = () => "";
     expect(evaluationVierge().semestre).toBe("S1");
   });
 });

@@ -2,13 +2,13 @@
 /** Mon compte > Préférences : les livrables proposés à l'étape 1 de l'évaluation. */
 import { balise, boutonAction, boutonSupprimer, champLigne, ligneEditeur, panneauEditeur, type Armement } from "./editeur-commun";
 
-/** Un livrable proposé ; les valeurs viennent de l'interface historique, non typée. */
+/** Un livrable proposé ; les valeurs viennent de l'interface, non typée. */
 export interface Livrable {
   nom: unknown;
   type?: unknown;
 }
 
-/** Valeur affichée d'un champ, comme `esc(x)` (nom) ou `esc(x||"")` (nature) dans l'interface historique. */
+/** Valeur affichée d'un champ, comme `esc(x)` (nom) ou `esc(x||"")` (nature) dans l'interface. */
 function texte(valeur: unknown, videSiFaux: boolean): string {
   if (typeof valeur === "string") return valeur;
   if (typeof valeur === "number" || typeof valeur === "boolean") return videSiFaux && !valeur ? "" : String(valeur);

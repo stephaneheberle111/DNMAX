@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { CH_WH, chainResetOrder, chainSetOrder, chainSetPivot, chainSetVertical, chainSvgNode, paintChain, publierChaineDessin, type CaseChaine } from "./chaine-dessin";
+import { CH_WH, chainResetOrder, chainSetOrder, chainSetPivot, chainSetVertical, chainSvgNode, paintChain, brancherChaineDessin, type CaseChaine } from "./chaine-dessin";
+
+const { paintRef, saveData, savePrefs } = vi.hoisted(() => ({ paintRef: vi.fn(), saveData: vi.fn(), savePrefs: vi.fn() }));
+vi.mock("./referentiel", () => ({ peindreReferentiel: paintRef }));
+vi.mock("./donnees", async (importOriginal) => ({ ...(await importOriginal<typeof import("./donnees")>()), saveData, savePrefs }));
 
 const fenetre: Record<string, unknown> = {};
-const paintRef = vi.fn();
-const saveData = vi.fn();
-const savePrefs = vi.fn();
 
 beforeEach(() => {
   paintRef.mockReset();
   saveData.mockReset();
   savePrefs.mockReset();
   for (const cle of Object.keys(fenetre)) Reflect.deleteProperty(fenetre, cle);
-  publierChaineDessin(fenetre, null);
-  Object.assign(fenetre, { paintRef, saveData, savePrefs });
+  brancherChaineDessin(null);
   Object.assign(etat, etatVide());
   etat.donnees = {
     activeDiplome: "d1",
@@ -41,14 +41,6 @@ beforeEach(() => {
 function carte(): Objet {
   return etat.ui.ref as Objet;
 }
-
-describe("publierChaineDessin", () => {
-  it("publie le dessin et les gestes de la chaîne sous leurs noms historiques", () => {
-    for (const nom of ["chainSvgNode", "paintChain", "chainSetPivot", "chainBind", "pivotWheel", "chainWire"]) {
-      expect(typeof fenetre[nom]).toBe("function");
-    }
-  });
-});
 
 describe("chainSvgNode", () => {
   const caseDe = (champs: Partial<CaseChaine>): CaseChaine => ({ id: "ec:e1", kind: "ec", sel: "e1", col: "#123456", x: 10, y: 50, h: 47.5, t: ["Dessin"], ...champs });

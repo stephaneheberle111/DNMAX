@@ -7,7 +7,7 @@ import { estObjet, type ObjetJson } from "./echange/modele";
  * livrables de chaque ligne, le semestre suggéré par la date et ce qu'il faut
  * pour l'enregistrer.
  *
- * L'évaluation est celle que l'interface historique range dans `dnmade.fiches` :
+ * L'évaluation est celle que l'interface range dans `dnmade.fiches` :
  * `items` (compétences retenues), `ops` (regroupements), `livrables`,
  * `classes`, `semestre`, `res` (résultats des étudiants)… Ces fonctions ne
  * modifient jamais ce qu'on leur passe ; les champs qu'elles ne connaissent

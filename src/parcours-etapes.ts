@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CECILL-2.1
-import { colleguesDeclares, type Avancement, type IdentifiantParcours } from "./domaine/parcours";
+import { ANGLE_BAS_DROITE, colleguesDeclares, plusProcheDeLAngle, type Avancement, type IdentifiantParcours } from "./domaine/parcours";
 
 /**
  * Geste que l'animation suggère sur la zone éclairée : `parcourir` promène le
@@ -10,6 +10,13 @@ export type Geste = "cliquer" | "remplir" | "regarder" | "parcourir" | "glisser"
 
 /** Valeur fixe, ou relue sur l'écran à chaque image (selon ce que l'enseignant a déjà fait). */
 export type Selon<T> = T | (() => T);
+
+/** Un geste d'un enchaînement : ce que fait le curseur, vers quoi, et d'où pour `glisser`. */
+export interface Mouvement {
+  geste: Geste;
+  pointe?: string;
+  depuis?: string;
+}
 
 /**
  * Une étape d'une visite guidée.
@@ -59,6 +66,11 @@ export interface Etape {
   /** Boutons que la bulle, rangée dans un coin, doit laisser visibles (en plus de `pointe`). */
   aDegager?: string;
   geste?: Selon<Geste>;
+  /**
+   * Gestes montrés tour à tour, en boucle, au lieu d'un seul (`geste`, `pointe`,
+   * `depuis`) : par exemple lier deux compétences, puis glisser un livrable, puis rédiger.
+   */
+  enchainement?: Selon<readonly Mouvement[]>;
   atteinte?: () => boolean;
   objectif?: (avancement: Avancement) => boolean;
   /** Délai avant de saluer l'objectif atteint et de passer à la suite (par défaut, un peu plus d'une seconde), pour laisser finir une saisie. */
@@ -133,6 +145,70 @@ function etapeFormulation(): "glisser" | "remplir" | "cliquer" {
 /** Nombre d'éléments désignés dans la page ; zéro hors navigateur (essais). */
 function compter(selecteur: string): number {
   return typeof document === "undefined" ? 0 : document.querySelectorAll(selecteur).length;
+}
+
+/**
+ * Vrai si le centre de l'élément est dans la fenêtre et dans le cadre de la
+ * carte : la vue zoomée garde hors du cadre des éléments qui ont une taille.
+ */
+function seVoitDansLaCarte(element: Element): boolean {
+  const cadre = element.getBoundingClientRect();
+  const [x, y] = [cadre.left + cadre.width / 2, cadre.top + cadre.height / 2];
+  const carte = element.closest("svg")?.parentElement?.getBoundingClientRect();
+  const dans = (limite: { left: number; top: number; right: number; bottom: number }): boolean =>
+    x >= limite.left && x <= limite.right && y >= limite.top && y <= limite.bottom;
+  return dans({ left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight }) && (carte === undefined || dans(carte));
+}
+
+/**
+ * Sélecteur de l'élément de la roue (désigné par `selecteur`) le plus proche
+ * de son bas-droit tel qu'il s'affiche (la roue a pu tourner), vu de son
+ * centre ; `selecteur` lui-même sans roue ni élément.
+ */
+function auBasDroiteDeLaRoue(selecteur: string): string {
+  if (typeof document === "undefined") return selecteur;
+  const moyeu = document.querySelector("#refExplore .radial .hub");
+  if (moyeu === null) return selecteur;
+  const centre = moyeu.getBoundingClientRect();
+  const [centreX, centreY] = [centre.left + centre.width / 2, centre.top + centre.height / 2];
+  // Une compétence revient une fois par EC qui la porte : l'angle du dessin (`data-am`) distingue chaque point.
+  const reperes = [...document.querySelectorAll(selecteur)].filter(seVoitDansLaCarte).map((element) => {
+    const cadre = element.getBoundingClientRect();
+    return {
+      id: repereSurLaRoue(element),
+      angle: Math.atan2(cadre.top + cadre.height / 2 - centreY, cadre.left + cadre.width / 2 - centreX),
+    };
+  });
+  const repere = plusProcheDeLAngle(
+    reperes.filter((element) => element.id !== ""),
+    ANGLE_BAS_DROITE,
+  );
+  return repere === null ? selecteur : `${selecteur}${repere}`;
+}
+
+/** Attributs qui désignent un seul élément de la roue : son identifiant et son angle dans le dessin. */
+function repereSurLaRoue(element: Element): string {
+  const id = element.getAttribute("data-id");
+  if (id === null || id === "") return "";
+  const angle = element.getAttribute("data-am");
+  const echapper = (valeur: string): string => valeur.replace(/["\\]/g, "\\$&");
+  return `[data-id="${echapper(id)}"]${angle === null ? "" : `[data-am="${echapper(angle)}"]`}`;
+}
+
+/**
+ * Gestes de la formulation : lier deux compétences (tant qu'aucune ne l'est et
+ * qu'il y en a deux), glisser un livrable sur une compétence (s'il y en a un),
+ * puis rédiger la compétence opérationnelle.
+ */
+function gestesFormulation(): readonly Mouvement[] {
+  if (typeof document === "undefined") return [];
+  const lier: Mouvement = { geste: "glisser", depuis: "#lignes [data-dragcomp]", pointe: "#lignes .lg ~ .lg" };
+  const livrable: Mouvement = { geste: "glisser", depuis: "#palLivr [data-dragliv]", pointe: "#lignes .livrow" };
+  const rediger: Mouvement = { geste: "remplir", pointe: "#lignes input[data-lib]" };
+  const dejaLiees = document.querySelector("#lignes [data-unlink]") !== null;
+  const plusieurs = compter("#lignes .lg") >= 2;
+  const avecLivrable = document.querySelector("#palLivr [data-dragliv]") !== null;
+  return [...(dejaLiees || !plusieurs ? [] : [lier]), ...(avecLivrable ? [livrable] : []), rediger];
 }
 
 function ongletOuvert(identifiantVue: string): () => boolean {
@@ -246,7 +322,7 @@ const PRISE_EN_MAIN: Parcours = {
       texte:
         "Votre espace est prêt. La visite vous fait explorer l'application en six temps : le référentiel, vos promotions, vos collègues, " +
         "la répartition de service, une première évaluation, puis vos préférences et les modules. Ce qui est déjà fait est coché au passage. " +
-        "Rien n'y est obligatoire : passez une étape avec « Suivant », ou toute la visite, et relancez-la depuis « Paramètres », panneau « Visites guidées ».",
+        "Rien n'y est obligatoire : passez une étape avec « Suivant », ou toute la visite, et relancez-la depuis « Paramètres > Visites guidées ».",
     },
     {
       ...ALLER_REFERENTIEL,
@@ -320,12 +396,17 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "1. La carte du référentiel",
       texte:
-        "Survolez un EC : la vue s'éclate autour de lui. Dézoomez (−) pour voir toute la roue, puis passez sur un point : " +
-        "chaque point est une compétence, et la carte montre à quel EC elle est associée. " +
+        "Chaque point est une compétence : passez sur l'un d'eux, la carte montre à quel EC elle est associée. " +
+        "Survolez un EC : la vue s'éclate autour de lui. Dézoomez (−) pour voir toute la roue. " +
         "La recherche retrouve une compétence par son code (C4.1, EC 11.2) ou un mot-clé.",
       cibles: ["#refExplore"],
-      haltes: ['#refExplore .radial .sg[data-kind="ec"]', '#refExplore [data-rz="-1"]', "#refExplore .radial .dot"],
-      pointe: '#refExplore .radial .sg[data-kind="ec"], #refExplore [data-rz="-1"], #refExplore .radial .dot',
+      // Le curseur commence par la compétence et l'EC du bas-droit de la roue, la partie que la vue de départ montre.
+      haltes: () => [
+        auBasDroiteDeLaRoue("#refExplore .radial .dot"),
+        auBasDroiteDeLaRoue('#refExplore .radial .sg[data-kind="ec"]'),
+        '#refExplore [data-rz="-1"]',
+      ],
+      pointe: '#refExplore .radial .dot, #refExplore .radial .sg[data-kind="ec"], #refExplore [data-rz="-1"]',
       geste: "parcourir",
     },
     {
@@ -401,7 +482,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "5. L'évaluation",
       texte:
-        "Donnez un intitulé et une consigne, cochez la ou les promotions concernées, les livrables attendus et au moins un EC (ou une UE). Tout cela est nécessaire pour enregistrer. " +
+        "Donnez un intitulé et une consigne, cochez la ou les promotions concernées, les livrables attendus et au moins un EC (ou une UE). Pour enregistrer, il faut un intitulé, une consigne, une promotion et au moins un EC, puis au moins une compétence à l'étape 2. " +
         "Les UE, EC et compétences proposés sont ceux du référentiel de la promotion cochée ; s'il n'est pas encore validé, DNMAX vous le rappelle, et vous pouvez continuer. " +
         "Passez ensuite à l'étape 2, « Compétences ».",
       cibles: ["#step1"],
@@ -428,13 +509,14 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "5. Lier des compétences",
       texte:
-        "Les compétences se déplacent : saisissez-en une par sa poignée ⠿ et déposez-la sur une autre ligne pour les lier, " +
-        "elles partagent alors une même formulation et les mêmes livrables. Glissée à l'écart, elle se détache. Rien d'obligatoire : cliquez « Suivant » pour continuer.",
+        "Les éléments colorés se déplacent. Saisissez une compétence par sa poignée ⠿ et déposez-la sur une autre ligne pour les lier : " +
+        "elles partagent alors une même formulation et les mêmes livrables ; glissée à l'écart, elle se détache. " +
+        "Glissez de même un livrable de la colonne de gauche sur une compétence, puis rédigez la compétence opérationnelle. " +
+        "Rien d'obligatoire : cliquez « Suivant » pour continuer.",
       cibles: ["#step3"],
-      // Le curseur part de la poignée de la première compétence et la dépose sur la ligne suivante.
-      depuis: "#lignes [data-dragcomp]",
-      pointe: "#lignes .lg ~ .lg",
       geste: "glisser",
+      // Compétence sur compétence, livrable sur compétence, puis rédaction ; une fois des compétences liées, seulement les deux derniers.
+      enchainement: gestesFormulation,
       // Avec une seule compétence, il n'y a rien à lier.
       groupeFait: () => compter("#lignes .lg") < 2,
     },
@@ -509,7 +591,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "C'est prêt",
       texte:
-        "Vous avez fait le tour de l'essentiel. Le module Étudiants et le module Niveaux d'acquisition ont chacun leur visite, et celle-ci se relance depuis « Paramètres », panneau « Visites guidées ».",
+        "Vous avez fait le tour de l'essentiel. Le module Étudiants et le module Niveaux d'acquisition ont chacun leur visite, et celle-ci se relance depuis « Paramètres > Visites guidées ».",
     },
   ],
 };
@@ -568,7 +650,7 @@ const MODULE_ELEVES: Parcours = {
     {
       titre: "Données des étudiants",
       texte:
-        "Dans « Paramètres », le panneau « Données des étudiants » répond aux demandes d'accès ou d'effacement et propose d'anonymiser les promotions sorties depuis plus d'un an.",
+        "Le panneau « Paramètres > Données des étudiants » répond aux demandes d'accès ou d'effacement et propose d'anonymiser ou d'effacer les promotions dont la durée de conservation, fixée dans Mon établissement > Établissement, est dépassée.",
     },
   ],
 };

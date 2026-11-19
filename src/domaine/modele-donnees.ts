@@ -64,7 +64,7 @@ function commeString(valeur: unknown): string {
 
 /** Comme `String(x==null?"":x)` ; les objets sont rendus par `String`, comme avant. */
 function enTexte(valeur: unknown): string {
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface historique
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface
   return String(valeur ?? "");
 }
 

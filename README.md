@@ -4,7 +4,7 @@ DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs �
 
 C'est une application de bureau autonome pour Windows, Linux et macOS : pas de serveur central, pas de compte, les données restent sur l'ordinateur de l'enseignant.
 
-> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs étudiants. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Les mises à jour leur sont proposées quand ils en lancent la recherche : clic sur la version en bas de la fenêtre, ou Paramètres > Mises à jour (voir « Publier une version »).
+> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs étudiants. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Les mises à jour leur sont proposées quand ils en lancent la recherche (clic sur la version en bas de la fenêtre, ou Paramètres > Mises à jour), ou chaque jour à l'ouverture s'ils ont activé la recherche automatique (voir « Publier une version »).
 
 ## Où sont les données
 
@@ -95,7 +95,7 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
 2. Sur GitHub, onglet Actions > atelier « Publication » > « Run workflow » sur la branche `main`.
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
-4. Publier le brouillon : GitHub pose l'étiquette `v…`, l'atelier « Téléchargements » dépose installeurs et manifeste (`latest.json`) sur dnmax.fr, et les postes déjà installés la trouveront en lançant une recherche : clic sur la version en bas de la fenêtre, ou Paramètres > Mises à jour.
+4. Publier le brouillon : GitHub pose l'étiquette `v…`, l'atelier « Téléchargements » dépose installeurs et manifeste (`latest.json`) sur dnmax.fr, et les postes déjà installés la trouveront en lançant une recherche (clic sur la version en bas de la fenêtre, ou Paramètres > Mises à jour), ou à l'ouverture suivante si la recherche automatique est activée.
 
 Si la construction macOS est annulée faute de machine disponible chez GitHub, relancer les jobs en échec depuis la page de l'exécution (« Re-run failed jobs »). Si les machines macOS manquent durablement :
 
@@ -122,32 +122,32 @@ Mise en place, une seule fois (Settings > Secrets and variables > Actions) :
 
 Pour obtenir la clé du serveur : renseigner d'abord `OVH_SITE_SERVEUR`, lancer l'atelier « Site » avec l'action **afficher-cle-serveur**, puis copier la ligne affichée dans le résumé de l'exécution dans le secret `OVH_SITE_CLE_HOTE`. La lecture se fait depuis les machines de GitHub, ce qui fonctionne même si le port 22 est fermé sur le réseau de l'enseignant.
 
-L'atelier « Téléchargements » (`.github/workflows/telechargements.yml`) dépose dans `www/telechargements/`, à chaque publication de version (ou à la demande), les installeurs Windows, macOS et `.deb` de la dernière version publiée ; l'atelier « Site » ne touche pas à ce dossier. L'AppImage et les fichiers de mise à jour restent sur GitHub.
+L'atelier « Téléchargements » (`.github/workflows/telechargements.yml`) dépose dans `www/telechargements/`, à chaque publication de version (ou à la demande), les installeurs Windows, macOS et `.deb` de la dernière version publiée ; l'atelier « Site » ne touche pas à ce dossier. L'AppImage et les archives de mise à jour macOS et Linux restent sur GitHub ; le manifeste `latest.json` et l'installeur Windows, qui sert aussi de mise à jour, sont servis par dnmax.fr.
 
 **À la main, en secours** : client FTP (FileZilla, par exemple) en **« Connexion FTP explicite sur TLS »**, jamais en FTP clair ; copier le contenu de `site/`, y compris le fichier caché `.htaccess`, dans `www`. Vérifier ensuite <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
 
 Le formulaire « Idées et bugs » de la page ouvre, au choix, un ticket prérempli sur GitHub ou un message prérempli adressé à contact@dnmax.fr.
 
-Les boutons de téléchargement pointent sur des fichiers à nom fixe de la dernière version publiée (`DNMAX-windows.exe`, `DNMAX-macos.dmg`, `DNMAX-linux.AppImage`, `DNMAX-linux.deb`), que l'atelier « Publication » joint à chaque version.
+Les boutons Windows, macOS et `.deb` pointent sur `telechargements/DNMAX-windows.exe`, `DNMAX-macos.dmg` et `DNMAX-linux.deb`, déposés sur dnmax.fr par l'atelier « Téléchargements » ; le bouton Linux pointe sur `releases/latest/download/DNMAX-linux.AppImage` sur GitHub. L'atelier « Publication » joint ces quatre copies à nom fixe à chaque version.
 
 ## Organisation du code
 
 ```mermaid
 flowchart LR
-  historique["public/heritage/<br/>interface historique"] --> pont["src/heritage/pont.ts<br/>pont vers l'application"]
-  pont --> domaine["src/domaine/<br/>règles, sans accès extérieur"]
+  interface["src/interface/, src/editeur/…<br/>écrans"] --> domaine["src/domaine/<br/>règles, sans accès extérieur"]
+  interface --> pont["src/heritage/pont.ts<br/>stockage, fichiers"]
   pont --> enveloppe["src/enveloppe.ts<br/>appels à l'enveloppe de bureau"]
   enveloppe --> tauri["src-tauri/<br/>enveloppe Tauri (Rust)"]
 ```
 
-- `public/heritage/` et `index.html` : l'interface historique, reprise telle quelle (voir `DECISIONS.md`, décision 5).
-- `src/heritage/pont.ts` : ce que l'application fournit à l'interface historique (stockage, enregistrement de fichiers).
+- `index.html` et `public/heritage/application.css` : la page et sa feuille de style. `src/interface/` : l'état de l'interface (`etat.ts`), le démarrage, les onglets, les cartes du référentiel et les écrans réécrits depuis l'ancienne interface (décisions 37 et 38).
+- `src/heritage/pont.ts` : ce que l'application fournit aux écrans (stockage, enregistrement de fichiers), et l'état de l'interface publié sur la fenêtre avec quelques fonctions, pour le banc de comparaison (`src/heritage/noms-banc.ts`).
 - `src/domaine/` : ce qui calcule. Aucune dépendance au navigateur ni à Tauri, donc testable directement.
 - `src/enveloppe.ts` : ce qui parle à l'extérieur.
 - `src/ecran-coffre.ts` : l'écran de mot de passe.
 - `src/ecran-compte.ts` : le menu « Mon compte » (mot de passe, préférences). `src/ecran-preferences.ts` : thème et avertissement de changement d'échelle de la page Préférences. `src/ecran-fond.ts` : le fond de page (règles dans `src/domaine/fond.ts`). `src/identite.css` : l'identité visuelle (nom, onglets à icône, cartes, fond), décision 4. `src/ecran-exemple.ts` : le retrait de l'exemple.
 - `src/ecran-bienvenue.ts` : la dernière étape de la page de bienvenue (choix de la mention, référentiel et promotions en cours), les premières étant dans `src/ecran-coffre.ts` ; règles dans `src/domaine/bienvenue.ts`. `src/configuration.ts` : les adresses publiques du projet.
-- `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ». `outils/generer-icones.ts` et `outils/generer-sceau.ts` régénèrent les icônes de l'application et le sceau DN MADE des exports.
+- `src/ecran-mise-a-jour.ts` : l'annonce d'une mise à jour. `outils/` : le compositeur du manifeste de mise à jour, utilisé par l'atelier « Publication ». `outils/generer-icones.ts` et `outils/generer-sceau.ts` régénèrent les icônes de l'application et le sceau DN MADE des exports. `outils/banc/` : le banc de comparaison des réécritures (mode d'emploi dans `outils/banc/LISEZMOI.md`).
 - `src/domaine/echange/` : les règles de l'échange entre enseignants (format du fichier, empreinte du référentiel, plan d'import). `src/ecran-echange.ts` : ses écrans. `src/canal-direct.ts` et `src/ecran-echange-direct.ts` : l'échange en direct, d'ordinateur à ordinateur avec un code de 8 chiffres, sur un même réseau local et sans aucun serveur ; le transport est dans `src-tauri/src/direct.rs` (code, authentification et chiffrement) et `src-tauri/src/voisinage.rs` (annonce sur le réseau local) (décision 21).
 - `src-tauri/` : la fenêtre de bureau et ses droits (`capabilities/`). Dans `src-tauri/src/` : `coffre.rs` chiffre (sans toucher au disque), `depot.rs` range les fichiers (sans connaître le chiffrement), `export.rs` écrit les exports, `direct.rs` et `voisinage.rs` font l'échange en direct, `lib.rs` relie le tout aux commandes appelées par l'interface.
 

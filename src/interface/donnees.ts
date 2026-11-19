@@ -5,9 +5,8 @@
  * matérialisation et absorption de la vue fusionnée, enregistrement des
  * données (`saveData`), identifiants neufs, préférences enregistrées.
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom, que le fichier
- * historique appelle encore ; les règles elles-mêmes sont dans `domaine/`.
+ * Repris du fichier historique (décision 38) ; les règles elles-mêmes sont
+ * dans `domaine/`.
  */
 import { estCadreVierge as estCadreViergeDans } from "../domaine/diplome-vierge";
 import { libelleDiplome } from "../domaine/diplomes";
@@ -29,21 +28,14 @@ import {
 import { appliquerDependances } from "../domaine/modules";
 import { libelleCritere } from "../domaine/preferences";
 import { SEMESTRES } from "../domaine/constituer";
+import { enregistrer, peindreLignes } from "./editeur";
+import { nettoyerLesRegroupements, peindreCompetencesChoisies, peindreFormulaire } from "./editeur-etape1";
+import { peindreEtablissement } from "./etablissement";
 import { etat, type Objet } from "./etat";
-
-/** Ce que le module appelle encore dans le fichier historique, ou dans d'autres modules repris. */
-interface FonctionsHistoriques {
-  computeREF(): Objet;
-  cleanOps(): void;
-  syncItemEcs(): void;
-  save(): void;
-  paintForm(): void;
-  paintPick(): void;
-  paintLignes(): void;
-  paintRef(): void;
-  paintOrg(): void;
-  paintPrefs(): void;
-}
+import { syncItemEcs } from "./evaluation-courante";
+import { paintPrefs } from "./preferences-parametres";
+import { peindreReferentiel } from "./referentiel";
+import { referentielAffiche } from "./versions-referentiel";
 
 /** Ce que le module demande à l'extérieur : stockage, horloge et hasard (ceux du navigateur en vrai). */
 export interface Branchements {
@@ -52,14 +44,7 @@ export interface Branchements {
   hasard(): number;
 }
 
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
 let branchements: Branchements = { ecrireStockage: () => undefined, maintenant: () => 0, hasard: () => 0 };
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function ecrireEntree(cle: string, valeur: unknown): void {
   try {
@@ -176,19 +161,19 @@ export function saveData(redessiner?: boolean, depuisDictionnaire?: boolean): vo
     if (donnees.activeDiplome !== donnees._viewOf) materialize(donnees);
   }
   persistData();
-  etat.referentiel = historique().computeREF();
+  etat.referentiel = referentielAffiche();
   const competences = etat.referentiel.competences as Objet[];
   etat.evaluation.items = (etat.evaluation.items as Objet[]).filter((item) => competences.some((competence) => competence.code === item.code));
-  historique().cleanOps();
-  historique().syncItemEcs();
-  historique().save();
+  nettoyerLesRegroupements();
+  syncItemEcs();
+  enregistrer();
   if (redessiner !== false) {
-    historique().paintForm();
-    historique().paintPick();
-    historique().paintLignes();
-    historique().paintRef();
-    if (etat.ui.tab === "org") historique().paintOrg();
-    if (etat.ui.tab === "pref") historique().paintPrefs();
+    peindreFormulaire();
+    peindreCompetencesChoisies();
+    peindreLignes();
+    peindreReferentiel();
+    if (etat.ui.tab === "org") peindreEtablissement();
+    if (etat.ui.tab === "pref") paintPrefs();
   }
 }
 
@@ -200,32 +185,7 @@ export function savePrefs(): void {
   ecrireEntree("dnmade.prefs", etat.preferences);
 }
 
-/** Pose ces fonctions sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierDonnees(cible: Fenetre, branchementsReels: Branchements): void {
-  fenetre = cible;
+/** Donne au module le stockage, l'horloge et le hasard. */
+export function brancherDonnees(branchementsReels: Branchements): void {
   branchements = branchementsReels;
-  Object.assign(cible, {
-    modDeps,
-    buildData,
-    estCadreVierge,
-    dipVisibles,
-    anneeCode,
-    dipLabel,
-    refOf,
-    ecCodeAt,
-    ecCodesList,
-    ecCodeLbl,
-    ecCodeShort,
-    materialize,
-    absorb,
-    persistData,
-    construireDonnees,
-    livrNames,
-    newId,
-    addMention,
-    projectRef,
-    saveData,
-    critLabel,
-    savePrefs,
-  });
 }

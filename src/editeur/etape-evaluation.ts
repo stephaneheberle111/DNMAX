@@ -397,7 +397,7 @@ export function peindrePromotions(contexte: ContextePromotions): void {
     );
   }
   if (contexte.aucuneEnCours) {
-    elements.push(creer("span", "hint", `Aucune promotion en cours en ${contexte.anneeScolaire} : crée-la dans Mon établissement > Promotions.`));
+    elements.push(creer("span", "hint", `Aucune promotion en cours en ${contexte.anneeScolaire} : créez-la dans Mon établissement > Promotions.`));
   }
   if (contexte.referentielNonValide) {
     const alerte = creer("span", "hint", "Le référentiel de cette évaluation n'est pas validé : vous pouvez l'enregistrer, mais pensez à le vérifier et à le valider. ");

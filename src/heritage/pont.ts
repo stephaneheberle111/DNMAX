@@ -45,25 +45,24 @@ import * as exemple from "../domaine/exemple";
 import * as modele from "../domaine/modele-donnees";
 import { afficherPage, brancherOnglets } from "../interface/onglets";
 import { etat, publierEtat } from "../interface/etat";
-import { publierConstantes } from "../interface/constantes";
-import { publierAidesCommunes } from "../interface/aides-communes";
-import { publierCarteDonnees } from "../interface/carte-donnees";
-import { publierChaineModele } from "../interface/chaine-modele";
-import { publierChaineDessin } from "../interface/chaine-dessin";
-import { publierDonnees } from "../interface/donnees";
-import { publierEvaluationCourante } from "../interface/evaluation-courante";
+import { brancherAidesCommunes } from "../interface/aides-communes";
+import { brancherChaineDessin } from "../interface/chaine-dessin";
+import { brancherRadialeDessin } from "../interface/radiale-dessin";
+import { brancherRadialeGestes, ecouterRedimensionnement } from "../interface/radiale-gestes";
+import { brancherExplorer } from "../interface/explorer";
+import { brancherDonnees } from "../interface/donnees";
+import { brancherEvaluationCourante } from "../interface/evaluation-courante";
 import { brancherEtDessiner, chargerEtat, terminerDemarrage, type BranchementsDemarrage } from "../interface/demarrage";
-import { publierEditeurEtape1 } from "../interface/editeur-etape1";
-import { publierPreferencesParametres } from "../interface/preferences-parametres";
-import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
-import { publierVersionsReferentiel } from "../interface/versions-referentiel";
-import { publierEtablissement } from "../interface/etablissement";
-import { publierReferentiel } from "../interface/referentiel";
-import { publierEditeur } from "../interface/editeur";
-import { publierEvaluations } from "../interface/evaluations";
-import { publierProgression } from "../interface/progression";
-import { publierExportDocument } from "../interface/export-document";
-import { publierExemple } from "../interface/exemple";
+import { brancherEditeurEtape1 } from "../interface/editeur-etape1";
+import { brancherPreferencesParametres } from "../interface/preferences-parametres";
+import { brancherPromotionsCalendrier } from "../interface/promotions-calendrier";
+import { brancherVersionsReferentiel } from "../interface/versions-referentiel";
+import { brancherEditeur } from "../interface/editeur";
+import { brancherEvaluations } from "../interface/evaluations";
+import { brancherProgression } from "../interface/progression";
+import { brancherExportDocument } from "../interface/export-document";
+import { brancherExemple } from "../interface/exemple";
+import { publierNomsDuBanc } from "./noms-banc";
 import { brancherInterface } from "../interface/branchements";
 import { MODULES, appliquerDependances, entraineDautres, modulesParDefaut } from "../domaine/modules";
 import { peindreModules } from "../parametres/modules";
@@ -99,10 +98,7 @@ import {
   oublierDossierExports,
 } from "../enveloppe";
 
-/** Adresse du script de l'interface historique, servi depuis `public/`. */
-const ADRESSE_SCRIPT_HISTORIQUE = "/heritage/application.js";
-
-/** Document que l'interface historique demande d'enregistrer. */
+/** Document que l'interface demande d'enregistrer. */
 interface DemandeEnregistrement {
   filename: string;
   data: ContenuFichier;
@@ -116,21 +112,21 @@ export type SurExport = (nomFichier: string, contientEleves: boolean) => void;
 /** Règle appliquée aux enseignants : rend les données à enregistrer, ou `null` s'il n'y a rien à changer. */
 export type RegleEnseignants = (donnees: EnseignantsEtMoi) => EnseignantsEtMoi | null;
 
-/** Ce que l'interface historique attend de l'application, sous `window.dnmaxPont`. */
+/** Ce que l'interface attend de l'application, sous `window.dnmaxPont`. */
 interface Pont {
   /**
-   * Posée par l'interface historique à son chargement : contenu lisible du
+   * Posée par l'interface à son chargement : contenu lisible du
    * référentiel d'un diplôme, pour une version validée ou (identifiant vide)
    * pour le référentiel de travail. Rend `null` si le diplôme est inconnu.
    */
   projeterReferentiel?: (diplomeId: string, versionId: string) => unknown;
   /**
-   * Posée par l'interface historique à son chargement : applique une règle aux
+   * Posée par l'interface à son chargement : applique une règle aux
    * enseignants de l'établissement qu'elle tient en mémoire, puis les enregistre
    * si la règle rend autre chose que `null`.
    */
   ajusterEnseignants?: (regle: RegleEnseignants) => void;
-  /** Posée par l'interface historique à son chargement : affiche la page Préférences. */
+  /** Posée par l'interface à son chargement : affiche la page Préférences. */
   ouvrirPreferences?: () => void;
   /**
    * Posée par l'application (voir `suivreRenommageMoi`) : appelée quand
@@ -138,10 +134,6 @@ interface Pont {
    * Les valeurs ne sont pas typées.
    */
   renommerMoi?: (prenom: unknown, nomFamille: unknown) => void;
-  /**
-   * Appelée avant tout changement d'échelle d'évaluation dans Préférences.
-   * Rend `true` si l'enseignant confirme.
-   */
   /**
    * Préférences > Documents exportés : dossier proposé par « Enregistrer sous ».
    * Absent hors de l'enveloppe de bureau, qui seule enregistre des fichiers.
@@ -152,7 +144,7 @@ interface Pont {
     oublier(): Promise<void>;
   };
   /**
-   * Posée par l'interface historique à son chargement : ouvre Mon établissement > Établissement
+   * Posée par l'interface à son chargement : ouvre Mon établissement > Établissement
    * et place le curseur sur le premier champ utile aux documents RGPD qui est vide.
    */
   ouvrirEtablissement?: () => void;
@@ -172,7 +164,7 @@ interface Pont {
   readonly documentsModuleEleves: (etablissement: unknown) => void;
   /**
    * Règles de validation du référentiel (`src/domaine/validation-referentiel.ts`),
-   * appliquées aux données que tient l'interface historique : `donnees` est
+   * appliquées aux données que tient l'interface : `donnees` est
    * l'objet de `dnmade.data`, `promotion` un élément de `dnmade.promos`.
    */
   readonly referentielValide: {
@@ -317,7 +309,7 @@ declare global {
   }
 }
 
-/** Erreur dont l'interface historique lit le champ `code` (« declined » = annulation, sans message). */
+/** Erreur dont l'interface lit le champ `code` (« declined » = annulation, sans message). */
 class ErreurEnregistrement extends Error {
   readonly code: string;
 
@@ -361,10 +353,13 @@ function contexteDocumentsEleves(etablissement: unknown): ContexteDocumentsEleve
 }
 
 /**
- * Installe ce dont l'interface historique dépend, puis charge son script.
+ * Installe l'interface (reprise du fichier historique, décision 38) : pose le
+ * pont, branche chaque module sur ce qu'il demande à l'extérieur, publie sur
+ * la fenêtre l'état et les fonctions qu'appelle le banc de comparaison (voir
+ * `noms-banc`), puis la démarre.
  *
- * Le script lit le stockage dès son chargement : le magasin doit donc déjà
- * contenir les données de l'enseignant quand cette fonction est appelée.
+ * Le démarrage lit le stockage : le magasin doit donc déjà contenir les
+ * données de l'enseignant quand cette fonction est appelée.
  *
  * @param surExport appelée après chaque document enregistré, avec le nom proposé pour ce document
  *   et l'indication qu'il contient, ou non, des données d'étudiants
@@ -374,6 +369,7 @@ function contexteDocumentsEleves(etablissement: unknown): ContexteDocumentsEleve
  * @param avantExportEleves avant d'enregistrer un document qui contient des étudiants :
  *   rend `true` si l'enseignant confirme, après avoir lu qu'il ne sera pas protégé
  */
+// eslint-disable-next-line @typescript-eslint/require-await -- asynchrone comme avant : les appelants l'attendent, et une erreur de publication y devient un rejet
 export async function chargerInterfaceHistorique(
   magasin: MagasinMemoire,
   surExport: SurExport = () => undefined,
@@ -432,7 +428,7 @@ export async function chargerInterfaceHistorique(
     ...(estDansEnveloppe()
       ? { dossierExports: { lire: lireDossierExports, choisir: choisirDossierExports, oublier: oublierDossierExports } }
       : {}),
-    // L'interface historique n'est pas typée : les champs reçus sont vérifiés.
+    // L'interface n'est pas typée : les champs reçus sont vérifiés.
     confirmerModuleEleves: (etablissement) =>
       confirmerActivationEleves({ ...contexteDocumentsEleves(etablissement), motDePasse: motDePasseEleves }),
     documentsModuleEleves: (etablissement) => {
@@ -445,92 +441,85 @@ export async function chargerInterfaceHistorique(
       avertir: avertirReferentielNonValide,
     },
   };
-  await new Promise<void>((resoudre, rejeter) => {
-    // L'état est publié avant le script, qui en affecte les parties sans les déclarer.
-    publierEtat(window, etat);
-    publierConstantes(window as unknown as Record<string, unknown>);
-    publierAidesCommunes(window as unknown as Record<string, unknown>, document);
-    publierCarteDonnees(window as unknown as Record<string, unknown>);
-    publierChaineModele(window as unknown as Record<string, unknown>);
-    publierChaineDessin(window as unknown as Record<string, unknown>, document);
-    publierDonnees(window as unknown as Record<string, unknown>, {
-      ecrireStockage: (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      maintenant: () => Date.now(),
-      hasard: () => Math.random(),
-    });
-    publierEvaluationCourante(window as unknown as Record<string, unknown>, () => Math.random());
-    publierEditeurEtape1(window as unknown as Record<string, unknown>, () => new Date());
-    publierPreferencesParametres(window as unknown as Record<string, unknown>, {
-      ecrireStockage: (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      maintenant: () => Date.now(),
-    });
-    publierPromotionsCalendrier(window as unknown as Record<string, unknown>, (cle, valeur) => {
+  // L'état et les fonctions que le banc de comparaison appelle sont publiés sur la fenêtre sous leurs anciens noms
+  // (voir `noms-banc`) ; chaque module reçoit ce qu'il demande à l'extérieur.
+  publierEtat(window, etat);
+  publierNomsDuBanc(window as unknown as Record<string, unknown>);
+  brancherAidesCommunes(document);
+  brancherChaineDessin(document);
+  brancherRadialeDessin(document);
+  brancherRadialeGestes(document);
+  brancherExplorer(document);
+  brancherDonnees({
+    ecrireStockage: (cle, valeur) => {
       magasin.setItem(cle, valeur);
-    });
-    publierEtablissement(window as unknown as Record<string, unknown>);
-    publierReferentiel(window as unknown as Record<string, unknown>);
-    publierEditeur(window as unknown as Record<string, unknown>, (cle, valeur) => {
-      magasin.setItem(cle, valeur);
-    });
-    publierEvaluations(
-      window as unknown as Record<string, unknown>,
-      (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      (cle) => magasin.getItem(cle),
-    );
-    publierProgression(window as unknown as Record<string, unknown>, (cle) => magasin.getItem(cle));
-    publierExportDocument(window as unknown as Record<string, unknown>, () => window.dnmaxPont?.telechargements);
-    publierExemple(
-      window as unknown as Record<string, unknown>,
-      (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      (cle) => magasin.getItem(cle),
-      () => installerReferentielExemple(magasin, new Date()),
-    );
-    publierVersionsReferentiel(window as unknown as Record<string, unknown>, {
-      ecrireStockage: (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      promotionValide,
-      diplomeValide,
-      maintenant: () => new Date(),
-    });
-    const script = document.createElement("script");
-    script.src = ADRESSE_SCRIPT_HISTORIQUE;
-    script.addEventListener("load", () => {
-      // Le démarrage suit la lecture du script, dans l'ordre où le script l'exécutait (décision 38).
-      try {
-        const fenetre = window as unknown as Record<string, unknown>;
-        const branchementsDemarrage: BranchementsDemarrage = {
-          lireStockage: (cle) => magasin.getItem(cle),
-          ecrireStockage: (cle, valeur) => {
-            magasin.setItem(cle, valeur);
-          },
-          maintenant: () => new Date(),
-        };
-        chargerEtat(fenetre, branchementsDemarrage);
-        const ponts = brancherEtDessiner(fenetre, document, branchementsDemarrage);
-        if (window.dnmaxPont) Object.assign(window.dnmaxPont, ponts);
-        terminerDemarrage();
-      } finally {
-        resoudre();
-      }
-    });
-    script.addEventListener("error", () => {
-      rejeter(new Error("le script de l'interface n'a pas pu être chargé"));
-    });
-    document.body.append(script);
+    },
+    maintenant: () => Date.now(),
+    hasard: () => Math.random(),
   });
+  brancherEvaluationCourante(() => Math.random());
+  brancherEditeurEtape1(() => new Date());
+  brancherPreferencesParametres(window as unknown as Record<string, unknown>, {
+    ecrireStockage: (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    },
+    maintenant: () => Date.now(),
+  });
+  brancherPromotionsCalendrier((cle, valeur) => {
+    magasin.setItem(cle, valeur);
+  });
+  brancherEditeur((cle, valeur) => {
+    magasin.setItem(cle, valeur);
+  });
+  brancherEvaluations(
+    (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    },
+    (cle) => magasin.getItem(cle),
+  );
+  brancherProgression((cle) => magasin.getItem(cle));
+  brancherExportDocument(() => window.dnmaxPont?.telechargements);
+  brancherExemple(
+    (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    },
+    (cle) => magasin.getItem(cle),
+    () => installerReferentielExemple(magasin, new Date()),
+  );
+  brancherVersionsReferentiel({
+    ecrireStockage: (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    },
+    promotionValide,
+    diplomeValide,
+    maintenant: () => new Date(),
+  });
+  // Le démarrage suit, dans l'ordre où l'ancien script l'exécutait à sa lecture : écoute du redimensionnement
+  // de la carte radiale, puis lecture des données, branchements et premier dessin.
+  try {
+    ecouterRedimensionnement(window);
+    const branchementsDemarrage: BranchementsDemarrage = {
+      lireStockage: (cle) => magasin.getItem(cle),
+      ecrireStockage: (cle, valeur) => {
+        magasin.setItem(cle, valeur);
+      },
+      maintenant: () => new Date(),
+    };
+    chargerEtat(branchementsDemarrage);
+    const ponts = brancherEtDessiner(window, document, branchementsDemarrage);
+    if (window.dnmaxPont as Window["dnmaxPont"] | undefined) Object.assign(window.dnmaxPont, ponts);
+    terminerDemarrage();
+  } catch (erreur) {
+    // Comme quand le démarrage suivait le chargement du script : une erreur est signalée comme non
+    // rattrapée, sans empêcher la suite du lancement.
+    queueMicrotask(() => {
+      throw erreur;
+    });
+  }
 }
 
 /**
- * Fait appliquer une règle aux enseignants par l'interface historique, qui
+ * Fait appliquer une règle aux enseignants par l'interface, qui
  * tient ses données en mémoire : les modifier dans le magasin serait écrasé à
  * son prochain enregistrement. Sans interface chargée, ne fait rien.
  */
