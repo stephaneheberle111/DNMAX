@@ -23,7 +23,7 @@ Compter environ deux heures, dont une demi-heure pour la partie J. Cocher chaque
 
 - [ ] **A1. Bienvenue.** Fenêtre titrée « DNMAX », sans numéro. Conseils, puis prénom, nom, établissement, puis mot de passe (8 caractères suffisent) et code de secours, puis mention « Objet ». Attendu : le référentiel s'installe, trois promotions sont créées, la visite démarre.
 - [ ] **A2. Visite.** La suivre jusqu'au bout. À l'étape « 5. L'évaluation », la bulle cite l'intitulé, la consigne, les promotions, les livrables et au moins un EC ; le curseur passe aussi sur la consigne et les EC. L'étape « 6. Apparence et vocabulaire » ne parle plus d'échelles.
-- [ ] **A3. Icône.** Barre des tâches et fenêtre : le signe X au trait intermédiaire.
+- [ ] **A3. Icône.** Raccourci et installeur : le D et le N en pièces sur le pavé pétrole. Barre des tâches (Windows, Linux) : le D sans fond, pétrole et ambre sur une barre claire, blanc et ambre clair sur une barre sombre.
 
 ## B. Composer une évaluation
 
