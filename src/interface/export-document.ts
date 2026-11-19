@@ -358,7 +358,7 @@ export async function proposerFichier(nom: string, donnees: Blob, eleves = false
   } catch (erreur) {
     const code = (erreur as { code?: unknown } | null)?.code;
     if (code === "declined") return;
-    if (code === "rate_limited") toast("Une demande est déjà en cours, réessaie dans un instant.");
+    if (code === "rate_limited") toast("Une demande est déjà en cours, réessayez dans un instant.");
     else if (code === "too_large") toast("Fichier trop volumineux pour cette destination.");
     else {
       const message = (erreur as { message?: unknown } | null)?.message;
