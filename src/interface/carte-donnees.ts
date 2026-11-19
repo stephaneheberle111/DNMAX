@@ -13,7 +13,7 @@ import { arcPath, fitN, polar, wrapN } from "../domaine/carte-geometrie";
 import { ecOrd } from "./aides-communes";
 import { ecCodeLbl } from "./donnees";
 import { anneeScolaire } from "./promotions-calendrier";
-import { ecsDeLEnseignant } from "../domaine/repartition";
+import { ecsDeLEnseignant, elementsDeLaRepartition, type ElementsRetenus } from "../domaine/repartition";
 import { etat, type Objet } from "./etat";
 
 /** Filtre de la carte : une sorte (« ue », « ec », « bloc », « comp ») et une valeur, ou rien. */
@@ -66,12 +66,22 @@ export function ecsMiens(): Set<string> | null {
 }
 
 /** État de la case « Seulement ma répartition » d'Explorer, et de quoi la basculer. */
-export function repartitionCarte(redessiner: () => void): { disponible: boolean; active: boolean; ecs: ReadonlySet<string> | null; basculer(): void } {
+export function repartitionCarte(redessiner: () => void): {
+  disponible: boolean;
+  active: boolean;
+  ecs: ReadonlySet<string> | null;
+  retenus: ElementsRetenus | null;
+  basculer(): void;
+} {
   const disponible = ecsDeMaRepartition().size > 0;
+  const miens = ecsMiens();
+  const tout = donnees();
   return {
     disponible,
     active: disponible && !!etatCarte().mine,
-    ecs: ecsMiens(),
+    ecs: miens,
+    // Ce qui reste affiché, case cochée : les tuiles le comptent.
+    retenus: miens === null ? null : elementsDeLaRepartition(tout.ues as Objet[], tout.ecs as Objet[], tout.competences as Objet[], miens),
     basculer: () => {
       etatCarte().mine = !etatCarte().mine;
       redessiner();

@@ -88,3 +88,26 @@ export function ecsDeLEnseignant(historique: Objet, anneeScolaire: string, ensei
   }
   return ecs;
 }
+
+/** Ce qu'une répartition de service retient d'un référentiel : noms d'UE, EC, numéros de bloc, codes de compétence. */
+export interface ElementsRetenus {
+  ues: Set<string>;
+  ecs: ReadonlySet<string>;
+  blocs: Set<string>;
+  competences: Set<string>;
+}
+
+/**
+ * UE, blocs et compétences qui vont avec les EC retenus : l'UE de chaque EC
+ * retenu, les compétences rattachées à au moins un de ces EC, et leurs blocs.
+ */
+export function elementsDeLaRepartition(ues: readonly Objet[], ecs: readonly Objet[], competences: readonly Objet[], retenus: ReadonlySet<string>): ElementsRetenus {
+  const idsUes = new Set(ecs.filter((ec) => retenus.has(ec.id as string)).map((ec) => ec.ueId));
+  const gardees = competences.filter((competence) => liste(competence.ecIds).some((id) => retenus.has(id as unknown as string)));
+  return {
+    ues: new Set(ues.filter((ue) => idsUes.has(ue.id)).map((ue) => String(ue.nom))),
+    ecs: retenus,
+    blocs: new Set(gardees.map((competence) => String(competence.bloc))),
+    competences: new Set(gardees.map((competence) => String(competence.code))),
+  };
+}
