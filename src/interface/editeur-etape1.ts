@@ -87,9 +87,9 @@ export function consigneEtudiants(vises: number, total: number): string {
       (vises > 1 ? "s" : "") +
       " sur " +
       String(total) +
-      " : seuls " +
-      (vises > 1 ? "eux sont notés" : "lui est noté") +
-      " à l'étape 4 et exporté" +
+      " : " +
+      (vises > 1 ? "seul·es ces étudiant·es sont noté·es" : "seul·e cet·te étudiant·e est noté·e") +
+      " à l'étape 4 et exporté·e" +
       (vises > 1 ? "s" : "") +
       "."
     );
@@ -416,7 +416,7 @@ export function peindreLivrablesChoisis(): void {
       peindreEtapes();
     },
     proposerAjoutEtablissement: (livrable) => {
-      askModal(`Ajouter « ${esc(livrable)} » à la liste des livrables de Mon établissement, pour les prochaines évaluations ?`, () => {
+      askModal(`Ajouter « ${esc(livrable)} » à la liste des livrables de Mon compte > Préférences, pour les prochaines évaluations ?`, () => {
         (donnees().livrables as Objet[]).push({ nom: livrable, type: "" });
         saveData();
         toast("« " + livrable + " » ajouté aux livrables.");

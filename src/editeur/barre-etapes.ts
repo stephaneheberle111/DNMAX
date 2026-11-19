@@ -86,12 +86,12 @@ export function peindreBarreEtapes(contexte: ContexteBarreEtapes): void {
   if (etudiants === 0) {
     resume(resume4, "", "aucun·e étudiant·e");
   } else if (faits >= etudiants) {
-    resume(resume4, `${String(etudiants)} ${pluriel(etudiants, "évalué")}`, " — complet");
+    resume(resume4, `${String(etudiants)} ${pluriel(etudiants, "évalué·e")}`, " — complet");
   } else {
     resume(
       resume4,
       `${String(faits)} / ${String(etudiants)}`,
-      ` ${pluriel(etudiants, "évalué")}${partiels > 0 ? ` · ${String(partiels)} en cours` : ""}`,
+      ` ${pluriel(etudiants, "évalué·e")}${partiels > 0 ? ` · ${String(partiels)} en cours` : ""}`,
     );
   }
 }

@@ -96,7 +96,7 @@ Seuls les documents que l'application produit (`docx`, `odt`, `xlsx`, `ods`, `pd
 
 ## 8. Les données sont chiffrées par un mot de passe
 
-**Retenu** : tout ce que l'enseignant saisit est enregistré dans un seul fichier chiffré, `coffre.dnmax`, déverrouillé par un mot de passe demandé à chaque ouverture. Un code de secours, affiché une seule fois à la création, permet de choisir un nouveau mot de passe en cas d'oubli.
+**Retenu** : tout ce que l'enseignant saisit est enregistré dans un seul fichier chiffré, `coffre.dnmax`, déverrouillé par un mot de passe demandé à chaque ouverture. Un code de secours, affiché une seule fois à la création, permet de choisir un nouveau mot de passe en cas d'oubli Il peut être renouvelé avec le mot de passe (décision 18) : un nouveau code est alors affiché, une seule fois lui aussi.
 
 **Comment** :
 
@@ -105,7 +105,7 @@ Seuls les documents que l'application produit (`docx`, `odt`, `xlsx`, `ods`, `pd
 - le fichier porte un numéro de version de format : une version inconnue est refusée avec un message clair plutôt que mal interprétée ;
 - l'écriture passe par un fichier provisoire puis un renommage, pour ne jamais laisser un coffre à moitié écrit ;
 - une copie du coffre (chiffrée elle aussi) est faite au plus une fois par jour dans `sauvegardes/`, juste après une ouverture réussie ; la plus récente est toujours gardée, puis la dernière de chaque semaine pendant 3 mois et la dernière de chaque mois pendant 12 mois (réglables dans Paramètres > Sauvegardes, décision 36) ;
-- aucune donnée d'évaluation, d'étudiant ni d'identité n'est écrite hors du coffre : seuls des réglages d'affichage (thème, fond, dernière version vue, reprise de la visite) vont dans le stockage du navigateur intégré, et le dossier des exports et la politique de sauvegarde dans de petits fichiers du dossier de configuration.
+- aucune donnée d'évaluation, d'étudiant ni d'identité n'est écrite hors du coffre : seuls des réglages d'affichage (thème, fond, dernière version vue, reprise de la visite, marque sans contenu laissée par un verrouillage après inactivité) vont dans le stockage du navigateur intégré, et le dossier des exports et la politique de sauvegarde dans de petits fichiers du dossier de configuration.
 
 **Pourquoi un mot de passe plutôt que le trousseau du système** : le trousseau aurait évité la saisie, mais il ne protège pas contre une personne qui utilise la session de l'enseignant, et il n'est pas toujours disponible sous Linux. Le mot de passe fonctionne de la même façon sur les trois systèmes.
 
@@ -325,7 +325,7 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 - l'expéditeur tire le code au hasard (générateur du système, tirage uniforme parmi 100 millions), ouvre une écoute TCP sur un port éphémère et s'annonce sur le réseau local par mDNS/DNS-SD (service `_dnmax-direct._tcp`). L'annonce ne porte que la version, le **canal** (les deux premiers chiffres du code) et le port, sous un nom d'instance et un nom d'hôte tirés au hasard : ni le nom de l'ordinateur ni celui de l'enseignant ;
 - le destinataire écoute les annonces quelques secondes, retient celle de son canal et s'y connecte. Si deux envois portent le même canal (rare, ou imitation par un tiers), il refuse de choisir et demande un nouveau code ;
-- les deux ordinateurs dérivent une clé commune par **SPAKE2** (échange de clé authentifié par mot de passe, crate `spake2`), le code entier servant de mot de passe ; le destinataire prouve la connaissance de la clé par un message chiffré ; le contenu part ensuite en morceaux de 64 Kio chiffrés et authentifiés par **ChaCha20-Poly1305** (déjà employé par le coffre), chacun avec un rang propre à son sens, puis le destinataire renvoie un accusé chiffré. L'expéditeur n'annonce « Envoyé » qu'après cet accusé.
+- les deux ordinateurs dérivent une clé commune par **SPAKE2** (échange de clé authentifié par mot de passe, crate `spake2`), le code entier servant de mot de passe ; le destinataire prouve la connaissance de la clé par un message chiffré ; le contenu part ensuite en morceaux de 64 Kio chiffrés et authentifiés par **ChaCha20-Poly1305** (même bibliothèque que le coffre, qui emploie la variante XChaCha20-Poly1305), chacun avec un rang propre à son sens, puis le destinataire renvoie un accusé chiffré. L'expéditeur n'annonce « Envoyé » qu'après cet accusé.
 
 **Pourquoi un PAKE, et pourquoi 8 chiffres suffisent** : avec SPAKE2, un tiers du même wifi qui écoute tout le trafic ne peut ni lire le contenu ni retrouver le code hors ligne (le trafic ne permet pas de tester des codes) ; il ne peut pas non plus se faire passer pour l'un des deux sans deviner le code. Sa seule voie est de tenter **un** code en se connectant à la place du collègue : l'expéditeur ne laisse qu'**un seul essai** par code, puis se ferme. Les deux premiers chiffres étant publics (canal), il reste 6 chiffres secrets : une chance sur un million de réussir pendant la validité du code. C'est du même ordre que les codes à usage unique des outils de transfert éprouvés (Magic Wormhole), pour un code qui se dicte. Un essai raté coûte seulement à l'expéditeur de relancer l'envoi, ce que les messages disent.
 

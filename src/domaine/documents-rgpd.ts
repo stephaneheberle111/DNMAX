@@ -282,7 +282,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Sécurité",
           contenu: [
             texte(
-              `Chiffrement de toutes les données saisies ; mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères, demandé à chaque ouverture ; verrouillage après ${String(champs.minutesVerrouillage)} minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des étudiant·es.`,
+              `Chiffrement de toutes les données saisies ; mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères, demandé à chaque ouverture ; verrouillage à la demande, et automatique après ${String(champs.minutesVerrouillage)} minutes sans activité ; code de secours remis une seule fois, renouvelable. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des étudiant·es.`,
             ),
           ],
         },

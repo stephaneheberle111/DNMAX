@@ -143,13 +143,15 @@ export function installerCompte(acces: AccesDonnees | null, verrouiller: (() => 
   const nom = creer("div", "menu-compte-nom");
   nom.setAttribute("role", "presentation");
   const entrees: HTMLButtonElement[] = [];
-  const ajouterEntree = (libelle: string, detail: string, action: () => void): void => {
+  const ajouterEntree = (libelle: string, detail: string, action: () => void, repere = ""): void => {
     const entree = creerBouton("", "menu-compte-entree", () => {
       fermer(false);
       action();
     });
     entree.setAttribute("role", "menuitem");
     entree.tabIndex = -1;
+    // Repère stable pour la visite guidée, qui désigne une entrée précise quel que soit son rang.
+    if (repere !== "") entree.dataset.entree = repere;
     entree.append(creer("b", "", libelle), creer("span", "", detail));
     entrees.push(entree);
   };
@@ -158,7 +160,7 @@ export function installerCompte(acces: AccesDonnees | null, verrouiller: (() => 
       montrerMotDePasse(acces);
     });
   }
-  ajouterEntree("Préférences", "Thème et fond de page, échelles, vocabulaire, livrables, documents exportés", ouvrirPreferences);
+  ajouterEntree("Préférences", "Thème et fond de page, vocabulaire, livrables, documents exportés", ouvrirPreferences, "preferences");
   if (verrouiller !== null) {
     ajouterEntree("Verrouiller", "Refermer vos données : le mot de passe sera redemandé", verrouiller);
   }

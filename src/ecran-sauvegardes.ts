@@ -15,7 +15,7 @@ function paragraphesConfirmation(sauvegarde: Sauvegarde): string[] {
   return [
     `Vos données actuelles vont être remplacées par celles du ${date}. Ce que vous avez saisi depuis n'apparaîtra plus dans DNMAX.`,
     "Rien n'est perdu pour autant : l'état actuel est d'abord mis de côté dans les sauvegardes (« État mis de côté avant la restauration… »). Vous pourrez y revenir de la même façon.",
-    `DNMAX se rechargera ensuite et vous demandera le mot de passe qui était en vigueur le ${date} : celui d'aujourd'hui si vous ne l'avez pas changé depuis. Votre code de secours reste valable.`,
+    `DNMAX se rechargera ensuite et vous demandera le mot de passe qui était en vigueur le ${date} : celui d'aujourd'hui si vous ne l'avez pas changé depuis. Le code de secours en vigueur à cette date l'ouvre aussi : l'actuel, si vous ne l'avez pas renouvelé depuis.`,
   ];
 }
 

@@ -125,8 +125,8 @@ export function peindreAvancement(contexte: ContexteSaisieEtudiants): void {
     avancement.textContent =
       etudiants.length === 0
         ? ""
-        : `${String(bilan.faits)} / ${pluriel(etudiants.length, "étudiant·e")} évalué${etudiants.length > 1 ? "s" : ""}` +
-          (bilan.partiels > 0 ? ` · ${pluriel(bilan.partiels, "commencé")}` : "") +
+        : `${String(bilan.faits)} / ${pluriel(etudiants.length, "étudiant·e")} évalué·e${etudiants.length > 1 ? "s" : ""}` +
+          (bilan.partiels > 0 ? ` · ${pluriel(bilan.partiels, "commencé·e")}` : "") +
           ` · ${pluriel(lignes.length, "ligne")}`;
   }
   const conseil = document.getElementById("n4hint");

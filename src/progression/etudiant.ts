@@ -61,7 +61,7 @@ export interface ContexteProgressionEtudiant extends FiltresCommuns {
 }
 
 const ETATS: Readonly<Record<string, readonly [string, string]>> = {
-  ok: ["ok", "Évalué"],
+  ok: ["ok", "Évalué·e"],
   part: ["part", "Évaluation partielle"],
   nr: ["todo", "Non rendu"],
   disp: ["prevue", "Dispensé·e"],
@@ -71,7 +71,7 @@ const ETATS: Readonly<Record<string, readonly [string, string]>> = {
 
 function aide(paliers: boolean): string {
   return (
-    "Pour un·e étudiant·e : les évaluations du semestre et les résultats obtenus, comparé au reste de la promotion — « Non évalué·e » signale une évaluation où les autres étudiant·es ont déjà des résultats saisis, mais pas celui-ci ou celle-ci. « Non rendu » et « Dispensé·e » se renseignent dans l'évaluation elle-même (étape Étudiant·es) et comptent comme traités. En dessous, toutes les compétences sur lesquelles il a été évalué jusqu'à ce semestre, avec l'évolution de son niveau de maîtrise d'une évaluation à l'autre" +
+    "Pour un·e étudiant·e : les évaluations du semestre et les résultats obtenus, comparés au reste de la promotion — « Non évalué·e » signale une évaluation où les autres étudiant·es ont déjà des résultats saisis, mais pas celui-ci ou celle-ci. « Non rendu » et « Dispensé·e » se renseignent dans l'évaluation elle-même (étape Étudiant·es) et comptent comme traités. En dessous, toutes les compétences sur lesquelles il ou elle a été évalué·e jusqu'à ce semestre, avec l'évolution de son niveau de maîtrise d'une évaluation à l'autre" +
     (paliers
       ? " et sa progression dans les niveaux d'acquisition : Initié (année 1) → Guidé (année 2) → Autonome (année 3), chaque niveau étant atteint dès qu'il est évalué avec une maîtrise suffisante dans l'année correspondante."
       : ".")
@@ -142,7 +142,7 @@ function avancement(contexte: ContexteProgressionEtudiant): HTMLElement {
     const saisie = balise("div", [["class", "pgev"]]);
     saisie.append(
       balise("span", [["class", "hint"]], ligne.sansLignes ? "—" : `${String(ligne.saisies)} / ${String(ligne.lignes)} ligne${ligne.lignes > 1 ? "s" : ""}`),
-      balise("div", [["class", "hint"]], `Promo : ${String(ligne.promoSaisis)}/${String(ligne.promoTotal)} évalués`),
+      balise("div", [["class", "hint"]], `Promo : ${String(ligne.promoSaisis)}/${String(ligne.promoTotal)} évalué·es`),
     );
     rangee.append(balise("span", [["class", `pill pst ${classe}`]], libelle), description, saisie, balise("div", [["class", "pgst"]]));
     bloc.append(rangee);
