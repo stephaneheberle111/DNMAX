@@ -650,7 +650,7 @@ const MODULE_ELEVES: Parcours = {
     {
       titre: "Données des étudiants",
       texte:
-        "Dans « Paramètres », le panneau « Données des étudiants » répond aux demandes d'accès ou d'effacement et propose d'anonymiser les promotions sorties depuis plus d'un an.",
+        "Dans « Paramètres », le panneau « Données des étudiants » répond aux demandes d'accès ou d'effacement et propose d'anonymiser ou d'effacer les promotions dont la durée de conservation, fixée dans Mon établissement > Établissement, est dépassée.",
     },
   ],
 };

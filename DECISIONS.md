@@ -90,8 +90,8 @@ La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en
 - cette clé est enfermée deux fois, sous une clé dérivée du mot de passe et sous une clé dérivée du code de secours (Argon2id, 64 Mio, 3 passes) ;
 - le fichier porte un numéro de version de format : une version inconnue est refusée avec un message clair plutôt que mal interprétée ;
 - l'écriture passe par un fichier provisoire puis un renommage, pour ne jamais laisser un coffre à moitié écrit ;
-- une copie du coffre (chiffrée elle aussi) est faite au plus une fois par jour dans `sauvegardes/`, juste après une ouverture réussie ; les dix dernières sont conservées ;
-- rien n'est écrit dans le stockage du navigateur intégré.
+- une copie du coffre (chiffrée elle aussi) est faite au plus une fois par jour dans `sauvegardes/`, juste après une ouverture réussie ; la plus récente est toujours gardée, puis la dernière de chaque semaine pendant 3 mois et la dernière de chaque mois pendant 12 mois (réglables dans Paramètres > Sauvegardes, décision 36) ;
+- aucune donnée d'évaluation, d'étudiant ni d'identité n'est écrite hors du coffre : seuls des réglages d'affichage (thème, fond, dernière version vue, reprise de la visite) vont dans le stockage du navigateur intégré, et le dossier des exports et la politique de sauvegarde dans de petits fichiers du dossier de configuration.
 
 **Pourquoi un mot de passe plutôt que le trousseau du système** : le trousseau aurait évité la saisie, mais il ne protège pas contre une personne qui utilise la session de l'enseignant, et il n'est pas toujours disponible sous Linux. Le mot de passe fonctionne de la même façon sur les trois systèmes.
 
@@ -287,7 +287,7 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 **Jamais de traitement automatique** : l'enseignant peut avoir à remettre un relevé avant. DNMAX rappelle et propose ; l'enseignant décide.
 
-**Limites** : les sauvegardes automatiques du coffre gardent une trace jusqu'à leur remplacement (dix jours d'utilisation) ; un nom cité dans un texte libre d'un autre élève, un titre ou des consignes n'est pas recherché ; un redoublant est repéré par son nom, donc un homonyme peut être pris pour un redoublant (il est alors gardé, ce qui est sans risque).
+**Limites** : les sauvegardes automatiques du coffre, chiffrées, gardent une trace jusqu'à leur remplacement : jusqu'à 12 mois avec le réglage par défaut (la dernière sauvegarde mensuelle gardée), 24 mois au plus (Paramètres > Sauvegardes) ; un nom cité dans un texte libre d'un autre élève, un titre ou des consignes n'est pas recherché ; un redoublant est repéré par son nom, donc un homonyme peut être pris pour un redoublant (il est alors gardé, ce qui est sans risque).
 
 ## 21. Échange en direct : un code de 8 chiffres à dicter, sur le réseau local, sans aucun serveur
 
@@ -327,7 +327,7 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 **Pourquoi verrouiller** : la sauvegarde peut avoir un autre mot de passe que la session en cours, et un enregistrement encore en attente dans la page écraserait sinon le coffre restauré avec l'ancien contenu.
 
-**Copies mises de côté** : elles ne comptent pas parmi les sauvegardes gardées par la politique hebdomadaire et mensuelle (une restauration ne doit pas en chasser une, décision 36) et apparaissent dans la même liste, ce qui permet d'annuler une restauration. Pour qu'une donnée effacée (un élève, décision 20) n'y survive pas indéfiniment, une copie mise de côté est supprimée dès que la rotation est pleine et qu'elle est plus ancienne que la plus ancienne sauvegarde quotidienne gardée : elle suit le même horizon de dix jours d'utilisation.
+**Copies mises de côté** : elles ne comptent pas parmi les sauvegardes gardées par la politique hebdomadaire et mensuelle (une restauration ne doit pas en chasser une, décision 36) et apparaissent dans la même liste, ce qui permet d'annuler une restauration. Pour qu'une donnée effacée (un élève, décision 20) n'y survive pas indéfiniment, une copie mise de côté est supprimée dès qu'elle est plus ancienne que la plus ancienne sauvegarde gardée par la politique : elle suit le même horizon (12 mois par défaut).
 
 **Recours** : si l'application ne s'ouvre plus, la copie à la main d'un fichier de `sauvegardes/` à la place de `coffre.dnmax` reste décrite dans la documentation.
 

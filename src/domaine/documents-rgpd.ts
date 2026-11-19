@@ -274,7 +274,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Droits des étudiants",
           contenu: [
             texte(
-              "Accès, rectification, effacement et limitation, à exercer auprès de l'enseignant ou du délégué à la protection des données. Dans DNMAX, Paramètres > Données des étudiants permet d'exporter toutes les données d'un étudiant, de l'effacer partout, et d'anonymiser ou d'effacer une promotion.",
+              "Accès, rectification, effacement et limitation, à exercer auprès de l'enseignant ou du délégué à la protection des données. Dans DNMAX, Paramètres > Données des étudiants permet d'exporter toutes les données d'un étudiant, de l'effacer partout, et d'anonymiser ou d'effacer une promotion. Les sauvegardes automatiques, chiffrées, en gardent une trace jusqu'à leur remplacement (au plus un an avec le réglage par défaut de Paramètres > Sauvegardes).",
             ),
           ],
         },

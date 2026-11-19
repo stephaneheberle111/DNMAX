@@ -168,8 +168,8 @@ pub fn creer(dossier: &Path, octets: &[u8]) -> io::Result<()> {
     ecrire(dossier, octets)
 }
 
-/// Copie le coffre dans le dossier des sauvegardes, une fois par jour, et ne
-/// garde que les `nombre_conserve` plus récentes.
+/// Copie le coffre dans le dossier des sauvegardes, une fois par jour, puis
+/// supprime celles que `politique` ne garde plus.
 ///
 /// À appeler juste après une ouverture réussie : on sait alors que le fichier
 /// copié est sain. Rend `true` si une sauvegarde a été créée.

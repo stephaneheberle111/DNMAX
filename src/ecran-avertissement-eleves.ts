@@ -165,7 +165,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
       creer(
         "p",
         "avertissement-securite",
-        `Sécurité : avec ce module, DNMAX exige un mot de passe d'au moins ${LONGUEUR} caractères et se verrouille après ${String(MINUTES_VERROUILLAGE)} minutes sans activité. Chiffrez aussi le disque de l'ordinateur (BitLocker sous Windows, FileVault sur Mac, LUKS sous Linux) : c'est conseillé, pas obligatoire. Les exports Word et Excel, eux, ne sont pas chiffrés.`,
+        `Sécurité : avec ce module, DNMAX exige un mot de passe d'au moins ${LONGUEUR} caractères et se verrouille après ${String(MINUTES_VERROUILLAGE)} minutes sans activité. Chiffrez aussi le disque de l'ordinateur (BitLocker sous Windows, FileVault sur Mac, LUKS sous Linux) : c'est conseillé, pas obligatoire. Les exports Word, Excel et OpenDocument, eux, ne sont pas chiffrés.`,
       ),
       creerDocuments(
         contexte,
