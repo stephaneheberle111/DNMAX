@@ -4,7 +4,6 @@ import {
   CLE_EVALUATIONS,
   CLE_PROMOTIONS,
   analyserJson,
-  estEvaluation,
   estObjet,
   lireDonneesEtablissement,
   lireEvaluations,
@@ -31,7 +30,8 @@ import {
   type BaseReferentiel,
   type ReferentielLocal,
 } from "./referentiel";
-import { lireListes, preparerEnvoi, type ReferentielEchange } from "./referentiel-echange";
+import { PARTIES, lireListes, preparerEnvoi, type Listes, type ReferentielEchange } from "./referentiel-echange";
+import { LONGUEURS, TAILLES, bornerPromotion, estJsonBorne, lireElementDictionnaire, lireElementStructure, lireModeleRecu } from "./schema-recu";
 import { CLE_DATES_MODIFICATION, lireDatesModification } from "./suivi-modifications";
 import { nettoyerNom } from "../identite";
 import type { Entrees } from "../magasin-memoire";
@@ -192,6 +192,15 @@ function lireDateModification(valeur: unknown, maintenant: Date | null): string 
   return valeur;
 }
 
+/**
+ * Données d'étudiants reçues. Leur forme appartient à l'écran de saisie : elles
+ * sont reprises telles quelles, mais refusées si elles sont démesurées.
+ */
+function lireDonneesElevesBornees(valeur: unknown): DonneesEleves | null {
+  const donnees = lireDonneesEleves(valeur);
+  return donnees !== null && estJsonBorne(donnees.champs) ? donnees : null;
+}
+
 function lireReferentiel(valeur: unknown): ReferentielEchange | null {
   const base = lireBase(valeur);
   if (base === null || !estObjet(valeur)) {
@@ -199,10 +208,28 @@ function lireReferentiel(valeur: unknown): ReferentielEchange | null {
   }
   const structure = lireListes(valeur.structure);
   const dictionnaire = lireListes(valeur.dictionnaire);
-  if (structure === null || dictionnaire === null) {
+  // Le contenu lisible est repris tel quel (son empreinte en dépend) : il doit au moins rester dans des bornes.
+  if (structure === null || dictionnaire === null || !estJsonBorne(valeur.contenuLisible)) {
     return null;
   }
-  return { ...base, structure, dictionnaire, contenuLisible: retirerHorsContenu(valeur.contenuLisible) };
+  return {
+    ...base,
+    structure: reconstruireListes(structure, lireElementStructure),
+    dictionnaire: reconstruireListes(dictionnaire, lireElementDictionnaire),
+    contenuLisible: retirerHorsContenu(valeur.contenuLisible),
+  };
+}
+
+/** Reconstruit chaque élément reçu selon le schéma : champs inconnus écartés, textes et listes bornés. */
+function reconstruireListes(listes: Listes, lire: typeof lireElementStructure): Listes {
+  const reconstruites: Listes = { ues: [], ecs: [], blocs: [], competences: [] };
+  for (const partie of PARTIES) {
+    reconstruites[partie] = listes[partie]
+      .slice(0, TAILLES.longue)
+      .map((element) => lire(partie, element))
+      .filter((element) => element !== null);
+  }
+  return reconstruites;
 }
 
 function lireBase(valeur: unknown): BaseReferentiel | null {
@@ -216,10 +243,10 @@ function lireBase(valeur: unknown): BaseReferentiel | null {
     return null;
   }
   return {
-    diplome: valeur.diplome,
-    mention: valeur.mention,
-    empreinte: valeur.empreinte,
-    dateVersion: valeur.dateVersion,
+    diplome: valeur.diplome.slice(0, LONGUEURS.nom),
+    mention: valeur.mention.slice(0, LONGUEURS.nom),
+    empreinte: valeur.empreinte.slice(0, LONGUEURS.nom),
+    dateVersion: valeur.dateVersion.slice(0, LONGUEURS.code),
   };
 }
 
@@ -257,18 +284,20 @@ export function lirePaquet(texte: string, protege = false, maintenant: Date | nu
   }
   const evaluations: EvaluationEchangee[] = [];
   const identifiantsVus = new Set<string>();
-  for (const element of Array.isArray(valeur.evaluations) ? (valeur.evaluations as unknown[]) : []) {
-    if (!estObjet(element) || !estEvaluation(element.modele) || identifiantsVus.has(element.modele.id)) {
+  for (const element of (Array.isArray(valeur.evaluations) ? (valeur.evaluations as unknown[]) : []).slice(0, TAILLES.longue)) {
+    // Le modèle est reconstruit champ par champ (`schema-recu`) : rien d'inconnu ne passe.
+    const modele = estObjet(element) ? lireModeleRecu(element.modele) : null;
+    if (!estObjet(element) || modele === null || identifiantsVus.has(modele.id)) {
       continue;
     }
-    identifiantsVus.add(element.modele.id);
+    identifiantsVus.add(modele.id);
     evaluations.push({
-      modele: extraireModele(element.modele),
+      modele: extraireModele(modele),
       // Comparée ensuite comme un texte à la date locale : un texte libre fausserait « la plus récente ».
       modifieLe: lireDateModification(element.modifieLe, maintenant),
       modifiePar: typeof element.modifiePar === "string" ? nettoyerNom(element.modifiePar) : "",
       base: lireBase(element.base),
-      donneesEleves: protege ? lireDonneesEleves(element.donneesEleves) : null,
+      donneesEleves: protege ? lireDonneesElevesBornees(element.donneesEleves) : null,
     });
   }
   return {
@@ -278,10 +307,13 @@ export function lirePaquet(texte: string, protege = false, maintenant: Date | nu
     expediteur: typeof valeur.expediteur === "string" ? nettoyerNom(valeur.expediteur) : "",
     evaluations,
     referentiels: (Array.isArray(valeur.referentiels) ? valeur.referentiels : [])
+      .slice(0, TAILLES.moyenne)
       .map(lireReferentiel)
       .filter((referentiel) => referentiel !== null),
     promotions: (protege && Array.isArray(valeur.promotions) ? valeur.promotions : [])
+      .slice(0, TAILLES.moyenne)
       .map(lirePromotionEchangee)
-      .filter((promotion) => promotion !== null),
+      .filter((promotion) => promotion !== null)
+      .map(bornerPromotion),
   };
 }

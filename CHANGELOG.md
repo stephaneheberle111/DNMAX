@@ -83,6 +83,7 @@
 
 - Module Étudiants : le mot de passe doit désormais compter au moins 12 caractères, trois types de caractères (minuscules, majuscules, chiffres, symboles), sans suite toute faite, sans DNMAX ni votre nom ni celui de l'établissement, et ne pas être parmi les plus courants. Un mot de passe qui ne convient plus est à changer à la prochaine ouverture.
 - Échange : un fichier reçu est contrôlé d'un bloc avant d'être lu. Il est refusé si l'un de ses identifiants n'a pas la forme de ceux de DNMAX ; une couleur qui n'en est pas une est ignorée, et une date de modification fantaisiste ou située dans le futur ne peut plus faire passer une version reçue pour la plus récente.
+- Échange : chaque évaluation et chaque référentiel reçus sont reconstruits champ par champ ; ce que DNMAX ne connaît pas, ou qui n'a pas la forme attendue, n'entre pas dans vos données, et un contenu démesuré est refusé.
 - Carte heuristique : l'identifiant d'une case est échappé comme le reste, pour qu'un référentiel reçu ne puisse rien glisser dans la page.
 - Export tableur : seuls des textes et des nombres sont écrits dans les cellules, jamais une formule venue d'un fichier reçu.
 - « Ouvrir le document » n'ouvre que les documents que DNMAX produit (Word, OpenDocument, tableur, PDF).
