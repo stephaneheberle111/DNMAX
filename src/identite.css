@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: CECILL-2.1 */
-/* Identité visuelle : nom « DNMA » + signe X, onglets à icône, cartes sur papier, fond de page gaufré.
+/* Identité visuelle (série 8) : logotype en pièces, onglets à picto, cartes sur papier, fond de page gaufré.
    Les couleurs sont les variables de public/heritage/application.css ; ici, la forme. */
 
 /* ---------- Papier et fond de page ---------- */
@@ -87,46 +87,57 @@ html[data-x-creux="non"] .fond-x {
   .fond-page { display: none; }
 }
 
-/* ---------- Nom : « DNMA » suivi du signe X en couleur ---------- */
+/* ---------- Couleurs des pièces : pétrole pour le design, ambre pour les métiers d'art ----------
+   En thème sombre, les nuances claires de application.css (--accent et --signal sombres), pour rester lisibles.
+   Les pictos des menus inactifs passent en deux gris : le fût plus marqué que la seconde pièce. */
+:root {
+  --piece-design: #10555f;
+  --piece-art: #c27a2c;
+  --picto-design: #6b6455;
+  --picto-art: #a39a86;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --piece-design: #62a9ae;
+    --piece-art: #d9a066;
+    --picto-design: #aba290;
+    --picto-art: #6e675a;
+  }
+}
+:root[data-theme="dark"] {
+  --piece-design: #62a9ae;
+  --piece-art: #d9a066;
+  --picto-design: #aba290;
+  --picto-art: #6e675a;
+}
+.piece-design {
+  fill: var(--piece-design);
+}
+.piece-art {
+  fill: var(--piece-art);
+}
+
+/* ---------- Logotype en pièces (planches 40 et 45) ---------- */
 .brand {
   flex-direction: row;
-  align-items: baseline;
-  gap: 1px;
-  margin-right: 8px;
+  align-items: center;
+  margin-right: 18px;
 }
-.brand b {
-  font-family: var(--fd);
-  font-weight: 800;
-  font-size: 26px;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-.signe {
-  width: 0.885em;
-  height: 0.885em;
+.logotype {
+  display: block;
+  width: 94px;
+  height: 21px;
   flex-shrink: 0;
-  margin-bottom: -0.115em;
-  font-size: 26px;
-}
-.signe-delie {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 4.6;
-  stroke-linecap: round;
-}
-.signe-plein {
-  fill: var(--accent);
 }
 
 @media (min-width: 1700px) {
-  .brand b,
-  .signe {
-    font-size: 28px;
+  .brand .logotype {
+    width: 108px;
+    height: 24px;
   }
 }
 
-/* ---------- Bandeau et onglets à icône ---------- */
+/* ---------- Bandeau et onglets à picto (planche 43) ---------- */
 header.bar {
   background: var(--surface);
   border-bottom-color: var(--line);
@@ -146,13 +157,19 @@ nav.tabs button {
   color: var(--muted);
   font-weight: 400;
 }
-nav.tabs button::before {
-  content: "";
-  width: 18px;
-  height: 18px;
+/* Le menu actif porte ses deux couleurs sur le fond pétrole pâle ; les autres sont en gris.
+   Les ronds sont détourés de la couleur du fond de l'onglet, pour se détacher du fût. */
+.picto {
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
-  background: currentColor;
-  mask: var(--icone) center / contain no-repeat;
+}
+.picto-design {
+  fill: var(--picto-design);
+}
+.picto-art {
+  fill: var(--picto-art);
+  stroke: var(--surface);
 }
 nav.tabs button:hover {
   color: var(--ink);
@@ -163,11 +180,13 @@ nav.tabs button[aria-selected="true"] {
   box-shadow: none;
   font-weight: 600;
 }
-#t-saved { --icone: url("./assets/icones/evaluations.svg"); }
-#t-prog { --icone: url("./assets/icones/progression.svg"); }
-#t-ref { --icone: url("./assets/icones/referentiel.svg"); }
-#t-org { --icone: url("./assets/icones/etablissement.svg"); }
-#t-set { --icone: url("./assets/icones/parametres.svg"); }
+nav.tabs button[aria-selected="true"] .picto-design {
+  fill: var(--piece-design);
+}
+nav.tabs button[aria-selected="true"] .picto-art {
+  fill: var(--piece-art);
+  stroke: var(--accent-soft);
+}
 
 /* ---------- Titres, cartes, boutons ---------- */
 .vue-titre {

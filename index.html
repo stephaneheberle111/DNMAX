@@ -28,13 +28,15 @@
 
 <header class="bar">
   <div class="bar-in">
-    <div class="brand" role="img" aria-label="DNMAX"><b aria-hidden="true">DNMA</b><svg class="signe" viewBox="0 0 100 100" aria-hidden="true"><path class="signe-delie" d="M13 87 42.1 57.9M64.5 35.5 87 13M8 82l10 10M82 8l10 10"/><path class="signe-plein" d="M15 26.5 42.5 13C59.5 33 72.5 55.5 81 82.5L74 86C56.5 66.5 38.5 45.5 15 26.5Z"/></svg></div>
+    <!-- Logotype en pièces (décision 4) : mêmes tracés que src/identite-pieces.ts, vérifié par src/identite-pieces.test.ts -->
+    <div class="brand"><svg class="logotype" viewBox="0 0 448 100" role="img" aria-label="DNMAX"><g transform="translate(0.00 0)"><path d="M10 10 H34 V90 H10 Z" class="piece-design"/><path d="M38 10 A40 40 0 0 1 38 90 Z" class="piece-art"/></g><g transform="translate(80.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 18.00 L38.00 42.00 L86.00 90.00 L86.00 66.00 Z" class="piece-art"/><path d="M62.00 10.00 L86.00 10.00 L86.00 60.34 L62.00 36.34 Z" class="piece-design"/></g><g transform="translate(168.00 0)"><path d="M10.00 10.00 L34.00 34.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M15.66 10.00 L100.34 10.00 L58.00 52.34 Z" class="piece-art"/><path d="M106.00 10.00 L106.00 90.00 L82.00 90.00 L82.00 34.00 Z" class="piece-design"/></g><g transform="translate(276.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 10.00 L38.00 34.00 L94.00 90.00 L94.00 66.00 Z" class="piece-art"/><path d="M38.00 62.00 L60.34 62.00 L72.34 74.00 L38.00 74.00 Z" class="piece-design"/></g><g transform="translate(372.00 0)"><path d="M10.00 10.00 L10.00 34.00 L66.00 90.00 L66.00 66.00 Z" class="piece-art"/><path d="M10.00 66.00 L10.00 90.00 L35.17 64.83 L23.17 52.83 Z M66.00 34.00 L66.00 10.00 L40.83 35.17 L52.83 47.17 Z" class="piece-design"/></g></svg></div>
+    <!-- Pictos des menus (planche 43) : deux pièces, deux couleurs, réglées dans src/identite.css -->
     <nav class="tabs" role="tablist">
-      <button role="tab" id="t-saved" aria-selected="true">Mes évaluations</button>
-      <button role="tab" id="t-prog" aria-selected="false">Progression</button>
-      <button role="tab" id="t-ref" aria-selected="false">Référentiel</button>
-      <button role="tab" id="t-org" aria-selected="false">Mon établissement</button>
-      <button role="tab" id="t-set" aria-selected="false">Paramètres</button>
+      <button role="tab" id="t-saved" aria-selected="true"><svg class="picto" viewBox="0 0 100 100" aria-hidden="true"><path class="picto-design" d="M38 12 H90 V32 H38 Z M38 40 H90 V60 H38 Z M38 68 H90 V88 H38 Z"/><path class="picto-art" d="M10 12 H30 V32 H10 Z M10 40 H30 V60 H10 Z M10 68 H30 V88 H10 Z"/></svg>Mes évaluations</button>
+      <button role="tab" id="t-prog" aria-selected="false"><svg class="picto" viewBox="0 0 100 100" aria-hidden="true"><path class="picto-design" d="M10 60 H34 V90 H10 Z M38 38 H62 V90 H38 Z"/><path class="picto-art" d="M66 10 H90 V90 H66 Z"/></svg>Progression</button>
+      <button role="tab" id="t-ref" aria-selected="false"><svg class="picto" viewBox="0 0 100 100" aria-hidden="true"><path class="picto-design" d="M12 10 H60 V90 H12 Z"/><circle class="picto-art" cx="66" cy="66" r="22" stroke-width="5"/></svg>Référentiel</button>
+      <button role="tab" id="t-org" aria-selected="false"><svg class="picto" viewBox="0 0 100 100" aria-hidden="true"><path class="picto-design" d="M18 50 H82 V90 H18 Z"/><path class="picto-art" d="M50 10 L92 46 H8 Z"/></svg>Mon établissement</button>
+      <button role="tab" id="t-set" aria-selected="false"><svg class="picto" viewBox="0 0 100 100" aria-hidden="true"><path class="picto-design" d="M10 24 H90 V36 H10 Z M10 64 H90 V76 H10 Z"/><circle class="picto-art" cx="64" cy="30" r="14" stroke-width="5"/><circle class="picto-art" cx="36" cy="70" r="14" stroke-width="5"/></svg>Paramètres</button>
     </nav>
     <!-- Ajout à l'interface historique : l'échange entre enseignants est géré par src/ecran-echange.ts,
          le menu « Mon compte » par src/ecran-compte.ts -->
