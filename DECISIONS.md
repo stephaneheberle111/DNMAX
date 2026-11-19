@@ -405,8 +405,8 @@ Dans les deux cas les évaluations elles-mêmes sont gardées : une grille ou de
 
 **Retenu** : deux choses distinctes, que l'ancien bouton confondait.
 
-- **Garder** est automatique : chaque modification est recopiée aussitôt dans la liste (`save()` de l'interface historique). Une nouvelle évaluation y entre dès qu'elle a un intitulé, un livrable ou une compétence, pour qu'un clic sur « + Nouvelle évaluation » sans suite n'y laisse pas de ligne vide.
-- **Terminer** reste un geste de l'enseignant : une évaluation entrée ainsi dans la liste porte la marque `brouillon`. Un brouillon ne compte pas dans Progression, ne peut être ni évalué, ni exporté, ni dupliqué, ni envoyé à un collègue, et n'a pas de suivi. « Enregistrer l'évaluation », à l'étape Formulation, retire la marque ; il faut un intitulé et au moins une compétence. Une évaluation enregistrée le reste : ses modifications et les résultats saisis sont pris en compte sans autre clic.
+- **Garder** est automatique : chaque modification est recopiée aussitôt dans la liste (`save()` de l'interface historique). Une nouvelle évaluation y entre dès qu'elle a un intitulé, un livrable ou une compétence, pour qu'un clic sur « Nouvelle évaluation » sans suite n'y laisse pas de ligne vide.
+- **Terminer** reste un geste de l'enseignant : une évaluation entrée ainsi dans la liste porte la marque `brouillon`. Un brouillon ne compte pas dans Progression, ne peut être ni évalué, ni exporté, ni dupliqué, ni envoyé à un collègue, et n'a pas de suivi. « Enregistrer l'évaluation », à l'étape Formulation, retire la marque ; il faut un intitulé, une consigne, une promotion, au moins un EC et au moins une compétence (`manquesPourEnregistrer`, `src/domaine/evaluation.ts`). Une évaluation enregistrée le reste : ses modifications et les résultats saisis sont pris en compte sans autre clic.
 
 **Conséquences** :
 
