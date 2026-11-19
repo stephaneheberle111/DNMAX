@@ -27,7 +27,7 @@ Le compte rendu (points relevés, corrections faites, points laissés) est joint
 5. **Versions et téléchargements** : numéro de version identique (`package.json`, `src-tauri/Cargo.toml`, CHANGELOG daté), liens de téléchargement du site valides, hébergement annoncé (OVH, GitHub) exact.
 6. **Livraison vierge** : `npm run verifier:vide` passe (aucune donnée livrée), aucun nom de personne réel dans les textes d'exemple.
 7. **Visite guidée** : chaque étape cible un élément qui existe encore et décrit l'écran actuel ; la jouer une fois de bout en bout.
-8. **Présentation** : captures aux résolutions 1280×800, 1920×1200 et 375 px de l'accueil, des menus et des boîtes principales ; thème clair et sombre ; rien de rogné ni de décentré.
+8. **Présentation** : captures aux résolutions 900×600 (largeur minimale de la fenêtre, `minWidth` de `src-tauri/tauri.conf.json` ; l'application n'existe pas sur téléphone), 1280×800 et 1920×1200 de l'accueil, des menus et des boîtes principales ; thème clair et sombre ; rien de rogné ni de décentré.
 9. **Mentions interdites** : aucune mention d'outil d'assistance dans les textes, le code ou l'historique (voir `CLAUDE.md`).
 
 ## 3. Compte rendu attendu
