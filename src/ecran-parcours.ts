@@ -749,7 +749,8 @@ function placerBulle(trou: DOMRect | null, enCoin: boolean, evite: readonly Rect
 
 /** Éléments que la bulle rangée dans un coin ne doit pas cacher ; à défaut, la zone éclairée. */
 function zonesADegager(etape: Etape, visee: DOMRect | null): DOMRect[] {
-  const selecteurs = [pointeDe(etape), etape.aDegager].filter((selecteur) => selecteur !== undefined);
+  // L'annonce « Ouvrir le document » d'un export, quand elle est affichée, ne doit pas être cachée par la bulle.
+  const selecteurs = [pointeDe(etape), etape.aDegager, ".annonce-export"].filter((selecteur) => selecteur !== undefined);
   const zones = selecteurs
     .flatMap((selecteur) => [...document.querySelectorAll(selecteur)])
     .filter((element) => estVisible(element))
@@ -987,6 +988,8 @@ function redessiner(): void {
     if (cible !== null) {
       const index = visite.index;
       ecouteClic = () => {
+        // Écoute à la capture : passe avant le traitement du clic par l'application.
+        etape.avantClic?.();
         // Laisse l'application traiter le clic avant de passer à la suite.
         window.setTimeout(() => {
           etape.apresClic?.();

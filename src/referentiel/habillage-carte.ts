@@ -377,7 +377,7 @@ function enteteAnnees(titre: string, derniere: string, contexte: ContexteHabilla
 function tableauEcs(contexte: ContexteHabillage): HTMLElement {
   const nombreCompetences = (ids: readonly unknown[]): number =>
     contexte.competencesVue.filter((competence) => (Array.isArray(competence.ecIds) ? (competence.ecIds as unknown[]) : []).some((id) => ids.includes(id))).length;
-  const tableau = balise("table", [["class", "mx"]]);
+  const tableau = balise("table", [["class", "mx fige"]]);
   const corps = balise("tbody");
   for (const groupe of contexte.groupesTableau) {
     const bande = balise("tr", [
@@ -462,7 +462,7 @@ function tableauEcs(contexte: ContexteHabillage): HTMLElement {
 function tableauCompetences(contexte: ContexteHabillage, filtre: { readonly kind: string; readonly value: string }): HTMLElement {
   const competences = competencesTableau(restreindreAuxEcs(contexte.competences, contexte.repartition?.ecs ?? null), filtre);
   if (competences.length === 0) return balise("div", [["class", "empty"]], "Aucune compétence ne correspond au filtre.");
-  const tableau = balise("table", [["class", "mx"]]);
+  const tableau = balise("table", [["class", "mx fige"]]);
   const corps = balise("tbody");
   for (const bloc of blocsTableau(competences)) {
     const bande = balise("tr", [
