@@ -5,9 +5,10 @@
    SUPPORTS_DEF, GROUPS, tidy et norm sont publiés par src/interface/constantes.ts ; BLOC_TINT est un accesseur
    de l'état. Toutes les autres fonctions de l'interface sont écrites en TypeScript (src/interface/) et publiées
    sous leur ancien nom ; le démarrage est dans src/interface/demarrage.ts, appelé juste après ce script.
-   Restent ici la carte radiale et son habillage (paintMap) ; la chaîne est dans src/interface/chaine-*.ts. */
-const anneeOf = sem => Math.floor(Math.max(0,SEMS.indexOf(sem))/2)+1;
-const ANNEES=[1,2,3];
+   Restent ici les gestes de la carte radiale (radialWire) et son habillage (paintMap) ; la chaîne est dans
+   src/interface/chaine-*.ts. Le dessin de la carte radiale (paintRadial, tlabel, radInfo, RAD, anneeOf, ANNEES)
+   est dans src/interface/radiale-dessin.ts ; l'angle de la roue (wheelAngle) y est tenu et publié sur la
+   fenêtre par un accesseur : il n'est plus déclaré ici, mais lu et affecté. */
 
 /* promotions, années scolaires et calendrier (promoShort, anneeScolaire, semSuggere…) : src/interface/promotions-calendrier.ts */
 /* Aides communes (esc, toast, askModal, paintTabs, blocName, hueOf, ecColor, ecNomRef, ueColor, ueOrd, ecNum, lienEc,
@@ -29,153 +30,13 @@ function paintExplore(){
     ecsRetenus:ecsMiens()});
 }
 
-let wheelAngle=0, wheelRaf=0;
+let wheelRaf=0;
 // carte radiale : nouvelle mise à l'échelle quand la colonne ou la fenêtre change de taille
 let radRedim=null, radObs=null;
 window.addEventListener("resize",()=>{if(radRedim)radRedim()});
-// Z0 : zoom de départ (quart bas-droit de la roue) ; ZMAX : grossissement le plus fort permis
-const RAD={RARR:505,Z0:1.65,ZMAX:2.5,S:760,c:380,PAD:100,HUB:84,RB:360,RL:380,DIST:[9,17,25,33]};
-function tlabel(x,y,lines,cls,size,lh){
-  if(!lines.length)return "";
-  return `<text class="lbl ${cls}" data-x="${x.toFixed(1)}" data-y="${y.toFixed(1)}" font-size="${size}" text-anchor="middle">`+
-    lines.map((t,i)=>`<tspan x="${x.toFixed(1)}" y="${(y+(i-(lines.length-1)/2)*lh).toFixed(1)}">${esc(t)}</tspan>`).join("")+
-    `</text>`;
-}
-function paintRadial(){
-  const D=DATA, m=REF.meta||{};
-  const groups=radialGroups();
-  const S=760, c=S/2, HUB=84;
-  const R={ue:[90,186],ec:[192,274],an:[280,324],dot:338};
-  const w=g=>Math.max(1,g.ecs.length);
-  const tot=groups.reduce((a,g)=>a+w(g),0)||1;
-  const GAP=0.014;
-  let a=-Math.PI/2, out=[], dots=[];
-  const sg=(kind,sel,inner,p,id,sem)=>`<g class="sg" data-sel="${esc(sel)}" data-kind="${kind}" data-id="${esc(id||"")}"${sem?` data-sem="${esc(sem)}"`:""} tabindex="0"`
-    +(p?` data-ring="${p.ring}" data-a0="${p.a0.toFixed(4)}" data-a1="${p.a1.toFixed(4)}" data-am="${p.am.toFixed(4)}"`:"")
-    +`>${inner}</g>`;
-  groups.forEach(g=>{
-    const span=(w(g)/tot)*Math.PI*2, a0=a+GAP/2, a1=a+span-GAP/2;
-    const uc=g.u.couleur||"#9aa2ae";
-    const uam=(a0+a1)/2, ur=(R.ue[0]+R.ue[1])/2;
-    const [ux,uy]=polar(c,ur,uam);
-    out.push(sg("ue",g.u.nom,
-      `<path class="seg" d="${arcPath(c,c,R.ue[0],R.ue[1],a0,a1)}" fill="${esc(uc)}" fill-opacity=".8"/>`+
-      tlabel(ux,uy,fitN(g.u.nom.replace(/^UE\s*/i,""),10,11,Math.min((a1-a0)*ur,R.ue[1]-R.ue[0])-10),"lue",10,11),
-      {ring:0,a0,a1,am:uam},g.u.id));
-    let e0=a0;
-    const step=(a1-a0)/Math.max(1,g.ecs.length);
-    g.ecs.forEach(ec=>{
-      const c0=e0+GAP/3, c1=e0+step-GAP/3, cm=(c0+c1)/2;
-      const col=ec.couleur||uc;
-      const nom=String(ec.nom||"").trim();
-      const rNom=(R.ec[0]+R.ec[1])/2;
-      const larg=(c1-c0)*rNom;
-      const lignes=nom?fitN(nom,9,9.5,larg-3,4):[];
-      const [ex,ey]=polar(c,rNom,cm);
-      out.push(sg("ec",ec.id,
-        `<path class="seg" d="${arcPath(c,c,R.ec[0],R.ec[1],c0,c1)}" fill="${esc(col)}" fill-opacity=".45"/>`+
-        (lignes.length?tlabel(ex,ey,lignes,"lecn",9,9.5):""),
-        {ring:1,a0:c0,a1:c1,am:cm},ec.id));
-      // couronne des années : une part par année de diplôme, semestres réunis
-      const sems0=SEMS.filter(x=>(ec.sems||[]).includes(x));
-      const sl0=sems0.length||1, sstep0=(c1-c0)/sl0;
-      const ans=ANNEES.map(an=>({an,idx:sems0.map((sm,i)=>anneeOf(sm)===an?i:-1).filter(i=>i>=0)})).filter(x=>x.idx.length);
-      (ans.length?ans:[{an:0,idx:[0]}]).forEach(({an,idx})=>{
-        const sep=ans.length>1;
-        const b0=c0+Math.min(...idx)*sstep0+(sep?GAP/5:0), b1=c0+(Math.max(...idx)+1)*sstep0-(sep?GAP/5:0), bm=(b0+b1)/2;
-        const rb=(R.an[0]+R.an[1])/2, larg=(b1-b0)*rb-4;
-        const lbl=an?("Année "+an):"—", court=an?("A"+an):"—";
-        const [mx2,my2]=polar(c,rb,bm);
-        out.push(sg("an",ec.id+"|"+an,
-          `<path class="seg" d="${arcPath(c,c,R.an[0],R.an[1],b0,b1)}" fill="${esc(col)}" fill-opacity=".26"/>`+
-          tlabel(mx2,my2,[lbl.length*4.6<=larg?lbl:court],"lan",10.5,10),
-          {ring:2,a0:b0,a1:b1,am:bm},ec.id,String(an)));
-      });
-      // points extérieurs : une compétence portée par cet EC, tous semestres confondus
-      const comps=filtComps(compsOfEc(ec.id));
-      comps.forEach((cp,i)=>{
-        const ang=c0+((i+0.5)/comps.length)*(c1-c0);
-        const rr=R.dot+(i%3)*10;
-        const [dx,dy]=polar(c,rr,ang);
-        dots.push(`<circle class="dot" cx="${dx.toFixed(1)}" cy="${dy.toFixed(1)}" r="5.2"
-          fill="${esc(col)}" data-sel="${esc(cp.code)}" data-kind="comp" data-id="${esc(cp.id)}" tabindex="0"
-          data-ring="3" data-am="${ang.toFixed(4)}"><title>${esc(cp.code+" · "+(cp.libelle||""))}</title></circle>`);
-      });
-      e0+=step;
-    });
-    a+=span;
-  });
-  const dipL=wrapN(m.diplomeNom||m.diplome||"Aucun diplôme",14,3);
-  const men=m.mention?"mention "+m.mention:"";
-  const n=dipL.length+(men?1:0);
-  let hy=c-((n-1)*16)/2;
-  let hub="";
-  dipL.forEach(t=>{hub+=`<text class="lhub" x="${c}" y="${hy.toFixed(1)}" text-anchor="middle" dominant-baseline="middle">${esc(t)}</text>`;hy+=16});
-  if(men)hub+=`<text class="lmen" x="${c}" y="${hy.toFixed(1)}" text-anchor="middle" dominant-baseline="middle">${esc(men)}</text>`;
-  const P=RAD.PAD;
-  return `<svg viewBox="${-P} ${-P} ${S+2*P} ${S+2*P}" class="radial" role="img" aria-label="Carte du référentiel">
-    <g id="wheelRot" transform="rotate(${wheelAngle.toFixed(2)} ${c} ${c})">${out.join("")}${dots.join("")}<g id="radSpread"></g></g>
-    <circle class="hub" cx="${c}" cy="${c}" r="${HUB}"/>
-    ${hub}
-    <path class="zone" d="${arcPath(c,c,HUB+2,332,-Math.PI/4,Math.PI/4)}"/>
-  </svg>`;
-}
 /* Carte heuristique (chaîne) : modèle (chainModel, chainItemText, chainNode, CH_KINDS, CH_LBL) dans
    src/interface/chaine-modele.ts ; dessin et gestes (paintChain, chainSvgNode, chainSetPivot, chainBind, pivotWheel,
    chainWire) dans src/interface/chaine-dessin.ts. Écrits en TypeScript et publiés sous leur ancien nom. */
-function radInfo(kind,sel,frozen,tint){
-  const D=DATA, box=document.getElementById("radInfo");
-  if(!box)return;
-  if(!kind){
-    box.innerHTML=`<div class="k">Carte du référentiel</div>
-      <div class="hint">Survolez pour éclater une portion, cliquez pour la figer.</div>`;
-    return;
-  }
-  const compsOfEcIds=ids=>filtComps(D.competences.filter(c=>c.ecIds.some(x=>ids.includes(x))));
-  const plural=(n,a,b)=>n+" "+(n>1?b:a);
-  let col="var(--line-strong)", cr="", k="", ttl="", tx="", sub="", pills="";
-  if(kind==="ue"){
-    const u=D.ues.find(x=>x.nom===sel)||{};
-    const ecs=filtEcs(D.ecs.filter(e=>e.ueId===u.id));
-    const ids=ecs.map(e=>e.id);
-    col=u.couleur||col; cr=tidy(u.code||""); k="Unité d'enseignement"; ttl=sel.replace(/^UE\s*/i,"");
-    sub=[plural(ecs.length,"enseignement","enseignements"),plural(compsOfEcIds(ids).length,"compétence","compétences")].join(" · ");
-  }else if(kind==="ec"){
-    const e=D.ecs.find(y=>y.id===sel)||{};
-    const u=D.ues.find(y=>y.id===e.ueId)||{};
-    col=e.couleur||col; cr=[tidy(u.code||""),(u.nom||"").replace(/^UE\s*/i,"")].filter(Boolean).join(" · ");
-    k="Enseignement constitutif"; ttl=ecName(e); tx=ANNEES.map(a=>((e.codes||{})[a]?anneeCode(a)+" : "+e.codes[a]:"")).filter(Boolean).join("  ·  ");
-    sub=[(e.sems||[]).join(" "),plural(compsOfEcIds([e.id]).length,"compétence","compétences")].filter(Boolean).join(" · ");
-  }else if(kind==="an"){
-    const [eid,a0]=String(sel).split("|"); const a=+a0;
-    const e=D.ecs.find(y=>y.id===eid)||{};
-    const u=D.ues.find(y=>y.id===e.ueId)||{};
-    const sms=(e.sems||[]).filter(sm=>anneeOf(sm)===a);
-    const n=filtComps(D.competences.filter(c=>{const l=lienEc(c,eid);
-      return !!l&&(l.sems||[]).some(sm=>anneeOf(sm)===a)})).length;
-    col=e.couleur||col;
-    cr=[tidy(u.code||""),(u.nom||"").replace(/^UE\s*/i,"")].filter(Boolean).join(" · ");
-    k="Année "+a+" · "+anneeCode(a)+(sms.length?" · "+sms.join(" "):"");
-    ttl=[((e.codes||{})[a])||"code à renseigner",ecName(e)].filter(Boolean).join(" · ");
-    tx=ANNEES.filter(y=>y!==a&&(e.codes||{})[y]).map(y=>anneeCode(y)+" : "+e.codes[y]).join("  ·  ");
-    sub=plural(n,"compétence évaluée","compétences évaluées");
-  }else{
-    const cp=D.competences.find(y=>y.code===sel)||{};
-    const b=D.blocs.find(y=>y.num===String(cp.bloc))||{};
-    cr=b.nom?"Bloc "+cp.bloc+" · "+b.nom:(cp.bloc?"Bloc "+cp.bloc:""); k="Compétence"; ttl=sel; tx=cp.libelle||"";col=tint||col;
-    const ecsC=D.ecs.filter(e=>(cp.ecIds||[]).includes(e.id));
-    sub=plural(ecsC.length,"EC rattaché","EC rattachés");
-    pills=`<div class="l">`+ecsC.map(e=>`<span class="pill c" style="--c:${esc(e.couleur||"#9aa2ae")}" title="${esc(ecCodeLbl(e)+" · "+ecName(e))}">${esc(ecCodeShort(e))}</span>`).join("")+`</div>`;
-  }
-  box.innerHTML=`<div class="rail" style="--c:${esc(col)}"></div>
-    ${cr?`<div class="cr">${esc(cr)}</div>`:""}
-    <div class="k">${esc(k)}</div>
-    <b class="ttl">${esc(ttl)}</b>
-    ${tx?`<p class="tx">${esc(tx)}</p>`:""}
-    ${sub?`<div class="s">${esc(sub)}</div>`:""}
-    ${pills}
-    ${frozen?`<div class="fz">Figé · survole la roue pour relâcher</div>`:""}`;
-}
 function radialWire(host){
   const svg=host.querySelector("svg.radial");if(!svg)return;
   const D=DATA, C=RAD.c, P=RAD.PAD, VB=RAD.S+2*P;
