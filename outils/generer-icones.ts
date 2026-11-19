@@ -3,25 +3,29 @@
 /**
  * Régénère les icônes de l'application dans src-tauri/icons/ à partir du dessin
  * de outils/icones.ts : chaque taille est rendue avec son niveau de détail, puis
- * assemblée en .ico (Windows) et .icns (macOS). Écrit aussi src-tauri/icone-source.svg,
- * ainsi que le favicon et l'icône de « À propos » (public/), pour que le signe soit le même partout.
+ * assemblée en .ico (Windows) et .icns (macOS). Rend aussi le D sans fond que la
+ * fenêtre prend pour icône dans la barre des tâches (src-tauri/src/lib.rs), en
+ * version claire et sombre. Écrit enfin src-tauri/icone-source.svg, ainsi que le
+ * favicon et l'icône de « À propos » (public/), pour que l'icône soit la même partout.
  *
  * Usage : node outils/generer-icones.ts
  */
 import { writeFileSync } from "node:fs";
 import { chromium } from "playwright";
-import { assemblerIcns, assemblerIco, svgIcone, type ImageIcone } from "./icones.ts";
+import { assemblerIcns, assemblerIco, svgIcone, svgIconeSansFond, type ImageIcone } from "./icones.ts";
 
 const DOSSIER = "src-tauri/icons";
 const TAILLES_ICO = [16, 24, 32, 48, 64, 256];
 const TAILLES_ICNS = [16, 32, 64, 128, 256, 512, 1024];
+/** Icône de fenêtre : Windows et Linux la réduisent eux-mêmes à la taille de la barre des tâches. */
+const TAILLE_BARRE_DES_TACHES = 64;
 
 const navigateur = await chromium.launch();
 try {
   const page = await navigateur.newPage();
-  const rendre = async (taille: number): Promise<Uint8Array> => {
+  const rendre = async (taille: number, svg = svgIcone(taille)): Promise<Uint8Array> => {
     await page.setViewportSize({ width: taille, height: taille });
-    await page.setContent(`<style>html,body{margin:0;background:transparent}svg{display:block}</style>${svgIcone(taille)}`);
+    await page.setContent(`<style>html,body{margin:0;background:transparent}svg{display:block}</style>${svg}`);
     return new Uint8Array(await page.locator("svg").screenshot({ omitBackground: true }));
   };
   const images = new Map<number, Uint8Array>();
@@ -35,6 +39,10 @@ try {
   writeFileSync(`${DOSSIER}/icon.png`, prendre(512).png);
   writeFileSync(`${DOSSIER}/icon.ico`, assemblerIco(TAILLES_ICO.map(prendre)));
   writeFileSync(`${DOSSIER}/icon.icns`, assemblerIcns(TAILLES_ICNS.map(prendre)));
+  for (const barre of ["clair", "sombre"] as const) {
+    const png = await rendre(TAILLE_BARRE_DES_TACHES, svgIconeSansFond(TAILLE_BARRE_DES_TACHES, barre));
+    writeFileSync(`${DOSSIER}/barre-taches-${barre}.png`, png);
+  }
   writeFileSync("src-tauri/icone-source.svg", `${svgIcone(1024)}\n`);
   writeFileSync("public/favicon.svg", `${svgIcone(32)}\n`);
   writeFileSync("public/icone.svg", `${svgIcone(128)}\n`);

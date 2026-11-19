@@ -772,6 +772,24 @@ fn decoder_pourcents(valeur: &str) -> String {
     String::from_utf8_lossy(&decode).into_owned()
 }
 
+/// Icône de la fenêtre, que Windows et Linux montrent dans la barre des tâches :
+/// le D sans fond (décision 4), pétrole et ambre sur une barre claire, blanc et
+/// ambre clair sur une barre sombre. Le pavé pétrole reste l'icône de
+/// l'application (raccourcis, installeur, Dock de macOS, qui ignore celle-ci).
+/// Images générées par `outils/generer-icones.ts`.
+fn icone_barre_taches(theme: tauri::Theme) -> tauri::image::Image<'static> {
+    match theme {
+        tauri::Theme::Dark => tauri::include_image!("icons/barre-taches-sombre.png"),
+        _ => tauri::include_image!("icons/barre-taches-clair.png"),
+    }
+}
+
+/// Pose sur la fenêtre l'icône de barre des tâches qui convient au thème du
+/// système. Un échec laisse l'icône de l'application : rien de grave.
+fn poser_icone_barre_taches(fenetre: &tauri::Window, theme: tauri::Theme) {
+    let _ = fenetre.set_icon(icone_barre_taches(theme));
+}
+
 /// Démarre l'application de bureau.
 ///
 /// # Panics
@@ -787,6 +805,19 @@ pub fn lancer() {
         .manage(Session::default())
         .manage(DernierExport::default())
         .manage(EchangeDirect::default())
+        .setup(|application| {
+            for fenetre in application.webview_windows().values() {
+                let fenetre = fenetre.as_ref().window();
+                let theme = fenetre.theme().unwrap_or(tauri::Theme::Light);
+                poser_icone_barre_taches(&fenetre, theme);
+            }
+            Ok(())
+        })
+        .on_window_event(|fenetre, evenement| {
+            if let tauri::WindowEvent::ThemeChanged(theme) = evenement {
+                poser_icone_barre_taches(fenetre, *theme);
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             enregistrer_fichier,
             ouvrir_dernier_export,
@@ -822,9 +853,28 @@ pub fn lancer() {
 
 #[cfg(test)]
 mod tests {
-    use super::{decoder_pourcents, erreur_lecture_sauvegarde, extraire_octets, ErreurCommande};
+    use super::{
+        decoder_pourcents, erreur_lecture_sauvegarde, extraire_octets, icone_barre_taches,
+        ErreurCommande,
+    };
     use std::io;
     use tauri::ipc::InvokeBody;
+
+    #[test]
+    fn la_barre_des_taches_sombre_recoit_le_d_clair() {
+        let sombre = icone_barre_taches(tauri::Theme::Dark);
+        let clair = icone_barre_taches(tauri::Theme::Light);
+        assert_eq!((sombre.width(), sombre.height()), (64, 64));
+        assert_eq!((clair.width(), clair.height()), (64, 64));
+        assert_ne!(sombre.rgba(), clair.rgba());
+    }
+
+    #[test]
+    fn le_d_de_la_barre_des_taches_est_sans_fond() {
+        let image = icone_barre_taches(tauri::Theme::Light);
+        // Le coin haut gauche est hors du D : entièrement transparent.
+        assert_eq!(image.rgba()[3], 0);
+    }
 
     #[test]
     fn une_sauvegarde_absente_de_la_liste_est_inconnue() {
