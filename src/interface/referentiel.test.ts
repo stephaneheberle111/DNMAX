@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide } from "./etat";
-import { allerALaValidation, allerALEtape, contexteDeLEtape, publierReferentiel } from "./referentiel";
+import { allerALaValidation, allerALEtape, contexteDeLEtape } from "./referentiel";
 
-let appels: string[];
+const appels = vi.hoisted(() => [] as string[]);
+vi.mock("./explorer", () => ({ paintExplore: () => appels.push("explorer") }));
+vi.mock("./aides-communes", async (importOriginal) => ({ ...(await importOriginal<typeof import("./aides-communes")>()), paintTabs: () => appels.push("onglets") }));
+vi.mock("./donnees", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./donnees")>()),
+  saveData: (redessiner?: boolean, depuisDictionnaire?: boolean) => appels.push(`enregistrer:${String(redessiner)}:${String(depuisDictionnaire)}`),
+  newId: (prefixe: string) => `${prefixe}1`,
+  persistData: () => appels.push("persist"),
+}));
 
 beforeEach(() => {
   Object.assign(etat, etatVide());
@@ -15,17 +23,10 @@ beforeEach(() => {
     refs: { d1: { ues: [{ id: "u1" }], ecs: [], blocs: [], competences: [] } },
     dico: { ues: [{ id: "u1" }, { id: "u2" }], ecs: [], blocs: [], competences: [] },
   };
-  appels = [];
-  // Sans navigateur : aucune zone de l'écran n'est trouvée, seuls les appels au fichier historique sont notés.
+  appels.length = 0;
+  // Sans navigateur : aucune zone de l'écran n'est trouvée, seuls les appels aux autres modules sont notés.
   vi.stubGlobal("document", { getElementById: () => null });
   vi.stubGlobal("window", { scrollTo: () => undefined });
-  publierReferentiel({
-    paintExplore: () => appels.push("explorer"),
-    paintTabs: () => appels.push("onglets"),
-    saveData: (redessiner?: boolean, depuisDictionnaire?: boolean) => appels.push(`enregistrer:${String(redessiner)}:${String(depuisDictionnaire)}`),
-    newId: (prefixe: string) => `${prefixe}1`,
-    persistData: () => appels.push("persist"),
-  });
 });
 
 afterEach(() => {

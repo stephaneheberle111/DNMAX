@@ -4,11 +4,11 @@
  * évaluation en cours, liste des évaluations, promotions, modules,
  * préférences et état d'affichage.
  *
- * Le temps de la reprise du fichier historique (décision 38), il est tenu ici
- * et publié sur la fenêtre sous les noms que ce fichier emploie (`DATA`, `F`…),
- * par des accesseurs : lire ou réaffecter `DATA` dans le fichier historique
- * lit ou réaffecte `etat.donnees`. Les modules TypeScript qui reprennent ses
- * fonctions lisent le même état, sans copie.
+ * Les modules de `interface/` le lisent et le modifient directement. Il est
+ * aussi publié sur la fenêtre sous les noms de l'ancien script (`DATA`, `F`…,
+ * décision 38), par des accesseurs, pour le banc de comparaison
+ * (`outils/banc/`) : lire ou réaffecter `DATA` dans la page lit ou réaffecte
+ * `etat.donnees`.
  */
 
 export type Objet = Record<string, unknown>;
@@ -39,7 +39,7 @@ export interface EtatInterface {
   teinteBlocs: string;
 }
 
-/** Nom employé par le fichier historique pour chaque partie de l'état. */
+/** Nom employé par l'ancien script pour chaque partie de l'état. */
 export const NOMS_HISTORIQUES: Readonly<Record<string, keyof EtatInterface>> = {
   DATA: "donnees",
   REF: "referentiel",
@@ -53,7 +53,7 @@ export const NOMS_HISTORIQUES: Readonly<Record<string, keyof EtatInterface>> = {
   BLOC_TINT: "teinteBlocs",
 };
 
-/** État vide, rempli par le fichier historique à son chargement. */
+/** État vide, rempli au démarrage de l'interface (`interface/demarrage`). */
 export function etatVide(): EtatInterface {
   return { donnees: {}, referentiel: {}, evaluation: {}, evaluations: [], promotions: [], modules: {}, preferences: {}, ui: {}, armement: null, teinteBlocs: "" };
 }
@@ -62,9 +62,8 @@ export function etatVide(): EtatInterface {
 export const etat: EtatInterface = etatVide();
 
 /**
- * Publie l'état sur `cible` (la fenêtre) sous les noms historiques, par des
- * accesseurs. À appeler avant le chargement du fichier historique, qui ne
- * déclare plus ces variables mais les affecte.
+ * Publie l'état sur `cible` (la fenêtre) sous les noms de l'ancien script,
+ * par des accesseurs.
  */
 export function publierEtat(cible: object, source: EtatInterface): void {
   for (const [nom, champ] of Object.entries(NOMS_HISTORIQUES)) {

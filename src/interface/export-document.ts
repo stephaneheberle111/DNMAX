@@ -5,9 +5,8 @@
  * fichier, sceau, avertissement avant d'exporter des restitutions
  * incomplètes, et remise du fichier à l'enveloppe.
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom ; la mise en
- * forme des documents est dans `export/`.
+ * Repris du fichier historique (décision 38) ; la mise en forme des documents
+ * est dans `export/`.
  */
 import { numeroCode } from "../domaine/constituer";
 import { sceauActif as sceauDemande } from "../domaine/preferences";
@@ -16,35 +15,21 @@ import { colonnesExport } from "../export/modele";
 import { construireOdt } from "../export/opendocument";
 import { construireTableur } from "../export/tableur";
 import { construireDocx } from "../export/word";
+import { toast } from "./aides-communes";
+import { critLabel } from "./donnees";
+import { rangRegroupement } from "./editeur-etape1";
 import { etat, type Objet } from "./etat";
+import { ligKey, lignesOf, migF, studentsOf } from "./evaluation-courante";
 import { libelleNiveauDuSemestre, promotionsAffichees } from "./promotions-calendrier";
 import { afficherMention, mentionDe, referentielAffiche } from "./versions-referentiel";
-
-/** Ce que le module appelle encore dans le fichier historique. */
-interface FonctionsHistoriques {
-  opIndex(id: unknown): number;
-  critLabel(): string;
-  studentsOf(evaluation: Objet): { id: string; nom: string }[];
-  lignesOf(evaluation: Objet): unknown[];
-  ligKey(ligne: unknown): string;
-  migF(evaluation: Objet): Objet;
-  toast(message: string): void;
-}
 
 /** Remise d'un fichier à l'enveloppe (boîte « Enregistrer sous »). */
 export interface Telechargements {
   save(demande: { filename: string; data: Blob; eleves: boolean }): Promise<unknown>;
 }
 
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
 let telechargements: () => Telechargements | undefined = () => undefined;
 let lireFichier: (chemin: string) => Promise<Response> = (chemin) => fetch(chemin);
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function evaluation(): Objet {
   return etat.evaluation;
@@ -113,7 +98,7 @@ export function lignesDuDocument(): LigneDocument[] {
       ecn: nomsDesEcs(ecs),
       livr: textes(regroupement.livrables).join(" ; "),
       key: `op:${String(regroupement.id)}`,
-      ord: [0, historique().opIndex(regroupement.id), 0],
+      ord: [0, rangRegroupement(regroupement.id), 0],
     });
   });
   items
@@ -147,13 +132,13 @@ export function colonnesDuDocument(): ReturnType<typeof colonnesExport> {
   return colonnesExport(
     textes(evaluation().livrables).length,
     lignesDuDocument().map((ligne) => ligne.livr || ""),
-    historique().critLabel(),
+    critLabel(),
   );
 }
 
 /** Étudiants du document : ceux de l'évaluation pour des restitutions (module Étudiants), aucun pour une grille vierge. */
 export function etudiantsDuDocument(): { id: string; nom: string }[] {
-  return etat.modules.eleves && !exportVide ? historique().studentsOf(evaluation()) : [];
+  return etat.modules.eleves && !exportVide ? studentsOf(evaluation()) : [];
 }
 
 /** Nom du fichier : semestre, promotions, intitulé et précision, sans caractère interdit, 120 caractères au plus. */
@@ -275,7 +260,7 @@ export async function exporterEvaluation(rang: number, format: string, mode: str
     etat.referentiel = referentielAffiche();
   };
   try {
-    etat.evaluation = historique().migF(structuredClone(exportee));
+    etat.evaluation = migF(structuredClone(exportee));
     exportVide = !restitutions;
     afficherMention(mentionDe(etat.evaluation));
     etat.referentiel = referentielAffiche();
@@ -287,18 +272,14 @@ export async function exporterEvaluation(rang: number, format: string, mode: str
     retablir();
     const message = erreur instanceof Error ? erreur.message : erreur;
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- message tel quel, comme avant
-    historique().toast(`${NOMS_FORMATS[format] ?? "Excel"} : ${message || erreur}`);
+    toast(`${NOMS_FORMATS[format] ?? "Excel"} : ${message || erreur}`);
   }
 }
 
 /** Étudiants pas encore entièrement évalués ; un non-rendu ou une dispense compte comme terminé. */
 export function etudiantsNonFinis(exportee: Objet): { id: string; nom: string }[] {
-  const cles = historique()
-    .lignesOf(exportee)
-    .map((ligne) => historique().ligKey(ligne));
-  return historique()
-    .studentsOf(exportee)
-    .filter((etudiant) => {
+  const cles = lignesOf(exportee).map((ligne) => ligKey(ligne));
+  return studentsOf(exportee).filter((etudiant) => {
       const resultat = ((((exportee.res || {}) as Objet)[etudiant.id] as Objet | undefined) || {});
       if (resultat.nr || resultat.disp) return false;
       const niveaux = (resultat.n || {}) as Objet;
@@ -368,50 +349,31 @@ export function avertirAvantRestitution(exportee: Objet, suite: () => void): voi
 export async function proposerFichier(nom: string, donnees: Blob, eleves = false): Promise<void> {
   const destination = telechargements();
   if (!destination) {
-    historique().toast("Téléchargement indisponible ici.");
+    toast("Téléchargement indisponible ici.");
     return;
   }
   try {
     await destination.save({ filename: nom, data: donnees, eleves });
-    historique().toast(`Fichier enregistré : ${nom}`);
+    toast(`Fichier enregistré : ${nom}`);
   } catch (erreur) {
     const code = (erreur as { code?: unknown } | null)?.code;
     if (code === "declined") return;
-    if (code === "rate_limited") historique().toast("Une demande est déjà en cours, réessaie dans un instant.");
-    else if (code === "too_large") historique().toast("Fichier trop volumineux pour cette destination.");
+    if (code === "rate_limited") toast("Une demande est déjà en cours, réessaie dans un instant.");
+    else if (code === "too_large") toast("Fichier trop volumineux pour cette destination.");
     else {
       const message = (erreur as { message?: unknown } | null)?.message;
       // eslint-disable-next-line @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions -- message tel quel, comme avant
-      historique().toast(`Échec de l'enregistrement${message ? ` : ${message}` : "."}`);
+      toast(`Échec de l'enregistrement${message ? ` : ${message}` : "."}`);
     }
   }
 }
 
 /**
- * Publie ces fonctions sous leurs anciens noms, pour le fichier historique.
- * `destination` rend la remise des fichiers à l'enveloppe (absente hors de l'interface).
+ * Donne au module `destination`, qui rend la remise des fichiers à
+ * l'enveloppe (absente hors de l'interface), et au besoin la lecture des
+ * fichiers livrés (le sceau).
  */
-export function publierExportDocument(cible: Fenetre, destination: () => Telechargements | undefined, lecture?: (chemin: string) => Promise<Response>): void {
-  fenetre = cible;
+export function brancherExportDocument(destination: () => Telechargements | undefined, lecture?: (chemin: string) => Promise<Response>): void {
   telechargements = destination;
   if (lecture) lireFichier = lecture;
-  Object.assign(cible, {
-    columns: colonnesDuDocument,
-    ecNoms: nomsDesEcs,
-    rows: lignesDuDocument,
-    eleveList: etudiantsDuDocument,
-    fname: nomDuFichier,
-    ligneContexte,
-    ligneSignature,
-    ficheExport: ficheDuDocument,
-    buildXlsx: tableur,
-    sceauActif,
-    chargerSceau,
-    buildDocx: documentWord,
-    buildOdt: documentOpenDocument,
-    exportFiche: exporterEvaluation,
-    elevesNonFinis: etudiantsNonFinis,
-    askRestitWarn: avertirAvantRestitution,
-    offer: proposerFichier,
-  });
 }

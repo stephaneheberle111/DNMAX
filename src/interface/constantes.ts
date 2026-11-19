@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: CECILL-2.1
 /**
- * Constantes et petites aides de texte que le fichier historique déclarait en
- * tête et que les adaptateurs passent aux écrans TypeScript : semestres,
- * échelle de niveaux, livrables d'origine, modes de regroupement de la
- * recherche, `tidy` et `norm`.
- *
- * Le temps de la reprise (décision 38), elles sont publiées sur la fenêtre
- * sous leurs anciens noms, avant le chargement du fichier historique, pour que
- * les fonctions qui les lisent puissent quitter ce fichier une à une.
+ * Constantes et petites aides de texte que l'ancien script déclarait en tête
+ * (décision 38) et que les adaptateurs passent aux écrans TypeScript :
+ * livrables d'origine, modes de regroupement de la recherche, `tidy` et
+ * `norm`. Les semestres et l'échelle de niveaux sont dans `domaine/`.
  */
-import { SEMESTRES } from "../domaine/constituer";
-import { ECHELLE } from "../domaine/evaluation";
 
 /** Livrables proposés à une installation neuve (Préférences > Livrables, « Rétablir la liste d'origine »). */
 export const LIVRABLES_ORIGINE: readonly string[] = [
@@ -58,18 +52,4 @@ export function norm(valeur: unknown): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "");
-}
-
-/**
- * Pose les constantes sur `fenetre` sous leurs noms historiques. Chaque appel
- * fournit des tableaux et objets neufs : l'historique pouvait les modifier
- * sans toucher aux constantes du domaine.
- */
-export function publierConstantes(fenetre: Record<string, unknown>): void {
-  fenetre["SEMS"] = [...SEMESTRES];
-  fenetre["PRESETS"] = { maitrise: { nom: ECHELLE.nom, niveaux: [...ECHELLE.niveaux] } };
-  fenetre["SUPPORTS_DEF"] = [...LIVRABLES_ORIGINE];
-  fenetre["GROUPS"] = { ...MODES_REGROUPEMENT };
-  fenetre["tidy"] = tidy;
-  fenetre["norm"] = norm;
 }

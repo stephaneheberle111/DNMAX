@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { etatVide, NOMS_HISTORIQUES, publierEtat } from "./etat";
 
 describe("publierEtat", () => {
-  it("fait lire l'état sous les noms du fichier historique", () => {
+  it("fait lire l'état sous ses anciens noms", () => {
     const source = etatVide();
     source.donnees = { activeDiplome: "d1" };
     const fenetre: Record<string, unknown> = {};
@@ -35,7 +35,7 @@ describe("publierEtat", () => {
     expect(source.armement).toBe("ens1");
   });
 
-  it("publie la teinte des blocs, vide jusqu'à ce que le fichier historique la relève", () => {
+  it("publie la teinte des blocs, vide jusqu'à ce que le démarrage la relève", () => {
     const source = etatVide();
     const fenetre: Record<string, unknown> = {};
     publierEtat(fenetre, source);

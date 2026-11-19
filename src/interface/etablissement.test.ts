@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: CECILL-2.1
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide } from "./etat";
-import { aEuLaPromotionDonnee, armerSuppression, ecsDeLaPromotion, publierEtablissement, repartitionDe, repartitionLue } from "./etablissement";
-import { publierPromotionsCalendrier } from "./promotions-calendrier";
+import { aEuLaPromotionDonnee, armerSuppression, ecsDeLaPromotion, repartitionDe, repartitionLue } from "./etablissement";
+import { brancherPromotionsCalendrier } from "./promotions-calendrier";
 
-let dessins: string[];
-let fenetre: Record<string, unknown>;
+const dessins = vi.hoisted(() => [] as string[]);
+vi.mock("./preferences-parametres", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./preferences-parametres")>()),
+  paintPrefs: () => dessins.push("pref"),
+}));
+vi.mock("./referentiel", async (importOriginal) => ({ ...(await importOriginal<typeof import("./referentiel")>()), peindreReferentiel: () => dessins.push("ref") }));
 
 beforeEach(() => {
   Object.assign(etat, etatVide());
@@ -15,10 +19,8 @@ beforeEach(() => {
     refs: { d1: { ues: [], ecs: [{ id: "e1", ueId: "", codes: { 1: "EC 1.1", 2: "EC 2.1" } }], blocs: [], competences: [] } },
     dico: { ues: [], ecs: [{ id: "e1", nom: "Atelier" }], blocs: [], competences: [] },
   };
-  dessins = [];
-  fenetre = { paintPrefs: () => dessins.push("pref"), paintRef: () => dessins.push("ref") };
-  publierPromotionsCalendrier(fenetre, () => undefined);
-  publierEtablissement(fenetre);
+  dessins.length = 0;
+  brancherPromotionsCalendrier(() => undefined);
 });
 
 describe("répartition de service", () => {

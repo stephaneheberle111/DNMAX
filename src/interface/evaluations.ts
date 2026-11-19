@@ -4,48 +4,27 @@
  * évaluation, filtres de la liste, liste elle-même et fenêtre des actions
  * (évaluer, exporter, dupliquer, supprimer).
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom ; l'export d'un
- * document (`exportFiche`, `offer`) et l'avertissement avant de restituer
- * restent dans le fichier historique, qui les appelle encore.
+ * Repris du fichier historique (décision 38). L'export d'un document et
+ * l'avertissement avant de restituer sont dans `interface/export-document`.
  */
-import { correspondFiltres, filtresActifs, filtresParDefaut, normaliserFiltres, profsDe } from "../domaine/filtres-evaluations";
+import { correspondFiltres, filtresActifs, filtresParDefaut, normaliserFiltres } from "../domaine/filtres-evaluations";
 import { avancementSaisie, estEvaluee, LIBELLES_STATUT, promotionsVisees, restitutionsEtudiants, statutEvaluation } from "../domaine/suivi-evaluation";
 import { apresDessinListe, ouvrirActions, type ContexteActions } from "../evaluations/actions";
 import { peindreFiltres, type ContexteFiltres } from "../evaluations/filtres";
 import { peindreListe, type ContexteListe } from "../evaluations/liste";
+import { paintTabs, toast as afficherBulle } from "./aides-communes";
 import { allerALEtape, enregistrer, peindreLignes } from "./editeur";
+import { evaluationVierge, nouvelleEvaluation, peindreCompetencesChoisies, peindreFormulaire, rendusManquants } from "./editeur-etape1";
 import { aEuLaPromotionDonnee } from "./etablissement";
 import { etat, type Objet } from "./etat";
+import { migF, studentsOf, uid } from "./evaluation-courante";
+import { chargerExemple } from "./exemple";
+import { avertirAvantRestitution, exporterEvaluation } from "./export-document";
 import { anneeDeFormation, anneeScolaire, dureePromotion, nomAffiche, nomCourt, normaliserPromotion, promotionsAffichees } from "./promotions-calendrier";
 import { afficherMention, mentionDe } from "./versions-referentiel";
 
-/** Ce que le module appelle encore dans le fichier historique. */
-interface FonctionsHistoriques {
-  studentsOf(evaluation: Objet): { id: string }[];
-  rendusManquants(evaluation: Objet): number;
-  toast(message: string): void;
-  vierge(): Objet;
-  migF(evaluation: Objet): Objet;
-  uid(): string;
-  paintTabs(): void;
-  paintForm(): void;
-  paintPick(): void;
-  nouvelleFiche(): void;
-  loadDemo(): unknown;
-  askRestitWarn(evaluation: Objet, suite: () => void): void;
-  exportFiche(rang: number, format: string, mode: string): unknown;
-}
-
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
 let ecrire: (cle: string, valeur: string) => void = () => undefined;
 let lire: (cle: string) => string | null = () => null;
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function ui(): Objet {
   return etat.ui;
@@ -69,9 +48,7 @@ function lireEntree(cle: string, parDefaut: unknown): unknown {
 }
 
 function idsEtudiants(evaluation: Objet): string[] {
-  return historique()
-    .studentsOf(evaluation)
-    .map((etudiant) => etudiant.id);
+  return studentsOf(evaluation).map((etudiant) => etudiant.id);
 }
 
 function aujourdhui(): string {
@@ -135,7 +112,7 @@ export function retirerDeLaListe(rang: number): void {
   etat.evaluations.splice(rang, 1);
   ecrireEntree("dnmade.fiches", etat.evaluations);
   if (etat.evaluation.id === retiree.id) {
-    etat.evaluation = historique().vierge();
+    etat.evaluation = evaluationVierge();
     ecrireEntree("dnmade.draft", etat.evaluation);
   }
   peindreEvaluations();
@@ -184,7 +161,7 @@ export function promotionsDe(evaluation: Objet): Objet[] {
   const noms =
     Array.isArray(evaluation.classes) && evaluation.classes.length
       ? (evaluation.classes as unknown[])
-      : // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface historique
+      : // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface
         String(evaluation.classe || "")
           .split(/,\s*/)
           .filter(Boolean);
@@ -254,7 +231,7 @@ export function peindreFiltresDeLaListe(): void {
 
 /** Ouvre une copie de l'évaluation de la liste dans l'éditeur, sur la mention de sa promotion. */
 function ouvrirDansLEditeur(rang: number): void {
-  etat.evaluation = historique().migF(structuredClone(etat.evaluations[rang] as Objet));
+  etat.evaluation = migF(structuredClone(etat.evaluations[rang] as Objet));
   afficherMention(mentionDe(etat.evaluation));
 }
 
@@ -273,14 +250,14 @@ export function peindreEvaluations(): void {
     ecrireEntree("dnmade.fiches", etat.evaluations);
   };
   const toast = (message: string): void => {
-    historique().toast(message);
+    afficherBulle(message);
   };
   const contexteActions = {
     evaluation: (rang: number) => etat.evaluations[rang],
     moduleEleves: !!etat.modules.eleves,
     suivi: suiviDe,
     saisie: saisieDansDnmax,
-    rendusManquants: (evaluation: Objet) => historique().rendusManquants(evaluation),
+    rendusManquants: (evaluation: Objet) => rendusManquants(evaluation),
     evaluationsIndividuelles,
     promotionsVisees,
     nomPromotion: nomAffiche,
@@ -298,9 +275,9 @@ export function peindreEvaluations(): void {
       ui().tab = "new";
       ui().step = 4;
       ui().eleve = "";
-      historique().paintTabs();
-      historique().paintForm();
-      historique().paintPick();
+      paintTabs();
+      peindreFormulaire();
+      peindreCompetencesChoisies();
       peindreLignes();
       allerALEtape(4);
     },
@@ -308,10 +285,12 @@ export function peindreEvaluations(): void {
       const evaluation = etat.evaluations[rang];
       if (!evaluation) return;
       if (mode === "rest") {
-        historique().askRestitWarn(evaluation, () => historique().exportFiche(rang, format, "rest"));
+        avertirAvantRestitution(evaluation, () => {
+          void exporterEvaluation(rang, format, "rest");
+        });
         return;
       }
-      void historique().exportFiche(rang, format, "eval");
+      void exporterEvaluation(rang, format, "eval");
       if (!suiviDe(evaluation).exporte) {
         (evaluation.suivi as Objet).exporte = aujourdhui();
         synchroniser(evaluation);
@@ -321,7 +300,7 @@ export function peindreEvaluations(): void {
     dupliquer: (rang: number) => {
       ouvrirDansLEditeur(rang);
       const copie = etat.evaluation;
-      copie.id = historique().uid();
+      copie.id = uid();
       copie.titre = `${String(copie.titre)} (copie)`;
       copie.date = new Date().toISOString().slice(0, 10);
       delete copie.distribPrev;
@@ -329,9 +308,9 @@ export function peindreEvaluations(): void {
       if (copie.suivi) (copie.suivi as Objet).saisie = copie.date;
       enregistrer();
       ui().tab = "new";
-      historique().paintTabs();
-      historique().paintForm();
-      historique().paintPick();
+      paintTabs();
+      peindreFormulaire();
+      peindreCompetencesChoisies();
     },
     synchroniser: (evaluation: Objet, vides: boolean) => {
       if (vides && etat.evaluation.id === evaluation.id) {
@@ -354,9 +333,9 @@ export function peindreEvaluations(): void {
     ui().tab = "new";
     ui().sel = [];
     ui().eleve = "";
-    historique().paintTabs();
-    historique().paintForm();
-    historique().paintPick();
+    paintTabs();
+    peindreFormulaire();
+    peindreCompetencesChoisies();
     peindreLignes();
     allerALEtape(ui().step === 4 ? 1 : ui().step);
   };
@@ -384,10 +363,8 @@ export function peindreEvaluations(): void {
     saisie: saisieDansDnmax,
     restitutions: restitutionsDesEtudiants,
     datesRestitutionEtudiants: (evaluation: Objet) =>
-      historique()
-        .studentsOf(evaluation)
-        .map((etudiant) => (((evaluation.res || {}) as Objet)[etudiant.id] as Objet | undefined)?.rest),
-    rendusManquants: (evaluation: Objet) => historique().rendusManquants(evaluation),
+      studentsOf(evaluation).map((etudiant) => (((evaluation.res || {}) as Objet)[etudiant.id] as Objet | undefined)?.rest),
+    rendusManquants: (evaluation: Objet) => rendusManquants(evaluation),
     evaluationsIndividuelles,
     armee: ui().delArm || null,
     etapeOuverte: () => (ui().stOpen == null ? null : String(ui().stOpen)),
@@ -434,45 +411,17 @@ export function peindreEvaluations(): void {
       peindreEvaluations();
     },
     nouvelleEvaluation: () => {
-      historique().nouvelleFiche();
+      nouvelleEvaluation();
     },
-    chargerExemple: () => historique().loadDemo(),
+    chargerExemple: () => chargerExemple(),
     apresDessin: () => {
       apresDessinListe(hote, contexteActions);
     },
   } as unknown as ContexteListe);
 }
 
-/**
- * Publie ces fonctions sous leurs anciens noms, pour le fichier historique.
- * `ecrireStockage` et `lireStockage` donnent accès aux entrées enregistrées.
- */
-export function publierEvaluations(cible: Fenetre, ecrireStockage: (cle: string, valeur: string) => void, lireStockage: (cle: string) => string | null): void {
-  fenetre = cible;
+/** Donne au module l'accès aux entrées enregistrées. */
+export function brancherEvaluations(ecrireStockage: (cle: string, valeur: string) => void, lireStockage: (cle: string) => string | null): void {
   ecrire = ecrireStockage;
   lire = lireStockage;
-  Object.assign(cible, {
-    suiviOf: suiviDe,
-    saisieDnmax: saisieDansDnmax,
-    promosNomsOf: promotionsVisees,
-    restEleves: restitutionsDesEtudiants,
-    statutOf: statutDe,
-    evalueeF: estEvalueeDonnee,
-    suiviSimple: suiviSimplifie,
-    nbIndiv: evaluationsIndividuelles,
-    retirerDeLaListe,
-    armList: armerDansLaListe,
-    mesPromoIds: mesPromotions,
-    promoVisible: promotionVisible,
-    sfDefault: filtresParDefaut,
-    sfState: etatDesFiltres,
-    profsOf: profsDe,
-    moiNom: nomDeMoi,
-    promosOfF: promotionsDe,
-    promoEnCours: promotionEnCours,
-    sfMatch: correspondAuxFiltres,
-    sfActive: filtresEnPlace,
-    paintSavedFilters: peindreFiltresDeLaListe,
-    paintSaved: peindreEvaluations,
-  });
 }

@@ -4,33 +4,20 @@
  * question oui / non, redessin de la barre des onglets, nom d'un bloc,
  * couleur et nom d'un EC ou d'une UE, ordre des EC.
  *
- * Reprises du fichier historique (décision 38) sans rien changer : la carte
- * radiale et la chaîne, qui restent dans ce fichier jusqu'à leur reprise
- * (0.9.2), les appellent toujours par leur ancien nom, publié sur la fenêtre.
+ * Reprises du fichier historique (décision 38) sans rien changer.
  */
 import { numeroCode, ordreEc } from "../domaine/constituer";
 import { afficherPage } from "./onglets";
 import { tidy } from "./constantes";
+import { peindreLigneEnregistrement } from "./editeur";
 import { etat, type Objet } from "./etat";
-
-/** Ce que le module appelle encore par la fenêtre. */
-interface FonctionsHistoriques {
-  paintEnregistrement(): void;
-}
-
-type Fenetre = Record<string, unknown>;
 
 const ANNEES = [1, 2, 3];
 
 /** Durée d'affichage d'une bulle d'annonce, en millisecondes. */
 const DUREE_ANNONCE = 3200;
 
-let fenetre: Fenetre = {};
 let documentCourant: Document | null = null;
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function page(): Document {
   if (documentCourant === null) throw new Error("aides communes : document absent");
@@ -124,7 +111,7 @@ export function toast(message: string): void {
 /** Affiche la page de l'onglet courant et redessine la ligne d'enregistrement. */
 export function paintTabs(): void {
   etat.ui.tab = afficherPage(page(), etat.ui.tab);
-  historique().paintEnregistrement();
+  peindreLigneEnregistrement();
 }
 
 /** Teinte tirée du texte, stable d'une fois sur l'autre. */
@@ -174,9 +161,7 @@ export function ecOrd(ec: Objet | null | undefined): number {
   return ordreEc(ec || {});
 }
 
-/** Pose ces fonctions sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierAidesCommunes(cible: Fenetre, document: Document | null): void {
-  fenetre = cible;
+/** Donne aux aides le document où poser bulles et questions. */
+export function brancherAidesCommunes(document: Document | null): void {
   documentCourant = document;
-  Object.assign(cible, { blocName, esc, askModal, toast, paintTabs, hueOf, refEcByCode, ecColor, ecNomRef, ueColor, ueOrd, ecNum, lienEc, ecOrd });
 }

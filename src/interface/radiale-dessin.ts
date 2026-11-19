@@ -19,8 +19,6 @@ import { tidy } from "./constantes";
 import { anneeCode, ecCodeLbl, ecCodeShort } from "./donnees";
 import { etat, type Objet } from "./etat";
 
-type Fenetre = Record<string, unknown>;
-
 /** Années d'un diplôme, dans l'ordre de la couronne. */
 export const ANNEES = [1, 2, 3];
 
@@ -276,8 +274,7 @@ export function radInfo(kind: string | null | undefined, sel?: unknown, frozen?:
     ${frozen ? `<div class="fz">Figé · survole la roue pour relâcher</div>` : ""}`;
 }
 
-/** Pose ces fonctions et constantes sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierRadialeDessin(cible: Fenetre, document: Document | null): void {
+/** Donne au dessin de la carte radiale le document où il dessine. */
+export function brancherRadialeDessin(document: Document | null): void {
   documentCourant = document;
-  Object.assign(cible, { anneeOf, ANNEES, RAD, tlabel, paintRadial, radInfo });
 }

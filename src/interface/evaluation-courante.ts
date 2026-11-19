@@ -5,24 +5,17 @@
  * étudiants d'une évaluation, lignes de la grille, bilan de la saisie,
  * promotions et semestre retenus, compétences et EC du semestre.
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom, que le fichier
- * historique appelle encore ; les règles elles-mêmes sont dans `domaine/`.
+ * Repris du fichier historique (décision 38) ; les règles elles-mêmes sont
+ * dans `domaine/`.
  */
 import { classesNettoyees, ecsRetenus, lignesDe, normaliserEvaluation } from "../domaine/evaluation";
 import { completerPersonne as completer, composerNom as composer, lignesNoms as lignes, nouvellePersonne as nouvelle, separerPrenomNom as separer, type Personne } from "../domaine/personnes";
 import { rafraichirListe } from "../domaine/promotions";
 import { bilanSaisie } from "../domaine/saisie-resultats";
+import { ecNum } from "./aides-communes";
 import { newId } from "./donnees";
+import { ecsDeLUe } from "./editeur-etape1";
 import { etat, type Objet } from "./etat";
-
-/** Ce que le module appelle encore dans le fichier historique. */
-interface FonctionsHistoriques {
-  ecsOfUe(ue: unknown, semestre: unknown): string[];
-  ecNum(code: unknown): number;
-}
-
-type Fenetre = Record<string, unknown>;
 
 /** Ligne de la grille sous la forme qu'attend l'affichage : les objets mêmes de l'évaluation. */
 export type LigneGrille = { k: "op"; o: Objet; its: Objet[] } | { k: "one"; it: Objet };
@@ -34,12 +27,7 @@ interface EtudiantDePromotion {
   promo: Objet;
 }
 
-let fenetre: Fenetre = {};
 let tirage: () => number = () => 0;
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function evaluation(): Objet {
   return etat.evaluation;
@@ -212,7 +200,7 @@ export function itemEcs(competence: Objet, semestre: unknown): string[] {
   const courante = evaluation();
   return ecsRetenus(
     ecsOf(competence, semestre).map((ec) => ec.ec as string),
-    [...(courante.ecCodes as string[]), ...((courante.ues || []) as unknown[]).flatMap((ue) => historique().ecsOfUe(ue, semestre))],
+    [...(courante.ecCodes as string[]), ...((courante.ues || []) as unknown[]).flatMap((ue) => ecsDeLUe(ue, semestre) as string[])],
   );
 }
 
@@ -232,35 +220,10 @@ export function ecsOfSem(semestre: unknown): Objet[] {
       if (!parCode.has(ec.ec)) parCode.set(ec.ec, { ec: ec.ec, nom: ec.nom, ue: ec.ue, couleur: ec.couleur });
     });
   });
-  return [...parCode.values()].sort((premier, second) => historique().ecNum(premier.ec) - historique().ecNum(second.ec));
+  return [...parCode.values()].sort((premier, second) => ecNum(premier.ec) - ecNum(second.ec));
 }
 
-/** Pose ces fonctions sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierEvaluationCourante(cible: Fenetre, hasard: () => number): void {
-  fenetre = cible;
+/** Donne au module le hasard dont il tire les identifiants. */
+export function brancherEvaluationCourante(hasard: () => number): void {
   tirage = hasard;
-  Object.assign(cible, {
-    migF,
-    separerPrenomNom,
-    composerNom,
-    nouvellePersonne,
-    completerPersonne,
-    lignesNoms,
-    syncListe,
-    migPromo,
-    promoElevesOf,
-    studentsOf,
-    lignesOf,
-    ligKey,
-    ligTitre,
-    evalStats,
-    setClasses,
-    uid,
-    setSemestre,
-    ecsOf,
-    compsFor,
-    itemEcs,
-    syncItemEcs,
-    ecsOfSem,
-  });
 }

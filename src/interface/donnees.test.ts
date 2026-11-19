@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CECILL-2.1
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide } from "./etat";
 import {
   anneeCode,
@@ -12,40 +12,41 @@ import {
   modDeps,
   newId,
   persistData,
-  publierDonnees,
+  brancherDonnees,
   saveData,
   savePrefs,
 } from "./donnees";
 
-let ecrits: [string, string][] = [];
-let appels: string[] = [];
-let fenetre: Record<string, unknown> = {};
+const appels = vi.hoisted(() => [] as string[]);
+const noter = vi.hoisted(() => (nom: string) => () => {
+  appels.push(nom);
+});
 
-function brancher(ecrire: (cle: string, valeur: string) => void = (cle, valeur) => ecrits.push([cle, valeur])): void {
-  fenetre = {};
-  for (const nom of ["cleanOps", "syncItemEcs", "save", "paintForm", "paintPick", "paintLignes", "paintRef", "paintOrg", "paintPrefs"]) {
-    fenetre[nom] = () => appels.push(nom);
-  }
-  fenetre.computeREF = () => {
+// Ce que `saveData` appelle dans les autres modules, relevé sous les anciens noms, dans l'ordre.
+vi.mock("./versions-referentiel", () => ({
+  referentielAffiche: () => {
     appels.push("computeREF");
     return { competences: [{ code: "C1" }] };
-  };
-  publierDonnees(fenetre, { ecrireStockage: ecrire, maintenant: () => 36 ** 3, hasard: () => 0.5 });
+  },
+}));
+vi.mock("./editeur-etape1", () => ({ nettoyerLesRegroupements: noter("cleanOps"), peindreFormulaire: noter("paintForm"), peindreCompetencesChoisies: noter("paintPick") }));
+vi.mock("./evaluation-courante", () => ({ syncItemEcs: noter("syncItemEcs") }));
+vi.mock("./editeur", () => ({ enregistrer: noter("save"), peindreLignes: noter("paintLignes") }));
+vi.mock("./referentiel", () => ({ peindreReferentiel: noter("paintRef") }));
+vi.mock("./etablissement", () => ({ peindreEtablissement: noter("paintOrg") }));
+vi.mock("./preferences-parametres", () => ({ paintPrefs: noter("paintPrefs") }));
+
+let ecrits: [string, string][] = [];
+
+function brancher(ecrire: (cle: string, valeur: string) => void = (cle, valeur) => ecrits.push([cle, valeur])): void {
+  brancherDonnees({ ecrireStockage: ecrire, maintenant: () => 36 ** 3, hasard: () => 0.5 });
 }
 
 beforeEach(() => {
   Object.assign(etat, etatVide());
   ecrits = [];
-  appels = [];
+  appels.length = 0;
   brancher();
-});
-
-describe("publierDonnees", () => {
-  it("publie les fonctions sous leurs noms historiques", () => {
-    for (const nom of ["saveData", "persistData", "newId", "anneeCode", "ecCodeLbl", "dipVisibles", "savePrefs", "modDeps"]) {
-      expect(typeof fenetre[nom]).toBe("function");
-    }
-  });
 });
 
 describe("newId", () => {

@@ -6,32 +6,19 @@
  * date selon le calendrier de l'établissement, semestre proposé pour
  * l'évaluation en cours.
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom, que le fichier
- * historique appelle encore ; les règles elles-mêmes sont dans `domaine/`.
+ * Repris du fichier historique (décision 38) ; les règles elles-mêmes sont
+ * dans `domaine/`.
  */
 import { codeDiplome } from "../domaine/diplomes";
 import { anneeDeClasse, anneeScolaire as anneeScolaireDeLaDate, lireCalendrier, rangSemestre as rangSemestreDeLaDate, semestreSuggere, semestresDeLAnnee, type Calendrier } from "../domaine/evaluation";
 import { codeAnnee } from "../domaine/modele-donnees";
 import { rafraichirListe } from "../domaine/promotions";
 import { etat, type Objet } from "./etat";
+import { setSemestre } from "./evaluation-courante";
 
 const SEMESTRES = ["S1", "S2", "S3", "S4", "S5", "S6"];
 
-/** Ce que le module appelle encore dans le fichier historique. */
-interface FonctionsHistoriques {
-  setSemestre(semestre: string): void;
-}
-
-/** Fenêtre où vivent les fonctions publiées et celles du fichier historique. */
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
 let ecrire: (cle: string, valeur: string) => void = () => undefined;
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function liste(valeur: unknown): Objet[] {
   return Array.isArray(valeur) ? (valeur as Objet[]) : [];
@@ -47,7 +34,7 @@ function anneeDuSemestre(semestre: unknown): number {
 
 /** Première année (sur quatre chiffres) d'une année scolaire « 2025-2026 », ou `null`. */
 export function debutAnneeScolaire(anneeScolaire: unknown): number | null {
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface historique
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface
   const trouve = /(\d{4})/.exec(String(anneeScolaire || ""));
   return trouve ? Number(trouve[1]) : null;
 }
@@ -64,7 +51,7 @@ export function dureePromotion(promotion: Objet): number {
 /** « DNO-2025-2028 » : code du diplôme, année d'entrée, année de sortie. */
 export function nomAutomatique(promotion: Objet): string {
   const diplome = diplomes().find((candidat) => candidat.id === promotion.diplomeId) ?? {};
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- même concaténation que l'interface historique
+  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- même concaténation que l'interface
   return `${codeDiplome(diplome) || "DN"}-${promotion.debut}-${String(Number(promotion.debut) + dureePromotion(promotion))}`;
 }
 
@@ -137,7 +124,7 @@ export function nomAffiche(nom: string): string {
 /** Promotions d'une évaluation (la courante par défaut), par leur nom affiché. */
 export function promotionsAffichees(evaluation?: Objet): string {
   const source = evaluation ?? etat.evaluation;
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface historique
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface
   const noms = Array.isArray(source.classes) ? (source.classes as string[]) : String(source.classe || "").split(/,\s*/).filter(Boolean);
   return noms.map(nomAffiche).join(", ");
 }
@@ -202,43 +189,13 @@ export function caleSemestreSurLaDate(): boolean {
   if (etat.evaluation.semManuel) return false;
   const propose = semestrePropose();
   if (propose && propose !== etat.evaluation.semestre) {
-    historique().setSemestre(propose);
+    setSemestre(propose);
     return true;
   }
   return false;
 }
 
-/**
- * Publie ces fonctions sous leurs anciens noms, pour le fichier historique.
- * `ecrireStockage` enregistre une entrée (les promotions).
- */
-export function publierPromotionsCalendrier(cible: Fenetre, ecrireStockage: (cle: string, valeur: string) => void): void {
-  fenetre = cible;
+/** Donne au module l'écriture du stockage (les promotions). */
+export function brancherPromotionsCalendrier(ecrireStockage: (cle: string, valeur: string) => void): void {
   ecrire = ecrireStockage;
-  Object.assign(cible, {
-    asStart: debutAnneeScolaire,
-    dipDuree: dureeDiplome,
-    promoDuree: dureePromotion,
-    promoNomAuto: nomAutomatique,
-    migPromoCohorte: normaliserPromotion,
-    promoAnneeAt: anneeDeFormation,
-    promoLive: promotionALAnnee,
-    curPromo: promotionCourante,
-    promoShort: nomCourt,
-    promoDisp: nomAffiche,
-    classesDisp: promotionsAffichees,
-    savePromos: enregistrerPromotions,
-    dnOf: codeAnneeDuSemestre,
-    dnLabel: libelleNiveauDuSemestre,
-    anneeLabel: libelleAnnee,
-    semsOfAnnee: semestresDeLaAnnee,
-    dateFiche: dateDeReference,
-    calendrier,
-    anneeScolaire,
-    rangSemestre,
-    semSuggere: semestrePropose,
-    applySemDate: caleSemestreSurLaDate,
-    anneeOfClasse: anneeDeLaClasse,
-    anneeFiche: anneeDeLEvaluation,
-  });
 }

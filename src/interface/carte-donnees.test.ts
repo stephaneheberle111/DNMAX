@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { compsOfEc, ecName, ecsMiens, filtComps, filtEcs, filtUes, publierCarteDonnees, radialGroups, refFilter, repartitionCarte, semItems, semLie } from "./carte-donnees";
+import { compsOfEc, ecName, ecsMiens, filtComps, filtEcs, filtUes, radialGroups, refFilter, repartitionCarte, semItems, semLie } from "./carte-donnees";
 import { anneeScolaire } from "./promotions-calendrier";
 
 function filtrer(kind: string, value: string): void {
@@ -26,14 +26,6 @@ beforeEach(() => {
     ],
   };
   etat.ui = { ref: { filter: { kind: "", value: "" } } };
-});
-
-describe("publierCarteDonnees", () => {
-  it("publie les données et les calculs de la carte sous leurs noms historiques", () => {
-    const fenetre: Record<string, unknown> = {};
-    publierCarteDonnees(fenetre);
-    for (const nom of ["arcPath", "polar", "wrapN", "fitN", "refFilter", "radialGroups", "semItems", "ecName"]) expect(typeof fenetre[nom]).toBe("function");
-  });
 });
 
 describe("refFilter", () => {

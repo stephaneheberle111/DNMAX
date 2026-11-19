@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide } from "./etat";
-import { blocName, ecColor, ecNomRef, ecOrd, esc, hueOf, lienEc, publierAidesCommunes, refEcByCode, toast, ueColor, ueOrd } from "./aides-communes";
+import { blocName, ecColor, ecNomRef, ecOrd, esc, hueOf, lienEc, brancherAidesCommunes, refEcByCode, toast, ueColor, ueOrd } from "./aides-communes";
 
 beforeEach(() => {
   Object.assign(etat, etatVide());
@@ -13,16 +13,6 @@ beforeEach(() => {
       { ue: "UE2", nom: "Volume", codes: { 1: "EC 1.2" } },
     ],
   };
-});
-
-describe("publierAidesCommunes", () => {
-  it("publie les aides sous leurs noms historiques", () => {
-    const fenetre: Record<string, unknown> = {};
-    publierAidesCommunes(fenetre, null);
-    for (const nom of ["esc", "toast", "askModal", "paintTabs", "blocName", "ecColor", "ueColor", "ueOrd", "ecNum", "lienEc", "ecOrd"]) {
-      expect(typeof fenetre[nom]).toBe("function");
-    }
-  });
 });
 
 describe("esc", () => {
@@ -99,7 +89,7 @@ describe("toast", () => {
       },
       body: { appendChild: (bulle: (typeof ajoutees)[number]) => ajoutees.push(bulle) },
     } as unknown as Document;
-    publierAidesCommunes({}, document);
+    brancherAidesCommunes(document);
     toast("Enregistré.");
     expect(ajoutees).toHaveLength(1);
     expect(ajoutees[0]).toMatchObject({ className: "toast", textContent: "Enregistré.", retiree: false });

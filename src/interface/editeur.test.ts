@@ -1,8 +1,22 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { publierEditeur, enregistrerDansLaListe, estBrouillon, etatEnregistrement, contexteSaisie } from "./editeur";
+import { brancherEditeur, enregistrerDansLaListe, estBrouillon, etatEnregistrement, contexteSaisie } from "./editeur";
 import { etat, etatVide } from "./etat";
-import { publierVersionsReferentiel } from "./versions-referentiel";
+import { brancherVersionsReferentiel } from "./versions-referentiel";
+
+vi.mock("./evaluations", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./evaluations")>()),
+  suiviDe: (evaluation: Record<string, unknown>) => {
+    evaluation.suivi = evaluation.suivi ?? { saisie: "2026-11-18" };
+  },
+}));
+vi.mock("./evaluation-courante", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./evaluation-courante")>()),
+  studentsOf: () => [{ id: "s1", nom: "Ana" }],
+  lignesOf: () => ["l1"],
+  ligKey: () => "one:C1",
+  ligTitre: () => ({ code: "C1", lib: "Compétence" }),
+}));
 
 let stockage: Map<string, string>;
 
@@ -11,17 +25,8 @@ beforeEach(() => {
   etat.donnees = { activeDiplome: "d1", diplomes: [{ id: "d1" }] };
   etat.ui = { step: 1, sel: [] };
   stockage = new Map();
-  const fenetre: Record<string, unknown> = {
-    suiviOf: (evaluation: Record<string, unknown>) => {
-      evaluation.suivi = evaluation.suivi ?? { saisie: "2026-11-18" };
-    },
-    studentsOf: () => [{ id: "s1", nom: "Ana" }],
-    lignesOf: () => ["l1"],
-    ligKey: () => "one:C1",
-    ligTitre: () => ({ code: "C1", lib: "Compétence" }),
-  };
-  publierVersionsReferentiel(fenetre, { ecrireStockage: () => undefined, promotionValide: () => true, diplomeValide: () => true, maintenant: () => new Date(0) });
-  publierEditeur(fenetre, (cle, valeur) => {
+  brancherVersionsReferentiel({ ecrireStockage: () => undefined, promotionValide: () => true, diplomeValide: () => true, maintenant: () => new Date(0) });
+  brancherEditeur((cle, valeur) => {
     stockage.set(cle, valeur);
   });
 });
