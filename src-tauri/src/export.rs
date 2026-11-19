@@ -39,6 +39,26 @@ pub fn nettoyer_nom_fichier(nom_propose: &str) -> String {
     }
 }
 
+/// Extensions des documents que l'application sait produire pour être lus dans un autre logiciel.
+const EXTENSIONS_OUVRABLES: [&str; 5] = ["docx", "odt", "xlsx", "ods", "pdf"];
+
+/// Indique si le fichier peut être confié au logiciel par défaut du système.
+///
+/// « Ouvrir » un fichier, c'est l'exécuter quand son extension désigne un
+/// programme (`.bat`, `.exe`, `.desktop`…). Le nom vient de l'interface et
+/// l'enseignant peut le changer dans la boîte de dialogue : seuls les
+/// documents que DNMAX produit sont donc ouverts, par liste blanche.
+pub fn est_ouvrable(chemin: &Path) -> bool {
+    chemin
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| {
+            EXTENSIONS_OUVRABLES
+                .iter()
+                .any(|admise| extension.eq_ignore_ascii_case(admise))
+        })
+}
+
 /// Écrit le contenu exporté à l'emplacement choisi par l'enseignant, en
 /// remplaçant le fichier qui s'y trouve déjà.
 ///
@@ -103,6 +123,35 @@ fn fichier_occupe(erreur: &io::Error) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn un_document_exporte_peut_etre_ouvert() {
+        for nom in [
+            "fiche.docx",
+            "fiche.odt",
+            "grille.XLSX",
+            "grille.ods",
+            "fiche.pdf",
+        ] {
+            assert!(est_ouvrable(Path::new(nom)), "{nom}");
+        }
+    }
+
+    #[test]
+    fn un_fichier_qui_s_execute_n_est_jamais_ouvert() {
+        for nom in [
+            "fiche.bat",
+            "fiche.exe",
+            "fiche.desktop",
+            "fiche.docx.cmd",
+            "fiche.html",
+            "sans-extension",
+            ".docx",
+            "",
+        ] {
+            assert!(!est_ouvrable(Path::new(nom)), "{nom}");
+        }
+    }
 
     #[test]
     fn conserve_un_nom_ordinaire_avec_accents() {

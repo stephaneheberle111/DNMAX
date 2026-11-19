@@ -44,6 +44,24 @@ describe("lirePaquet", () => {
     expect(lirePaquet(JSON.stringify(paquet))).toEqual(paquet);
   });
 
+  it("refuse un paquet dont un identifiant contient du balisage", () => {
+    const paquet = construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand", CATALOGUE);
+    const trafique = JSON.stringify(paquet).replace('"id":"eval1"', '"id":"x\\"><style>"');
+    expect(trafique).toContain("<style>");
+    expect(lirePaquet(trafique)).toBe("illisible");
+  });
+
+  it("refuse un paquet qui porte une clé réservée du langage", () => {
+    const texte = `{"format":"dnmax-echange","version":1,"evaluations":[{"modele":{"id":"eval1","res":{"__proto__":{"x":1}}}}],"referentiels":[]}`;
+    expect(lirePaquet(texte)).toBe("illisible");
+  });
+
+  it("oublie une date de modification qui n'a pas la forme d'une date", () => {
+    const texte = `{"format":"dnmax-echange","version":1,"evaluations":[{"modele":{"id":"eval1"},"modifieLe":"9999 toujours plus récente"}],"referentiels":[]}`;
+    const paquet = lirePaquet(texte);
+    expect(typeof paquet === "object" && paquet.evaluations[0]?.modifieLe).toBe("");
+  });
+
   it("relit un paquet protégé qui ne contient pas d'étudiants, sans données d'étudiants", () => {
     const paquet = construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand", CATALOGUE);
     const relu = lirePaquet(JSON.stringify(paquet), true);

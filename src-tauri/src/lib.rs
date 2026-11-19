@@ -56,7 +56,8 @@ fn enregistrer_fichier(
 /// Ouvre, avec le logiciel par défaut du système, le dernier document exporté.
 ///
 /// La page ne fournit aucun chemin : seul un fichier que l'enseignant vient
-/// d'enregistrer lui-même par la boîte de dialogue peut être ouvert.
+/// d'enregistrer lui-même par la boîte de dialogue peut être ouvert, et
+/// seulement s'il a l'extension d'un document (voir `export::est_ouvrable`).
 #[tauri::command(async)]
 fn ouvrir_dernier_export(
     application: AppHandle,
@@ -66,6 +67,9 @@ fn ouvrir_dernier_export(
         .verrou()
         .clone()
         .ok_or_else(|| "aucun document n'a été exporté".to_owned())?;
+    if !export::est_ouvrable(&chemin) {
+        return Err("ce type de fichier ne s'ouvre pas depuis DNMAX".to_owned());
+    }
     application
         .opener()
         .open_path(chemin.to_string_lossy(), None::<&str>)

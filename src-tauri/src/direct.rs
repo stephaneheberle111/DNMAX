@@ -502,22 +502,34 @@ impl Envoi {
             if annulation.est_demandee() {
                 return Err(ErreurDirect::Annule);
             }
+            // Vérifié à chaque tour, et pas seulement quand personne ne se présente : sinon
+            // des connexions muettes à la chaîne garderaient l'envoi ouvert après l'expiration.
+            let restant = limite.saturating_duration_since(Instant::now());
+            if restant.is_zero() {
+                return Err(ErreurDirect::DelaiDepasse);
+            }
             match self.ecoute.accept() {
                 Ok((flux, pair)) => {
                     if !voisine(pair.ip()) {
                         continue;
                     }
-                    match self.servir_connexion(flux, parametres, alea, annulation, suivi) {
+                    // Le salut ne peut pas se faire attendre au-delà de la validité du code.
+                    let attente_salut = parametres.connexion.min(restant);
+                    match self.servir_connexion(
+                        flux,
+                        parametres,
+                        attente_salut,
+                        alea,
+                        annulation,
+                        suivi,
+                    ) {
                         Ok(Issue::PasPourMoi) => {}
                         Ok(Issue::Envoye) => return Ok(()),
                         Err(erreur) => return Err(annulation.ou(erreur)),
                     }
                 }
                 Err(erreur) if erreur.kind() == io::ErrorKind::WouldBlock => {
-                    if Instant::now() >= limite {
-                        return Err(ErreurDirect::DelaiDepasse);
-                    }
-                    thread::sleep(PAS_ATTENTE);
+                    thread::sleep(PAS_ATTENTE.min(restant));
                 }
                 Err(erreur) if erreur.kind() == io::ErrorKind::Interrupted => {}
                 Err(_) => return Err(ErreurDirect::ReseauIndisponible),
@@ -529,6 +541,7 @@ impl Envoi {
         &self,
         mut flux: TcpStream,
         parametres: &ParametresDirect,
+        attente_salut: Duration,
         alea: &mut (impl RngCore + CryptoRng),
         annulation: &Annulation,
         suivi: &mut impl FnMut(EtapeDirect),
@@ -536,7 +549,7 @@ impl Envoi {
         // Selon le système, la connexion acceptée hérite ou non du mode non bloquant de l'écoute.
         // Le salut doit venir vite : une connexion muette ne doit pas faire attendre le vrai destinataire.
         if flux.set_nonblocking(false).is_err()
-            || flux.set_read_timeout(Some(parametres.connexion)).is_err()
+            || flux.set_read_timeout(Some(attente_salut)).is_err()
             || flux.set_write_timeout(Some(parametres.inactivite)).is_err()
         {
             return Ok(Issue::PasPourMoi);
@@ -750,6 +763,30 @@ mod tests {
             &Annulation::default(),
             &mut |_| {},
         )
+    }
+
+    #[test]
+    fn des_connexions_muettes_ne_prolongent_pas_la_validite_du_code() {
+        let parametres = ParametresDirect {
+            validite: Duration::from_millis(300),
+            connexion: Duration::from_millis(400),
+            ..parametres()
+        };
+        let (adresse, _code, _annulation, fil) = lancer_expediteur("contenu", parametres);
+        // Dix connexions ouvertes d'avance et qui ne disent rien : chacune occuperait l'expéditeur
+        // tout le délai du salut, soit quatre secondes au total, bien après l'expiration du code.
+        let muettes: Vec<TcpStream> = (0..10)
+            .filter_map(|_| TcpStream::connect(adresse).ok())
+            .collect();
+        let debut = Instant::now();
+        let (issue, _) = fil.join().expect("fil de l'expéditeur");
+        drop(muettes);
+        assert_eq!(issue, Err(ErreurDirect::DelaiDepasse));
+        assert!(
+            debut.elapsed() < Duration::from_secs(2),
+            "l'envoi a duré {:?} après l'expiration du code",
+            debut.elapsed()
+        );
     }
 
     /// Un code de même canal que `code`, mais faux.

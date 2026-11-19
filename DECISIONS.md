@@ -74,11 +74,17 @@ La consigne est de préférer, à fonction égale, un outil référencé au [SIL
 
 **Risque connu** : `npm audit` signale deux vulnérabilités élevées sur cette version (pollution de prototype et expression régulière coûteuse). Elles concernent la **lecture** de classeurs ; DNMAX ne fait qu'en **écrire**. À réévaluer impérativement le jour où l'application lira un classeur fourni par un tiers.
 
+**Garde-fou** : cette réserve ne repose pas sur la mémoire de qui lira ce fichier. Une règle du linter (`eslint.config.js`, `no-restricted-syntax`) refuse, hors tests, tout appel de lecture de la bibliothèque (`XLSX.read`, `readFile`, `stream`, `sheet_to_…`, y compris importés par leur nom) avec un message qui renvoie ici. Le linter devant être à zéro erreur avant toute fusion, un import Excel ne peut pas entrer dans l'application sans que quelqu'un lève la règle, donc sans rouvrir cette décision. La lever suppose d'avoir d'abord changé de bibliothèque ou de version : le correctif n'existe pas sur le registre npm, seulement sur le site de l'éditeur. Les tests, qui relisent les classeurs qu'ils viennent de produire eux-mêmes, sont exemptés.
+
+**Cellules** : `construireTableur` n'écrit que des textes et des nombres. La bibliothèque prend un objet ou un tableau pour une cellule déjà construite, formule comprise, et les champs d'une évaluation peuvent venir d'un fichier reçu.
+
 ## 7. Les exports passent par la boîte de dialogue du système
 
 L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom proposé et des octets, l'enveloppe nettoie le nom, ouvre « Enregistrer sous » et écrit là où l'enseignant l'a décidé. Aucun droit d'accès général aux fichiers n'est accordé à la page.
 
 La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en indique un. Après l'enregistrement, l'application propose d'ouvrir le document avec le logiciel par défaut du système : l'enveloppe retient pour cela l'emplacement du dernier export, que la page ne connaît jamais — elle ne peut donc faire ouvrir que ce que l'enseignant vient d'enregistrer lui-même.
+
+Seuls les documents que l'application produit (`docx`, `odt`, `xlsx`, `ods`, `pdf`) sont ouverts ainsi (`export::est_ouvrable`) : pour le système, « ouvrir » un fichier dont l'extension désigne un programme, c'est l'exécuter, et l'enseignant peut changer le nom dans la boîte de dialogue.
 
 ## 8. Les données sont chiffrées par un mot de passe
 
@@ -137,6 +143,8 @@ La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en
 **Dates de modification** : l'interface historique n'en tenait pas. Elles sont déduites à chaque enregistrement, en comparant le modèle avant et après, et rangées sous la clé `dnmax.modifications`. Une évaluation antérieure à cette fonction affiche « date inconnue » jusqu'à sa prochaine modification.
 
 **Depuis** : l'échange du référentiel (décision 12), celui des élèves et de leurs résultats dans un fichier chiffré (décision 13) et le transfert vers un autre ordinateur (décision 14) ont été ajoutés.
+
+**Contrôle du contenu reçu** : avant toute lecture champ par champ, le fichier entier passe par `assainirContenuRecu` (`src/domaine/echange/contenu-recu.ts`). Il est refusé (« illisible ») s'il porte une clé réservée du langage (`__proto__`, `constructor`, `prototype`), un identifiant (`id`, `…Id`, `…Ids`) qui n'a pas la forme de ceux que l'application produit (lettres, chiffres, `.`, `_`, `-`, 64 caractères au plus) ou une imbrication démesurée ; une couleur qui n'est pas hexadécimale est retirée ; une date de modification qui n'est pas une date ISO est oubliée. Les identifiants servent ensuite de clés et d'attributs dans la page : c'est à l'entrée qu'ils sont tenus. **Limite** : ce n'est pas encore un schéma strict. Les autres champs d'un modèle d'évaluation ou d'un référentiel reçu sont repris tels quels, sans contrôle de type ni de longueur ; l'affichage les échappe, et le tableur n'écrit que des textes et des nombres.
 
 ## 11. L'enseignant est identifié par son nom
 

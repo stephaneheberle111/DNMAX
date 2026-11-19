@@ -22,6 +22,7 @@ import {
   type DonneesEleves,
   type PromotionEchangee,
 } from "./donnees-eleves";
+import { assainirContenuRecu, estDateIso } from "./contenu-recu";
 import { extraireModele } from "./modele-evaluation";
 import {
   decrireBase,
@@ -205,7 +206,8 @@ function lireBase(valeur: unknown): BaseReferentiel | null {
 /**
  * Lit un fichier d'échange reçu d'un autre enseignant.
  *
- * Le fichier vient de l'extérieur : sa forme est vérifiée, et tout modèle
+ * Le fichier vient de l'extérieur : ses identifiants, ses clés et ses couleurs
+ * sont contrôlés d'un bloc (`assainirContenuRecu`), sa forme est vérifiée, et tout modèle
  * reçu repasse par `extraireModele` pour qu'un fichier trafiqué ne puisse pas
  * injecter des résultats d'étudiants ni des identifiants locaux.
  *
@@ -227,6 +229,10 @@ export function lirePaquet(texte: string, protege = false): Paquet | ErreurPaque
   if (!Array.isArray(valeur.evaluations) && !Array.isArray(valeur.referentiels)) {
     return "illisible";
   }
+  // Avant toute lecture champ par champ : identifiants, clés réservées et couleurs (voir `contenu-recu`).
+  if (!assainirContenuRecu(valeur)) {
+    return "illisible";
+  }
   const evaluations: EvaluationEchangee[] = [];
   const identifiantsVus = new Set<string>();
   for (const element of Array.isArray(valeur.evaluations) ? (valeur.evaluations as unknown[]) : []) {
@@ -236,7 +242,8 @@ export function lirePaquet(texte: string, protege = false): Paquet | ErreurPaque
     identifiantsVus.add(element.modele.id);
     evaluations.push({
       modele: extraireModele(element.modele),
-      modifieLe: typeof element.modifieLe === "string" ? element.modifieLe : "",
+      // Comparée ensuite comme un texte à la date locale : un texte libre fausserait « la plus récente ».
+      modifieLe: typeof element.modifieLe === "string" && estDateIso(element.modifieLe) ? element.modifieLe : "",
       modifiePar: typeof element.modifiePar === "string" ? nettoyerNom(element.modifiePar) : "",
       base: lireBase(element.base),
       donneesEleves: protege ? lireDonneesEleves(element.donneesEleves) : null,

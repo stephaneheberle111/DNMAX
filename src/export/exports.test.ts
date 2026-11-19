@@ -2,7 +2,7 @@
 import JSZip from "jszip";
 import * as XLSX from "xlsx";
 import { describe, expect, it } from "vitest";
-import { colonnesExport, type FicheExport } from "./modele";
+import { colonnesExport, echapperXml, type FicheExport } from "./modele";
 import { construireOdt } from "./opendocument";
 import { construireTableur } from "./tableur";
 import { construireDocx } from "./word";
@@ -136,6 +136,13 @@ describe("construireOdt", () => {
 describe("construireTableur", () => {
   const feuilles = (octets: Uint8Array): XLSX.WorkBook => XLSX.read(octets, { type: "array" });
 
+  it("écrit en texte une valeur qui n'en est pas un, pour qu'elle ne devienne jamais une formule", () => {
+    const piege = ["M. X", 'HYPERLINK("https://exemple.invalid","Barème")'] as unknown as string;
+    const feuille = feuilles(construireTableur(fiche({ prof: piege }), "xlsx")).Sheets["Évaluation"] as XLSX.WorkSheet;
+    const cellules = Object.values(feuille).filter((cellule): cellule is XLSX.CellObject => typeof cellule === "object" && cellule !== null && "t" in cellule);
+    expect(cellules.some((cellule) => cellule.f !== undefined)).toBe(false);
+  });
+
   it("sans étudiant, contient l'évaluation et les compétences", () => {
     expect(feuilles(construireTableur(fiche(), "xlsx")).SheetNames).toEqual(["Évaluation", "Compétences"]);
   });
@@ -151,5 +158,17 @@ describe("construireTableur", () => {
     const classeur = feuilles(construireTableur(fiche(), "ods"));
     const lignes = XLSX.utils.sheet_to_json<string[]>(classeur.Sheets["Évaluation"] as XLSX.WorkSheet, { header: 1 });
     expect(lignes[0]?.[0]).toBe("MAQUETTE & ASSEMBLAGE");
+  });
+});
+
+describe("echapperXml", () => {
+  it("retire les caractères qu'un document XML n'admet pas, et garde tabulation et retours à la ligne", () => {
+    expect(echapperXml("a\u000Bb\u0000c\u001Fd\uFFFEe")).toBe("abcde");
+    expect(echapperXml("a\tb\nc\rd")).toBe("a\tb\nc\rd");
+  });
+
+  it("retire une demi-paire isolée et garde un caractère hors du plan de base", () => {
+    expect(echapperXml("a\uD83Db")).toBe("ab");
+    expect(echapperXml("a\u{1F600}b")).toBe("a\u{1F600}b");
   });
 });

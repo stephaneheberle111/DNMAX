@@ -73,10 +73,17 @@
 - Visite guidée : à l'étape « Compétences », le curseur invitait à écrire au lieu de cocher une case ; à l'étape « Vos préférences », la bulle cachait le menu « Mon compte ».
 - Documents Word et OpenDocument : les noms des niveaux au-dessus de la jauge ne sont plus coupés au milieu d'un mot (« Non acqui-s ») ; chacun a la place de son mot le plus long, et le texte se réduit un peu si la colonne est étroite.
 - Visite guidée : le curseur animé n'apparaît plus sur la page d'accueil de la visite, seulement quand il montre un geste ; à l'étape « Échanger », la bulle ne tremble plus quand la boîte s'ouvre ou se referme ; les confettis de fin partent une seule fois, en arrivant sur la dernière page, et non plus en fermant la visite.
+- Exports Word et OpenDocument : un caractère invisible venu d'un copier-coller ne rend plus le document illisible.
 
 ### Sécurité
 
 - Module Étudiants : le mot de passe doit désormais compter au moins 12 caractères, trois types de caractères (minuscules, majuscules, chiffres, symboles), sans suite toute faite, sans DNMAX ni votre nom ni celui de l'établissement, et ne pas être parmi les plus courants. Un mot de passe qui ne convient plus est à changer à la prochaine ouverture.
+- Échange : un fichier reçu est contrôlé d'un bloc avant d'être lu. Il est refusé si l'un de ses identifiants n'a pas la forme de ceux de DNMAX ; une couleur qui n'en est pas une est ignorée, et une date de modification fantaisiste ne peut plus faire passer une version reçue pour la plus récente.
+- Carte heuristique : l'identifiant d'une case est échappé comme le reste, pour qu'un référentiel reçu ne puisse rien glisser dans la page.
+- Export tableur : seuls des textes et des nombres sont écrits dans les cellules, jamais une formule venue d'un fichier reçu.
+- « Ouvrir le document » n'ouvre que les documents que DNMAX produit (Word, OpenDocument, tableur, PDF).
+- Échange en direct : le code expire bien au bout de son délai, même si un autre poste du réseau multiplie les connexions muettes.
+- La page de l'application ne peut plus envoyer un formulaire ni changer son adresse de base.
 
 ## 0.8.0 — 2026-11-15
 

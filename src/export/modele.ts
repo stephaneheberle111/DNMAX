@@ -81,9 +81,21 @@ export function appreciationDe(resultat: unknown): string {
   return estObjet(resultat) && typeof resultat.appr === "string" ? resultat.appr : "";
 }
 
-/** Échappe un texte pour XML. */
+/** Caractères de contrôle et non-caractères que XML 1.0 interdit, même échappés. */
+// eslint-disable-next-line no-control-regex -- ce sont précisément les caractères de contrôle qu'il faut retirer
+const INTERDITS_EN_XML = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g;
+
+/**
+ * Échappe un texte pour XML.
+ *
+ * Les caractères que XML n'admet pas (contrôle, demi-paire isolée) sont
+ * retirés : un seul, venu d'un copier-coller, rendrait le document illisible.
+ */
 export function echapperXml(texte: string | number): string {
   return String(texte)
+    // Une paire complète est gardée telle quelle, une demi-paire isolée disparaît.
+    .replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])|[\uD800-\uDFFF]/g, "$1")
+    .replace(INTERDITS_EN_XML, "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
