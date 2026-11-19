@@ -1,0 +1,36 @@
+/* SPDX-License-Identifier: CECILL-2.1 */
+/* Carte heuristique (chaîne) : boutons de la barre des vues, en-têtes déplaçables, rangées superposées et roue
+   horizontale. Le reste de la chaîne est mis en forme dans public/heritage/application.css. */
+
+/* « Vue verticale » et « Ordre par défaut », au bout de la barre des vues */
+.subnav .chtools{display:inline-flex;gap:5px;margin-left:auto;align-items:center}
+.subnav .chtools button:disabled{opacity:.5;cursor:default}
+.subnav .chtools button:disabled:hover{border-color:var(--line)}
+
+/* zone d'annonce pour les lecteurs d'écran, invisible */
+.chlive{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* en-têtes : glisser pour changer l'ordre des colonnes */
+.chh{touch-action:none}
+.chh:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.chh.chdrag{z-index:6;background:var(--surface);color:var(--ink);box-shadow:0 4px 14px rgb(0 0 0 / .16);cursor:grabbing}
+.chainbox.chdragging .chh:not(.chdrag){opacity:.7}
+.chdrop{position:absolute;top:0;width:3px;height:28px;margin-left:-1px;border-radius:2px;background:var(--accent);z-index:5;pointer-events:none}
+.chdrop.v{left:0;width:280px;height:3px;margin:-1px 0 0}
+
+/* rangées superposées : chaque en-tête au-dessus de sa rangée */
+.chainbox.vert .chh{justify-content:flex-start}
+.chainbox.vert .chh span{flex:none}
+
+/* roue horizontale : les éléments défilent de gauche à droite */
+.wheel.hz{cursor:ew-resize}
+.wheel.hz .wit{left:50%;right:auto;top:10px;bottom:24px;width:124px;height:auto;margin:0 0 0 -62px;flex-direction:column;
+  align-items:flex-start;justify-content:center;gap:3px;padding:4px 8px;white-space:normal;line-height:1.3;font-size:11.5px;overflow:hidden}
+.wheel.hz .wit .wt{flex:none;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:clip}
+.wheel.hz .wband{left:50%;right:auto;top:6px;bottom:20px;width:132px;height:auto;margin:0 0 0 -66px}
+.wheel.hz .wfade{top:0;bottom:0;width:70px;height:auto}
+.wheel.hz .wfade.t{left:0;right:auto;background:linear-gradient(90deg,var(--surface-2),color-mix(in srgb,var(--surface-2) 10%,transparent))}
+.wheel.hz .wfade.b{left:auto;right:0;background:linear-gradient(90deg,color-mix(in srgb,var(--surface-2) 10%,transparent),var(--surface-2))}
+.wheel.hz .wit.full{top:50%;bottom:auto;width:238px;margin-left:-119px}
+.wheel.hz.solo .wit.full{left:50%;right:auto}
+.wheel.hz .wit.full .wt{display:block;-webkit-line-clamp:none;overflow:visible}

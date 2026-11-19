@@ -31,6 +31,7 @@
 
 ### Ajouté
 
+- Référentiel > Explorer, carte heuristique : changez l'ordre des colonnes en glissant leur en-tête (ou, au clavier, avec les flèches sur l'en-tête), dans l'ordre qui vous parle : chaque colonne ne montre que ce qui est réellement relié à l'élément choisi, et deux cases voisines sont reliées quand une compétence est rattachée à un EC à un semestre. « Vue verticale » superpose les colonnes en rangées, la roue tournant alors de gauche à droite. L'ordre et la vue sont retenus ; « Ordre par défaut » revient à semestre, compétence, EC, UE, diplôme, en colonnes.
 - Référentiel > Explorer : la case « Seulement ma répartition de service », sous les filtres, ne montre que les EC que vous assurez cette année d'après Mon établissement > Répartition, avec leurs compétences, leurs UE et leurs semestres, sur la carte radiale, la carte heuristique, les deux tableaux et la recherche. Elle n'apparaît qu'une fois « C'est moi » choisi et au moins un EC affecté. Cochée, les tuiles de filtre ne proposent et ne comptent que ce qui reste affiché.
 - Visites guidées : un bouquet final de confettis salue la fin de la visite, à l'arrivée sur sa dernière page (sauf si le système demande de réduire les animations).
 - Paramètres > Règles d'évaluation : suivi simplifié dans Mes évaluations, « À faire » puis « Faite » une fois la fiche distribuée. Ce n'est qu'un affichage : le suivi détaillé reste enregistré, et se retrouve en décochant la case.
@@ -45,6 +46,7 @@
 
 ### Corrigé
 
+- Carte heuristique : un clic sur un élément voisin dans la roue de la colonne verrouillée le choisit bien ; la roue se repliait avant le clic. Une compétence rattachée à un EC sans semestre ne montre plus cet EC comme s'ils étaient liés, et, diplôme verrouillé, les UE sans compétence rattachée disparaissent tandis que les EC sans UE apparaissent, comme avec les autres colonnes.
 - Enregistrer un document (Word, OpenDocument, tableur, PDF, fichier d'échange) à la place d'un fichier existant : si l'écriture échoue, l'ancien fichier reste intact ; quand il est ouvert dans un autre logiciel (Word, LibreOffice…), DNMAX dit de le fermer ou de choisir un autre nom, au lieu d'afficher l'erreur brute du système.
 - Bas de page : la bulle d'aide de la version dit que la recherche de mise à jour interroge le site dnmax.fr (elle nommait à tort GitHub).
 - Référentiel > Constituer > Validation : valider une nouvelle version, quand une version validée existait déjà et que des promotions sont en cours, ouvre de nouveau le choix des promotions qui passent à cette version (une erreur l'empêchait).

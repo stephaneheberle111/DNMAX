@@ -123,3 +123,35 @@ describe("chainModel avec « Seulement ma répartition de service »", () => {
     expect(ids(modele?.sets[3])).toEqual(["u2"]);
   });
 });
+
+describe("chainModel avec un autre ordre des colonnes", () => {
+  it("suit l'ordre retenu dans les préférences et relie les colonnes devenues voisines", () => {
+    etat.preferences = { chaineOrdre: ["ue", "sem", "dip", "comp", "ec"] };
+    (etat.ui.ref as Objet).piv = { kind: "ec", id: "e1" };
+    const modele = chainModel();
+    expect(modele?.ordre).toEqual(["ue", "sem", "dip", "comp", "ec"]);
+    expect(modele?.p).toBe(4);
+    expect(ids(modele?.sets[0])).toEqual(["u1"]);
+    expect(ids(modele?.sets[1])).toEqual(["S1"]);
+    expect(ids(modele?.sets[3])).toEqual(["c1"]);
+    const [u1] = etat.donnees.ues as Objet[];
+    expect(modele?.rel("ue", u1 as Objet, { id: "S1", sem: "S1" })).toBe(true);
+    expect(modele?.rel("ue", u1 as Objet, { id: "S2", sem: "S2" })).toBe(false);
+  });
+
+  it("revient à l'ordre par défaut quand l'ordre enregistré n'est pas valable", () => {
+    etat.preferences = { chaineOrdre: ["ue", "ue", "dip", "comp", "ec"] };
+    expect(chainModel()?.ordre).toEqual(["sem", "comp", "ec", "ue", "dip"]);
+  });
+
+  it("ne range les compétences au barycentre des semestres que si les deux colonnes sont voisines", () => {
+    etat.donnees.competences = [
+      { id: "c2", code: "C2.1", bloc: 2, libelle: "Modeler", ecIds: ["e1"], ecs: [{ id: "e1", sems: ["S1"] }] },
+      { id: "c1", code: "C1.1", bloc: 1, libelle: "Dessiner", ecIds: ["e1"], ecs: [{ id: "e1", sems: ["S2"] }] },
+    ];
+    (etat.ui.ref as Objet).piv = { kind: "ec", id: "e1" };
+    expect(ids(chainModel()?.sets[1])).toEqual(["c2", "c1"]);
+    etat.preferences = { chaineOrdre: ["sem", "ec", "ue", "comp", "dip"] };
+    expect(ids(chainModel()?.sets[3])).toEqual(["c1", "c2"]);
+  });
+});

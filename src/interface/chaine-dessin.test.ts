@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { CH_WH, chainSetPivot, chainSvgNode, paintChain, publierChaineDessin, type CaseChaine } from "./chaine-dessin";
+import { CH_WH, chainResetOrder, chainSetOrder, chainSetPivot, chainSetVertical, chainSvgNode, paintChain, publierChaineDessin, type CaseChaine } from "./chaine-dessin";
 
 const fenetre: Record<string, unknown> = {};
 const paintRef = vi.fn();
 const saveData = vi.fn();
+const savePrefs = vi.fn();
 
 beforeEach(() => {
   paintRef.mockReset();
   saveData.mockReset();
+  savePrefs.mockReset();
   for (const cle of Object.keys(fenetre)) Reflect.deleteProperty(fenetre, cle);
   publierChaineDessin(fenetre, null);
-  Object.assign(fenetre, { paintRef, saveData });
+  Object.assign(fenetre, { paintRef, saveData, savePrefs });
   Object.assign(etat, etatVide());
   etat.donnees = {
     activeDiplome: "d1",
@@ -139,5 +141,58 @@ describe("chainSetPivot", () => {
     expect(etat.donnees.activeDiplome).toBe("d1");
     expect(paintRef).toHaveBeenCalledTimes(1);
     expect(saveData).not.toHaveBeenCalled();
+  });
+});
+
+describe("paintChain dans un autre ordre et en rangées", () => {
+  it("dessine les colonnes dans l'ordre retenu, avec les en-têtes déplaçables et la zone d'annonce", () => {
+    etat.preferences = { chaineOrdre: ["dip", "ue", "ec", "comp", "sem"] };
+    const balisage = paintChain();
+    const ordre = [...balisage.matchAll(/data-lock="(\w+)"/g)].map((resultat) => resultat[1]);
+    expect(ordre).toEqual(["dip", "ue", "ec", "comp", "sem"]);
+    expect(balisage).toContain(`data-link="ue:u1|ec:e1"`);
+    expect(balisage).toContain(`aria-roledescription="en-tête déplaçable"`);
+    expect(balisage).toContain(`class="chlive" role="status" aria-live="polite"`);
+  });
+
+  it("passe en rangées superposées, roue horizontale, quand c'est demandé", () => {
+    etat.preferences = { chaineVerticale: true };
+    const balisage = paintChain();
+    expect(balisage).toContain(`class="chainbox vert"`);
+    expect(balisage).toContain(`class="wheel tall hz"`);
+    expect(balisage.match(/<rect class="ccol/g)).toHaveLength(5);
+    expect(balisage).toContain(`data-link="comp:c1|ec:e1"`);
+    expect(balisage).toContain("flèches haut et bas");
+  });
+
+  it("reste en colonnes côte à côte par défaut", () => {
+    expect(paintChain()).not.toContain("chainbox vert");
+  });
+});
+
+describe("ordre et sens retenus", () => {
+  it("retient un nouvel ordre, l'enregistre et redessine, focus et annonce compris", () => {
+    chainSetOrder(["comp", "sem", "ec", "ue", "dip"], "comp", "annonce");
+    expect(etat.preferences.chaineOrdre).toEqual(["comp", "sem", "ec", "ue", "dip"]);
+    expect(savePrefs).toHaveBeenCalledTimes(1);
+    expect(paintRef).toHaveBeenCalledTimes(1);
+    expect(carte().chFocus).toBe("lock:comp");
+    expect(carte().chAnnonce).toBe("annonce");
+  });
+
+  it("bascule en rangées superposées et retour", () => {
+    chainSetVertical(true);
+    expect(etat.preferences.chaineVerticale).toBe(true);
+    chainSetVertical(false);
+    expect(etat.preferences.chaineVerticale).toBe(false);
+    expect(savePrefs).toHaveBeenCalledTimes(2);
+  });
+
+  it("« Ordre par défaut » rétablit l'ordre et les colonnes côte à côte", () => {
+    etat.preferences = { chaineOrdre: ["dip", "ue", "ec", "comp", "sem"], chaineVerticale: true };
+    chainResetOrder();
+    expect(etat.preferences).toEqual({ chaineOrdre: ["sem", "comp", "ec", "ue", "dip"], chaineVerticale: false });
+    expect(savePrefs).toHaveBeenCalledTimes(1);
+    expect(paintRef).toHaveBeenCalledTimes(1);
   });
 });
