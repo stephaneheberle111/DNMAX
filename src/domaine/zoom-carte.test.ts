@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
 import {
+  zoomEnsemble,
   bornerVue,
   bornerZoom,
   facteurMolette,
@@ -176,5 +177,36 @@ describe("hauteurCadre", () => {
   });
   it("vaut zéro pour une largeur inconnue", () => {
     expect(hauteurCadre(0, 800)).toBe(0);
+  });
+});
+
+describe("zoomEnsemble", () => {
+  it("fait tenir le disque en hauteur dans un cadre plus large que haut", () => {
+    expect(zoomEnsemble(2, 960, 1200)).toBeCloseTo(0.8);
+  });
+
+  it("fait tenir le disque en largeur dans un cadre plus haut que large", () => {
+    expect(zoomEnsemble(0.5, 960, 1200)).toBeCloseTo(0.4);
+  });
+
+  it("vaut 1 pour des mesures absentes ou nulles", () => {
+    expect(zoomEnsemble(1, 960, 0)).toBe(1);
+    expect(zoomEnsemble(Number.NaN, 960, 960)).toBe(1);
+  });
+});
+
+describe("vueDepart sous le zoom 1 (« Ajuster »)", () => {
+  const geo = { cote: 960, origine: -100, centreRoue: 380, rayonCoeur: 98, zoomMin: 0.8, zoomMax: 2.5, zoomDepart: 1.65 };
+
+  it("centre la roue entière au zoom minimal", () => {
+    expect(vueDepart(1.3, geo, 0.8)).toMatchObject({ zoom: 0.8, centreX: 380, centreY: 380 });
+  });
+
+  it("reste centrée quand le zoom minimal descend d'un cheveu sous le zoom demandé", () => {
+    expect(vueDepart(1.3, { ...geo, zoomMin: 0.79 }, 0.8)).toMatchObject({ centreX: 380, centreY: 380 });
+  });
+
+  it("garde le quart bas-droit au zoom de départ", () => {
+    expect(vueDepart(1.3, geo, 1.65)).toEqual(vueDepart(1.3, { ...geo, zoomMin: 1 }, 1.65));
   });
 });
