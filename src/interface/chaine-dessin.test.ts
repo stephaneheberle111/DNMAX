@@ -157,6 +157,15 @@ describe("paintChain dans un autre ordre et en rangées", () => {
     expect(balisage).toContain("flèches haut et bas");
   });
 
+  it("élargit la colonne des EC, hors pivot, pour que son en-tête tienne sur une ligne", () => {
+    const largeur = (balisage: string, sorte: string): string | undefined => new RegExp(`data-lock="${sorte}" style="left:\\d+px;width:(\\d+)px`).exec(balisage)?.[1];
+    const colonnes = paintChain();
+    expect(largeur(colonnes, "ec")).toBe("230");
+    expect(largeur(colonnes, "ue")).toBe("190");
+    carte().piv = { kind: "ec", id: "e1" };
+    expect(largeur(paintChain(), "ec")).toBe("256");
+  });
+
   it("reste en colonnes côte à côte par défaut", () => {
     expect(paintChain()).not.toContain("chainbox vert");
   });

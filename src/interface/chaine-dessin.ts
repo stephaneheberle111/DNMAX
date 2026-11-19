@@ -107,12 +107,14 @@ export function paintChain(): string {
   const { kind, p, piv, sets } = M;
   const ordre = M.ordre;
   const CW = 172,
+    // La colonne des EC est plus large : son en-tête « Enseignement constitutif » ne tiendrait pas sur une ligne dans 172.
+    CW_EC = 212,
     CWP = 238,
     GAP = 30,
     PADX = 10,
     TOP = 44,
     VG = 11;
-  const widths = ordre.map((_k, i) => (i === p ? CWP : CW));
+  const widths = ordre.map((k, i) => (i === p ? CWP : k === "ec" ? CW_EC : CW));
   const X = (i: number): number => PADX + widths.slice(0, i).reduce((a, w) => a + w + GAP, 0);
   const LAST = ordre.length - 1,
     W = X(LAST) + (widths[LAST] as number) + PADX;
@@ -208,9 +210,9 @@ export function paintChain(): string {
   </div></div>`;
 }
 
-/** Longueur maximale d'une ligne de libellé, par sorte de case : colonnes côte à côte (cases de 172) ou rangées (cases de 150). */
+/** Longueur maximale d'une ligne de libellé, par sorte de case : colonnes côte à côte (cases de 172, 212 pour les EC) ou rangées (cases de 150). */
 type Coupes = Readonly<Record<string, number>>;
-const COUPES_COLONNES: Coupes = { comp: 31, ec: 25, ue: 25, dip: 30 };
+const COUPES_COLONNES: Coupes = { comp: 31, ec: 31, ue: 25, dip: 30 };
 const COUPES_RANGEES: Coupes = { comp: 26, ec: 21, ue: 21, dip: 25 };
 
 /** Un seul semestre en vue (colonne verrouillée dessus, ou réduite à un seul) : les EC portent son code ; sinon vide. */

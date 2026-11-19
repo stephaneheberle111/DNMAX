@@ -10,8 +10,10 @@
 /* zone d'annonce pour les lecteurs d'écran, invisible */
 .chlive{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
-/* en-têtes : glisser pour changer l'ordre des colonnes */
+/* en-têtes : glisser pour changer l'ordre des colonnes. Un libellé trop long passe sur deux lignes plutôt que
+   d'être coupé (les colonnes sont prévues assez larges pour qu'il tienne sur une). */
 .chh{touch-action:none}
+.chh span{white-space:normal;overflow:visible;line-height:1.1}
 .chh:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .chh.chdrag{z-index:6;background:var(--surface);color:var(--ink);box-shadow:0 4px 14px rgb(0 0 0 / .16);cursor:grabbing}
 .chainbox.chdragging .chh:not(.chdrag){opacity:.7}
