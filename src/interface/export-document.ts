@@ -318,9 +318,9 @@ export function avertirAvantRestitution(exportee: Objet, suite: () => void): voi
         "p",
         { id: "rwT" },
         element("b", {}, "Évaluation pas terminée"),
-        ` — ${String(nonFinis.length)} étudiant${plusieurs ? "s ne sont" : " n'est"} pas entièrement évalué${plusieurs ? "s" : ""} : ${noms}${nonFinis.length > 8 ? "…" : ""}.`,
+        ` — ${String(nonFinis.length)} étudiant·e${plusieurs ? "s ne sont" : " n'est"} pas entièrement évalué·e${plusieurs ? "s" : ""} : ${noms}${nonFinis.length > 8 ? "…" : ""}.`,
       ),
-      element("p", { class: "hint", style: "font-size:12.5px" }, "Les non rendus et les dispensés comptent comme terminés. Les restitutions de ces étudiants seront incomplètes."),
+      element("p", { class: "hint", style: "font-size:12.5px" }, "Les non-rendus et les dispenses comptent comme terminés. Les restitutions de ces étudiant·es seront incomplètes."),
       element("div", { class: "row" }, refuser, accepter),
     ),
   );

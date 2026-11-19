@@ -166,7 +166,7 @@ function ficheXml(fiche: FicheExport, etudiant: EtudiantExport | null, images: I
   entete += paragraphe(fiche.titre || "Évaluation", { b: true, sz: 16, after: 40 });
   if (fiche.signature !== "") entete += paragraphe(fiche.signature, { sz: 10, after: 30 });
   entete += paragraphe(fiche.contexte, { sz: 10, color: "10555F", after: 40, border: true });
-  if (etudiant !== null && etudiant.nom !== "") entete += paragraphe(`Étudiant : ${etudiant.nom}`, { sz: 10, after: 120 });
+  if (etudiant !== null && etudiant.nom !== "") entete += paragraphe(`Étudiant·e : ${etudiant.nom}`, { sz: 10, after: 120 });
   let xml = fiche.sceau === null ? entete : avecSceau(images, entete, fiche.sceau) + paragraphe("", { after: 60 });
   if (fiche.consignes !== "") {
     xml += paragraphe("Consignes et attendus", { b: true, sz: 10, caps: true, color: "5A5345", before: 120, after: 30 });

@@ -84,11 +84,11 @@ describe("vue Étudiant", () => {
       { texte: "1 partielle", gras: false },
       { texte: "2 non rendus", gras: true },
       { texte: "1 dispensée", gras: false },
-      { texte: "1 non évaluée alors que d'autres étudiants l'ont été", gras: true },
+      { texte: "1 non évaluée alors que d'autres étudiant·es l'ont été", gras: true },
       { texte: "2 pas encore évaluées (pour personne)", gras: false },
     ]);
     expect(resumeAvancement({ part: 0, nr: 0, disp: 0, miss: 0, wait: 0 }, 3, "S3")).toEqual([{ texte: "Rien en retard.", gras: false }]);
-    expect(resumeAvancement({ part: 0, nr: 0, disp: 0, miss: 0, wait: 0 }, 0, "S3")).toEqual([{ texte: "Aucune évaluation au S3 pour cet étudiant.", gras: false }]);
+    expect(resumeAvancement({ part: 0, nr: 0, disp: 0, miss: 0, wait: 0 }, 0, "S3")).toEqual([{ texte: "Aucune évaluation au S3 pour cet·te étudiant·e.", gras: false }]);
   });
 
   it("signale un écart d'au moins un demi-point à la moyenne de la classe, jamais pour les rendus", () => {

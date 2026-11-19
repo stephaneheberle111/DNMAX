@@ -78,7 +78,7 @@ const GABARIT_BONNES_PRATIQUES = `
     <li><b>Des sauvegardes.</b> DNMAX fait chaque jour d'utilisation une copie chiffrée sur cet ordinateur et en garde une par semaine pendant trois mois, puis une par mois pendant un an ; de temps en temps,
         emportez-en une sur une clé ou un disque externe avec «&nbsp;Échanger… &gt; Changer d'ordinateur&nbsp;».</li>
     <li><b>Les exports Word, Excel et OpenDocument ne sont pas chiffrés.</b> Rangez-les à l'abri et supprimez ceux qui
-        contiennent des étudiants dès qu'ils ne servent plus.</li>
+        contiennent des étudiant·es dès qu'ils ne servent plus.</li>
     <li><b>Le code de secours</b>, affiché à l'étape suivante, se garde sur papier, hors de l'ordinateur.</li>
   </ul>
   <p class="coffre-erreur" role="alert" hidden></p>
@@ -89,8 +89,8 @@ const GABARIT_BONNES_PRATIQUES = `
 const GABARIT_PROFIL = `
   ${marqueEtape(2)}
   <h1>Vous et votre établissement</h1>
-  <p>Votre prénom et votre nom signent les fichiers que vous envoyez à d'autres enseignants : chacun voit ainsi qui a écrit quoi.
-     Le nom de l'établissement figure dans les documents remis aux étudiants.</p>
+  <p>Votre prénom et votre nom signent les fichiers que vous envoyez à d'autres enseignant·es : chacun·e voit ainsi qui a écrit quoi.
+     Le nom de l'établissement figure dans les documents remis aux étudiant·es.</p>
   <label>Votre prénom
     <input type="text" name="prenom" autocomplete="given-name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>
   <label>Votre nom
@@ -104,7 +104,7 @@ const GABARIT_PROFIL = `
 const GABARIT_CREATION = `
   ${marqueEtape(3)}
   <h1>Protégez vos données</h1>
-  <p>DNMAX chiffre tout ce que vous saisissez — évaluations, étudiants, résultats — avant de l'écrire sur cet ordinateur.
+  <p>DNMAX chiffre tout ce que vous saisissez — évaluations, étudiant·es, résultats — avant de l'écrire sur cet ordinateur.
      Choisissez un mot de passe : il vous sera demandé à chaque ouverture.</p>
   <label>Mot de passe (${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères au moins)
     <input type="password" name="motDePasse" autocomplete="new-password" required></label>
@@ -151,7 +151,7 @@ const GABARIT_SECOURS = `
 
 const GABARIT_RENFORCEMENT = `
   <h1>Un mot de passe plus solide</h1>
-  <p>Le module Étudiants est actif : vos données contiennent les noms et les résultats de vos étudiants.
+  <p>Le module Étudiant·es est actif : vos données contiennent les noms et les résultats de vos étudiant·es.
      Il faut un mot de passe de ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères au moins, avec trois types de caractères
      (minuscules, majuscules, chiffres, symboles), sans suite toute faite, sans DNMAX ni votre nom ni celui de l'établissement.
      Une courte phrase avec un chiffre convient très bien.</p>
@@ -474,7 +474,7 @@ export function demanderOuvertureCoffre(coffreExiste: boolean, verrouilleParInac
 
 const GABARIT_IDENTITE = `
   <h1>Qui êtes-vous ?</h1>
-  <p>Votre prénom et votre nom accompagnent ce que vous modifiez et signent les fichiers que vous envoyez à d'autres enseignants :
+  <p>Votre prénom et votre nom accompagnent ce que vous modifiez et signent les fichiers que vous envoyez à d'autres enseignant·es :
      chacun voit ainsi qui a écrit quoi.</p>
   <label>Votre prénom
     <input type="text" name="prenom" autocomplete="given-name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>

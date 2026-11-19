@@ -49,7 +49,7 @@ describe("noteModule", () => {
   });
 
   it("demande d'activer d'abord le module requis", () => {
-    expect(noteModule(module("dn"), actifs)?.texte).toBe("activez d'abord le module Étudiants");
+    expect(noteModule(module("dn"), actifs)?.texte).toBe("activez d'abord le module Étudiant·es");
   });
 
   it("dit inactif par défaut un module facultatif disponible", () => {

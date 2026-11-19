@@ -28,9 +28,9 @@ const JOUR_DE_SORTIE = "07-01";
 const PREFIXE_ELEVE_PROMOTION = "s";
 const PREFIXE_LIBRE = "libre";
 /** Préfixe du nom donné à un étudiant anonymisé, suivi de son rang dans la promotion. */
-export const NOM_ANONYME = "Étudiant anonyme";
+export const NOM_ANONYME = "Étudiant·e anonyme";
 /** Préfixes donnés par des versions antérieures, encore présents dans des données déjà anonymisées. */
-const NOMS_ANONYMES_ANCIENS: readonly string[] = ["Élève anonyme"];
+const NOMS_ANONYMES_ANCIENS: readonly string[] = ["Étudiant anonyme", "Élève anonyme"];
 
 /** Étudiant d'une promotion échue dont le nom figure aussi dans une promotion encore en cours. */
 export interface RedoublantProbable {

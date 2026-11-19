@@ -103,7 +103,7 @@ const LIBELLES_RENDU: readonly (readonly [StatutRendu, string])[] = [
   ["", "—"],
   ["rendu", "Rendu"],
   ["nr", "Non rendu"],
-  ["disp", "Dispensé"],
+  ["disp", "Dispensé·e"],
 ];
 
 function pluriel(nombre: number, mot: string): string {
@@ -125,7 +125,7 @@ export function peindreAvancement(contexte: ContexteSaisieEtudiants): void {
     avancement.textContent =
       etudiants.length === 0
         ? ""
-        : `${String(bilan.faits)} / ${pluriel(etudiants.length, "étudiant")} évalué${etudiants.length > 1 ? "s" : ""}` +
+        : `${String(bilan.faits)} / ${pluriel(etudiants.length, "étudiant·e")} évalué${etudiants.length > 1 ? "s" : ""}` +
           (bilan.partiels > 0 ? ` · ${pluriel(bilan.partiels, "commencé")}` : "") +
           ` · ${pluriel(lignes.length, "ligne")}`;
   }
@@ -135,7 +135,7 @@ export function peindreAvancement(contexte: ContexteSaisieEtudiants): void {
       etudiants.length === 0
         ? ""
         : bilan.faits === etudiants.length
-          ? "Tout le monde est évalué — le Word par étudiant et l'Excel de la promo se génèrent depuis « Mes évaluations »."
+          ? "Tout le monde est évalué — le Word par étudiant·e et l'Excel de la promo se génèrent depuis « Mes évaluations »."
           : "Chaque saisie est enregistrée aussitôt ; les documents se génèrent depuis « Mes évaluations ».";
   }
 }
@@ -155,7 +155,7 @@ export function peindreSaisieEtudiants(hote: HTMLElement, contexte: ContexteSais
       creer(
         "div",
         "empty",
-        "Aucun étudiant. Choisissez une promotion à l'étape 1, ou saisissez une liste de noms, puis revenez ici pour évaluer chacun.",
+        "Aucun·e étudiant·e. Choisissez une promotion à l'étape 1, ou saisissez une liste de noms, puis revenez ici pour évaluer chacun·e.",
       ),
     );
     return;
@@ -212,8 +212,8 @@ function changerStatut(contexte: ContexteSaisieEtudiants, id: string, statut: st
   const resultat = resultatDe(contexte.resultats, id);
   const suite = changerRendu(resultat, statut, contexte.aujourdhui());
   remplacer(resultat, suite.resultat);
-  if (suite.avis === "saisie-effacee") contexte.annoncer("Niveaux, observations et appréciation de l'étudiant effacés.");
-  if (suite.avis === "reste-rendu") contexte.annoncer("Des niveaux sont saisis pour cet étudiant : il reste « Rendu ».");
+  if (suite.avis === "saisie-effacee") contexte.annoncer("Niveaux, observations et appréciation de l'étudiant·e effacés.");
+  if (suite.avis === "reste-rendu") contexte.annoncer("Des niveaux sont saisis pour cet·te étudiant·e : son statut reste « Rendu ».");
   contexte.enregistrer();
   contexte.apresSaisie();
 }
@@ -243,14 +243,14 @@ function peindreGrille(hote: HTMLElement, contexte: ContexteSaisieEtudiants, rep
   entete.style.gridTemplateColumns = colonnes;
   const enteteRendu = creer("span", "", "Rendu");
   enteteRendu.title =
-    "Rendu, non rendu ou dispensé — à renseigner pour chaque étudiant avant de terminer l'évaluation. Un niveau saisi le passe en « Rendu »";
+    "Rendu, non rendu ou dispensé·e — à renseigner pour chaque étudiant·e avant de terminer l'évaluation. Un niveau saisi passe son statut à « Rendu »";
   const enteteRestitue = creer("span", "", "Restitué");
   enteteRestitue.style.textAlign = "center";
-  enteteRestitue.title = "Résultat rendu à l'étudiant";
+  enteteRestitue.title = "Résultat rendu à l'étudiant·e";
   const enteteFait = creer("span", "", "Fait");
   enteteFait.style.textAlign = "right";
   entete.append(
-    creer("span", "", "Étudiant"),
+    creer("span", "", "Étudiant·e"),
     enteteRendu,
     ...lignes.map((ligne) => {
       const colonne = creer("span");
@@ -330,7 +330,7 @@ function peindreGrille(hote: HTMLElement, contexte: ContexteSaisieEtudiants, rep
   }
   const defilement = creer("div", "tw");
   defilement.append(grille);
-  const aide = creer("div", "hint", "Une ligne par étudiant, une colonne par compétence évaluée. Un clic sur un nom ouvre sa fiche.");
+  const aide = creer("div", "hint", "Une ligne par étudiant·e, une colonne par compétence évaluée. Un clic sur un nom ouvre sa fiche.");
   aide.style.padding = "10px 14px 2px";
   hote.replaceChildren(defilement, aide);
 }
@@ -365,7 +365,7 @@ function peindreFiche(hote: HTMLElement, contexte: ContexteSaisieEtudiants, repe
   suivant.disabled = rang >= etudiants.length - 1;
   const choix = creer("select");
   choix.id = "eSel";
-  choix.setAttribute("aria-label", "Étudiant");
+  choix.setAttribute("aria-label", "Étudiant·e");
   for (const candidat of etudiants) {
     const avancement = avancementDe(contexte, candidat.id);
     const option = creer("option", "", `${candidat.nom} — ${String(avancement.n)}/${String(avancement.tot)}`);

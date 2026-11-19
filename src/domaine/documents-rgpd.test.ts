@@ -106,8 +106,8 @@ describe("champsManquants", () => {
 describe("composerFicheEleves", () => {
   it("s'intitule « Information aux étudiants » et propose un nom de PDF explicite", () => {
     const fiche = composerFicheEleves(CHAMPS);
-    expect(fiche.pages[0]?.[0]).toEqual({ type: "titre", texte: "Information aux étudiants" });
-    expect(fiche.nomFichier).toBe("DNMAX - Information aux étudiants.pdf");
+    expect(fiche.pages[0]?.[0]).toEqual({ type: "titre", texte: "Information aux étudiant·es" });
+    expect(fiche.nomFichier).toBe("DNMAX - Information aux étudiant·es.pdf");
   });
 
   it("tient sur une seule page", () => {
@@ -117,7 +117,7 @@ describe("composerFicheEleves", () => {
   it("cite l'établissement, le contact du délégué et la date en toutes lettres", () => {
     const texte = texteDe(composerFicheEleves(CHAMPS));
     expect(texte).toContain("Établissement : Lycée des Arts appliqués · 13 novembre 2026");
-    expect(texte).toContain("délégué à la protection des données de l'établissement : dpd@exemple.fr.");
+    expect(texte).toContain("du délégué ou de la déléguée à la protection des données de l'établissement : dpd@exemple.fr.");
   });
 
   it("ne nomme ni enseignant ni chef d'établissement, et ne laisse aucune zone à compléter", () => {
@@ -132,8 +132,8 @@ describe("composerFicheEleves", () => {
     expect(accuse).toBeDefined();
     const texte = texteDe(fiche);
     expect(texte).toContain("Accusé de réception");
-    expect(texte).toContain("Signature de l'étudiant");
-    expect(texte).toContain("Signature du représentant légal, si l'étudiant est mineur");
+    expect(texte).toContain("Signature de l'étudiant·e");
+    expect(texte).toContain("Signature du ou de la représentant·e légal·e, si l'étudiant·e est mineur·e");
     expect(texte).not.toContain("il ne s'agit pas d'un consentement");
   });
 
@@ -164,17 +164,17 @@ describe("composerNoteEtablissement", () => {
     expect(texte).toContain("verrouillage après 20 minutes sans activité");
   });
 
-  it("s'intitule « Note au chef d'établissement », sur deux pages", () => {
+  it("s'intitule « Note à la direction de l'établissement », sur deux pages", () => {
     const note = composerNoteEtablissement(CHAMPS);
-    expect(note.pages[0]?.[0]).toEqual({ type: "titre", texte: "Note au chef d'établissement" });
+    expect(note.pages[0]?.[0]).toEqual({ type: "titre", texte: "Note à la direction de l'établissement" });
     expect(note.pages).toHaveLength(2);
-    expect(note.nomFichier).toBe("DNMAX - Note au chef d'établissement.pdf");
+    expect(note.nomFichier).toBe("DNMAX - Note à la direction de l'établissement.pdf");
   });
 
   it("désigne l'établissement comme responsable et donne le contact du délégué", () => {
     const texte = texteDe(composerNoteEtablissement(CHAMPS));
-    expect(texte).toContain("Lycée des Arts appliqués, représenté par son chef d'établissement.");
-    expect(texte).toContain("Délégué à la protection des données\ndpd@exemple.fr");
+    expect(texte).toContain("Lycée des Arts appliqués, représenté par son ou sa chef·fe d'établissement.");
+    expect(texte).toContain("Délégué·e à la protection des données\ndpd@exemple.fr");
     expect(texte).toContain("Établissement : Lycée des Arts appliqués · 13 novembre 2026");
   });
 

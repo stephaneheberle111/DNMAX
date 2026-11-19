@@ -24,7 +24,7 @@ export interface ContexteEnseignants {
 
 const CSS = "grid-template-columns:60px minmax(0,1fr) minmax(0,1fr) 92px";
 const AIDE =
-  "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur de DNMAX : son prénom et son nom signent ses envois, sa répartition de service cadre la page Progression, et il est coché d'office dans une nouvelle évaluation.";
+  "Proposés dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur·rice de DNMAX : son prénom et son nom signent ses envois, sa répartition de service cadre la page Progression, et son nom est coché d'office dans une nouvelle évaluation.";
 
 function texte(valeur: unknown): string {
   return typeof valeur === "string" ? valeur : "";
@@ -92,7 +92,7 @@ export function peindreEnseignants(hote: HTMLElement, contexte: ContexteEnseigna
   });
   hote.replaceChildren(
     panneauEditeur({
-      titre: "Enseignants",
+      titre: "Enseignant·es",
       compte: String(enseignants.length),
       actions: [ajouter],
       entete: { css: CSS, cellules: ["C'est moi", "Prénom", "Nom", ""] },

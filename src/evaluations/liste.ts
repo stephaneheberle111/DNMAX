@@ -33,7 +33,7 @@ export interface ContexteListe {
   restitutions(evaluation: Evaluation): { n: number; tot: number };
   /** Dates de restitution aux étudiants (module Étudiants). */
   datesRestitutionEtudiants(evaluation: Evaluation): unknown[];
-  /** Étudiants sans « Rendu », « Non rendu » ni « Dispensé ». */
+  /** Étudiants sans « Rendu », « Non rendu » ni « Dispensé·e ». */
   rendusManquants(evaluation: Evaluation): number;
   /** Étudiants qui ont une évaluation individuelle enregistrée. */
   evaluationsIndividuelles(evaluation: Evaluation): number;
@@ -117,7 +117,7 @@ function fenetreEtape(contexte: ContexteListe, evaluation: Evaluation, etape: nu
         balise(
           "span",
           [["class", "hint"], ["style", "flex-basis:100%;color:var(--signal)"]],
-          `${String(manquants)} étudiant${manquants > 1 ? "s" : ""} sans « Rendu », « Non rendu » ou « Dispensé » : à renseigner dans l'évaluation avant de la terminer.`,
+          `${String(manquants)} étudiant·e${manquants > 1 ? "s" : ""} sans « Rendu », « Non rendu » ou « Dispensé·e » : à renseigner dans l'évaluation avant de la terminer.`,
         ),
       );
     } else {
@@ -125,7 +125,7 @@ function fenetreEtape(contexte: ContexteListe, evaluation: Evaluation, etape: nu
     }
     const saisie = contexte.moduleEleves ? contexte.saisie(evaluation) : null;
     if (saisie?.any) {
-      corps.append(balise("span", [["class", "hint"], ["style", "flex-basis:100%"]], `Saisie dans DNMAX : ${String(saisie.full)}/${String(saisie.tot)} étudiants`));
+      corps.append(balise("span", [["class", "hint"], ["style", "flex-basis:100%"]], `Saisie dans DNMAX : ${String(saisie.full)}/${String(saisie.tot)} étudiant·es`));
     } else if (!contexte.moduleEleves && suivi.exporte) {
       corps.append(balise("span", [["class", "hint"], ["style", "flex-basis:100%"]], `Grille exportée le ${dateLongue(suivi.exporte)}`));
     }

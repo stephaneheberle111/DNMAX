@@ -58,8 +58,8 @@ const MESSAGES_DIRECT: Record<CodeErreurDirect, string> = {
     "ou un pare-feu bloque DNMAX. Rien n'a été transmis.",
   "code-errone":
     "Le code ne correspond pas. Par sécurité, il ne peut plus servir : votre collègue doit relancer l'envoi pour obtenir un nouveau code.",
-  "delai-depasse": "Le code a expiré sans que votre collègue ne se connecte. Relancez l'envoi quand vous êtes prêts tous les deux.",
-  "transfert-interrompu": "La connexion s'est interrompue pendant le transfert. Rien n'a été modifié chez le destinataire.",
+  "delai-depasse": "Le code a expiré sans que votre collègue ne se connecte. Relancez l'envoi quand vous êtes prêt·es tou·tes les deux.",
+  "transfert-interrompu": "La connexion s'est interrompue pendant le transfert. Rien n'a été modifié chez le ou la destinataire.",
   "donnees-alterees": "Le contenu a été altéré en route : il a été refusé, rien n'a été modifié.",
   "version-incompatible": "Vos deux ordinateurs n'ont pas la même version de DNMAX. Mettez-les à jour, ou passez par un fichier.",
   annule: "Échange annulé.",
@@ -149,12 +149,12 @@ export function montrerEnvoiDirect(texte: string, protege: boolean): void {
       const motDePasse = creer(
         "p",
         "echange-detail alerte",
-        "Le contenu comprend des étudiants : il part en plus chiffré par le mot de passe choisi, que votre collègue saisira à la réception.",
+        "Le contenu comprend des étudiant·es : il part en plus chiffré par le mot de passe choisi, que votre collègue saisira à la réception.",
       );
       motDePasse.hidden = !protege;
       etapes.replaceChildren(code, consigne, motDePasse);
     } else if (etape.etape === "connexion") {
-      etat.textContent = "Votre collègue est connecté : envoi en cours…";
+      etat.textContent = "Votre collègue est connecté·e : envoi en cours…";
       etapes.replaceChildren();
     } else if (etape.etape === "progression") {
       etat.textContent = decrireProgression("Envoi", etape);
@@ -165,7 +165,7 @@ export function montrerEnvoiDirect(texte: string, protege: boolean): void {
         return;
       }
       etapes.replaceChildren();
-      etat.textContent = "Envoyé. Votre collègue voit maintenant ce que l'envoi changerait chez lui, et choisit ce qu'il garde.";
+      etat.textContent = "Envoyé. Votre collègue voit maintenant ce que l'envoi changerait de son côté, et choisit ce qui est gardé.";
       terminer();
     })
     .catch((raison: unknown) => {
@@ -249,7 +249,7 @@ export function montrerReceptionDirecte(traiterTexte: (texte: string) => Promise
       if (etape.etape === "recherche") {
         etat.textContent = "Recherche de l'ordinateur de votre collègue sur le réseau…";
       } else if (etape.etape === "connexion") {
-        etat.textContent = "Connecté : réception en cours…";
+        etat.textContent = "Connexion établie : réception en cours…";
       } else if (etape.etape === "progression") {
         etat.textContent = decrireProgression("Réception", etape);
       }

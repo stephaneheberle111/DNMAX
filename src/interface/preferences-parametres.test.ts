@@ -260,15 +260,15 @@ describe("Paramètres > Modules", () => {
     etat.modules.eleves = false;
     appliquerModule("eleves", true);
     expect(JSON.parse(stockage["dnmade.modules"] ?? "null")).toEqual({ base: true, eleves: true, dn: true });
-    expect(appels).toEqual(["onglets", "formulaire", "competences", "lignes", "referentiel", "toast:Étudiants : activé"]);
+    expect(appels).toEqual(["onglets", "formulaire", "competences", "lignes", "referentiel", "toast:Étudiant·es : activé"]);
     expect(recus.ecrans.map((recu) => recu.ecran)).toEqual(["modules", "vocabulaire"]);
   });
 
   it("prévient quand désactiver un module en désactive un autre", () => {
     appliquerModule("eleves", false);
     expect(etat.modules).toEqual({ base: true, eleves: false, dn: false });
-    expect(appels[0]).toBe("toast:Niveaux d'acquisition désactivé aussi : il nécessite le module Étudiants.");
-    expect(appels.at(-1)).toBe("toast:Étudiants : désactivé");
+    expect(appels[0]).toBe("toast:Niveaux d'acquisition désactivé aussi : il nécessite le module Étudiant·es.");
+    expect(appels.at(-1)).toBe("toast:Étudiant·es : désactivé");
   });
 
   it("ne prévient pas quand aucun autre module n'en dépend", () => {

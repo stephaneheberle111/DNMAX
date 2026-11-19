@@ -52,12 +52,12 @@ describe("prochaineEtape", () => {
   });
 
   it("compte les étudiants restant à saisir avec le module Étudiants", () => {
-    expect(prochaineEtape("evalcours", { ...base, moduleEleves: true, saisie: { full: 3, tot: 5 } })).toBe("→ 2 étudiants à saisir (3/5)");
+    expect(prochaineEtape("evalcours", { ...base, moduleEleves: true, saisie: { full: 3, tot: 5 } })).toBe("→ 2 étudiant·es à saisir (3/5)");
     expect(prochaineEtape("evalcours", base)).toBe("→ marquer terminée une fois évaluée");
   });
 
   it("compte les étudiants restant à qui restituer, ou la promotion restante", () => {
-    expect(prochaineEtape("restpart", { ...base, restitutions: { n: 4, tot: 5 } })).toBe("→ à restituer à 1 étudiant");
+    expect(prochaineEtape("restpart", { ...base, restitutions: { n: 4, tot: 5 } })).toBe("→ à restituer à 1 étudiant·e");
     expect(prochaineEtape("restpart", base)).toBe("→ promotion restante à restituer");
   });
 

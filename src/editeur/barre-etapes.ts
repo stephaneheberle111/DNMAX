@@ -84,7 +84,7 @@ export function peindreBarreEtapes(contexte: ContexteBarreEtapes): void {
   const { etudiants, faits, partiels } = contexte.bilan;
   const resume4 = document.getElementById("s4sum");
   if (etudiants === 0) {
-    resume(resume4, "", "aucun étudiant");
+    resume(resume4, "", "aucun·e étudiant·e");
   } else if (faits >= etudiants) {
     resume(resume4, `${String(etudiants)} ${pluriel(etudiants, "évalué")}`, " — complet");
   } else {

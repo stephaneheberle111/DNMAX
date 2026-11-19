@@ -64,14 +64,14 @@ const ETATS: Readonly<Record<string, readonly [string, string]>> = {
   ok: ["ok", "Évalué"],
   part: ["part", "Évaluation partielle"],
   nr: ["todo", "Non rendu"],
-  disp: ["prevue", "Dispensé"],
-  miss: ["autre", "Non évalué"],
+  disp: ["prevue", "Dispensé·e"],
+  miss: ["autre", "Non évalué·e"],
   wait: ["prevue", "Pas encore évaluée"],
 };
 
 function aide(paliers: boolean): string {
   return (
-    "Pour un étudiant : les évaluations du semestre et ce qu'il y a obtenu, comparé au reste de la promotion — « Non évalué » signale une évaluation où les autres étudiants ont déjà été saisis mais pas lui. « Non rendu » et « Dispensé » se renseignent dans l'évaluation elle-même (étape Étudiants) et comptent comme traités. En dessous, toutes les compétences sur lesquelles il a été évalué jusqu'à ce semestre, avec l'évolution de son niveau de maîtrise d'une évaluation à l'autre" +
+    "Pour un·e étudiant·e : les évaluations du semestre et les résultats obtenus, comparé au reste de la promotion — « Non évalué·e » signale une évaluation où les autres étudiant·es ont déjà des résultats saisis, mais pas celui-ci ou celle-ci. « Non rendu » et « Dispensé·e » se renseignent dans l'évaluation elle-même (étape Étudiant·es) et comptent comme traités. En dessous, toutes les compétences sur lesquelles il a été évalué jusqu'à ce semestre, avec l'évolution de son niveau de maîtrise d'une évaluation à l'autre" +
     (paliers
       ? " et sa progression dans les niveaux d'acquisition : Initié (année 1) → Guidé (année 2) → Autonome (année 3), chaque niveau étant atteint dès qu'il est évalué avec une maîtrise suffisante dans l'année correspondante."
       : ".")
@@ -84,12 +84,12 @@ function arrondi(valeur: number): string {
 
 function choixEtudiant(contexte: ContexteProgressionEtudiant, rang: number): HTMLElement {
   const etiquette = balise("label");
-  const precedent = balise("button", [["type", "button"], ["class", "btn ghost"], ["id", "pgElPrev"], ...(rang <= 0 ? [["disabled", ""] as const] : []), ["aria-label", "Étudiant précédent"]], "‹");
-  const choix = balise("select", [["id", "pgEl"], ["aria-label", "Étudiant"]]);
+  const precedent = balise("button", [["type", "button"], ["class", "btn ghost"], ["id", "pgElPrev"], ...(rang <= 0 ? [["disabled", ""] as const] : []), ["aria-label", "Étudiant·e précédent·e"]], "‹");
+  const choix = balise("select", [["id", "pgEl"], ["aria-label", "Étudiant·e"]]);
   choix.append(...contexte.etudiants.map((etudiant) => option(etudiant.id, etudiant.nom, etudiant.id === contexte.etudiant)));
   const suivant = balise(
     "button",
-    [["type", "button"], ["class", "btn ghost"], ["id", "pgElNext"], ...(rang >= contexte.etudiants.length - 1 ? [["disabled", ""] as const] : []), ["aria-label", "Étudiant suivant"]],
+    [["type", "button"], ["class", "btn ghost"], ["id", "pgElNext"], ...(rang >= contexte.etudiants.length - 1 ? [["disabled", ""] as const] : []), ["aria-label", "Étudiant·e suivant·e"]],
     "›",
   );
   const aller = (decalage: number): void => {
@@ -106,7 +106,7 @@ function choixEtudiant(contexte: ContexteProgressionEtudiant, rang: number): HTM
     contexte.choisirEtudiant(choix.value);
   });
   etiquette.append(
-    balise("span", [["class", "sfl2"]], "Étudiant"),
+    balise("span", [["class", "sfl2"]], "Étudiant·e"),
     " ",
     precedent,
     " ",
@@ -165,7 +165,7 @@ function acquisition(contexte: ContexteProgressionEtudiant): HTMLElement {
   titre.append(balise("span", [["class", "hint"], ["style", "font-weight:400"]], detail));
   bloc.append(titre);
   const blocs = [...new Set(competences.map((competence) => competence.bloc))].sort((a, b) => Number(a) - Number(b));
-  if (blocs.length === 0) bloc.append(balise("div", [["class", "empty"]], "Pas encore de niveau saisi pour cet étudiant."));
+  if (blocs.length === 0) bloc.append(balise("div", [["class", "empty"]], "Pas encore de niveau saisi pour cet·te étudiant·e."));
   for (const numero of blocs) {
     bloc.append(balise("div", [["class", "pgbh"], ["style", "font-weight:500;border-top:0;padding-top:8px"]], `${numero} - ${contexte.nomBloc(numero)}`));
     const duBloc = competences.filter((competence) => competence.bloc === numero).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
@@ -185,7 +185,7 @@ function acquisition(contexte: ContexteProgressionEtudiant): HTMLElement {
         const { moyenne, ecart, nombre: effectif } = competence.position;
         const position = balise("div", [["class", "pgpos"], ["style", "margin-top:4px"]]);
         position.append(
-          balise("span", [["class", "hint"]], `Classe : en moyenne « ${niveaux[moyenne] ?? ""} » (${String(effectif)} étudiants)`),
+          balise("span", [["class", "hint"]], `Classe : en moyenne « ${niveaux[moyenne] ?? ""} » (${String(effectif)} étudiant·es)`),
           " ",
           balise("span", [["class", `pp ${ecart > 0 ? "up" : ecart < 0 ? "dn" : "eq"}`]], ecart > 0 ? "▲ au-dessus" : ecart < 0 ? "▼ en dessous" : "= dans la moyenne"),
         );
@@ -225,14 +225,14 @@ export function peindreProgressionEtudiant(hote: HTMLElement, contexte: Contexte
   const nomEtudiant = contexte.etudiants[rang]?.nom ?? "";
   const panneau = balise("div", [["class", "panel"]]);
   const tete = balise("div", [["class", "pick-head"]]);
-  const titre = balise("h3", [], "Progression étudiant");
+  const titre = balise("h3", [], "Progression étudiant·e");
   titre.append(bulleAide(aide(contexte.paliers !== null)));
   const droite = balise("div", [["style", "margin-left:auto"]]);
   droite.append(basculeVue(true, (vue) => { contexte.choisirVue(vue); }));
   tete.append(titre, droite);
   panneau.append(tete, barreFiltres(contexte, contexte.etudiant === null ? [] : [choixEtudiant(contexte, rang)]));
   if (contexte.etudiant === null) {
-    panneau.append(balise("div", [["class", "empty"]], `Aucun étudiant dans ${contexte.nomPromotion}. Ajoutez-les dans Mon établissement > Promotions.`));
+    panneau.append(balise("div", [["class", "empty"]], `Aucun·e étudiant·e dans ${contexte.nomPromotion}. Ajoutez-les dans Mon établissement > Promotions.`));
     hote.replaceChildren(panneau);
     return;
   }
@@ -245,7 +245,7 @@ export function peindreProgressionEtudiant(hote: HTMLElement, contexte: Contexte
   const chiffre = balise("div");
   chiffre.append(
     balise("b", [["class", "big"]], String(completes)),
-    ` / ${String(lignes.length)} évaluation${lignes.length > 1 ? "s" : ""} du ${contexte.semestre} complète${completes > 1 ? "s" : ""} pour cet étudiant`,
+    ` / ${String(lignes.length)} évaluation${lignes.length > 1 ? "s" : ""} du ${contexte.semestre} complète${completes > 1 ? "s" : ""} pour cet·te étudiant·e`,
   );
   const barre = balise("div", [["class", "pgbar"]]);
   barre.append(balise("i", [["style", `width:${String(pourcentage(completes, lignes.length))}%`]]));
@@ -255,7 +255,7 @@ export function peindreProgressionEtudiant(hote: HTMLElement, contexte: Contexte
     indicateurs.append(
       indicateur(contexte, "rendu", "Rendus", false),
       indicateur(contexte, "nr", "Non rendus", true),
-      indicateur(contexte, "disp", `Dispensé${contexte.rendus.disp > 1 ? "s" : ""}`, true),
+      indicateur(contexte, "disp", `Dispensé·e${contexte.rendus.disp > 1 ? "s" : ""}`, true),
     );
     resume.append(indicateurs);
   }

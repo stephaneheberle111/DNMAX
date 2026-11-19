@@ -70,7 +70,7 @@ export function construireTableur(fiche: FicheExport, format: "xlsx" | "ods"): U
       ["Livrables", fiche.livrables.join(" ; ")],
       [],
     ];
-    grille.push(["Étudiant", ...lignes.map((ligne) => ligne.comp.replace(/\n/g, " / ").slice(0, 90))]);
+    grille.push(["Étudiant·e", ...lignes.map((ligne) => ligne.comp.replace(/\n/g, " / ").slice(0, 90))]);
     grille.push(["", ...lignes.map((ligne) => ligne.lib.slice(0, 70))]);
     for (const etudiant of fiche.etudiants) {
       grille.push([

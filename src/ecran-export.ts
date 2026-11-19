@@ -8,7 +8,7 @@ const DUREE_AFFICHAGE_MS = 20_000;
 const CLASSE_ANNONCE = "annonce-export";
 /** Hors de DNMAX, les données d'étudiants ne sont plus chiffrées : l'enseignant doit le savoir. */
 const AVERTISSEMENT_ELEVES =
-  "Ce document contient des noms et des résultats d'étudiants et n'est pas protégé par mot de passe : " +
+  "Ce document contient des noms et des résultats d'étudiant·es et n'est pas protégé par mot de passe : " +
   "rangez-le, partagez-le et supprimez-le avec le même soin qu'un relevé de notes.";
 
 /**
@@ -18,7 +18,7 @@ const AVERTISSEMENT_ELEVES =
 export function confirmerExportEleves(): Promise<boolean> {
   return new Promise((resoudre) => {
     let confirme = false;
-    const { boite, fermer } = ouvrirBoite("Document avec des étudiants", () => {
+    const { boite, fermer } = ouvrirBoite("Document avec des étudiant·es", () => {
       resoudre(confirme);
     });
     boite.classList.add("boite-etroite");

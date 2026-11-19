@@ -55,7 +55,7 @@ export interface ContexteProgressionPromotion {
 }
 
 const AIDE =
-  "Pour une promotion en cours et un semestre : les compétences que le référentiel rattache à ce semestre, et ce que vos évaluations enregistrées en couvrent déjà. Une compétence est « évaluée » dès qu'une évaluation du semestre la contient, « en cours » tant que tous les étudiants n'ont pas de niveau saisi. La répartition donne le dernier niveau de chaque étudiant.";
+  "Pour une promotion en cours et un semestre : les compétences que le référentiel rattache à ce semestre, et ce que vos évaluations enregistrées en couvrent déjà. Une compétence est « évaluée » dès qu'une évaluation du semestre la contient, « en cours » tant que tou·tes les étudiant·es n'ont pas de niveau saisi. La répartition donne le dernier niveau de chaque étudiant·e.";
 const ETATS: Readonly<Record<string, string>> = {
   ok: "Évaluée",
   part: "En cours",
@@ -126,7 +126,7 @@ export function basculeVue(vueEtudiant: boolean, choisirVue: (vue: string) => vo
   const bascule = balise("div", [["class", "seg"], ["id", "pgView"]]);
   for (const [vue, libelle, active] of [
     ["promo", "Promotion", !vueEtudiant],
-    ["eleve", "Étudiant", vueEtudiant],
+    ["eleve", "Étudiant·e", vueEtudiant],
   ] as const) {
     const bouton = balise("button", [["type", "button"], ["data-pv", vue], ["aria-pressed", String(active)]], libelle);
     bouton.addEventListener("click", () => {
@@ -144,7 +144,7 @@ function filtres(contexte: ContexteProgressionPromotion): HTMLElement {
   const suite: Node[] = [];
   if (contexte.enseignants.length > 0) {
     suite.push(
-      liste(choisir, "t", "Enseignant", [
+      liste(choisir, "t", "Enseignant·e", [
         option("", "Tous", false),
         ...contexte.enseignants.map((enseignant) => option(enseignant.id, enseignant.nom, contexte.enseignantsChoisis.includes(enseignant.id))),
       ]),
@@ -197,7 +197,7 @@ function ligne(contexte: ContexteProgressionPromotion, donnees: LigneProgression
       if (effectif) barre.append(balise("i", [["style", `flex:${String(effectif)};background:${contexte.couleurNiveau(rang, nombre)}`]]));
     });
     if (contexte.etudiants - donnees.done) barre.append(balise("i", [["style", `flex:${String(contexte.etudiants - donnees.done)}`], ["class", "none"]]));
-    repartition.append(barre, balise("span", [["class", "hint"]], `${String(donnees.done)}/${String(contexte.etudiants)} étudiants`));
+    repartition.append(barre, balise("span", [["class", "hint"]], `${String(donnees.done)}/${String(contexte.etudiants)} étudiant·es`));
   }
   rangee.append(balise("span", [["class", `pill pst ${donnees.state}`]], ETATS[donnees.state] ?? ""), competence, evaluations, repartition);
   return rangee;
@@ -225,7 +225,7 @@ export function peindreProgressionPromotion(hote: HTMLElement, contexte: Context
   const detail = balise(
     "div",
     [["class", "hint"]],
-    `${contexte.nomPromotion}${contexte.moduleEleves ? ` · ${pluriel(contexte.etudiants, "étudiant")}` : ""} · ${pluriel(contexte.evaluationsAuSemestre, "évaluation")} au ${contexte.semestre}`,
+    `${contexte.nomPromotion}${contexte.moduleEleves ? ` · ${pluriel(contexte.etudiants, "étudiant·e")}` : ""} · ${pluriel(contexte.evaluationsAuSemestre, "évaluation")} au ${contexte.semestre}`,
   );
   if (aEvaluer > 0) detail.append(" · ", balise("b", [], `${String(aEvaluer)} à évaluer`));
   else detail.append(" · tout est couvert");

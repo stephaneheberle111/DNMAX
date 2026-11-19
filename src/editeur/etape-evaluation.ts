@@ -120,7 +120,7 @@ export function peindreEnseignants(contexte: ContexteEnseignants): void {
   const choisis = textes(evaluation.profs);
   const tous = [...new Set([...contexte.enseignants.filter(Boolean), ...choisis])];
   if (tous.length === 0) {
-    hote.replaceChildren(creer("span", "hint", "Ajoutez les enseignants dans Mon établissement > Enseignants."));
+    hote.replaceChildren(creer("span", "hint", "Ajoutez les enseignant·es dans Mon établissement > Enseignant·es."));
     return;
   }
   hote.replaceChildren(

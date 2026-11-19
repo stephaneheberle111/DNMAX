@@ -263,7 +263,7 @@ export function evaluationLecture(contexte: ContexteDetaille): EvaluationExemple
     livrables: ["Fiche de lecture"], semestre: "S1", classe: "DN MADE 1 Objet",
     date: jourIso(contexte.maintenant - JOUR * 21), prof: "Sophie Hébert",
     ues: ["UE HUMANITES et CULTURE"], ecCodes: ["EC 1.1"], compCode: "C4.2",
-    consignes: "Lecture d'un chapitre au choix dans la bibliographie, restitution en une page : thèse de l'auteur, notions clés, lien avec le projet d'atelier en cours.",
+    consignes: "Lecture d'un chapitre au choix dans la bibliographie, restitution en une page : thèse de l'auteur·rice, notions clés, lien avec le projet d'atelier en cours.",
     ops: [], preset: "maitrise", niveaux: contexte.niveaux.slice(),
     opts: { crit: true, obs: true }, eleves: "", items,
   };

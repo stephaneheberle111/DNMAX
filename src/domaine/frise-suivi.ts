@@ -77,13 +77,13 @@ export function prochaineEtape(statut: string, situation: SituationFrise): strin
     case "evalcours": {
       if (!situation.moduleEleves) return "→ marquer terminée une fois évaluée";
       const { full, tot } = situation.saisie;
-      return `→ ${pluriel(tot - full, "étudiant")} à saisir (${String(full)}/${String(tot)})`;
+      return `→ ${pluriel(tot - full, "étudiant·e")} à saisir (${String(full)}/${String(tot)})`;
     }
     case "eval":
-      return "→ à restituer aux étudiants";
+      return "→ à restituer aux étudiant·es";
     case "restpart": {
       const { n, tot } = situation.restitutions;
-      return tot > 0 && n > 0 ? `→ à restituer à ${pluriel(tot - n, "étudiant")}` : "→ promotion restante à restituer";
+      return tot > 0 && n > 0 ? `→ à restituer à ${pluriel(tot - n, "étudiant·e")}` : "→ promotion restante à restituer";
     }
     default:
       return `✓ terminée${situation.derniereRestitution === "" ? "" : ` le ${dateCourte(situation.derniereRestitution)}`}`;
