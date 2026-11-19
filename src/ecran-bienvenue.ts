@@ -13,7 +13,7 @@ import { lirePaquet } from "./domaine/echange/paquet";
 import { appliquerReferentiels, calculerPlanReferentiels } from "./domaine/echange/plan-referentiels";
 import { estReferentielVide } from "./domaine/echange/referentiel";
 import type { Entrees } from "./domaine/magasin-memoire";
-import { NOMBRE_ETAPES_BIENVENUE, messagePourErreur } from "./ecran-coffre";
+import { NOMBRE_ETAPES_BIENVENUE, creerEcranCoffre, messagePourErreur } from "./ecran-coffre";
 import type { AccesDonnees } from "./ecran-echange";
 import { REFERENTIELS_EMBARQUES } from "./referentiels-embarques";
 
@@ -106,7 +106,8 @@ async function preparerEntrees(acces: AccesDonnees, choix: string, nomEtablissem
 }
 
 function afficher(acces: AccesDonnees, etablissementSaisi: string): void {
-  const ecran = creer("div", "ecran-coffre ecran-bienvenue");
+  const { ecran, place } = creerEcranCoffre();
+  ecran.classList.add("ecran-bienvenue");
   ecran.setAttribute("role", "dialog");
   ecran.setAttribute("aria-modal", "true");
   ecran.setAttribute("aria-labelledby", "bienvenue-titre");
@@ -200,7 +201,7 @@ function afficher(acces: AccesDonnees, etablissementSaisi: string): void {
       });
   });
   actualiser();
-  ecran.append(formulaire);
+  place.append(formulaire);
   document.body.append(ecran);
   formulaire.querySelector<HTMLInputElement>('input[name="mention"]:checked')?.focus();
 }

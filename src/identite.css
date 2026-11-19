@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: CECILL-2.1 */
-/* Identité visuelle : nom « DNMA » + signe X, onglets à icône, cartes sur papier, fond de page gaufré.
+/* Identité visuelle (série 8) : logotype en pièces, onglets à picto, cartes sur papier, fond de page gaufré.
    Les couleurs sont les variables de public/heritage/application.css ; ici, la forme. */
 
 /* ---------- Papier et fond de page ---------- */
@@ -16,7 +16,7 @@ body {
   z-index: -1;
   pointer-events: none;
 }
-/* La trame est une couche à part : en thème sombre elle est inversée, le X en creux non. */
+/* La trame est une couche à part : en thème sombre elle est inversée, le bandeau gaufré non. */
 /* Sans réglage (ou « lisse », le fond par défaut), pas de trame. */
 .fond-page::before {
   content: "";
@@ -51,82 +51,104 @@ html[data-relief="peine"] .fond-page {
 :root[data-teinte="pale"][data-theme="dark"] { --paper: #211f1b; }
 :root[data-teinte="douce"][data-theme="dark"] { --paper: #1e1d19; }
 :root[data-teinte="soutenue"][data-theme="dark"] { --paper: #15130e; }
-.fond-x {
+/* Bandeau gaufré (planches 44 et 45) : « Diplôme national des métiers d'art et du design » en pièces,
+   à 30 px du bas, centré, à sa taille de planche (1200 px de large) et réduit seulement si la fenêtre est plus étroite.
+   Le texte est dessiné cinq fois : ombres et lumières décalées, puis à la couleur du papier. */
+.bandeau-gaufre {
   position: absolute;
-  right: 26px;
-  bottom: calc(26px + var(--hauteur-pied, 0px));
-  width: 210px;
-  height: 210px;
+  left: 50%;
+  bottom: calc(30px + var(--hauteur-pied, 0px));
+  width: min(1200px, 100%);
+  height: auto;
+  aspect-ratio: 1200 / 16;
+  transform: translateX(-50%);
+  overflow: visible;
 }
-html[data-x-creux="non"] .fond-x {
+html[data-bandeau="non"] .bandeau-gaufre {
   display: none;
 }
-
-.fond-x use {
-  --creux: rgba(58, 44, 22, 0.099);
-  fill: var(--creux);
-  stroke: var(--creux);
+.bandeau-gaufre use {
+  fill: var(--gaufre);
 }
-.fond-x .creux-lumiere-large { --creux: rgba(255, 255, 255, 0.427); }
-.fond-x .creux-ombre { --creux: rgba(58, 44, 22, 0.22); }
-.fond-x .creux-lumiere { --creux: rgba(255, 255, 255, 0.95); }
-.fond-x .creux-fond { --creux: var(--paper); }
+.gaufre-ombre-large { --gaufre: rgba(58, 44, 22, 0.122); }
+.gaufre-lumiere-large { --gaufre: rgba(255, 255, 255, 0.405); }
+.gaufre-ombre { --gaufre: rgba(58, 44, 22, 0.27); }
+.gaufre-lumiere { --gaufre: rgba(255, 255, 255, 0.9); }
+.gaufre-fond { --gaufre: var(--paper); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .fond-page::before { filter: invert(1); opacity: 0.35; }
-  :root:not([data-theme="light"]) .fond-x .creux-ombre-large { --creux: rgba(0, 0, 0, 0.25); }
-  :root:not([data-theme="light"]) .fond-x .creux-lumiere-large { --creux: rgba(255, 255, 255, 0.03); }
-  :root:not([data-theme="light"]) .fond-x .creux-ombre { --creux: rgba(0, 0, 0, 0.5); }
-  :root:not([data-theme="light"]) .fond-x .creux-lumiere { --creux: rgba(255, 255, 255, 0.08); }
+  :root:not([data-theme="light"]) .gaufre-ombre-large { --gaufre: rgba(0, 0, 0, 0.25); }
+  :root:not([data-theme="light"]) .gaufre-lumiere-large { --gaufre: rgba(255, 255, 255, 0.03); }
+  :root:not([data-theme="light"]) .gaufre-ombre { --gaufre: rgba(0, 0, 0, 0.5); }
+  :root:not([data-theme="light"]) .gaufre-lumiere { --gaufre: rgba(255, 255, 255, 0.08); }
 }
 :root[data-theme="dark"] .fond-page::before { filter: invert(1); opacity: 0.35; }
-:root[data-theme="dark"] .fond-x .creux-ombre-large { --creux: rgba(0, 0, 0, 0.25); }
-:root[data-theme="dark"] .fond-x .creux-lumiere-large { --creux: rgba(255, 255, 255, 0.03); }
-:root[data-theme="dark"] .fond-x .creux-ombre { --creux: rgba(0, 0, 0, 0.5); }
-:root[data-theme="dark"] .fond-x .creux-lumiere { --creux: rgba(255, 255, 255, 0.08); }
+:root[data-theme="dark"] .gaufre-ombre-large { --gaufre: rgba(0, 0, 0, 0.25); }
+:root[data-theme="dark"] .gaufre-lumiere-large { --gaufre: rgba(255, 255, 255, 0.03); }
+:root[data-theme="dark"] .gaufre-ombre { --gaufre: rgba(0, 0, 0, 0.5); }
+:root[data-theme="dark"] .gaufre-lumiere { --gaufre: rgba(255, 255, 255, 0.08); }
+/* Sur le volet pétrole de l'écran d'ouverture, dans les deux thèmes : les valeurs de la planche 44.
+   Placées après le thème sombre, à spécificité égale, pour passer devant. */
+:root .sur-petrole .gaufre-ombre-large { --gaufre: rgba(0, 0, 0, 0.162); }
+:root .sur-petrole .gaufre-lumiere-large { --gaufre: rgba(255, 255, 255, 0.099); }
+:root .sur-petrole .gaufre-ombre { --gaufre: rgba(0, 0, 0, 0.36); }
+:root .sur-petrole .gaufre-lumiere { --gaufre: rgba(255, 255, 255, 0.22); }
+:root .sur-petrole .gaufre-fond { --gaufre: #10555f; }
 @media print {
   .fond-page { display: none; }
 }
 
-/* ---------- Nom : « DNMA » suivi du signe X en couleur ---------- */
+/* ---------- Couleurs des pièces : pétrole pour le design, ambre pour les métiers d'art ----------
+   En thème sombre, les nuances claires de application.css (--accent et --signal sombres), pour rester lisibles.
+   Les pictos des menus inactifs passent en deux gris : le fût plus marqué que la seconde pièce. */
+:root {
+  --piece-design: #10555f;
+  --piece-art: #c27a2c;
+  --picto-design: #6b6455;
+  --picto-art: #a39a86;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --piece-design: #62a9ae;
+    --piece-art: #d9a066;
+    --picto-design: #aba290;
+    --picto-art: #6e675a;
+  }
+}
+:root[data-theme="dark"] {
+  --piece-design: #62a9ae;
+  --piece-art: #d9a066;
+  --picto-design: #aba290;
+  --picto-art: #6e675a;
+}
+.piece-design {
+  fill: var(--piece-design);
+}
+.piece-art {
+  fill: var(--piece-art);
+}
+
+/* ---------- Logotype en pièces (planches 40 et 45) ---------- */
 .brand {
   flex-direction: row;
-  align-items: baseline;
-  gap: 1px;
-  margin-right: 8px;
+  align-items: center;
+  margin-right: 18px;
 }
-.brand b {
-  font-family: var(--fd);
-  font-weight: 800;
-  font-size: 26px;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-.signe {
-  width: 0.885em;
-  height: 0.885em;
+.logotype {
+  display: block;
+  width: 94px;
+  height: 21px;
   flex-shrink: 0;
-  margin-bottom: -0.115em;
-  font-size: 26px;
-}
-.signe-delie {
-  fill: none;
-  stroke: var(--ink);
-  stroke-width: 4.6;
-  stroke-linecap: round;
-}
-.signe-plein {
-  fill: var(--accent);
 }
 
 @media (min-width: 1700px) {
-  .brand b,
-  .signe {
-    font-size: 28px;
+  .brand .logotype {
+    width: 108px;
+    height: 24px;
   }
 }
 
-/* ---------- Bandeau et onglets à icône ---------- */
+/* ---------- Bandeau et onglets à picto (planche 43) ---------- */
 header.bar {
   background: var(--surface);
   border-bottom-color: var(--line);
@@ -146,13 +168,19 @@ nav.tabs button {
   color: var(--muted);
   font-weight: 400;
 }
-nav.tabs button::before {
-  content: "";
-  width: 18px;
-  height: 18px;
+/* Le menu actif porte ses deux couleurs sur le fond pétrole pâle ; les autres sont en gris.
+   Les ronds sont détourés de la couleur du fond de l'onglet, pour se détacher du fût. */
+.picto {
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
-  background: currentColor;
-  mask: var(--icone) center / contain no-repeat;
+}
+.picto-design {
+  fill: var(--picto-design);
+}
+.picto-art {
+  fill: var(--picto-art);
+  stroke: var(--surface);
 }
 nav.tabs button:hover {
   color: var(--ink);
@@ -163,11 +191,13 @@ nav.tabs button[aria-selected="true"] {
   box-shadow: none;
   font-weight: 600;
 }
-#t-saved { --icone: url("./assets/icones/evaluations.svg"); }
-#t-prog { --icone: url("./assets/icones/progression.svg"); }
-#t-ref { --icone: url("./assets/icones/referentiel.svg"); }
-#t-org { --icone: url("./assets/icones/etablissement.svg"); }
-#t-set { --icone: url("./assets/icones/parametres.svg"); }
+nav.tabs button[aria-selected="true"] .picto-design {
+  fill: var(--piece-design);
+}
+nav.tabs button[aria-selected="true"] .picto-art {
+  fill: var(--piece-art);
+  stroke: var(--accent-soft);
+}
 
 /* ---------- Titres, cartes, boutons ---------- */
 .vue-titre {

@@ -12,7 +12,7 @@ describe("lireFond", () => {
     });
   });
 
-  it("donne le fond lisse, en force normale, avec le X en creux, quand rien n'est enregistré", () => {
+  it("donne le fond lisse, en force normale, avec le bandeau gaufré, quand rien n'est enregistré", () => {
     expect(lireFond(null)).toEqual({ trame: "lisse", force: "normale", teinte: "normale", xEnCreux: true });
     expect(lireFond(undefined)).toBe(FOND_PAR_DEFAUT);
   });
@@ -39,7 +39,7 @@ describe("attributsFond", () => {
       "data-fond": "toile",
       "data-relief": "peine",
       "data-teinte": "pale",
-      "data-x-creux": "non",
+      "data-bandeau": "non",
     });
   });
 
@@ -47,7 +47,11 @@ describe("attributsFond", () => {
     expect(lireFond(JSON.stringify({ trame: "feutre", force: "normale", xEnCreux: true })).teinte).toBe("normale");
   });
 
-  it("marque le X en creux affiché par « oui »", () => {
-    expect(attributsFond(FOND_PAR_DEFAUT)["data-x-creux"]).toBe("oui");
+  it("garde pour le bandeau gaufré le choix fait pour le X en creux qu'il remplace", () => {
+    expect(attributsFond(lireFond(JSON.stringify({ trame: "lisse", xEnCreux: false })))["data-bandeau"]).toBe("non");
+  });
+
+  it("marque le bandeau gaufré affiché par « oui »", () => {
+    expect(attributsFond(FOND_PAR_DEFAUT)["data-bandeau"]).toBe("oui");
   });
 });

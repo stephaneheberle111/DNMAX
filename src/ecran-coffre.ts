@@ -11,6 +11,7 @@ import {
 } from "./domaine/saisie-coffre";
 import { moduleElevesActif } from "./domaine/securite";
 import { DELAI_VERROUILLAGE_INACTIVITE_MS } from "./configuration";
+import { svgDN, svgLogotype } from "./identite-pieces";
 import {
   changerMotDePasse,
   creerCoffre,
@@ -125,15 +126,14 @@ const GABARIT_CODE_SECOURS = `
   <label class="coffre-case"><input type="checkbox" name="note" required> J'ai noté ce code en lieu sûr</label>
   <div class="coffre-actions"><span></span><button type="submit" class="btn primary">Continuer</button></div>`;
 
+/** Planche 44 : le logotype au-dessus suffit à titrer l'écran, le titre reste pour les lecteurs d'écran. */
 const GABARIT_OUVERTURE = `
-  <h1>DNMAX</h1>
-  <p>Saisissez votre mot de passe pour ouvrir vos données.</p>
+  <h1 class="coffre-cache">Ouvrir DNMAX</h1>
   <label>Mot de passe
     <input type="password" name="motDePasse" autocomplete="current-password" required></label>
   <p class="coffre-erreur" role="alert" hidden></p>
-  <div class="coffre-actions">
-    <button type="button" class="lnk" data-role="oubli">Mot de passe oublié ?</button>
-    <button type="submit" class="btn primary">Ouvrir</button></div>`;
+  <button type="submit" class="btn primary">Ouvrir</button>
+  <button type="button" class="lnk" data-role="oubli">Mot de passe oublié ?</button>`;
 
 const GABARIT_SECOURS = `
   <h1>Mot de passe oublié</h1>
@@ -181,14 +181,58 @@ function afficherErreur(formulaire: HTMLFormElement, message: string): void {
   }
 }
 
+/** Les cinq couches du bandeau gaufré : ombres et lumières décalées, puis le texte (défini dans index.html, `#bandeau-texte`). */
+const COUCHES_BANDEAU = `
+  <use href="#bandeau-texte" class="gaufre-ombre-large" transform="translate(-0.45 -1.00)"/>
+  <use href="#bandeau-texte" class="gaufre-lumiere-large" transform="translate(0.45 1.00)"/>
+  <use href="#bandeau-texte" class="gaufre-ombre" transform="translate(-0.23 -0.50)"/>
+  <use href="#bandeau-texte" class="gaufre-lumiere" transform="translate(0.23 0.50)"/>
+  <use href="#bandeau-texte" class="gaufre-fond"/>`;
+
 /**
- * Remplace le contenu de l'écran par `gabarit` et rend le formulaire créé.
+ * Écran d'ouverture de la série 8 (planche 44) : à gauche, le volet pétrole avec
+ * le DN en pièces ; à droite, le logotype puis le formulaire ; en bas, le bandeau
+ * gaufré, aux couleurs du volet sur sa moitié gauche et du papier sur la droite.
+ * Les deux moitiés se partagent la fenêtre à parts égales, pour que la coupure
+ * du bandeau tombe sur celle des volets.
+ */
+const GABARIT_ECRAN = `
+  <div class="coffre-volet" aria-hidden="true">
+    ${svgDN("coffre-dn")}
+    <p class="coffre-volet-mots"><span class="coffre-mot-art">Métiers d’art</span><span class="coffre-mot-design">Design</span></p>
+  </div>
+  <div class="coffre-colonne">
+    ${svgLogotype("coffre-logotype")}
+    <div class="coffre-place"></div>
+  </div>
+  <svg class="bandeau-gaufre" viewBox="0 0 1200 16" aria-hidden="true" focusable="false">
+    <clipPath id="bandeau-volet"><rect width="600" height="16"/></clipPath>
+    <clipPath id="bandeau-papier"><rect x="600" width="600" height="16"/></clipPath>
+    <g clip-path="url(#bandeau-volet)" class="sur-petrole">${COUCHES_BANDEAU}</g>
+    <g clip-path="url(#bandeau-papier)">${COUCHES_BANDEAU}</g>
+  </svg>`;
+
+/**
+ * Crée l'écran du coffre (aussi celui de la bienvenue) et rend l'écran entier,
+ * à placer dans la page, et la place où vont ses formulaires successifs.
+ */
+export function creerEcranCoffre(): { ecran: HTMLElement; place: HTMLElement } {
+  const ecran = document.createElement("div");
+  ecran.className = "ecran-coffre";
+  // Gabarit fixe de ce fichier, sans aucune donnée saisie.
+  ecran.innerHTML = GABARIT_ECRAN;
+  const place = ecran.querySelector<HTMLElement>(".coffre-place") ?? ecran;
+  return { ecran, place };
+}
+
+/**
+ * Remplace le formulaire affiché dans `place` par `gabarit` et rend le formulaire créé.
  * Les gabarits sont des textes fixes de ce fichier : aucune donnée saisie n'y est injectée.
  */
-function afficherFormulaire(ecran: HTMLElement, gabarit: string): HTMLFormElement {
+function afficherFormulaire(place: HTMLElement, gabarit: string): HTMLFormElement {
   const formulaire = document.createElement("form");
   formulaire.innerHTML = gabarit;
-  ecran.replaceChildren(formulaire);
+  place.replaceChildren(formulaire);
   formulaire.querySelector("input")?.focus();
   return formulaire;
 }
@@ -367,6 +411,7 @@ function montrerCodeSecours(ecran: HTMLElement, codeSecours: string, continuer: 
 
 function montrerOuverture(ecran: HTMLElement, terminer: (ouverture: OuvertureCoffre) => void, verrouilleParInactivite = false): void {
   const formulaire = afficherFormulaire(ecran, GABARIT_OUVERTURE);
+  formulaire.classList.add("coffre-ouverture");
   if (verrouilleParInactivite) {
     const avis = document.createElement("p");
     avis.className = "coffre-avis";
@@ -413,17 +458,16 @@ function montrerSecours(ecran: HTMLElement, terminer: (ouverture: OuvertureCoffr
  */
 export function demanderOuvertureCoffre(coffreExiste: boolean, verrouilleParInactivite = false): Promise<OuvertureCoffre> {
   return new Promise((resoudre) => {
-    const ecran = document.createElement("div");
-    ecran.className = "ecran-coffre";
+    const { ecran, place } = creerEcranCoffre();
     document.body.prepend(ecran);
     const terminer = (ouverture: OuvertureCoffre): void => {
       ecran.remove();
       resoudre(ouverture);
     };
     if (coffreExiste) {
-      montrerOuverture(ecran, terminer, verrouilleParInactivite);
+      montrerOuverture(place, terminer, verrouilleParInactivite);
     } else {
-      montrerBonnesPratiques(ecran, terminer);
+      montrerBonnesPratiques(place, terminer);
     }
   });
 }
@@ -447,10 +491,9 @@ const GABARIT_IDENTITE = `
  */
 export function demanderIdentite(genererIdentifiant: () => string): Promise<Identite> {
   return new Promise((resoudre) => {
-    const ecran = document.createElement("div");
-    ecran.className = "ecran-coffre";
+    const { ecran, place } = creerEcranCoffre();
     document.body.prepend(ecran);
-    const formulaire = afficherFormulaire(ecran, GABARIT_IDENTITE);
+    const formulaire = afficherFormulaire(place, GABARIT_IDENTITE);
     formulaire.addEventListener("submit", (evenement) => {
       evenement.preventDefault();
       const identite = creerIdentite(lireChamp(formulaire, "prenom"), lireChamp(formulaire, "nom"), genererIdentifiant());

@@ -1,72 +1,59 @@
 // SPDX-License-Identifier: CECILL-2.1
 /*
- * Dessin de l'icône de l'application : le signe X « plein & délié », blanc et
- * pétrole clair, sur un pavé pétrole arrondi. Le plein s'effile vers le bas
- * (tracé « intermédiaire 2 », entre l'ancien plein et le coup de gouge) ; il est
- * le même à toutes les tailles. Le délié a trois niveaux de détail selon la
- * taille d'affichage, son écart à la croisée gardant le même dégagement autour
- * du plein. Calculs seuls, sans accès aux fichiers.
+ * Dessin de l'icône de l'application (série 8, décision 4) : « D + N en grand,
+ * le D seul en petit ». Sur un pavé pétrole arrondi (rx 22 sur 100), le D et le N
+ * en pièces blanches et ambre clair à partir de 64 px, le D seul en dessous.
+ * Une version sans fond, le D seul, sert d'icône de fenêtre pour la barre des
+ * tâches : pétrole et ambre sur une barre claire, blanc et ambre clair sur une
+ * barre sombre. Tracés et mises en place repris de la planche de l'icône.
+ * Calculs seuls, sans accès aux fichiers.
  */
+import { LETTRE_D, LETTRE_N, dessinerLettres, peintureCouleurs } from "../src/identite-pieces.ts";
 
-export type NiveauDetail = "fin" | "moyen" | "simple";
+export type NiveauDetail = "dn" | "d";
 
-/** 88 px et plus : fin ; de 40 à 87 px : moyen ; moins de 40 px : simple. */
+/** 64 px et plus : D + N ; moins de 64 px : le D seul, qui reste lisible. */
 export function niveauDetail(taillePixels: number): NiveauDetail {
-  if (taillePixels >= 88) return "fin";
-  return taillePixels >= 40 ? "moyen" : "simple";
+  return taillePixels >= 64 ? "dn" : "d";
 }
 
-interface DessinSigne {
-  /** Trait fin (délié), avec ses deux petits traits d'extrémité sauf au niveau simple. */
-  readonly delie: string;
-  readonly epaisseurDelie: number;
-  /** Trait plein, large et légèrement courbe. */
-  readonly plein: string;
-  /** Place du signe dans le pavé (repère 100 × 100). */
-  readonly decalage: number;
-  readonly echelle: number;
-}
+export const COULEURS_ICONE = { pave: "#10555F", design: "#FFFFFF", art: "#E9B978" } as const;
 
-/** Plein du signe, effilé vers le bas, identique à tous les niveaux de détail. */
-export const PLEIN = "M15 26.5 42.5 13C59.5 33 72.5 55.5 81 82.5L74 86C56.5 66.5 38.5 45.5 15 26.5Z";
+/** Couleurs du D sans fond : « clair » pour une barre des tâches claire, « sombre » pour une barre sombre. */
+export const COULEURS_SANS_FOND = {
+  clair: { design: "#10555F", art: "#C27A2C" },
+  sombre: { design: "#FFFFFF", art: "#E9B978" },
+} as const;
 
-export const SIGNES: Readonly<Record<NiveauDetail, DessinSigne>> = {
-  fin: {
-    delie: "M12 88 43 57M63.6 36.4 88 12M7.4 83.4l9.2 9.2M83.4 7.4l9.2 9.2",
-    epaisseurDelie: 2.6,
-    plein: PLEIN,
-    decalage: 14,
-    echelle: 0.72,
-  },
-  moyen: {
-    delie: "M13 87 42.1 57.9M64.5 35.5 87 13M8 82l10 10M82 8l10 10",
-    epaisseurDelie: 4.6,
-    plein: PLEIN,
-    decalage: 13,
-    echelle: 0.74,
-  },
-  simple: {
-    delie: "M17 85 40.6 59.4M67.7 32.3 85 17",
-    epaisseurDelie: 8.5,
-    plein: PLEIN,
-    decalage: 12,
-    echelle: 0.76,
-  },
+export type BarreDesTaches = keyof typeof COULEURS_SANS_FOND;
+
+/** Pavé et place des lettres, tels que la planche les pose à chaque niveau (le pavé du D est rentré d'une demi-unité). */
+const MISE_EN_PAGE: Readonly<Record<NiveauDetail, { readonly pave: string; readonly place: string }>> = {
+  dn: { pave: '<rect width="100" height="100" rx="22"', place: "translate(6 25) scale(0.5)" },
+  d: { pave: '<rect x="0.5" y="0.5" width="99" height="99" rx="22"', place: "translate(17.44 13) scale(0.74)" },
 };
 
-export const COULEURS_ICONE = { pave: "#10555F", delie: "#A8D2D4", plein: "#FFFFFF" } as const;
+function enteteSvg(viewBox: string, taillePixels: number): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="${String(taillePixels)}" height="${String(taillePixels)}">`;
+}
 
-/** SVG de l'icône de l'application, dessiné au niveau de détail de la taille demandée. */
+/** SVG de l'icône de l'application, au niveau de détail de la taille demandée. */
 export function svgIcone(taillePixels: number): string {
-  const signe = SIGNES[niveauDetail(taillePixels)];
+  const niveau = niveauDetail(taillePixels);
+  const lettres = niveau === "dn" ? [LETTRE_D, LETTRE_N] : [LETTRE_D];
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${String(taillePixels)}" height="${String(taillePixels)}">` +
-    `<rect width="100" height="100" rx="22" fill="${COULEURS_ICONE.pave}"/>` +
-    `<g transform="translate(${String(signe.decalage)} ${String(signe.decalage)}) scale(${String(signe.echelle)})">` +
-    `<path d="${signe.delie}" fill="none" stroke="${COULEURS_ICONE.delie}" stroke-width="${String(signe.epaisseurDelie)}" stroke-linecap="round"/>` +
-    `<path d="${signe.plein}" fill="${COULEURS_ICONE.plein}"/>` +
+    enteteSvg("0 0 100 100", taillePixels) +
+    `${MISE_EN_PAGE[niveau].pave} fill="${COULEURS_ICONE.pave}"/>` +
+    `<g transform="${MISE_EN_PAGE[niveau].place}">` +
+    dessinerLettres(lettres, peintureCouleurs(COULEURS_ICONE.design, COULEURS_ICONE.art)) +
     `</g></svg>`
   );
+}
+
+/** SVG du D sans fond (transparent), pour une barre des tâches claire ou sombre. */
+export function svgIconeSansFond(taillePixels: number, barre: BarreDesTaches): string {
+  const couleurs = COULEURS_SANS_FOND[barre];
+  return enteteSvg("-6 0 100 100", taillePixels) + dessinerLettres([LETTRE_D], peintureCouleurs(couleurs.design, couleurs.art)) + `</svg>`;
 }
 
 /** Entrée d'un fichier d'icônes : sa taille en pixels et son image PNG. */
