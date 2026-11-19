@@ -81,8 +81,9 @@ describe("paintChain", () => {
     const balisage = paintChain();
     expect(carte().piv).toEqual({ kind: "comp", id: "c1" });
     expect(balisage.match(/<rect class="ccol/g)).toHaveLength(5);
-    expect(balisage).toContain(`<rect class="ccol piv" x="1" y="34" width="256"`);
-    expect(balisage).toContain(`data-lock="comp" style="left:1px;width:256px"`);
+    expect(balisage).toContain(`<rect class="ccol alt piv" x="203" y="34" width="256"`);
+    expect(balisage).toContain(`data-lock="comp" style="left:203px;width:256px"`);
+    expect(balisage.indexOf(`data-lock="sem"`)).toBeLessThan(balisage.indexOf(`data-lock="comp"`));
     expect(balisage).toContain(`aria-pressed="true" title="Colonne verrouillée"`);
     expect(balisage).toContain(`id="ec:e1"`);
     expect(balisage).toContain("Dessin &lt;croquis&gt;");
