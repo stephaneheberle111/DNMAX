@@ -47,6 +47,7 @@ import { afficherPage, brancherOnglets } from "../interface/onglets";
 import { etat, publierEtat } from "../interface/etat";
 import { publierConstantes } from "../interface/constantes";
 import { publierAidesCommunes } from "../interface/aides-communes";
+import { publierCarteDonnees } from "../interface/carte-donnees";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
 import { brancherEtDessiner, chargerEtat, terminerDemarrage, type BranchementsDemarrage } from "../interface/demarrage";
@@ -447,6 +448,7 @@ export async function chargerInterfaceHistorique(
     publierEtat(window, etat);
     publierConstantes(window as unknown as Record<string, unknown>);
     publierAidesCommunes(window as unknown as Record<string, unknown>, document);
+    publierCarteDonnees(window as unknown as Record<string, unknown>);
     publierDonnees(window as unknown as Record<string, unknown>, {
       ecrireStockage: (cle, valeur) => {
         magasin.setItem(cle, valeur);
