@@ -16,7 +16,7 @@ body {
   z-index: -1;
   pointer-events: none;
 }
-/* La trame est une couche à part : en thème sombre elle est inversée, le X en creux non. */
+/* La trame est une couche à part : en thème sombre elle est inversée, le bandeau gaufré non. */
 /* Sans réglage (ou « lisse », le fond par défaut), pas de trame. */
 .fond-page::before {
   content: "";
@@ -51,38 +51,49 @@ html[data-relief="peine"] .fond-page {
 :root[data-teinte="pale"][data-theme="dark"] { --paper: #211f1b; }
 :root[data-teinte="douce"][data-theme="dark"] { --paper: #1e1d19; }
 :root[data-teinte="soutenue"][data-theme="dark"] { --paper: #15130e; }
-.fond-x {
+/* Bandeau gaufré (planches 44 et 45) : « Diplôme national des métiers d'art et du design » en pièces,
+   à 30 px du bas, centré, à sa taille de planche (1200 px de large) et réduit seulement si la fenêtre est plus étroite.
+   Le texte est dessiné cinq fois : ombres et lumières décalées, puis à la couleur du papier. */
+.bandeau-gaufre {
   position: absolute;
-  right: 26px;
-  bottom: calc(26px + var(--hauteur-pied, 0px));
-  width: 210px;
-  height: 210px;
+  left: 50%;
+  bottom: calc(30px + var(--hauteur-pied, 0px));
+  width: min(1200px, 100%);
+  height: auto;
+  aspect-ratio: 1200 / 16;
+  transform: translateX(-50%);
+  overflow: visible;
 }
-html[data-x-creux="non"] .fond-x {
+html[data-bandeau="non"] .bandeau-gaufre {
   display: none;
 }
-
-.fond-x use {
-  --creux: rgba(58, 44, 22, 0.099);
-  fill: var(--creux);
-  stroke: var(--creux);
+.bandeau-gaufre use {
+  fill: var(--gaufre);
 }
-.fond-x .creux-lumiere-large { --creux: rgba(255, 255, 255, 0.427); }
-.fond-x .creux-ombre { --creux: rgba(58, 44, 22, 0.22); }
-.fond-x .creux-lumiere { --creux: rgba(255, 255, 255, 0.95); }
-.fond-x .creux-fond { --creux: var(--paper); }
+.gaufre-ombre-large { --gaufre: rgba(58, 44, 22, 0.122); }
+.gaufre-lumiere-large { --gaufre: rgba(255, 255, 255, 0.405); }
+.gaufre-ombre { --gaufre: rgba(58, 44, 22, 0.27); }
+.gaufre-lumiere { --gaufre: rgba(255, 255, 255, 0.9); }
+.gaufre-fond { --gaufre: var(--paper); }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .fond-page::before { filter: invert(1); opacity: 0.35; }
-  :root:not([data-theme="light"]) .fond-x .creux-ombre-large { --creux: rgba(0, 0, 0, 0.25); }
-  :root:not([data-theme="light"]) .fond-x .creux-lumiere-large { --creux: rgba(255, 255, 255, 0.03); }
-  :root:not([data-theme="light"]) .fond-x .creux-ombre { --creux: rgba(0, 0, 0, 0.5); }
-  :root:not([data-theme="light"]) .fond-x .creux-lumiere { --creux: rgba(255, 255, 255, 0.08); }
+  :root:not([data-theme="light"]) .gaufre-ombre-large { --gaufre: rgba(0, 0, 0, 0.25); }
+  :root:not([data-theme="light"]) .gaufre-lumiere-large { --gaufre: rgba(255, 255, 255, 0.03); }
+  :root:not([data-theme="light"]) .gaufre-ombre { --gaufre: rgba(0, 0, 0, 0.5); }
+  :root:not([data-theme="light"]) .gaufre-lumiere { --gaufre: rgba(255, 255, 255, 0.08); }
 }
 :root[data-theme="dark"] .fond-page::before { filter: invert(1); opacity: 0.35; }
-:root[data-theme="dark"] .fond-x .creux-ombre-large { --creux: rgba(0, 0, 0, 0.25); }
-:root[data-theme="dark"] .fond-x .creux-lumiere-large { --creux: rgba(255, 255, 255, 0.03); }
-:root[data-theme="dark"] .fond-x .creux-ombre { --creux: rgba(0, 0, 0, 0.5); }
-:root[data-theme="dark"] .fond-x .creux-lumiere { --creux: rgba(255, 255, 255, 0.08); }
+:root[data-theme="dark"] .gaufre-ombre-large { --gaufre: rgba(0, 0, 0, 0.25); }
+:root[data-theme="dark"] .gaufre-lumiere-large { --gaufre: rgba(255, 255, 255, 0.03); }
+:root[data-theme="dark"] .gaufre-ombre { --gaufre: rgba(0, 0, 0, 0.5); }
+:root[data-theme="dark"] .gaufre-lumiere { --gaufre: rgba(255, 255, 255, 0.08); }
+/* Sur le volet pétrole de l'écran d'ouverture, dans les deux thèmes : les valeurs de la planche 44.
+   Placées après le thème sombre, à spécificité égale, pour passer devant. */
+:root .sur-petrole .gaufre-ombre-large { --gaufre: rgba(0, 0, 0, 0.162); }
+:root .sur-petrole .gaufre-lumiere-large { --gaufre: rgba(255, 255, 255, 0.099); }
+:root .sur-petrole .gaufre-ombre { --gaufre: rgba(0, 0, 0, 0.36); }
+:root .sur-petrole .gaufre-lumiere { --gaufre: rgba(255, 255, 255, 0.22); }
+:root .sur-petrole .gaufre-fond { --gaufre: #10555f; }
 @media print {
   .fond-page { display: none; }
 }

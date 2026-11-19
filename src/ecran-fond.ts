@@ -46,13 +46,13 @@ export function installerChoixFond(): void {
   const trames = [...bloc.querySelectorAll<HTMLInputElement>('input[name="fond"]')];
   const forces = [...bloc.querySelectorAll<HTMLButtonElement>("button[data-force]")];
   const teintes = [...bloc.querySelectorAll<HTMLButtonElement>("button[data-teinte]")];
-  const caseX = bloc.querySelector<HTMLInputElement>("#fond-x-creux");
+  const caseBandeau = bloc.querySelector<HTMLInputElement>("#fond-bandeau");
 
   const afficher = (): void => {
     for (const bouton of trames) bouton.checked = bouton.value === fond.trame;
     for (const bouton of forces) bouton.setAttribute("aria-pressed", String(bouton.dataset.force === fond.force));
     for (const bouton of teintes) bouton.setAttribute("aria-pressed", String(bouton.dataset.teinte === fond.teinte));
-    if (caseX !== null) caseX.checked = fond.xEnCreux;
+    if (caseBandeau !== null) caseBandeau.checked = fond.xEnCreux;
   };
   const changer = (modification: Partial<Fond>): void => {
     fond = { ...fond, ...modification };
@@ -78,8 +78,8 @@ export function installerChoixFond(): void {
       if (estTeinte(teinte)) changer({ teinte });
     });
   }
-  caseX?.addEventListener("change", () => {
-    changer({ xEnCreux: caseX.checked });
+  caseBandeau?.addEventListener("change", () => {
+    changer({ xEnCreux: caseBandeau.checked });
   });
   afficher();
 }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: CECILL-2.1
 /*
  * Fond de page choisi dans « Préférences » : une trame de papier, la force de
- * son relief, l'intensité de sa couleur et le X en creux. Calculs seuls : lecture d'un réglage enregistré
- * et attributs à poser sur la page.
+ * son relief, l'intensité de sa couleur et le bandeau gaufré en bas de page.
+ * Calculs seuls : lecture d'un réglage enregistré et attributs à poser sur la page.
  */
 
 export const TRAMES = ["lisse", "feutre", "toile", "verge"] as const;
@@ -20,6 +20,10 @@ export interface Fond {
   readonly trame: Trame;
   readonly force: Force;
   readonly teinte: Teinte;
+  /**
+   * Bandeau gaufré affiché en bas de page. Le champ garde le nom du « X en creux »
+   * qu'il remplace (série 8) : c'est le nom enregistré, et le choix déjà fait reste valable.
+   */
   readonly xEnCreux: boolean;
 }
 
@@ -63,12 +67,12 @@ export function lireFond(texte: unknown): Fond {
   };
 }
 
-/** Attributs de la page lus par la feuille de styles (`data-fond`, `data-relief`, `data-teinte`, `data-x-creux`). */
-export function attributsFond(fond: Fond): Readonly<Record<"data-fond" | "data-relief" | "data-teinte" | "data-x-creux", string>> {
+/** Attributs de la page lus par la feuille de styles (`data-fond`, `data-relief`, `data-teinte`, `data-bandeau`). */
+export function attributsFond(fond: Fond): Readonly<Record<"data-fond" | "data-relief" | "data-teinte" | "data-bandeau", string>> {
   return {
     "data-fond": fond.trame,
     "data-relief": fond.force,
     "data-teinte": fond.teinte,
-    "data-x-creux": fond.xEnCreux ? "oui" : "non",
+    "data-bandeau": fond.xEnCreux ? "oui" : "non",
   };
 }
