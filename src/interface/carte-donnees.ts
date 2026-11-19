@@ -12,6 +12,8 @@ import { SEMESTRES } from "../domaine/constituer";
 import { arcPath, fitN, polar, wrapN } from "../domaine/carte-geometrie";
 import { ecOrd } from "./aides-communes";
 import { ecCodeLbl } from "./donnees";
+import { anneeScolaire } from "./promotions-calendrier";
+import { ecsDeLEnseignant } from "../domaine/repartition";
 import { etat, type Objet } from "./etat";
 
 /** Filtre de la carte : une sorte (« ue », « ec », « bloc », « comp ») et une valeur, ou rien. */
@@ -43,26 +45,67 @@ export function refFilter(): FiltreCarte {
   return filtre;
 }
 
+/**
+ * EC de la répartition de service de « C'est moi » pour l'année scolaire en
+ * cours, toutes promotions confondues ; ensemble vide sans « C'est moi » ou
+ * sans affectation.
+ */
+export function ecsDeMaRepartition(): Set<string> {
+  const tout = donnees();
+  return ecsDeLEnseignant((tout.affectH || {}) as Objet, anneeScolaire(), tout.moi);
+}
+
+/**
+ * EC auxquels la carte se limite quand « Seulement ma répartition » est
+ * coché (et qu'il y a une répartition) ; `null` sinon : rien n'est retiré.
+ */
+export function ecsMiens(): Set<string> | null {
+  if (!etatCarte().mine) return null;
+  const miens = ecsDeMaRepartition();
+  return miens.size ? miens : null;
+}
+
+/** État de la case « Seulement ma répartition » d'Explorer, et de quoi la basculer. */
+export function repartitionCarte(redessiner: () => void): { disponible: boolean; active: boolean; ecs: ReadonlySet<string> | null; basculer(): void } {
+  const disponible = ecsDeMaRepartition().size > 0;
+  return {
+    disponible,
+    active: disponible && !!etatCarte().mine,
+    ecs: ecsMiens(),
+    basculer: () => {
+      etatCarte().mine = !etatCarte().mine;
+      redessiner();
+    },
+  };
+}
+
 export function filtUes(ues: Objet[]): Objet[] {
   const filtre = refFilter();
-  if (filtre.kind === "ue") return ues.filter((ue) => ue.nom === filtre.value);
+  const miens = ecsMiens();
+  // Avec « Seulement ma répartition » : les UE où j'assure au moins un EC.
+  const retenues = miens === null ? ues : ues.filter((ue) => (donnees().ecs as Objet[]).some((ec) => ec.ueId === ue.id && miens.has(ec.id as string)));
+  if (filtre.kind === "ue") return retenues.filter((ue) => ue.nom === filtre.value);
   if (filtre.kind === "ec") {
     const ec = (donnees().ecs as Objet[]).find((candidat) => candidat.id === filtre.value) || {};
-    return ues.filter((ue) => ue.id === ec.ueId);
+    return retenues.filter((ue) => ue.id === ec.ueId);
   }
-  return ues;
+  return retenues;
 }
 
 export function filtEcs(ecs: Objet[]): Objet[] {
   const filtre = refFilter();
-  return filtre.kind === "ec" ? ecs.filter((ec) => ec.id === filtre.value) : ecs;
+  const miens = ecsMiens();
+  const retenus = miens === null ? ecs : ecs.filter((ec) => miens.has(ec.id as string));
+  return filtre.kind === "ec" ? retenus.filter((ec) => ec.id === filtre.value) : retenus;
 }
 
 export function filtComps(competences: Objet[]): Objet[] {
   const filtre = refFilter();
-  if (filtre.kind === "bloc") return competences.filter((competence) => String(competence.bloc) === filtre.value);
-  if (filtre.kind === "comp") return competences.filter((competence) => competence.code === filtre.value);
-  return competences;
+  const miens = ecsMiens();
+  const retenues = miens === null ? competences : competences.filter((competence) => ((competence.ecIds || []) as string[]).some((id) => miens.has(id)));
+  if (filtre.kind === "bloc") return retenues.filter((competence) => String(competence.bloc) === filtre.value);
+  if (filtre.kind === "comp") return retenues.filter((competence) => competence.code === filtre.value);
+  return retenues;
 }
 
 /**
@@ -110,5 +153,5 @@ export function ecName(ec: Objet | null | undefined): string {
 
 /** Pose ces fonctions, et les calculs de géométrie, sur `cible` (la fenêtre) sous leurs noms historiques. */
 export function publierCarteDonnees(cible: Record<string, unknown>): void {
-  Object.assign(cible, { arcPath, polar, wrapN, fitN, refFilter, filtUes, filtEcs, filtComps, radialGroups, compsOfEc, semItems, semLie, ecName });
+  Object.assign(cible, { arcPath, polar, wrapN, fitN, refFilter, filtUes, filtEcs, filtComps, radialGroups, compsOfEc, semItems, semLie, ecName, ecsMiens, repartitionCarte });
 }

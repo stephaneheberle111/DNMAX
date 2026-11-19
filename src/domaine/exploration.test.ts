@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
 import {
+  restreindreAuxEcs,
   basculerSemestreRecherche,
   blocsTableau,
   casesEc,
@@ -196,5 +197,27 @@ describe("tableau compétences × semestres", () => {
     expect(titreBloc("1", "Concevoir")).toBe("Bloc 1 · Concevoir");
     expect(titreBloc("1", "Bloc 1")).toBe("Bloc 1");
     expect(titreBloc("1", "")).toBe("Bloc 1");
+  });
+});
+
+describe("restreindreAuxEcs", () => {
+  const competences = [
+    { code: "C1", ecs: [{ ec: "EC 1.1", id: "e1", sem: "S1" }, { ec: "EC 1.2", id: "e2", sem: "S1" }] },
+    { code: "C2", ecs: [{ ec: "EC 1.2", id: "e2", sem: "S2" }] },
+    { code: "C3" },
+  ];
+
+  it("ne garde que les EC retenus de chaque compétence", () => {
+    expect(restreindreAuxEcs(competences, new Set(["e1"]))).toEqual([{ code: "C1", ecs: [{ ec: "EC 1.1", id: "e1", sem: "S1" }] }]);
+  });
+
+  it("retire les compétences qui ne gardent aucun EC", () => {
+    expect(restreindreAuxEcs(competences, new Set(["e9"]))).toEqual([]);
+  });
+
+  it("ne change rien sans ensemble, sans modifier les compétences reçues", () => {
+    expect(restreindreAuxEcs(competences, null)).toEqual(competences);
+    restreindreAuxEcs(competences, new Set(["e1"]));
+    expect(competences[0]?.ecs).toHaveLength(2);
   });
 });
