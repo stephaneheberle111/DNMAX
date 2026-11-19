@@ -48,11 +48,6 @@ export const ECHELLE = {
 /** Rang (à partir de 0) du premier niveau qui vaut compétence acquise : « Satisfaisant ». */
 export const RANG_ACQUIS = 2;
 
-/** Vrai si ce niveau (rang à partir de 0) vaut compétence acquise. */
-export function estAcquis(rang: number): boolean {
-  return rang >= RANG_ACQUIS;
-}
-
 /** Calendrier de l'établissement : mois (1 à 12) de la rentrée et de la bascule au second semestre. */
 export interface Calendrier {
   rentree: number;

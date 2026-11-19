@@ -16,12 +16,9 @@ import { ecNum, ecOrd } from "./aides-communes";
 import { ecCodeLbl } from "./donnees";
 import { etat, type Objet } from "./etat";
 import { SEMESTRES } from "../domaine/constituer";
-import { cheminsReels, estSorteChaine, passagesParLePivot, SORTES_CHAINE, type SorteChaine } from "../domaine/chaine";
+import { cheminsReels, estSorteChaine, passagesParLePivot, type SorteChaine } from "../domaine/chaine";
 import { ordonnerParBarycentre } from "../domaine/chaine-barycentre";
 import { ordreChaine } from "../domaine/preferences";
-
-/** Les cinq colonnes de la chaîne dans l'ordre par défaut, de gauche à droite : le semestre d'abord, demande de l'auteur. */
-export const CH_KINDS = SORTES_CHAINE;
 
 /** Libellé de chaque colonne. */
 export const CH_LBL: Readonly<Record<string, string>> = {

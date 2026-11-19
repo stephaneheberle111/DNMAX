@@ -12,7 +12,6 @@ import {
   formuler,
   ECHELLE,
   enumerer,
-  estAcquis,
   ecsRetenus,
   etatEnregistrement,
   lignesDe,
@@ -58,14 +57,6 @@ describe("normaliserEvaluation", () => {
       preset: "maitrise",
       niveaux: ["Insuffisant", "Fragile", "Satisfaisant", "Très bonne maîtrise"],
     });
-  });
-});
-
-describe("estAcquis", () => {
-  it("vaut acquis à partir de « Satisfaisant », pas en dessous", () => {
-    expect(estAcquis(2)).toBe(true);
-    expect(estAcquis(3)).toBe(true);
-    expect(estAcquis(1)).toBe(false);
   });
 });
 
