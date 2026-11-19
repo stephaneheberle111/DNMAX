@@ -142,6 +142,10 @@ flowchart LR
 
 - `index.html` et `public/heritage/application.css` : la page et sa feuille de style. `src/interface/` : l'état de l'interface (`etat.ts`), le démarrage, les onglets, les cartes du référentiel et les écrans réécrits depuis l'ancienne interface (décisions 37 et 38).
 - `src/heritage/pont.ts` : ce que l'application fournit aux écrans (stockage, enregistrement de fichiers), et l'état de l'interface publié sur la fenêtre avec quelques fonctions, pour le banc de comparaison (`src/heritage/noms-banc.ts`).
+- Écrans, un dossier par espace : `src/evaluations/` (Mes évaluations : liste, filtres, actions), `src/editeur/` (l'éditeur d'évaluation en quatre étapes et la saisie des résultats), `src/progression/` (vues Promotion et Étudiant), `src/referentiel/` (Constituer, Explorer et l'habillage des cartes, recherche), `src/etablissement/` (Mon établissement : volets, diplômes, promotions, enseignants, livrables), `src/parametres/` (modules), `src/preferences/` (Préférences), `src/export/` (Word, Excel et OpenDocument).
+- `src/parcours-etapes.ts` : les étapes des visites guidées ; `src/ecran-parcours.ts` : leur moteur (zone éclairée, curseur, bulle).
+- Écrans communs : `src/ecran-pied.ts` (pied de page, version, mises à jour), `src/ecran-documentation.ts` (documentation et Confidentialité, lues dans `site/index.html`), `src/ecran-nouveautes.ts` (nouveautés après une mise à jour, lues dans le CHANGELOG), `src/ecran-sauvegardes.ts`, `src/ecran-droits-eleves.ts` (Paramètres > Données des étudiants), `src/ecran-avertissement-eleves.ts`, `src/ecran-verrouillage.ts`, `src/ecran-export.ts`.
+- Documents imprimables (fiches RGPD) : `src/rendu-document-html.ts` (aperçu), `src/rendu-document-pdf.ts` et `src/generer-pdf.ts` (PDF, chargé à la demande). `src/referentiels-embarques.ts` : les référentiels livrés avec l'application, les mêmes fichiers que ceux du site.
 - `src/domaine/` : ce qui calcule. Aucune dépendance au navigateur ni à Tauri, donc testable directement.
 - `src/enveloppe.ts` : ce qui parle à l'extérieur.
 - `src/ecran-coffre.ts` : l'écran de mot de passe.
