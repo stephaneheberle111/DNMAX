@@ -53,12 +53,24 @@ export interface ContexteHabillage {
    * Case « Seulement ma répartition de service » : proposée si « C'est moi »
    * assure des EC cette année ; `ecs` est l'ensemble retenu quand elle est cochée.
    */
-  readonly repartition?: { readonly disponible: boolean; readonly active: boolean; readonly ecs: ReadonlySet<string> | null; basculer(): void };
+  readonly repartition?: {
+    readonly disponible: boolean;
+    readonly active: boolean;
+    readonly ecs: ReadonlySet<string> | null;
+    /** Case cochée : UE, EC, blocs et compétences qui restent, que les tuiles proposent et comptent. */
+    readonly retenus?: {
+      readonly ues: ReadonlySet<string>;
+      readonly ecs: ReadonlySet<string>;
+      readonly blocs: ReadonlySet<string>;
+      readonly competences: ReadonlySet<string>;
+    } | null;
+    basculer(): void;
+  };
 }
 
 const AIDES: Readonly<Record<string, string>> = {
   chain:
-    "Cinq colonnes, de la compétence au diplôme, le semestre entre la compétence et l'EC. La colonne verrouillée (cadenas fermé) tourne comme une roue ; les autres montrent ce qui est associé à l'élément choisi, avant et après lui. Le cadenas d'une autre colonne, ou un clic sur une case, y déplace le verrou. Survoler une case éclaire son chemin.",
+    "Cinq colonnes, du semestre au diplôme : semestre, compétence, EC, UE, diplôme. La colonne verrouillée (cadenas fermé) tourne comme une roue ; les autres montrent ce qui est associé à l'élément choisi, avant et après lui. Le cadenas d'une autre colonne, ou un clic sur une case, y déplace le verrou. Survoler une case éclaire son chemin.",
   table:
     "Une ligne par enseignement constitutif, groupée par unité : la case donne le code que porte l'EC à ce semestre — il change d'une année de diplôme à l'autre. Un clic sur une case ouvre l'EC dans Constituer ; un clic sur une unité bascule sur « Recherche ».",
   tablec:
@@ -192,34 +204,40 @@ function tuile(contexte: ContexteHabillage, sorte: string, libelle: string, comp
 
 function tuiles(contexte: ContexteHabillage): HTMLElement {
   const cadre = balise("div", [["class", "tiles"]]);
+  // « Seulement ma répartition de service » cochée : les tuiles ne proposent et ne comptent que ce qui reste.
+  const retenus = contexte.repartition?.retenus ?? null;
+  const ues = retenus === null ? contexte.ues : contexte.ues.filter((ue) => retenus.ues.has(String(ue.nom)));
+  const ecs = retenus === null ? contexte.ecs : contexte.ecs.filter((ec) => retenus.ecs.has(String(ec.id)));
+  const blocs = retenus === null ? contexte.blocs : contexte.blocs.filter((bloc) => retenus.blocs.has(String(bloc.num)));
+  const competences = retenus === null ? contexte.competences : contexte.competences.filter((competence) => retenus.competences.has(String(competence.code)));
   cadre.append(
     tuile(
       contexte,
       "ue",
       "Unités d'enseignement",
-      `${String(contexte.ues.length)} UE`,
-      contexte.ues.map((ue) => ({ v: affiche(ue.nom), t: affiche(ue.nom) })),
+      `${String(ues.length)} UE`,
+      ues.map((ue) => ({ v: affiche(ue.nom), t: affiche(ue.nom) })),
     ),
     tuile(
       contexte,
       "ec",
       "Enseignements constitutifs",
-      `${String(contexte.ecs.length)} EC`,
-      contexte.ecs.map((ec) => ({ v: affiche(ec.id), t: `${nomEc(ec)} · ${codesEc(ec).join(" · ") || "—"}` })),
+      `${String(ecs.length)} EC`,
+      ecs.map((ec) => ({ v: affiche(ec.id), t: `${nomEc(ec)} · ${codesEc(ec).join(" · ") || "—"}` })),
     ),
     tuile(
       contexte,
       "bloc",
       "Blocs",
-      `${String(contexte.blocs.length)} blocs`,
-      contexte.blocs.map((bloc) => ({ v: affiche(bloc.num), t: `${brut(bloc.num)} - ${brut(bloc.nom)}` })),
+      `${String(blocs.length)} blocs`,
+      blocs.map((bloc) => ({ v: affiche(bloc.num), t: `${brut(bloc.num)} - ${brut(bloc.nom)}` })),
     ),
     tuile(
       contexte,
       "comp",
       "Compétences",
-      `${String(contexte.competences.length)} compétences`,
-      contexte.competences.map((competence) => ({ v: affiche(competence.code), t: `${brut(competence.libelle).slice(0, 64)} — ${brut(competence.code)}` })),
+      `${String(competences.length)} compétences`,
+      competences.map((competence) => ({ v: affiche(competence.code), t: `${brut(competence.libelle).slice(0, 64)} — ${brut(competence.code)}` })),
     ),
   );
   return cadre;

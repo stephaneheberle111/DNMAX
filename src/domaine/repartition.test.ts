@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { aEuLaPromotion, anneesProposees, ecsDeLAnnee, ecsDeLEnseignant } from "./repartition";
+import { aEuLaPromotion, anneesProposees, ecsDeLAnnee, ecsDeLEnseignant, elementsDeLaRepartition } from "./repartition";
 
 const DICTIONNAIRE = {
   ues: [{ id: "u1", nom: "UE 1", couleur: "#111111" }],
@@ -74,5 +74,37 @@ describe("EC qu'un enseignant assure", () => {
     expect(ecsDeLEnseignant(historique, "2026-2027", "").size).toBe(0);
     expect(ecsDeLEnseignant(historique, "2030-2031", "t1").size).toBe(0);
     expect(ecsDeLEnseignant({ "2026-2027": { p1: null } }, "2026-2027", "t1").size).toBe(0);
+  });
+});
+
+describe("ce que retient une répartition", () => {
+  const ues = [
+    { id: "u1", nom: "UE 1" },
+    { id: "u2", nom: "UE 2" },
+  ];
+  const ecs = [
+    { id: "e1", ueId: "u1" },
+    { id: "e2", ueId: "u2" },
+  ];
+  const competences = [
+    { code: "C1.1", bloc: 1, ecIds: ["e1"] },
+    { code: "C2.1", bloc: 2, ecIds: ["e2"] },
+    { code: "C2.2", bloc: 2 },
+  ];
+
+  it("garde l'UE de chaque EC retenu, les compétences qu'ils portent et leurs blocs", () => {
+    const retenus = elementsDeLaRepartition(ues, ecs, competences, new Set(["e2"]));
+    expect([...retenus.ues]).toEqual(["UE 2"]);
+    expect([...retenus.competences]).toEqual(["C2.1"]);
+    expect([...retenus.blocs]).toEqual(["2"]);
+  });
+
+  it("ne garde rien d'autre qu'un EC inconnu", () => {
+    const retenus = elementsDeLaRepartition(ues, ecs, competences, new Set(["e9"]));
+    expect(retenus.ues.size + retenus.competences.size + retenus.blocs.size).toBe(0);
+  });
+
+  it("tolère une compétence sans rattachement", () => {
+    expect(elementsDeLaRepartition(ues, ecs, [{ code: "C9" }], new Set(["e1"])).competences.size).toBe(0);
   });
 });

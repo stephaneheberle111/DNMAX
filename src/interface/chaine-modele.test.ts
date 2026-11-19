@@ -29,6 +29,12 @@ beforeEach(() => {
   etat.ui = { ref: { filter: { kind: "", value: "" } } };
 });
 
+describe("ordre des colonnes", () => {
+  it("met le semestre en premier, puis la compétence, l'EC, l'UE et le diplôme", () => {
+    expect([...CH_KINDS]).toEqual(["sem", "comp", "ec", "ue", "dip"]);
+  });
+});
+
 describe("publierChaineModele", () => {
   it("publie le modèle et les colonnes sous leurs noms historiques", () => {
     const fenetre: Record<string, unknown> = {};
@@ -43,7 +49,8 @@ describe("chainModel", () => {
     const modele = chainModel();
     expect(modele?.kind).toBe("comp");
     expect(modele?.piv.id).toBe("c1");
-    expect(ids(modele?.sets[1])).toEqual(["S1"]);
+    expect(modele?.p).toBe(1);
+    expect(ids(modele?.sets[0])).toEqual(["S1"]);
     expect(ids(modele?.sets[2])).toEqual(["e1"]);
     expect(ids(modele?.sets[3])).toEqual(["u1"]);
     expect((etat.ui.ref as Objet).piv).toEqual({ kind: "comp", id: "c1" });
@@ -52,8 +59,8 @@ describe("chainModel", () => {
   it("verrouille la roue sur le semestre choisi", () => {
     (etat.ui.ref as Objet).piv = { kind: "sem", id: "S2" };
     const modele = chainModel();
-    expect(modele?.p).toBe(1);
-    expect(ids(modele?.sets[0])).toEqual(["c2"]);
+    expect(modele?.p).toBe(0);
+    expect(ids(modele?.sets[1])).toEqual(["c2"]);
     expect(ids(modele?.sets[2])).toEqual(["e2"]);
   });
 
@@ -79,11 +86,13 @@ describe("chainModel", () => {
     expect(chainModel()).toBeNull();
   });
 
-  it("relie deux cases seulement par un triplet compétence, semestre, EC réel", () => {
+  it("relie un semestre à une compétence, et une compétence à un EC, seulement par un triplet réel", () => {
     const modele = chainModel();
     const [c1] = etat.donnees.competences as Objet[];
-    expect(modele?.rel("comp", c1 as Objet, { id: "S1", sem: "S1" })).toBe(true);
-    expect(modele?.rel("comp", c1 as Objet, { id: "S2", sem: "S2" })).toBe(false);
+    expect(modele?.rel("sem", { id: "S1", sem: "S1" }, c1 as Objet)).toBe(true);
+    expect(modele?.rel("sem", { id: "S2", sem: "S2" }, c1 as Objet)).toBe(false);
+    expect(modele?.rel("comp", c1 as Objet, { id: "e1" })).toBe(true);
+    expect(modele?.rel("comp", c1 as Objet, { id: "e2" })).toBe(false);
   });
 });
 
@@ -109,8 +118,8 @@ describe("chainModel avec « Seulement ma répartition de service »", () => {
     (etat.ui.ref as Objet).piv = { kind: "ec", id: "" };
     const modele = chainModel();
     expect(modele?.items.map((ec) => ec.id)).toEqual(["e2"]);
-    expect(ids(modele?.sets[0])).toEqual(["c2"]);
-    expect(ids(modele?.sets[1])).toEqual(["S2"]);
+    expect(ids(modele?.sets[1])).toEqual(["c2"]);
+    expect(ids(modele?.sets[0])).toEqual(["S2"]);
     expect(ids(modele?.sets[3])).toEqual(["u2"]);
   });
 });

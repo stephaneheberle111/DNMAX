@@ -4,6 +4,7 @@
 
 ### Modifié
 
+- Référentiel > Explorer, carte heuristique : le semestre devient la première colonne, avant la compétence (semestre, compétence, EC, UE, diplôme).
 - Mes évaluations, filtre « Promotions » : vos promotions et vos évaluations d'abord ; « + Autres promotions » propose, plus discrètes, celles hors de votre répartition de service, dont les évaluations s'affichent quand vous en cochez une.
 - Mes évaluations : la case « Seulement mes évaluations », dans la barre des filtres, ne garde que les évaluations dont vous êtes l'enseignant ; elle se combine avec les autres filtres. Elle n'apparaît qu'une fois « C'est moi » choisi dans Mon établissement > Enseignants.
 - Visite guidée : les pages de « Constituer » sont éclairées en entier, pour corriger chaque UE, EC, bloc ou compétence pendant la visite ; le curseur se déplace d'un geste à l'autre comme une main, au lieu de repartir de la bulle (à la validation, il coche la case puis va sur « Valider cette version ») ; un collègue ajouté compte une fois son prénom et son nom saisis, et la visite laisse quelques secondes pour finir ; le lien entre compétences n'est montré qu'à partir de deux compétences ; « Enregistrer l'évaluation » fait passer à la suite, avec des confettis, sans recliquer « Mes évaluations ».
@@ -30,7 +31,7 @@
 
 ### Ajouté
 
-- Référentiel > Explorer : la case « Seulement ma répartition de service », sous les filtres, ne montre que les EC que vous assurez cette année d'après Mon établissement > Répartition, avec leurs compétences, leurs UE et leurs semestres, sur la carte radiale, la carte heuristique, les deux tableaux et la recherche. Elle n'apparaît qu'une fois « C'est moi » choisi et au moins un EC affecté.
+- Référentiel > Explorer : la case « Seulement ma répartition de service », sous les filtres, ne montre que les EC que vous assurez cette année d'après Mon établissement > Répartition, avec leurs compétences, leurs UE et leurs semestres, sur la carte radiale, la carte heuristique, les deux tableaux et la recherche. Elle n'apparaît qu'une fois « C'est moi » choisi et au moins un EC affecté. Cochée, les tuiles de filtre ne proposent et ne comptent que ce qui reste affiché.
 - Visites guidées : un bouquet final de confettis salue la fin de la visite, à l'arrivée sur sa dernière page (sauf si le système demande de réduire les animations).
 - Paramètres > Règles d'évaluation : suivi simplifié dans Mes évaluations, « À faire » puis « Faite » une fois la fiche distribuée. Ce n'est qu'un affichage : le suivi détaillé reste enregistré, et se retrouve en décochant la case.
 - Paramètres > Mises à jour : recherche automatique, une fois par jour à l'ouverture, désactivée par défaut. La recherche interroge désormais dnmax.fr, hébergé en France, et non plus GitHub ; la mise à jour Windows s'y télécharge aussi.
