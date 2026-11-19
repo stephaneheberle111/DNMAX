@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: CECILL-2.1
 /**
- * Garde-fou de la reprise du fichier historique (décision 38) : chaque
- * fonction qu'il appelle par son nom doit exister, définie dans le fichier,
- * publiée sur la fenêtre par l'application, ou fournie par le navigateur.
- * Une fonction retirée à tort ne se voit sinon qu'à l'usage, quand l'écran
- * qui l'appelle s'ouvre.
+ * Garde-fou de la reprise du fichier historique (décision 38). Le fichier
+ * est supprimé, mais les modules repris s'appellent encore entre eux par la
+ * fenêtre, sous les anciens noms (interface `FonctionsHistoriques` de chaque
+ * module, lue par `historique()`) : chacun de ces noms doit être publié par
+ * un module ou faire partie de l'état. Un nom publié nulle part ne se
+ * verrait sinon qu'à l'usage, quand l'écran qui l'appelle s'ouvre (c'est ce
+ * qui était arrivé à `promoLabel`, #174 → #187).
  */
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { NOMS_HISTORIQUES } from "../interface/etat";
 import { publierPromotionsCalendrier } from "../interface/promotions-calendrier";
 import { publierVersionsReferentiel } from "../interface/versions-referentiel";
 import { publierEtablissement } from "../interface/etablissement";
@@ -24,43 +27,14 @@ import { publierCarteDonnees } from "../interface/carte-donnees";
 import { publierChaineModele } from "../interface/chaine-modele";
 import { publierChaineDessin } from "../interface/chaine-dessin";
 import { publierRadialeDessin } from "../interface/radiale-dessin";
+import { publierRadialeGestes } from "../interface/radiale-gestes";
+import { publierExplorer } from "../interface/explorer";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
 import { publierEditeurEtape1 } from "../interface/editeur-etape1";
 import { publierPreferencesParametres } from "../interface/preferences-parametres";
 
-const CHEMIN = new URL("../../public/heritage/application.js", import.meta.url);
-
-/** Fonctions du navigateur appelées sans `window.` dans le fichier historique. */
-const NAVIGATEUR = new Set([
-  "setTimeout",
-  "clearTimeout",
-  "setInterval",
-  "clearInterval",
-  "requestAnimationFrame",
-  "cancelAnimationFrame",
-  "matchMedia",
-  "getComputedStyle",
-  "isNaN",
-  "parseInt",
-  "parseFloat",
-  "String",
-  "Number",
-  "Boolean",
-  "Array",
-  "Object",
-  "Date",
-  "structuredClone",
-  "encodeURIComponent",
-  "decodeURIComponent",
-  "Blob",
-  "Error",
-  "fetch",
-  "btoa",
-]);
-
-/** Fonctions publiées sur la fenêtre par l'application, sous leur ancien nom, le temps de la reprise. */
-const PUBLIEES = new Set<string>(nomsPublies());
+const DOSSIER = new URL("../interface/", import.meta.url);
 
 /** Noms réellement posés sur la fenêtre par les modules repris : la liste suit le code au lieu d'être recopiée. */
 function nomsPublies(): string[] {
@@ -71,6 +45,8 @@ function nomsPublies(): string[] {
   publierChaineModele(fenetre);
   publierChaineDessin(fenetre, null);
   publierRadialeDessin(fenetre, null);
+  publierRadialeGestes(fenetre, null);
+  publierExplorer(fenetre, null);
   publierDonnees(fenetre, { ecrireStockage: () => undefined, maintenant: () => 0, hasard: () => 0 });
   publierEvaluationCourante(fenetre, () => 0);
   publierEditeurEtape1(fenetre, () => new Date(0));
@@ -87,44 +63,50 @@ function nomsPublies(): string[] {
   return Object.keys(fenetre);
 }
 
-/** Noms appelés comme fonctions (`nom(...)`) et noms déclarés (fonctions, variables, paramètres) dans le fichier. */
-function analyser(source: string): { appels: Map<string, number>; declares: Set<string> } {
-  const fichier = ts.createSourceFile("application.js", source, ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS);
-  const appels = new Map<string, number>();
-  const declares = new Set<string>();
-  const declarer = (nom: ts.BindingName): void => {
-    if (ts.isIdentifier(nom)) declares.add(nom.text);
-    else for (const element of nom.elements) if (!ts.isOmittedExpression(element)) declarer(element.name);
-  };
+/** Fonctions du navigateur qu'un module appelle aussi par la fenêtre. */
+const NAVIGATEUR = ["scrollTo"];
+
+/** Ce qui existe sur la fenêtre : fonctions et constantes publiées, parties de l'état, fonctions du navigateur. */
+const EXISTANTS = new Set<string>([...nomsPublies(), ...Object.keys(NOMS_HISTORIQUES), ...NAVIGATEUR]);
+
+/** Noms déclarés par l'interface `FonctionsHistoriques` d'un module (ce qu'il appelle par la fenêtre). */
+function nomsAppeles(source: string): string[] {
+  const fichier = ts.createSourceFile("module.ts", source, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS);
+  const noms: string[] = [];
   const visiter = (noeud: ts.Node): void => {
-    if ((ts.isFunctionDeclaration(noeud) || ts.isFunctionExpression(noeud)) && noeud.name) declares.add(noeud.name.text);
-    if (ts.isVariableDeclaration(noeud) || ts.isParameter(noeud)) declarer(noeud.name);
-    if (ts.isCallExpression(noeud) && ts.isIdentifier(noeud.expression) && !appels.has(noeud.expression.text)) {
-      appels.set(noeud.expression.text, fichier.getLineAndCharacterOfPosition(noeud.getStart()).line + 1);
+    if (ts.isInterfaceDeclaration(noeud) && noeud.name.text === "FonctionsHistoriques") {
+      for (const membre of noeud.members) if (membre.name && ts.isIdentifier(membre.name)) noms.push(membre.name.text);
     }
     ts.forEachChild(noeud, visiter);
   };
   visiter(fichier);
-  return { appels, declares };
+  return noms;
 }
 
-function orphelins(source: string): string[] {
-  const { appels, declares } = analyser(source);
-  return [...appels]
-    .filter(([nom]) => !declares.has(nom) && !PUBLIEES.has(nom) && !NAVIGATEUR.has(nom))
-    .map(([nom, ligne]) => `${nom} (ligne ${String(ligne)})`);
+function orphelins(fichier: string, source: string): string[] {
+  return nomsAppeles(source)
+    .filter((nom) => !EXISTANTS.has(nom))
+    .map((nom) => `${nom} (${fichier})`);
 }
 
-describe("fichier historique", () => {
-  it("n'appelle aucune fonction qui n'existe nulle part", () => {
-    expect(orphelins(readFileSync(CHEMIN, "utf8"))).toEqual([]);
+describe("appels par la fenêtre entre modules repris", () => {
+  it("n'appellent aucun nom publié nulle part", () => {
+    const modules = readdirSync(DOSSIER).filter((nom) => nom.endsWith(".ts") && !nom.endsWith(".test.ts"));
+    const appels = modules.flatMap((nom) => nomsAppeles(readFileSync(new URL(nom, DOSSIER), "utf8")));
+    // Le garde-fou porte bien sur quelque chose : plusieurs modules appellent encore par la fenêtre.
+    expect(appels.length).toBeGreaterThan(20);
+    expect(modules.flatMap((nom) => orphelins(nom, readFileSync(new URL(nom, DOSSIER), "utf8")))).toEqual([]);
   });
 
-  it("repère une fonction appelée mais définie nulle part", () => {
-    expect(orphelins("function a(){ return b(1); }")).toEqual(["b (ligne 1)"]);
+  it("repère un nom appelé mais publié nulle part", () => {
+    expect(orphelins("essai.ts", "interface FonctionsHistoriques { paintRef(): void; inconnue(): void; }")).toEqual(["inconnue (essai.ts)"]);
   });
 
-  it("accepte une fonction locale, un paramètre appelé et une fonction du navigateur", () => {
-    expect(orphelins("function a(f){ const g = () => 1; return f(g()) + setTimeout(a, 1); }")).toEqual([]);
+  it("accepte une fonction publiée, une constante publiée et une partie de l'état", () => {
+    expect(orphelins("essai.ts", "interface FonctionsHistoriques { paintExplore(): void; GROUPS: object; DATA: object; }")).toEqual([]);
+  });
+
+  it("ignore les interfaces d'un autre nom", () => {
+    expect(orphelins("essai.ts", "interface Autre { inconnue(): void; }")).toEqual([]);
   });
 });

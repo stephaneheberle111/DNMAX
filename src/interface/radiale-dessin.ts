@@ -34,12 +34,7 @@ export const anneeOf = (sem: unknown): number => Math.floor(Math.max(0, (SEMESTR
  */
 export const RAD = { RARR: 505, Z0: 1.65, ZMAX: 2.5, S: 760, c: 380, PAD: 100, HUB: 84, RB: 360, RL: 380, DIST: [9, 17, 25, 33] };
 
-/**
- * Angle de la roue, en degrés : lu au dessin, modifié par la rotation. Le
- * temps de la reprise, il est publié sur la fenêtre (`wheelAngle`) par un
- * accesseur, pour que les gestes restés dans le fichier historique le
- * partagent sans copie.
- */
+/** Angle de la roue, en degrés : lu au dessin, modifié par la rotation (`interface/radiale-gestes`). */
 export const roue = { angle: 0 };
 
 let documentCourant: Document | null = null;
@@ -192,7 +187,7 @@ export function paintRadial(): string {
  * `kind`. `frozen` ajoute la mention « Figé » ; `tint` colore le rail d'une
  * compétence. Sans encadré dans la page, ne fait rien.
  */
-export function radInfo(kind: string | null | undefined, sel?: unknown, frozen?: boolean, tint?: string): void {
+export function radInfo(kind: string | null | undefined, sel?: unknown, frozen?: boolean, tint?: string | null): void {
   const D = etat.donnees,
     box = page().getElementById("radInfo");
   if (!box) return;
@@ -281,21 +276,8 @@ export function radInfo(kind: string | null | undefined, sel?: unknown, frozen?:
     ${frozen ? `<div class="fz">Figé · survole la roue pour relâcher</div>` : ""}`;
 }
 
-/**
- * Pose ces fonctions et constantes sur `cible` (la fenêtre) sous leurs noms
- * historiques, et l'angle de la roue (`wheelAngle`) par un accesseur. À
- * appeler avant le chargement du fichier historique, qui ne déclare plus
- * `wheelAngle` mais l'affecte.
- */
+/** Pose ces fonctions et constantes sur `cible` (la fenêtre) sous leurs noms historiques. */
 export function publierRadialeDessin(cible: Fenetre, document: Document | null): void {
   documentCourant = document;
   Object.assign(cible, { anneeOf, ANNEES, RAD, tlabel, paintRadial, radInfo });
-  Object.defineProperty(cible, "wheelAngle", {
-    configurable: true,
-    enumerable: false,
-    get: () => roue.angle,
-    set: (valeur: number) => {
-      roue.angle = valeur;
-    },
-  });
 }

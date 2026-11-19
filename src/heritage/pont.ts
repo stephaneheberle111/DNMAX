@@ -51,6 +51,8 @@ import { publierCarteDonnees } from "../interface/carte-donnees";
 import { publierChaineModele } from "../interface/chaine-modele";
 import { publierChaineDessin } from "../interface/chaine-dessin";
 import { publierRadialeDessin } from "../interface/radiale-dessin";
+import { ecouterRedimensionnement, publierRadialeGestes } from "../interface/radiale-gestes";
+import { publierExplorer } from "../interface/explorer";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
 import { brancherEtDessiner, chargerEtat, terminerDemarrage, type BranchementsDemarrage } from "../interface/demarrage";
@@ -99,9 +101,6 @@ import {
   lireDossierExports,
   oublierDossierExports,
 } from "../enveloppe";
-
-/** Adresse du script de l'interface historique, servi depuis `public/`. */
-const ADRESSE_SCRIPT_HISTORIQUE = "/heritage/application.js";
 
 /** Document que l'interface historique demande d'enregistrer. */
 interface DemandeEnregistrement {
@@ -362,10 +361,11 @@ function contexteDocumentsEleves(etablissement: unknown): ContexteDocumentsEleve
 }
 
 /**
- * Installe ce dont l'interface historique dépend, puis charge son script.
+ * Installe l'interface (reprise du fichier historique, décision 38) : publie
+ * ses fonctions sur la fenêtre sous leurs anciens noms, puis la démarre.
  *
- * Le script lit le stockage dès son chargement : le magasin doit donc déjà
- * contenir les données de l'enseignant quand cette fonction est appelée.
+ * Le démarrage lit le stockage : le magasin doit donc déjà contenir les
+ * données de l'enseignant quand cette fonction est appelée.
  *
  * @param surExport appelée après chaque document enregistré, avec le nom proposé pour ce document
  *   et l'indication qu'il contient, ou non, des données d'étudiants
@@ -375,6 +375,7 @@ function contexteDocumentsEleves(etablissement: unknown): ContexteDocumentsEleve
  * @param avantExportEleves avant d'enregistrer un document qui contient des étudiants :
  *   rend `true` si l'enseignant confirme, après avoir lu qu'il ne sera pas protégé
  */
+// eslint-disable-next-line @typescript-eslint/require-await -- asynchrone comme avant : les appelants l'attendent, et une erreur de publication y devient un rejet
 export async function chargerInterfaceHistorique(
   magasin: MagasinMemoire,
   surExport: SurExport = () => undefined,
@@ -446,89 +447,88 @@ export async function chargerInterfaceHistorique(
       avertir: avertirReferentielNonValide,
     },
   };
-  await new Promise<void>((resoudre, rejeter) => {
-    // L'état est publié avant le script, qui en affecte les parties sans les déclarer.
-    publierEtat(window, etat);
-    publierConstantes(window as unknown as Record<string, unknown>);
-    publierAidesCommunes(window as unknown as Record<string, unknown>, document);
-    publierCarteDonnees(window as unknown as Record<string, unknown>);
-    publierChaineModele(window as unknown as Record<string, unknown>);
-    publierChaineDessin(window as unknown as Record<string, unknown>, document);
-    publierRadialeDessin(window as unknown as Record<string, unknown>, document);
-    publierDonnees(window as unknown as Record<string, unknown>, {
-      ecrireStockage: (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      maintenant: () => Date.now(),
-      hasard: () => Math.random(),
-    });
-    publierEvaluationCourante(window as unknown as Record<string, unknown>, () => Math.random());
-    publierEditeurEtape1(window as unknown as Record<string, unknown>, () => new Date());
-    publierPreferencesParametres(window as unknown as Record<string, unknown>, {
-      ecrireStockage: (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      maintenant: () => Date.now(),
-    });
-    publierPromotionsCalendrier(window as unknown as Record<string, unknown>, (cle, valeur) => {
+  // L'état est publié d'abord : les fonctions publiées sous leur ancien nom en affectent les parties.
+  publierEtat(window, etat);
+  publierConstantes(window as unknown as Record<string, unknown>);
+  publierAidesCommunes(window as unknown as Record<string, unknown>, document);
+  publierCarteDonnees(window as unknown as Record<string, unknown>);
+  publierChaineModele(window as unknown as Record<string, unknown>);
+  publierChaineDessin(window as unknown as Record<string, unknown>, document);
+  publierRadialeDessin(window as unknown as Record<string, unknown>, document);
+  publierRadialeGestes(window as unknown as Record<string, unknown>, document);
+  publierExplorer(window as unknown as Record<string, unknown>, document);
+  publierDonnees(window as unknown as Record<string, unknown>, {
+    ecrireStockage: (cle, valeur) => {
       magasin.setItem(cle, valeur);
-    });
-    publierEtablissement(window as unknown as Record<string, unknown>);
-    publierReferentiel(window as unknown as Record<string, unknown>);
-    publierEditeur(window as unknown as Record<string, unknown>, (cle, valeur) => {
-      magasin.setItem(cle, valeur);
-    });
-    publierEvaluations(
-      window as unknown as Record<string, unknown>,
-      (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      (cle) => magasin.getItem(cle),
-    );
-    publierProgression(window as unknown as Record<string, unknown>, (cle) => magasin.getItem(cle));
-    publierExportDocument(window as unknown as Record<string, unknown>, () => window.dnmaxPont?.telechargements);
-    publierExemple(
-      window as unknown as Record<string, unknown>,
-      (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      (cle) => magasin.getItem(cle),
-      () => installerReferentielExemple(magasin, new Date()),
-    );
-    publierVersionsReferentiel(window as unknown as Record<string, unknown>, {
-      ecrireStockage: (cle, valeur) => {
-        magasin.setItem(cle, valeur);
-      },
-      promotionValide,
-      diplomeValide,
-      maintenant: () => new Date(),
-    });
-    const script = document.createElement("script");
-    script.src = ADRESSE_SCRIPT_HISTORIQUE;
-    script.addEventListener("load", () => {
-      // Le démarrage suit la lecture du script, dans l'ordre où le script l'exécutait (décision 38).
-      try {
-        const fenetre = window as unknown as Record<string, unknown>;
-        const branchementsDemarrage: BranchementsDemarrage = {
-          lireStockage: (cle) => magasin.getItem(cle),
-          ecrireStockage: (cle, valeur) => {
-            magasin.setItem(cle, valeur);
-          },
-          maintenant: () => new Date(),
-        };
-        chargerEtat(fenetre, branchementsDemarrage);
-        const ponts = brancherEtDessiner(fenetre, document, branchementsDemarrage);
-        if (window.dnmaxPont) Object.assign(window.dnmaxPont, ponts);
-        terminerDemarrage();
-      } finally {
-        resoudre();
-      }
-    });
-    script.addEventListener("error", () => {
-      rejeter(new Error("le script de l'interface n'a pas pu être chargé"));
-    });
-    document.body.append(script);
+    },
+    maintenant: () => Date.now(),
+    hasard: () => Math.random(),
   });
+  publierEvaluationCourante(window as unknown as Record<string, unknown>, () => Math.random());
+  publierEditeurEtape1(window as unknown as Record<string, unknown>, () => new Date());
+  publierPreferencesParametres(window as unknown as Record<string, unknown>, {
+    ecrireStockage: (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    },
+    maintenant: () => Date.now(),
+  });
+  publierPromotionsCalendrier(window as unknown as Record<string, unknown>, (cle, valeur) => {
+    magasin.setItem(cle, valeur);
+  });
+  publierEtablissement(window as unknown as Record<string, unknown>);
+  publierReferentiel(window as unknown as Record<string, unknown>);
+  publierEditeur(window as unknown as Record<string, unknown>, (cle, valeur) => {
+    magasin.setItem(cle, valeur);
+  });
+  publierEvaluations(
+    window as unknown as Record<string, unknown>,
+    (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    },
+    (cle) => magasin.getItem(cle),
+  );
+  publierProgression(window as unknown as Record<string, unknown>, (cle) => magasin.getItem(cle));
+  publierExportDocument(window as unknown as Record<string, unknown>, () => window.dnmaxPont?.telechargements);
+  publierExemple(
+    window as unknown as Record<string, unknown>,
+    (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    },
+    (cle) => magasin.getItem(cle),
+    () => installerReferentielExemple(magasin, new Date()),
+  );
+  publierVersionsReferentiel(window as unknown as Record<string, unknown>, {
+    ecrireStockage: (cle, valeur) => {
+      magasin.setItem(cle, valeur);
+    },
+    promotionValide,
+    diplomeValide,
+    maintenant: () => new Date(),
+  });
+  // Le démarrage suit la publication, dans l'ordre où le fichier historique, désormais supprimé, l'exécutait
+  // à sa lecture : écoute du redimensionnement de la carte radiale, puis lecture des données, branchements
+  // et premier dessin.
+  try {
+    const fenetre = window as unknown as Record<string, unknown>;
+    ecouterRedimensionnement(window);
+    const branchementsDemarrage: BranchementsDemarrage = {
+      lireStockage: (cle) => magasin.getItem(cle),
+      ecrireStockage: (cle, valeur) => {
+        magasin.setItem(cle, valeur);
+      },
+      maintenant: () => new Date(),
+    };
+    chargerEtat(fenetre, branchementsDemarrage);
+    const ponts = brancherEtDessiner(fenetre, document, branchementsDemarrage);
+    if (window.dnmaxPont as Window["dnmaxPont"] | undefined) Object.assign(window.dnmaxPont, ponts);
+    terminerDemarrage();
+  } catch (erreur) {
+    // Comme quand le démarrage suivait le chargement du script : une erreur est signalée comme non
+    // rattrapée, sans empêcher la suite du lancement.
+    queueMicrotask(() => {
+      throw erreur;
+    });
+  }
 }
 
 /**

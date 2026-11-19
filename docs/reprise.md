@@ -1,18 +1,18 @@
 # Reprise du travail en cours
 
-État au 18 novembre 2026, à la fusion de #208 (fin de la 0.9.1), pour reprendre le chantier sans rien perdre. À lire avec `CLAUDE.md` (règles du projet), `DECISIONS.md` (décisions 36 à 38 surtout) et `docs/revue-coherence.md`.
+État au 18 novembre 2026, à la fusion de #208 (fin de la 0.9.1), complété le 19 novembre à la fin de la reprise (0.9.2 : fichier historique supprimé), pour reprendre le chantier sans rien perdre. À lire avec `CLAUDE.md` (règles du projet), `DECISIONS.md` (décisions 36 à 38 surtout) et `docs/revue-coherence.md`.
 
 ## Où en est le projet
 
 - **Version 0.9.0** : fusionnée dans `main` (#132), **pas publiée**. L'atelier « Publication » n'a pas été lancé ; il ne se lance qu'avec le feu vert de l'auteur.
 - **Recette sur le bureau de l'auteur** : en cours de son côté, avec les installeurs d'essai de l'atelier « Installeurs », exécution n° 8 (Windows et Linux ; macOS annulé faute de machine, comme les fois précédentes), et la fiche `docs/recette-0.9.md` (parties A à J). Puis publication de la 0.9, sur son accord.
-- **0.9.1 terminée côté code** (décision 38, voir plus bas) : groupes 1 à 8 fusionnés (#184 à #201), groupe 9 fusionné (#203, #204, #206, #207, #208). Le fichier historique ne garde plus que la carte radiale, la chaîne et leurs aides : c'est la 0.9.2.
+- **0.9.1 terminée côté code** (décision 38, voir plus bas) : groupes 1 à 8 fusionnés (#184 à #201), groupe 9 fusionné (#203, #204, #206, #207, #208). La 0.9.2 a repris la carte radiale, la chaîne et leurs aides : le fichier historique est supprimé.
 - **Contrôles** : linter et typage sans erreur, 1 311 tests au vert sur `main`.
-- **Fichier historique** : 963 lignes (7 756 au départ), presque toutes pour la carte radiale et la chaîne.
+- **Fichier historique** : supprimé par la 0.9.2 (7 756 lignes au départ, 963 à la fin de la 0.9.1, 548 avant la carte radiale).
 
 ## Le fichier historique
 
-`public/heritage/application.js` est passé de 7 756 à 963 lignes. Ce qui en est sorti, dans l'ordre des demandes de fusion :
+`public/heritage/application.js` est passé de 7 756 lignes à rien : il est supprimé (0.9.2). Ce qui en est sorti, dans l'ordre des demandes de fusion :
 
 | Demande | Ce qui est sorti | Où |
 |---|---|---|
@@ -62,14 +62,18 @@
 | #208 | 0.9.1, groupe 9 : démarrage (lecture des données, état de départ, branchements, premier dessin, ponts `ouvrirPreferences`, `projeterReferentiel`, `ajusterEnseignants`, `ouvrirEtablissement`), appelé par le pont juste après la lecture du script ; constantes de tête devenues inutiles retirées | `src/interface/demarrage.ts` |
 | #209, #211 | Hors reprise : Mes évaluations, promotions des collègues proposées dans le filtre (masquées par défaut) et case « Seulement mes évaluations » | `src/domaine/filtres-evaluations.ts`, `src/evaluations/filtres.ts` |
 | #212 | Intégration continue : compilation Rust gardée en cache, trente minutes pour la tâche « Enveloppe de bureau » | `.github/workflows/ci.yml` |
+| #213, #214 | 0.9.2 : aides communes (`esc`, `toast`, `askModal`, `paintTabs`, couleurs et rangs) et calculs des deux cartes (géométrie, données affichées) | `src/interface/aides-communes.ts`, `src/interface/carte-donnees.ts`, `src/domaine/carte-geometrie.ts` |
+| #216, #218 | 0.9.2 : la chaîne (modèle, dessin et gestes) | `src/interface/chaine-modele.ts`, `src/interface/chaine-dessin.ts` |
+| `refactor/radiale-dessin` | 0.9.2 : dessin de la carte radiale (`paintRadial`, `tlabel`, `radInfo`, `RAD`, `anneeOf`, `ANNEES`), vérifié au pixel (275 captures) | `src/interface/radiale-dessin.ts` |
+| `refactor/radiale-gestes` | 0.9.2 : gestes de la carte radiale (`radialWire`, redimensionnement) et Explorer (`paintMap`, `paintExplore`) ; **fichier historique supprimé**, le pont démarre l'interface juste après la publication ; garde-fou reporté sur les appels par la fenêtre entre modules | `src/interface/radiale-gestes.ts`, `src/interface/explorer.ts`, `src/heritage/pont.ts` |
 
 Hors reprise, depuis #178 : fiche de recette complétée (#179), installeur Windows en français (#180), visite du référentiel simplifiée et boutons bleus de Constituer retirés (#181), évaluation possible sur un référentiel non validé avec un rappel (#182), mes promotions distinguées des autres dans une évaluation (#183), lien `node_modules` retiré (#185), `promoLabel` rétabli et garde-fou des appels (#187).
 
-Le fichier historique ne garde, pour ces parties, que de petits adaptateurs qui construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`).
+Les modules repris construisent le contexte de chaque écran et l'appellent par `window.dnmaxPont` (déclaré dans `src/heritage/pont.ts`) ; ils s'appellent encore entre eux par la fenêtre, sous les anciens noms.
 
 ## Ce qui reste, dans l'ordre convenu avec l'auteur
 
-L'auteur préfère une v1 propre à une sortie rapide. Toute l'interface, hors des deux cartes, est écrite en TypeScript (voir le tableau) : Mes évaluations, Progression, l'exemple, l'éditeur, Référentiel, Mon établissement, Préférences, Paramètres, le modèle de données et le démarrage. Le fichier historique ne garde que la carte radiale, la chaîne et leurs aides, reprises par la 0.9.2 ci-dessous.
+L'auteur préfère une v1 propre à une sortie rapide. Toute l'interface, hors des deux cartes, est écrite en TypeScript (voir le tableau) : Mes évaluations, Progression, l'exemple, l'éditeur, Référentiel, Mon établissement, Préférences, Paramètres, le modèle de données et le démarrage. La carte radiale, la chaîne et leurs aides ont suivi avec la 0.9.2 ci-dessous : il ne reste plus rien du fichier historique.
 
 ### 0.9.1 et 0.9.2 (décision 38)
 
@@ -85,19 +89,19 @@ La décision 5 est levée : le fichier historique disparaît. 0.9.1 reprend tout
 8. **Fait** (#199, #200, #201) : Progression (`paintProg`, `paintProgEleve`) et l'exemple (`loadDemo`, `demoMass`).
 9. **Fait** (#203, #204, #206, #207, #208) : constantes, aides du modèle et de l'évaluation en cours, Préférences et Paramètres, étape 1 de l'éditeur, démarrage.
 
-**0.9.2, prochain chantier** : la carte radiale et la chaîne (`paintExplore`, `paintRadial`, `paintChain`, `pivotWheel`, `radialWire`, `radInfo`, `paintMap` et leurs aides : `esc`, `help`, `askModal`, `toast`, `paintTabs`, `blocName`, `hueOf`, `ecColor`, `ueColor`, `ueOrd`, `ecNum`, `lienEc`, `ecOrd`, `anneeOf`, `ANNEES`), avec le contrôle visuel de l'auteur. Ce qui reste hors des deux cartes (`paintTabs`, `toast`, `askModal`, `help`, `esc`) peut sortir d'abord, sans risque pour leur dessin.
+**0.9.2, faite** (voir le tableau) : la carte radiale et la chaîne (`paintExplore`, `paintRadial`, `paintChain`, `pivotWheel`, `radialWire`, `radInfo`, `paintMap` et leurs aides : `esc`, `help`, `askModal`, `toast`, `paintTabs`, `blocName`, `hueOf`, `ecColor`, `ueColor`, `ueOrd`, `ecNum`, `lienEc`, `ecOrd`, `anneeOf`, `ANNEES`), avec le contrôle visuel de l'auteur. Ce qui reste hors des deux cartes (`paintTabs`, `toast`, `askModal`, `help`, `esc`) peut sortir d'abord, sans risque pour leur dessin.
 
-La carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) et la chaîne (`paintChain`, `chainModel`, `chainWire`, `chainBind`) restent dans le fichier historique, inchangées. Pour comparer, ces deux vues ne sont pas reproductibles d'une exécution à l'autre (positions animées, hauteurs mesurées selon les polices) : neutraliser nombres, `transform` et `style` avant de comparer.
+La carte radiale (`paintRadial`, `radialWire`, `radInfo`) et la chaîne (`paintChain`, `chainModel`, `chainWire`, `chainBind`) sont reprises à l'identique, balisage compris. Pour comparer, ces deux vues ne sont pas reproductibles d'une exécution à l'autre (positions animées, hauteurs mesurées selon les polices) : neutraliser nombres, `transform` et `style` avant de comparer.
 
 **Consigne de l'auteur, à respecter strictement : aucun risque sur la carte radiale (`paintRadial`, `radialWire`, `pivotWheel`, `radInfo`) ni sur la chaîne (`paintChain`, `chainModel`, `chainWire`).** Leur dessin reste tel quel. Au plus, un calcul déjà isolé peut en sortir, avec une comparaison d'images avant et après.
 
 ### Comment reprendre un groupe
 
-Suivre #186 comme modèle :
+Méthode suivie jusqu'à la suppression du fichier (#186 comme modèle), à garder pour un réaménagement semblable :
 
 - un module `src/interface/<sujet>.ts` qui lit l'état par `etat` (`src/interface/etat.ts`) et appelle ce qui reste dans le fichier historique par la fenêtre (fonction `historique()`) ;
 - une fonction `publier<Sujet>(fenetre, …)` qui pose les fonctions sous leurs anciens noms ; l'appeler dans `src/heritage/pont.ts`, avant le chargement du fichier historique, à côté de `publierPromotionsCalendrier` ;
-- **ajouter cet appel à `nomsPublies()`** dans `src/heritage/appels-historiques.test.ts` : ce garde-fou échoue si le fichier historique appelle une fonction définie nulle part (c'est lui qui aurait repéré le retrait à tort de `promoLabel` par #174) ;
+- **ajouter cet appel à `nomsPublies()`** dans `src/heritage/appels-historiques.test.ts` : ce garde-fou échouait si le fichier historique appelait une fonction définie nulle part (c'est lui qui aurait repéré le retrait à tort de `promoLabel` par #174) ; depuis la suppression du fichier, il vérifie que chaque nom qu'un module appelle par la fenêtre (interface `FonctionsHistoriques`) est publié ou fait partie de l'état ;
 - retirer les fonctions du fichier historique, tests du module, banc des 21 parcours identique, ligne au CHANGELOG.
 
 ## Questions en attente de l'auteur
@@ -137,7 +141,7 @@ Le banc est dans `outils/banc/` : `banc.cjs` (les 23 parcours, dont « repartiti
 
 En plus du banc, comparer fonction par fonction l'ancien code et le nouveau :
 
-- extraire les fonctions du fichier historique de `main` (`git show origin/main:public/heritage/application.js`) et les charger avec `new Function`, avec un `newId` à compteur ;
+- extraire les fonctions du fichier historique d'un commit qui le contient encore (`git show 4bd01b3:public/heritage/application.js`) et les charger avec `new Function`, avec un `newId` à compteur ;
 - transpiler le module TypeScript en CommonJS (`typescript.transpileModule`) ;
 - appliquer les deux aux mêmes données, et comparer le JSON obtenu après chaque étape : classement, vue, modification puis report, enregistrement, associations proposées, nouvelle mention ;
 - données : quelques milliers de jeux tirés au hasard (doublons écrits différemment, champs absents, diplômes inconnus, liens anciens par `ecIds`), plus les données de l'exemple relevées par le banc à trois dates ;
@@ -155,6 +159,7 @@ En plus du banc, comparer fonction par fonction l'ancien code et le nouveau :
 - **Focus après un redessin** : quand le champ qui a le focus est masqué par le redessin, l'élément actif relevé varie d'une exécution à l'autre, sur `main` aussi. Comparer sans le focus à cette étape.
 - **Lien `node_modules` commité** (#183, retiré par #185) : un lien symbolique créé dans une copie de travail a été entraîné par une fusion et a remplacé `node_modules` par un lien vers lui-même. `.gitignore` ignore désormais `node_modules` sous toutes ses formes ; après une récupération malheureuse, supprimer `node_modules` et relancer `npm ci`.
 - **Fonction retirée encore appelée** (`promoLabel`, #174 → #187) : seul l'écran qui l'appelle la révèle. Le garde-fou `src/heritage/appels-historiques.test.ts` le voit maintenant ; le tenir à jour à chaque groupe.
+- **Captures au pixel instables** (carte radiale) : une capture d'élément fait défiler la page, ce qui change l'élément survolé ; une capture pleine page redimensionne la fenêtre, ce qui relance la mise à l'échelle de la carte ; et le rendu par défaut de Chromium varie de ±1 sur l'anticrénelage d'une exécution à l'autre. Parades : défilement fixé avant les gestes, capture de la partie visible (`clip`, sans `fullPage`), Chromium lancé avec `--disable-partial-raster --disable-gpu-rasterization --disable-gpu --force-color-profile=srgb`. Ainsi, deux productions sur `main` sont identiques au pixel.
 - **Serveurs et tâches de fond arrêtés** de temps en temps dans l'environnement de travail : jouer le banc par lots de moins de dix minutes, au premier plan, et relancer les serveurs Vite avant chaque lot.
 - **Intégration continue : tâche « Enveloppe de bureau » annulée après 20 minutes** (#186) : relancée une fois, elle passe en quatre minutes. Ne pas la relancer plus d'une fois sans chercher la cause.
 - **CHANGELOG** : il entre en conflit à presque chaque fusion ; garder les deux entrées.
@@ -174,4 +179,4 @@ En plus du banc, comparer fonction par fonction l'ancien code et le nouveau :
   - « Ensuite, dans l'ordre » : les demandes de fusion en attente de vérification, puis la liste de « Ce qui reste » ;
   - « Déjà fait » : les demandes fusionnées (#139 à #208), avec une ligne chacune ;
   - le nombre de tests sur `main` (1 311 au 18 novembre, à la fin de la 0.9.1) ;
-  - le nombre de lignes restant dans le fichier historique (963 au 18 novembre, 7 756 au départ).
+  - le nombre de lignes restant dans le fichier historique (963 au 18 novembre, 7 756 au départ ; supprimé par la 0.9.2).

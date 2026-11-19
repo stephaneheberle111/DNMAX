@@ -42,14 +42,6 @@ describe("publierRadialeDessin", () => {
     expect(fenetre.RAD).toBe(RAD);
     expect(fenetre.ANNEES).toBe(ANNEES);
   });
-
-  it("partage l'angle de la roue par un accesseur, dans les deux sens", () => {
-    fenetre.wheelAngle = 12.5;
-    expect(roue.angle).toBe(12.5);
-    roue.angle = 3;
-    expect(fenetre.wheelAngle).toBe(3);
-    expect(Object.keys(fenetre)).not.toContain("wheelAngle");
-  });
 });
 
 describe("anneeOf", () => {
@@ -94,7 +86,7 @@ describe("paintRadial", () => {
   });
 
   it("tourne la roue selon l'angle partagé", () => {
-    fenetre.wheelAngle = 33.456;
+    roue.angle = 33.456;
     expect(paintRadial()).toContain(`transform="rotate(33.46 380 380)"`);
   });
 
