@@ -46,6 +46,7 @@
 
 ### Corrigé
 
+- Thème sombre, couleur du papier : l'intensité était inversée (« pâle » donnait le papier le plus foncé, « soutenue » le plus clair) ; de « pâle » à « soutenue », le papier s'écarte désormais de plus en plus des cartes, comme en thème clair.
 - Enregistrer un document (Word, OpenDocument, tableur, PDF, fichier d'échange) à la place d'un fichier existant : si l'écriture échoue, l'ancien fichier reste intact ; quand il est ouvert dans un autre logiciel (Word, LibreOffice…), DNMAX dit de le fermer ou de choisir un autre nom, au lieu d'afficher l'erreur brute du système.
 - Bas de page : la bulle d'aide de la version dit que la recherche de mise à jour interroge le site dnmax.fr (elle nommait à tort GitHub).
 - Référentiel > Constituer > Validation : valider une nouvelle version, quand une version validée existait déjà et que des promotions sont en cours, ouvre de nouveau le choix des promotions qui passent à cette version (une erreur l'empêchait).
