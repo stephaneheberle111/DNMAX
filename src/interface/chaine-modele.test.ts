@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
 import { CH_KINDS, chainItemText, chainModel, chainNode, publierChaineModele } from "./chaine-modele";
+import { anneeScolaire } from "./promotions-calendrier";
 
 function ids(liste: Objet[] | undefined): unknown[] {
   return (liste ?? []).map((element) => element.id);
@@ -97,5 +98,19 @@ describe("chainItemText et chainNode", () => {
   it("donne au moins 34 de haut à une case, plus pour un code, des lignes et un sous-titre", () => {
     expect(chainNode({ t: [] }).h).toBe(34);
     expect(chainNode({ code: "C1", t: ["a", "b", "c"], sub: "s" }).h).toBe(13 + 37.5 + 13 + 14);
+  });
+});
+
+describe("chainModel avec « Seulement ma répartition de service »", () => {
+  it("ne garde que mes EC, leurs compétences, leurs UE et leurs semestres", () => {
+    etat.donnees.moi = "t1";
+    etat.donnees.affectH = { [anneeScolaire()]: { p1: { e2: ["t1"] } } };
+    (etat.ui.ref as Objet).mine = true;
+    (etat.ui.ref as Objet).piv = { kind: "ec", id: "" };
+    const modele = chainModel();
+    expect(modele?.items.map((ec) => ec.id)).toEqual(["e2"]);
+    expect(ids(modele?.sets[0])).toEqual(["c2"]);
+    expect(ids(modele?.sets[1])).toEqual(["S2"]);
+    expect(ids(modele?.sets[3])).toEqual(["u2"]);
   });
 });

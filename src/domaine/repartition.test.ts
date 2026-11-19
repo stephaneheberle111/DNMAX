@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { aEuLaPromotion, anneesProposees, ecsDeLAnnee } from "./repartition";
+import { aEuLaPromotion, anneesProposees, ecsDeLAnnee, ecsDeLEnseignant } from "./repartition";
 
 const DICTIONNAIRE = {
   ues: [{ id: "u1", nom: "UE 1", couleur: "#111111" }],
@@ -52,5 +52,27 @@ describe("enseignant qui a eu une promotion", () => {
   it("est faux sans enseignant, et tolère des entrées absentes", () => {
     expect(aEuLaPromotion(HISTORIQUE, "p1", "")).toBe(false);
     expect(aEuLaPromotion({ "2024-2025": null, "2025-2026": { p1: { e1: null } } }, "p1", "t1")).toBe(false);
+  });
+});
+
+describe("EC qu'un enseignant assure", () => {
+  const historique = {
+    "2026-2027": { p1: { e1: ["t1"], e2: ["t2"] }, p2: { e3: ["t1", "t2"], e1: ["t1"] } },
+    "2025-2026": { p1: { e9: ["t1"] } },
+  };
+
+  it("réunit les EC de toutes ses promotions pour l'année demandée, sans doublon", () => {
+    expect([...ecsDeLEnseignant(historique, "2026-2027", "t1")].sort()).toEqual(["e1", "e3"]);
+  });
+
+  it("ignore les autres années et les EC des collègues", () => {
+    expect([...ecsDeLEnseignant(historique, "2026-2027", "t2")].sort()).toEqual(["e2", "e3"]);
+    expect(ecsDeLEnseignant(historique, "2025-2026", "t2").size).toBe(0);
+  });
+
+  it("rend un ensemble vide sans enseignant ou pour une année absente", () => {
+    expect(ecsDeLEnseignant(historique, "2026-2027", "").size).toBe(0);
+    expect(ecsDeLEnseignant(historique, "2030-2031", "t1").size).toBe(0);
+    expect(ecsDeLEnseignant({ "2026-2027": { p1: null } }, "2026-2027", "t1").size).toBe(0);
   });
 });

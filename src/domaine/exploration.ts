@@ -239,3 +239,15 @@ export function ecsAuSemestre(competence: Element, semestre: string): string[] {
 export function titreBloc(numero: string, nom: string): string {
   return `Bloc ${numero}${nom !== "" && nom !== `Bloc ${numero}` ? ` · ${nom}` : ""}`;
 }
+
+/**
+ * Compétences réduites aux EC retenus (la répartition de service d'un
+ * enseignant) : chaque compétence ne garde que les EC retenus qui la portent,
+ * et celles qui n'en gardent aucun disparaissent. Sans ensemble, rien ne change.
+ */
+export function restreindreAuxEcs(competences: readonly Element[], ecs: ReadonlySet<string> | null): Element[] {
+  if (ecs === null) return competences.slice();
+  return competences
+    .map((competence) => ({ ...competence, ecs: porteurs(competence).filter((porteur) => ecs.has(porteur.id)) }))
+    .filter((competence) => competence.ecs.length > 0);
+}

@@ -30,6 +30,7 @@
 
 ### Ajouté
 
+- Référentiel > Explorer : la case « Seulement ma répartition de service », sous les filtres, ne montre que les EC que vous assurez cette année d'après Mon établissement > Répartition, avec leurs compétences, leurs UE et leurs semestres, sur la carte radiale, la carte heuristique, les deux tableaux et la recherche. Elle n'apparaît qu'une fois « C'est moi » choisi et au moins un EC affecté.
 - Visites guidées : un bouquet final de confettis salue la fin de la visite, à l'arrivée sur sa dernière page (sauf si le système demande de réduire les animations).
 - Paramètres > Règles d'évaluation : suivi simplifié dans Mes évaluations, « À faire » puis « Faite » une fois la fiche distribuée. Ce n'est qu'un affichage : le suivi détaillé reste enregistré, et se retrouve en décochant la case.
 - Paramètres > Mises à jour : recherche automatique, une fois par jour à l'ouverture, désactivée par défaut. La recherche interroge désormais dnmax.fr, hébergé en France, et non plus GitHub ; la mise à jour Windows s'y télécharge aussi.
