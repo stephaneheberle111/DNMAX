@@ -456,6 +456,10 @@ export function radialWire(host: HTMLElement): void {
   // Les calculs (bornes, centrage sur le pointeur, animation) sont dans src/domaine/zoom-carte.ts.
   const ZC = (window.dnmaxPont as NonNullable<Window["dnmaxPont"]>).zoomCarte;
   const ZM = RAD.HUB + 14; // au zoom de départ, le cercle du diplôme reste entier et les compétences éclatées restent visibles
+  // Rayon de tout ce que la roue peut montrer autour de son centre : les pastilles des compétences
+  // éclatées (jusqu'à trois rangées au-delà de l'anneau des années) et les flèches de rotation.
+  const RAYON_ENSEMBLE = 580;
+  // zoomMin suit la taille du cadre (voir dimensionner) : au plus bas, la roue entière tient dans la vue.
   const GEO = { cote: VB, origine: -P, centreRoue: C, rayonCoeur: ZM, zoomMin: 1, zoomMax: RAD.ZMAX, zoomDepart: RAD.Z0 };
   // tailles de police (unités du dessin) des libellés qui disparaissent quand ils deviennent illisibles
   const LIBELLES = { lue: 10, lecn: 9, lan: 10.5 };
@@ -488,8 +492,10 @@ export function radialWire(host: HTMLElement): void {
     if (cadre && h) cadre.style.height = String(h) + "px";
     hautCadre = h || svg.getBoundingClientRect().height;
     rapport = hautCadre ? w / hautCadre : 1;
+    GEO.zoomMin = Math.min(1, ZC.zoomEnsemble(rapport, VB, 2 * RAYON_ENSEMBLE));
   };
-  const zoomDepart = (): number => (cadre && cadre.clientWidth < 480 ? 1 : RAD.Z0);
+  // Cadre étroit : on part de la roue entière plutôt que de son quart.
+  const zoomDepart = (): number => (cadre && cadre.clientWidth < 480 ? GEO.zoomMin : RAD.Z0);
   const dessiner = (vz: VueCarte): void => {
     vue = vz;
     const { largeur: vw, hauteur: vh } = ZC.tailleVue(vz.zoom, VB, rapport);
@@ -599,7 +605,8 @@ export function radialWire(host: HTMLElement): void {
   const vueInitiale = (): VueCarte => (ui().radVue as VueCarte | null | undefined) || ZC.vueDepart(rapport, GEO, zoomDepart());
   const ajuster = (): void => {
     ui().radVue = null;
-    viser(ZC.vueDepart(rapport, GEO, zoomDepart()), false, false);
+    // « Ajuster » : la roue entière, zone d'éclatement et flèches comprises, centrée, à toute taille de cadre.
+    viser(ZC.vueDepart(rapport, GEO, GEO.zoomMin), false, false);
   };
   const PAS = 1.15; // un clic sur + ou − : petit pas, sans à-coup
   // la pointe remonte le long du trait, dans le sens de rotation (plus vite au survol)
