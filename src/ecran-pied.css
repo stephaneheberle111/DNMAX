@@ -87,11 +87,6 @@
   text-align: center;
 }
 
-.pied-erreur {
-  color: var(--danger);
-  font-weight: 600;
-}
-
 body {
   padding-bottom: var(--hauteur-pied, 0px);
 }
