@@ -250,10 +250,57 @@ const RANGEE_CASE = 150,
   RANGEE_ROUE_H = 118;
 
 /**
+ * Semestres compacts des rangées superposées, en pixels : largeur d'une
+ * case, place de l'étiquette « Année n » en tête de chaque groupe, écart
+ * entre deux semestres d'une année et entre deux années.
+ */
+const SEMESTRE_COMPACT = { case: 92, etiquette: 62, ecart: 6, ecartAnnees: 16 } as const;
+
+/** Groupe de semestres d'une même année, dans la rangée des semestres : début, largeur, année et son code. */
+interface GroupeAnnee {
+  x: number;
+  largeur: number;
+  annee: number;
+  code: string;
+}
+
+/**
+ * Place côte à côte, groupés par année, les semestres `cases` (dans l'ordre
+ * chronologique) à partir de l'abscisse `debut` : étiquette de l'année, puis
+ * ses semestres serrés. Rend les groupes et la largeur totale.
+ */
+export function placerSemestresParAnnee(cases: readonly { x: number; annee: number }[], debut: number): { groupes: GroupeAnnee[]; largeur: number } {
+  const groupes: GroupeAnnee[] = [];
+  let x = debut;
+  cases.forEach((n, rang) => {
+    const groupe = groupes[groupes.length - 1];
+    if (!groupe || groupe.annee !== n.annee) {
+      if (rang > 0) x += SEMESTRE_COMPACT.ecartAnnees - SEMESTRE_COMPACT.ecart;
+      groupes.push({ x, largeur: 0, annee: n.annee, code: anneeCode(n.annee) });
+      x += SEMESTRE_COMPACT.etiquette;
+    }
+    n.x = x;
+    x += SEMESTRE_COMPACT.case + SEMESTRE_COMPACT.ecart;
+    const courant = groupes[groupes.length - 1] as GroupeAnnee;
+    courant.largeur = x - SEMESTRE_COMPACT.ecart - courant.x;
+  });
+  return { groupes, largeur: cases.length ? x - SEMESTRE_COMPACT.ecart - debut : 0 };
+}
+
+/** Balisage d'un groupe d'année : cadre discret, « Année n » et son code, devant ses semestres. */
+function groupeAnneeSvg(groupe: GroupeAnnee, y: number, hauteur: number): string {
+  return `<g class="cannee"><rect x="${String(groupe.x - 5)}" y="${String(y - 5)}" width="${String(groupe.largeur + 10)}" height="${String(hauteur + 10)}" rx="10"/>
+    <text class="cannee-t" x="${String(groupe.x + 6)}" y="${String(y + hauteur / 2 - 2)}">Année ${String(groupe.annee)}</text>
+    <text class="cannee-c" x="${String(groupe.x + 6)}" y="${String(y + hauteur / 2 + 10)}">${esc(groupe.code)}</text></g>`;
+}
+
+/**
  * Balisage de la chaîne en rangées superposées : chaque colonne devient une
  * rangée, son en-tête au-dessus, les cases côte à côte ; la rangée
  * verrouillée porte une roue horizontale. Les cases se placent comme en
- * colonnes, au barycentre de leurs liens avec la rangée la plus longue.
+ * colonnes, au barycentre de leurs liens avec la rangée la plus longue ; les
+ * semestres, eux, forment un bloc serré, groupé par année, centré sur la
+ * moyenne de leurs liens.
  */
 function paintChainVerticale(M: ModeleChaine): string {
   const { kind, p, piv, sets } = M;
@@ -270,10 +317,29 @@ function paintChainVerticale(M: ModeleChaine): string {
   const cpl = pt.code ? 24 : 31,
     fullH = wrapN(pt.label, cpl, 30).length * 17 + 12;
   const WH = Math.max(RANGEE_ROUE_H, fullH + 46);
-  const rows = ordre.map((k, i) => (i === p ? null : (sets[i] as Objet[]).map((x) => caseChaine(k, x, 0, semFix, COUPES_RANGEES))));
+  // Rangée des semestres (hors pivot) : cases compactes « Semestre n », l'année étant dite par leur groupe.
+  const iSem = (ordre as string[]).indexOf("sem");
+  const semCompacts = iSem !== p;
+  const rows = ordre.map((k, i) =>
+    i === p
+      ? null
+      : (sets[i] as Objet[]).map((x) => {
+          const n = caseChaine(k, x, 0, semFix, COUPES_RANGEES);
+          return k === "sem" ? chainNode({ ...n, sub: "" }) : n;
+        }),
+  );
+  const anneeDe = new Map((sets[iSem] as Objet[]).map((x) => ["sem:" + String(x.id), Number(x.annee)]));
   const pivN = { id: nid(kind, piv), kind, h: WH, piv: true, x: 0, y: 0, t: [] } as CaseChaine;
   const rowN = (i: number): CaseChaine[] => (i === p ? [pivN] : (rows[i] as CaseChaine[]));
-  const len = (n: CaseChaine): number => (n.piv ? WL : NW);
+  const len = (n: CaseChaine): number => (n.piv ? WL : n.kind === "sem" && semCompacts ? SEMESTRE_COMPACT.case : NW);
+  let groupes: GroupeAnnee[] = [];
+  /** Place la rangée des semestres en un bloc groupé par année, centré sur le barycentre voulu (ou à `debut`). */
+  const placerSemestres = (debut: number): number => {
+    const cases = rowN(iSem).map((n) => Object.assign(n, { annee: anneeDe.get(n.id) ?? 0 }));
+    const place = placerSemestresParAnnee(cases, debut);
+    groupes = place.groupes;
+    return place.largeur;
+  };
   // épaisseur de chaque rangée : la plus haute de ses cases, toutes alignées sur elle
   const epais = ordre.map((_k, i) => (i === p ? WH : Math.max(34, ...rowN(i).map((n) => n.h))));
   ordre.forEach((_k, i) => {
@@ -281,16 +347,19 @@ function paintChainVerticale(M: ModeleChaine): string {
   });
   const Y = (i: number): number => epais.slice(0, i).reduce((a, h) => a + TETE + h + RG, 0);
   const anchor = (n: CaseChaine): number => n.x + len(n) / 2;
-  const longueur = (i: number): number => rowN(i).reduce((a, n) => a + len(n) + HG, 0);
+  const longueur = (i: number): number =>
+    i === iSem && semCompacts ? placerSemestresParAnnee(rowN(i).map((n) => ({ x: 0, annee: anneeDe.get(n.id) ?? 0 })), 0).largeur : rowN(i).reduce((a, n) => a + len(n) + HG, 0);
   const base = ordre
     .map((_k, i) => i)
     .filter((i) => i !== p)
     .sort((a, b) => longueur(b) - longueur(a))[0] as number;
   let x = PADX;
-  rowN(base).forEach((n) => {
-    n.x = x;
-    x += len(n) + HG;
-  });
+  if (base === iSem && semCompacts) placerSemestres(PADX);
+  else
+    rowN(base).forEach((n) => {
+      n.x = x;
+      x += len(n) + HG;
+    });
   const element = (i: number, n: CaseChaine): Objet | undefined => (n.piv ? piv : (sets[i] as Objet[]).find((e) => nid(ordre[i] as string, e) === n.id));
   const linked = (i: number, n: CaseChaine, j: number): CaseChaine[] => {
     const lo = Math.min(i, j);
@@ -301,6 +370,17 @@ function paintChainVerticale(M: ModeleChaine): string {
     });
   };
   const placeRow = (i: number, ref: number): void => {
+    if (i === iSem && semCompacts) {
+      // Semestres : un bloc serré, centré sur la moyenne des places que voudraient leurs liens.
+      const voulues = rowN(i).flatMap((n) => {
+        const ls = linked(i, n, ref);
+        return ls.length ? [ls.reduce((a, m) => a + anchor(m), 0) / ls.length] : [];
+      });
+      const largeur = placerSemestres(0);
+      const centre = voulues.length ? voulues.reduce((a, v) => a + v, 0) / voulues.length : PADX + largeur / 2;
+      placerSemestres(centre - largeur / 2);
+      return;
+    }
     let prev = -1e9;
     rowN(i).forEach((n) => {
       const ls = linked(i, n, ref);
@@ -314,8 +394,9 @@ function paintChainVerticale(M: ModeleChaine): string {
   for (let i = base + 1; i < ordre.length; i++) placeRow(i, i - 1);
   for (let i = base - 1; i >= 0; i--) placeRow(i, i + 1);
   const all = ordre.flatMap((_k, i) => rowN(i));
-  const minX = Math.min(...all.map((n) => n.x));
+  const minX = Math.min(...all.map((n) => n.x), ...groupes.map((g) => g.x));
   all.forEach((n) => (n.x = Math.round(n.x + PADX - minX)));
+  groupes.forEach((g) => (g.x = Math.round(g.x + PADX - minX)));
   ordre.forEach((_k, i) => {
     rowN(i).forEach((n) => (n.y = Y(i) + TETE));
   });
@@ -338,8 +419,9 @@ function paintChainVerticale(M: ModeleChaine): string {
   return `<div class="tw"><div class="chainbox vert" style="width:${String(W)}px;height:${String(H)}px">
     <svg class="chain" width="${String(W)}" height="${String(H)}" viewBox="0 0 ${String(W)} ${String(H)}">
       ${ordre.map((_k, i) => `<rect class="ccol${i % 2 ? " alt" : ""}${i === p ? " piv" : ""}" x="1" y="${String(Y(i) + TETE - 9)}" width="${String(W - 2)}" height="${String((epais[i] as number) + 18)}" rx="10"/>`).join("")}
+      ${semCompacts ? groupes.map((g) => groupeAnneeSvg(g, Y(iSem) + TETE, epais[iSem] as number)).join("") : ""}
       <g class="links">${links.map(path).join("")}</g>
-      ${ordre.flatMap((_k, i) => (i === p ? [] : (rows[i] as CaseChaine[]).map((n) => chainSvgNode(n, NW)))).join("")}
+      ${ordre.flatMap((_k, i) => (i === p ? [] : (rows[i] as CaseChaine[]).map((n) => chainSvgNode(n, len(n))))).join("")}
     </svg>
     ${ordre
       .map(

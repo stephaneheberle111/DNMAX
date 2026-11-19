@@ -24,6 +24,11 @@
 .chainbox.vert .chh{justify-content:flex-start}
 .chainbox.vert .chh span{flex:none}
 
+/* rangées superposées : semestres compacts, groupés par année sous un cadre discret */
+svg.chain .cannee rect{fill:var(--surface);stroke:var(--line);stroke-width:1}
+svg.chain .cannee-t{fill:var(--ink);font-family:var(--fd);font-size:11px;font-weight:600}
+svg.chain .cannee-c{fill:var(--muted);font-family:var(--fm);font-size:9.5px}
+
 /* roue horizontale : les éléments défilent de gauche à droite */
 .wheel.hz{cursor:ew-resize}
 .wheel.hz .wit{left:50%;right:auto;top:10px;bottom:24px;width:124px;height:auto;margin:0 0 0 -62px;flex-direction:column;

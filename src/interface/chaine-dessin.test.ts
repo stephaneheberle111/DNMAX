@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { CH_WH, chainResetOrder, chainSetOrder, chainSetPivot, chainSetVertical, chainSvgNode, paintChain, brancherChaineDessin, type CaseChaine } from "./chaine-dessin";
+import { CH_WH, chainResetOrder, chainSetOrder, chainSetPivot, chainSetVertical, chainSvgNode, paintChain, placerSemestresParAnnee, brancherChaineDessin, type CaseChaine } from "./chaine-dessin";
 
 const { paintRef, saveData, savePrefs } = vi.hoisted(() => ({ paintRef: vi.fn(), saveData: vi.fn(), savePrefs: vi.fn() }));
 vi.mock("./referentiel", () => ({ peindreReferentiel: paintRef }));
@@ -166,6 +166,26 @@ describe("paintChain dans un autre ordre et en rangées", () => {
     expect(largeur(paintChain(), "ec")).toBe("256");
   });
 
+  it("montre en rangées des semestres compacts, groupés par année", () => {
+    etat.preferences = { chaineVerticale: true };
+    const balisage = paintChain();
+    expect(balisage.match(/<g class="cannee">/g)).toHaveLength(2);
+    expect(balisage).toContain(">Année 1</text>");
+    expect(balisage).toContain(">Année 2</text>");
+    expect(balisage).toMatch(/data-node="sem:S1"[^]*?width="92"/);
+    expect(balisage).not.toContain("Année 1 · ");
+  });
+
+  it("ne groupe pas les semestres quand leur rangée porte le ruban", () => {
+    etat.preferences = { chaineVerticale: true };
+    carte().piv = { kind: "sem", id: "S1" };
+    expect(paintChain()).not.toContain(`class="cannee"`);
+  });
+
+  it("ne groupe pas les semestres en colonnes côte à côte", () => {
+    expect(paintChain()).not.toContain(`class="cannee"`);
+  });
+
   it("reste en colonnes côte à côte par défaut", () => {
     expect(paintChain()).not.toContain("chainbox vert");
   });
@@ -195,5 +215,26 @@ describe("ordre et sens retenus", () => {
     expect(etat.preferences).toEqual({ chaineOrdre: ["sem", "comp", "ec", "ue", "dip"], chaineVerticale: false });
     expect(savePrefs).toHaveBeenCalledTimes(1);
     expect(paintRef).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("placerSemestresParAnnee", () => {
+  it("serre les semestres d'une année derrière son étiquette et écarte un peu plus deux années", () => {
+    const cases = [
+      { x: 0, annee: 1 },
+      { x: 0, annee: 1 },
+      { x: 0, annee: 2 },
+    ];
+    const { groupes, largeur } = placerSemestresParAnnee(cases, 10);
+    expect(cases.map((c) => c.x)).toEqual([72, 170, 340]);
+    expect(groupes.map((g) => [g.x, g.largeur, g.annee])).toEqual([
+      [10, 252, 1],
+      [278, 154, 2],
+    ]);
+    expect(largeur).toBe(422);
+  });
+
+  it("rend une largeur nulle et aucun groupe sans semestre", () => {
+    expect(placerSemestresParAnnee([], 10)).toEqual({ groupes: [], largeur: 0 });
   });
 });
