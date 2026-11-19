@@ -748,6 +748,12 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
 table.t th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
 table.t td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 table.t tr:last-child td{border-bottom:0}
+/* Recherche : un tableau par groupe, aux mêmes largeurs de colonnes pour qu'elles s'alignent d'un groupe à l'autre. */
+table.t.rch{table-layout:fixed;min-width:760px}
+table.t.rch col.rch-bloc{width:64px}
+table.t.rch col.rch-code{width:96px}
+table.t.rch col.rch-semestres{width:220px}
+table.t.rch col.rch-ecs{width:240px}
 .pill.c{border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) var(--chip),var(--surface))}
 .pill{display:inline-block;max-width:100%;font-family:var(--fb);font-size:11px;padding:2px 7px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);line-height:1.45}
 .pill b{font-family:var(--fm);font-weight:500;font-size:10.5px}
@@ -813,6 +819,12 @@ table.t tr:last-child td{border-bottom:0}
 @media (min-width:900px){
   #savedList.tw{overflow-x:clip;overflow-y:visible}
   table.slist thead th{position:sticky;top:var(--hauteur-barre,60px);z-index:3;background:var(--surface-2);box-shadow:inset 0 -1px 0 var(--line)}
+  /* Même chose pour les tableaux d'Explorer (EC et compétences × semestres), dont l'en-tête a deux rangées :
+     la première a une hauteur fixe, sous laquelle se colle la seconde (les semestres). */
+  .tw:has(> table.mx.fige){overflow-x:clip;overflow-y:visible}
+  table.mx.fige thead th{position:sticky;top:var(--hauteur-barre,60px);z-index:3;background-clip:padding-box;box-shadow:inset 0 -1px 0 var(--line)}
+  table.mx.fige thead th.an{height:30px;box-sizing:border-box}
+  table.mx.fige thead tr + tr th{top:calc(var(--hauteur-barre,60px) + 30px)}
 }
 
 .mod .modvisite{margin-top:8px;padding:4px 10px;font-size:12.5px}

@@ -132,7 +132,11 @@ export function peindreRecherche(contexte: ContexteRecherche): void {
         balise("span", [["class", "t"]], groupe.sousTitre),
         balise("span", [["class", "c"]], `${String(competences.length)} comp.`),
       );
-      const tableau = balise("table", [["class", "t"]]);
+      // Largeurs fixes : d'un groupe à l'autre, chaque colonne commence au même endroit.
+      const tableau = balise("table", [["class", "t rch"]]);
+      const colonnes = balise("colgroup");
+      for (const sorte of [...(avecBloc ? ["bloc"] : []), "code", "intitule", "semestres", "ecs"]) colonnes.append(balise("col", [["class", `rch-${sorte}`]]));
+      tableau.append(colonnes);
       const entete = balise("tr");
       for (const titre of [...(avecBloc ? ["Bloc"] : []), "Code", "Compétence", "Semestres", "EC"]) entete.append(balise("th", [], titre));
       const thead = balise("thead");

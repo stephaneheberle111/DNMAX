@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { PARCOURS, type Avancement, type IdentifiantParcours } from "./domaine/parcours";
 import { chapitreDe, PARCOURS_DEFINIS, type Etape } from "./parcours-etapes";
+import { etat, type Objet } from "./interface/etat";
 
 const ETAPES = [
   { titre: "Bienvenue" },
@@ -39,10 +40,13 @@ describe("prise en main, grande étape Référentiel", () => {
     expect(cibles.some((cible) => cible.includes("definir"))).toBe(false);
   });
 
-  it("mène de l'onglet « Référentiel » droit à « Constituer », sans clic de plus", () => {
+  it("mène de l'onglet « Référentiel » droit à « Constituer », sans clic de plus ni passage par Explorer", () => {
     const etapes = PARCOURS_DEFINIS["prise-en-main"].etapes;
-    const onglet = etapes.find((etape) => etape.cibles?.includes("#t-ref") === true && etape.apresClic !== undefined);
-    expect(onglet).toBeDefined();
+    const onglet = etapes.find((etape) => etape.cibles?.includes("#t-ref") === true && etape.avantClic !== undefined);
+    etat.ui = { ref: { pane: "explorer" } };
+    // Avant que l'application traite le clic : l'onglet s'ouvre déjà sur « Constituer ».
+    onglet?.avantClic?.();
+    expect((etat.ui.ref as Objet).pane).toBe("constituer");
     expect(etapes.some((etape) => etape.cibles?.includes('#refNav [data-pane="constituer"]') === true)).toBe(false);
   });
 

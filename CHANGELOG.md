@@ -4,6 +4,7 @@
 
 ### Modifié
 
+- Référentiel > Explorer : l'en-tête des tableaux EC × semestres et compétences × semestres reste visible quand la page défile ; dans « Recherche », les colonnes ont la même largeur d'un groupe à l'autre. L'annonce « Ouvrir le document » après un export s'affiche au centre de la fenêtre. La visite guidée ouvre le Référentiel directement sur « Constituer », sans passer un instant par « Explorer ».
 - Référentiel > Explorer, carte radiale : « Ajuster » montre la roue entière, avec la place des compétences éclatées et les flèches de rotation, quelle que soit la taille de la fenêtre ; dans un cadre étroit, la carte s'ouvre aussi sur la roue entière. Avant, il revenait au quart de la roue de départ.
 - Référentiel > Explorer, carte heuristique : le semestre devient la première colonne, avant la compétence (semestre, compétence, EC, UE, diplôme).
 - Référentiel > Explorer, carte heuristique : les cases de chaque colonne se rangent selon les cases auxquelles elles sont reliées, de proche en proche, pour que les liens se croisent beaucoup moins ; les semestres restent dans l'ordre chronologique.

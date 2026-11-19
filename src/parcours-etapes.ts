@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { ANGLE_BAS_DROITE, colleguesDeclares, plusProcheDeLAngle, type Avancement, type IdentifiantParcours } from "./domaine/parcours";
+import { etat, type Objet } from "./interface/etat";
 
 /**
  * Geste que l'animation suggère sur la zone éclairée : `parcourir` promène le
@@ -61,6 +62,8 @@ export interface Etape {
    * visible de chaque sélecteur (au lieu de tous les éléments de `pointe`).
    */
   haltes?: Selon<readonly string[]>;
+  /** Au clic de l'enseignant sur la zone (étape `avanceAuClic`), avant que l'application le traite. */
+  avantClic?: () => void;
   /** Après le clic de l'enseignant sur la zone (étape `avanceAuClic`), ce que la visite fait encore pour lui. */
   apresClic?: () => void;
   /** Boutons que la bulle, rangée dans un coin, doit laisser visibles (en plus de `pointe`). */
@@ -329,8 +332,10 @@ const PRISE_EN_MAIN: Parcours = {
       texte:
         "Ouvrez l'onglet « Référentiel » : il contient le référentiel de votre mention. La visite vous mène à « Constituer », " +
         "où vous le vérifiez page par page, des unités d'enseignement à la validation.",
-      // L'onglet ouvert, la visite choisit « Constituer » à la place de l'enseignant.
-      apresClic: cliquer('#refNav [data-pane="constituer"]'),
+      // L'onglet s'ouvre directement sur « Constituer » : choisi après coup, il laissait voir Explorer un instant.
+      avantClic: () => {
+        (etat.ui.ref as Objet).pane = "constituer";
+      },
       atteinte: paneReferentiel("constituer"),
     },
     {
