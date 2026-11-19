@@ -22,6 +22,7 @@ import { publierConstantes } from "../interface/constantes";
 import { publierAidesCommunes } from "../interface/aides-communes";
 import { publierCarteDonnees } from "../interface/carte-donnees";
 import { publierChaineModele } from "../interface/chaine-modele";
+import { publierChaineDessin } from "../interface/chaine-dessin";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
 import { publierEditeurEtape1 } from "../interface/editeur-etape1";
@@ -67,6 +68,7 @@ function nomsPublies(): string[] {
   publierAidesCommunes(fenetre, null);
   publierCarteDonnees(fenetre);
   publierChaineModele(fenetre);
+  publierChaineDessin(fenetre, null);
   publierDonnees(fenetre, { ecrireStockage: () => undefined, maintenant: () => 0, hasard: () => 0 });
   publierEvaluationCourante(fenetre, () => 0);
   publierEditeurEtape1(fenetre, () => new Date(0));
