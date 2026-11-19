@@ -6,7 +6,7 @@
  * survol qui éclaire ce qui est relié et codes des EC au survol d'un semestre.
  * Les colonnes changent d'ordre en glissant leur en-tête (ou au clavier,
  * flèches sur l'en-tête) ; la chaîne se montre en colonnes côte à côte ou en
- * rangées superposées (roue horizontale). Ordre et sens sont retenus dans
+ * rangées superposées (ruban horizontal pour pivot). Ordre et sens sont retenus dans
  * les préférences.
  *
  * Repris du fichier historique (décision 38) à l'identique : mêmes calculs,
@@ -244,10 +244,21 @@ function attributsEnTete(sorte: string, rang: number): string {
   return `data-rang="${String(rang)}" aria-roledescription="en-tête déplaçable" aria-description="Glisser, ou flèches gauche et droite, pour déplacer la colonne ${esc(CH_LBL[sorte])}"`;
 }
 
-/** Hauteur d'une case de la roue horizontale, et longueur de cette roue, en pixels. */
-const RANGEE_CASE = 150,
-  RANGEE_ROUE = 620,
-  RANGEE_ROUE_H = 118;
+/** Largeur d'une case des rangées superposées, en pixels. */
+const RANGEE_CASE = 150;
+
+/**
+ * Ruban du pivot des rangées superposées, en pixels : longueur, hauteur
+ * minimale, largeur de l'élément au centre et des autres, écart entre deux
+ * éléments, éléments dessinés de part et d'autre du centre.
+ */
+const RUBAN = { longueur: 860, hauteur: 112, centre: 224, element: 136, ecart: 10, deChaqueCote: 3 } as const;
+
+/** Décalage horizontal du centre de l'élément à `d` crans du centre du ruban (négatif à gauche), en pixels. */
+export function decalageRuban(d: number): number {
+  if (d === 0) return 0;
+  return Math.sign(d) * (RUBAN.centre / 2 + RUBAN.ecart + (Math.abs(d) - 1) * (RUBAN.element + RUBAN.ecart) + RUBAN.element / 2);
+}
 
 /**
  * Semestres compacts des rangées superposées, en pixels : largeur d'une
@@ -297,7 +308,7 @@ function groupeAnneeSvg(groupe: GroupeAnnee, y: number, hauteur: number): string
 /**
  * Balisage de la chaîne en rangées superposées : chaque colonne devient une
  * rangée, son en-tête au-dessus, les cases côte à côte ; la rangée
- * verrouillée porte une roue horizontale. Les cases se placent comme en
+ * verrouillée porte un ruban horizontal. Les cases se placent comme en
  * colonnes, au barycentre de leurs liens avec la rangée la plus longue ; les
  * semestres, eux, forment un bloc serré, groupé par année, centré sur la
  * moyenne de leurs liens.
@@ -306,7 +317,7 @@ function paintChainVerticale(M: ModeleChaine): string {
   const { kind, p, piv, sets } = M;
   const ordre = M.ordre;
   const NW = RANGEE_CASE,
-    WL = RANGEE_ROUE,
+    WL = RUBAN.longueur,
     PADX = 10,
     HG = 11,
     TETE = 34,
@@ -314,9 +325,9 @@ function paintChainVerticale(M: ModeleChaine): string {
   const nid = (k: string, x: Objet): string => k + ":" + String(x.id);
   const semFix = semestreFixe(M);
   const pt = chainItemText(kind, piv);
-  const cpl = pt.code ? 24 : 31,
-    fullH = wrapN(pt.label, cpl, 30).length * 17 + 12;
-  const WH = Math.max(RANGEE_ROUE_H, fullH + 46);
+  // ruban : assez haut pour l'intitulé complet de l'élément au centre (34 caractères par ligne environ)
+  const fullH = (pt.code ? 16 : 0) + wrapN(pt.label, 34, 30).length * 15 + 16;
+  const WH = Math.max(RUBAN.hauteur, fullH + 30);
   // Rangée des semestres (hors pivot) : cases compactes « Semestre n », l'année étant dite par leur groupe.
   const iSem = (ordre as string[]).indexOf("sem");
   const semCompacts = iSem !== p;
@@ -430,11 +441,13 @@ function paintChainVerticale(M: ModeleChaine): string {
       )
       .join("")}
     <div class="chpiv" style="left:${String(pivN.x)}px;top:${String(pivN.y)}px;width:${String(WL)}px">
-      <div class="wheel tall hz" id="chainWheel" tabindex="0" role="listbox" aria-label="${esc(CH_LBL[kind])}" style="height:${String(WH)}px"
+      <div class="wheel tall ruban" id="chainWheel" tabindex="0" role="listbox" aria-label="${esc(CH_LBL[kind])}" style="height:${String(WH)}px"
         title="Molette ou flèches gauche et droite pour parcourir · clic ou Entrée pour sélectionner · tape du texte pour filtrer">
         <div class="wband"></div><div class="wstage"></div>
         <div class="wfade t"></div><div class="wfade b"></div>
-        <div class="whint" hidden>molette ou flèches pour en changer</div>
+        <button type="button" class="wpas g" data-pas="-1" tabindex="-1" aria-label="Élément précédent" title="Élément précédent">‹</button>
+        <button type="button" class="wpas d" data-pas="1" tabindex="-1" aria-label="Élément suivant" title="Élément suivant">›</button>
+        <div class="whint" hidden>molette, flèches ou clic pour en changer</div>
         <div class="wq" hidden></div>
       </div>
     </div>
@@ -494,6 +507,7 @@ export function chainBind(host: HTMLElement): void {
     };
     brancherEnTete(host, b, M.ordre, verticale);
   });
+  if (verticale) montrerRuban(host);
   poserOutils(host, M.ordre, verticale);
   rendreFocusEtAnnonce(host);
   host.querySelectorAll<HTMLElement>("svg.chain .cnode").forEach((n) => {
@@ -509,6 +523,19 @@ export function chainBind(host: HTMLElement): void {
     };
   });
   chainWire(host);
+}
+
+/**
+ * Rangées superposées : la chaîne peut être plus large que la zone, qui
+ * défile alors de côté ; on la fait défiler pour que le ruban soit au
+ * milieu de la vue, sinon il pourrait être hors de vue après un redessin.
+ */
+function montrerRuban(host: HTMLElement): void {
+  const boite = host.querySelector<HTMLElement>(".chainbox.vert");
+  const ruban = boite?.querySelector<HTMLElement>(".chpiv");
+  const zone = boite?.parentElement;
+  if (!boite || !ruban || !zone) return;
+  zone.scrollLeft = Math.max(0, boite.offsetLeft + ruban.offsetLeft + ruban.offsetWidth / 2 - zone.clientWidth / 2);
 }
 
 /** Vrai juste après un glisser d'en-tête : le clic qui suit le relâchement ne verrouille pas la colonne. */
@@ -707,19 +734,18 @@ function rendreFocusEtAnnonce(host: HTMLElement): void {
   if (annonce) annoncer(host, annonce);
 }
 
-/** Réglages de la roue selon son sens : rayon, perspective, angle entre deux éléments, éléments de part et d'autre. */
-const ROUE = {
-  y: { R: 110, PRS: 700, STEP: 14, SPAN: 6 },
-  x: { R: 260, PRS: 1400, STEP: 24, SPAN: 3 },
-} as const;
+/** Réglages de la roue : rayon, perspective, angle entre deux éléments, éléments de part et d'autre. */
+const ROUE = { R: 110, PRS: 700, STEP: 14, SPAN: 6 } as const;
 
 /**
  * Roue du pivot : montre l'élément courant entier, ou, en parcours, les
  * voisins en perspective. Molette (un pas toutes les 90 ms au plus), flèches,
  * Page précédente / suivante, saisie d'un filtre, Entrée ou clic pour choisir
  * (`onCommit` reçoit l'identifiant d'un autre élément), Échap pour revenir.
- * `axe` vaut « y » (roue verticale, colonnes côte à côte) ou « x » (roue
- * horizontale, rangées superposées).
+ * `axe` vaut « y » (roue verticale, colonnes côte à côte) ou « x » (ruban
+ * horizontal, rangées superposées) : le ruban montre toujours ses voisins à
+ * plat, côte à côte, l'élément courant au centre, et ses boutons ‹ › font
+ * défiler comme les flèches ; les gestes sont les mêmes.
  */
 export function pivotWheel(el: HTMLElement, all: ElementRoue[], curId: unknown, onCommit: (id: unknown) => void, axe: "x" | "y" = "y"): void {
   const stage = el.querySelector(".wstage") as HTMLElement,
@@ -734,10 +760,32 @@ export function pivotWheel(el: HTMLElement, all: ElementRoue[], curId: unknown, 
     browsing = false;
   const home = (): number => Math.max(0, items.findIndex((c) => c.id === curId));
   idx = home();
-  const { SPAN, STEP, R, PRS } = ROUE[axe],
+  const { SPAN, STEP, R, PRS } = ROUE,
     IH = 26;
+  const etiquette = (c: ElementRoue): string => `${c.code ? `<span class="wc">${esc(c.code)}</span>` : ""}<span class="wt">${esc(c.label)}</span>`;
+  const drawRuban = (full: boolean): void => {
+    let h = "";
+    for (let d = -RUBAN.deChaqueCote; d <= RUBAN.deChaqueCote; d++) {
+      const i = idx + d;
+      if (i < 0 || i >= items.length) continue;
+      const c = items[i] as ElementRoue,
+        largeur = d ? RUBAN.element : RUBAN.centre;
+      h += `<button type="button" class="wit${d ? "" : " on"}${!d && full ? " full" : ""}${c.strong ? " b" : ""}" data-wi="${String(i)}" data-d="${String(d)}" tabindex="-1"
+        style="--c:${esc(c.col || "#9aa2ae")};left:calc(50% + ${String(decalageRuban(d) - largeur / 2)}px);width:${String(largeur)}px"
+        aria-selected="${String(!d)}">${etiquette(c)}</button>`;
+    }
+    stage.innerHTML = h;
+  };
   const draw = (): void => {
     const full = !browsing && !q && items[idx] && (items[idx] as ElementRoue).id === curId;
+    if (axe === "x") {
+      drawRuban(!!full);
+      qbox.hidden = !q && !browsing;
+      qbox.textContent = q ? "filtre : " + q + " · Entrée pour choisir" : browsing ? "clic ou Entrée pour choisir" : "";
+      const hint = el.querySelector<HTMLElement>(".whint");
+      if (hint) hint.hidden = !full;
+      return;
+    }
     el.classList.toggle("solo", !!full);
     let h = "";
     for (let d = -SPAN; d <= SPAN; d++) {
@@ -748,8 +796,8 @@ export function pivotWheel(el: HTMLElement, all: ElementRoue[], curId: unknown, 
         a = d * STEP,
         k = (PRS - R * Math.cos((a * Math.PI) / 180)) / PRS;
       h += `<button type="button" class="wit${d ? "" : " on"}${!d && full ? " full" : ""}${c.strong ? " b" : ""}" data-wi="${String(i)}" data-d="${String(d)}" tabindex="-1"
-        style="--c:${esc(c.col || "#9aa2ae")};transform:${axe === "y" ? "rotateX" : "rotateY"}(${(axe === "y" ? -a : a).toFixed(1)}deg) translateZ(${String(R)}px) scale(${k.toFixed(3)});opacity:${Math.max(0, 1 - Math.abs(d) / (SPAN + 1.1)).toFixed(2)}"
-        aria-selected="${String(!d)}">${c.code ? `<span class="wc">${esc(c.code)}</span>` : ""}<span class="wt">${esc(c.label)}</span></button>`;
+        style="--c:${esc(c.col || "#9aa2ae")};transform:rotateX(${(-a).toFixed(1)}deg) translateZ(${String(R)}px) scale(${k.toFixed(3)});opacity:${Math.max(0, 1 - Math.abs(d) / (SPAN + 1.1)).toFixed(2)}"
+        aria-selected="${String(!d)}">${etiquette(c)}</button>`;
     }
     stage.innerHTML = h;
     band.style.height = "";
@@ -821,7 +869,7 @@ export function pivotWheel(el: HTMLElement, all: ElementRoue[], curId: unknown, 
     "wheel",
     (e) => {
       e.preventDefault();
-      // roue horizontale : le défilement de côté d'un pavé tactile la fait tourner aussi
+      // ruban : le défilement de côté d'un pavé tactile le fait défiler aussi
       const delta = axe === "x" && Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       const dy = delta * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
       acc = Math.max(-120, Math.min(120, acc + dy));
@@ -901,6 +949,15 @@ export function pivotWheel(el: HTMLElement, all: ElementRoue[], curId: unknown, 
     const b = (e.target as Element).closest<HTMLElement>("[data-wi]");
     if (!b) return;
     select(+(b.dataset.wi as string));
+  });
+  // boutons ‹ › du ruban : un cran, sans prendre le focus à la roue (même raison que pour les cases)
+  el.querySelectorAll<HTMLElement>("[data-pas]").forEach((b) => {
+    b.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+    });
+    b.addEventListener("click", () => {
+      move(Number(b.dataset.pas));
+    });
   });
   if (q) refilter();
   else draw();

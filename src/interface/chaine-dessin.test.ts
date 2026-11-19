@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { CH_WH, chainResetOrder, chainSetOrder, chainSetPivot, chainSetVertical, chainSvgNode, paintChain, placerSemestresParAnnee, brancherChaineDessin, type CaseChaine } from "./chaine-dessin";
+import { CH_WH, chainResetOrder, chainSetOrder, chainSetPivot, chainSetVertical, chainSvgNode, paintChain, placerSemestresParAnnee, decalageRuban, brancherChaineDessin, type CaseChaine } from "./chaine-dessin";
 
 const { paintRef, saveData, savePrefs } = vi.hoisted(() => ({ paintRef: vi.fn(), saveData: vi.fn(), savePrefs: vi.fn() }));
 vi.mock("./referentiel", () => ({ peindreReferentiel: paintRef }));
@@ -147,11 +147,13 @@ describe("paintChain dans un autre ordre et en rangées", () => {
     expect(balisage).toContain(`class="chlive" role="status" aria-live="polite"`);
   });
 
-  it("passe en rangées superposées, roue horizontale, quand c'est demandé", () => {
+  it("passe en rangées superposées, avec un ruban pour pivot, quand c'est demandé", () => {
     etat.preferences = { chaineVerticale: true };
     const balisage = paintChain();
     expect(balisage).toContain(`class="chainbox vert"`);
-    expect(balisage).toContain(`class="wheel tall hz"`);
+    expect(balisage).toContain(`class="wheel tall ruban"`);
+    expect(balisage).toContain(`data-pas="-1"`);
+    expect(balisage).toContain(`data-pas="1"`);
     expect(balisage.match(/<rect class="ccol/g)).toHaveLength(5);
     expect(balisage).toContain(`data-link="comp:c1|ec:e1"`);
     expect(balisage).toContain("flèches haut et bas");
@@ -236,5 +238,15 @@ describe("placerSemestresParAnnee", () => {
 
   it("rend une largeur nulle et aucun groupe sans semestre", () => {
     expect(placerSemestresParAnnee([], 10)).toEqual({ groupes: [], largeur: 0 });
+  });
+});
+
+describe("decalageRuban", () => {
+  it("met l'élément courant au centre et ses voisins de part et d'autre, à pas réguliers", () => {
+    expect(decalageRuban(0)).toBe(0);
+    expect(decalageRuban(1)).toBe(190);
+    expect(decalageRuban(-1)).toBe(-190);
+    expect(decalageRuban(2) - decalageRuban(1)).toBe(146);
+    expect(decalageRuban(-3)).toBe(-482);
   });
 });
