@@ -74,9 +74,9 @@ const GABARIT_BONNES_PRATIQUES = `
         <li>macOS&nbsp;: FileVault s'active dans Réglages Système &gt; Confidentialité et sécurité.</li>
         <li>Linux&nbsp;: LUKS se choisit à l'installation du système («&nbsp;chiffrer le disque&nbsp;»).</li>
       </ul></li>
-    <li><b>Des sauvegardes.</b> DNMAX garde chaque jour une copie chiffrée sur cet ordinateur ; de temps en temps,
+    <li><b>Des sauvegardes.</b> DNMAX fait chaque jour d'utilisation une copie chiffrée sur cet ordinateur et en garde une par semaine pendant trois mois, puis une par mois pendant un an ; de temps en temps,
         emportez-en une sur une clé ou un disque externe avec «&nbsp;Échanger… &gt; Changer d'ordinateur&nbsp;».</li>
-    <li><b>Les exports Word et Excel ne sont pas chiffrés.</b> Rangez-les à l'abri et supprimez ceux qui
+    <li><b>Les exports Word, Excel et OpenDocument ne sont pas chiffrés.</b> Rangez-les à l'abri et supprimez ceux qui
         contiennent des étudiants dès qu'ils ne servent plus.</li>
     <li><b>Le code de secours</b>, affiché à l'étape suivante, se garde sur papier, hors de l'ordinateur.</li>
   </ul>

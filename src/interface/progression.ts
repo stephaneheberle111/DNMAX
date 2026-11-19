@@ -98,7 +98,7 @@ export function peindreProgression(): void {
       creer(
         "div",
         "empty",
-        `Aucune promotion en cours pour ${(meta.diplome as string) || "cette mention"} en ${scolaire}.\n    Crée-la dans Mon établissement > Promotions.`,
+        `Aucune promotion en cours pour ${(meta.diplome as string) || "cette mention"} en ${scolaire}.\n    Créez-la dans Mon établissement > Promotions.`,
       ),
     );
     hote.replaceChildren(panneau);

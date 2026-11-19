@@ -27,7 +27,7 @@ import {
  * et la réception suit le même circuit.
  */
 
-const RECOURS_FICHIER = "L'échange par fichier reste disponible : « Échanger… » > « Envoyer » ou « Recevoir ».";
+const RECOURS_FICHIER = "L'échange par fichier reste disponible : « Échanger… > Envoyer » ou « Échanger… > Recevoir ».";
 
 const MEME_RESEAU =
   "Vos deux ordinateurs doivent être sur le même réseau (même wifi ou même réseau local) : " +
@@ -143,7 +143,7 @@ export function montrerEnvoiDirect(texte: string, protege: boolean): void {
       const consigne = creer(
         "p",
         "",
-        "Il le saisit dans « Échanger… » > « Échange en direct » > « Recevoir en direct », sur le même réseau (même wifi). " +
+        "Il le saisit dans « Échanger… > Échange en direct > Recevoir en direct », sur le même réseau (même wifi). " +
           `Le code est valable ${decrireValidite(etape.validiteSecondes)}, pour un seul essai. Gardez cette fenêtre ouverte.`,
       );
       const motDePasse = creer(

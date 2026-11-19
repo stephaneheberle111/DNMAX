@@ -205,8 +205,8 @@ jobs:
           find publication -mindepth 1 -type d -empty -delete
           node outils/ecrire-manifeste.ts publication "$VERSION" "https://github.com/${GITHUB_REPOSITORY}/releases/download/${ETIQUETTE}" "$SYSTEMES"
       - name: Copies à nom fixe pour les liens de téléchargement du site
-        # Le site pointe sur « releases/latest/download/<nom> » : il lui faut des noms
-        # qui ne changent pas d'une version à l'autre. Fait après le manifeste, qui
+        # Le site (AppImage) et l'atelier « Téléchargements » (autres installeurs) prennent
+        # « releases/latest/download/<nom> » : il leur faut des noms qui ne changent pas d'une version à l'autre. Fait après le manifeste, qui
         # doit continuer à désigner les fichiers signés sous leur nom d'origine.
         run: |
           cp publication/*-setup.exe publication/DNMAX-windows.exe

@@ -322,7 +322,7 @@ const PRISE_EN_MAIN: Parcours = {
       texte:
         "Votre espace est prêt. La visite vous fait explorer l'application en six temps : le référentiel, vos promotions, vos collègues, " +
         "la répartition de service, une première évaluation, puis vos préférences et les modules. Ce qui est déjà fait est coché au passage. " +
-        "Rien n'y est obligatoire : passez une étape avec « Suivant », ou toute la visite, et relancez-la depuis « Paramètres », panneau « Visites guidées ».",
+        "Rien n'y est obligatoire : passez une étape avec « Suivant », ou toute la visite, et relancez-la depuis « Paramètres > Visites guidées ».",
     },
     {
       ...ALLER_REFERENTIEL,
@@ -482,7 +482,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "5. L'évaluation",
       texte:
-        "Donnez un intitulé et une consigne, cochez la ou les promotions concernées, les livrables attendus et au moins un EC (ou une UE). Tout cela est nécessaire pour enregistrer. " +
+        "Donnez un intitulé et une consigne, cochez la ou les promotions concernées, les livrables attendus et au moins un EC (ou une UE). Pour enregistrer, il faut un intitulé, une consigne, une promotion et au moins un EC, puis au moins une compétence à l'étape 2. " +
         "Les UE, EC et compétences proposés sont ceux du référentiel de la promotion cochée ; s'il n'est pas encore validé, DNMAX vous le rappelle, et vous pouvez continuer. " +
         "Passez ensuite à l'étape 2, « Compétences ».",
       cibles: ["#step1"],
@@ -591,7 +591,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "C'est prêt",
       texte:
-        "Vous avez fait le tour de l'essentiel. Le module Étudiants et le module Niveaux d'acquisition ont chacun leur visite, et celle-ci se relance depuis « Paramètres », panneau « Visites guidées ».",
+        "Vous avez fait le tour de l'essentiel. Le module Étudiants et le module Niveaux d'acquisition ont chacun leur visite, et celle-ci se relance depuis « Paramètres > Visites guidées ».",
     },
   ],
 };
@@ -650,7 +650,7 @@ const MODULE_ELEVES: Parcours = {
     {
       titre: "Données des étudiants",
       texte:
-        "Dans « Paramètres », le panneau « Données des étudiants » répond aux demandes d'accès ou d'effacement et propose d'anonymiser les promotions sorties depuis plus d'un an.",
+        "Le panneau « Paramètres > Données des étudiants » répond aux demandes d'accès ou d'effacement et propose d'anonymiser ou d'effacer les promotions dont la durée de conservation, fixée dans Mon établissement > Établissement, est dépassée.",
     },
   ],
 };

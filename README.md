@@ -4,7 +4,7 @@ DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs �
 
 C'est une application de bureau autonome pour Windows, Linux et macOS : pas de serveur central, pas de compte, les données restent sur l'ordinateur de l'enseignant.
 
-> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs étudiants. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Les mises à jour leur sont proposées quand ils en lancent la recherche : clic sur la version en bas de la fenêtre, ou Paramètres > Mises à jour (voir « Publier une version »).
+> **État** : utilisable pour des essais. Les enseignants peuvent s'échanger des évaluations, des référentiels et, dans un fichier chiffré, les résultats de leurs étudiants. Ils peuvent aussi emporter toutes leurs données vers un autre ordinateur. Les mises à jour leur sont proposées quand ils en lancent la recherche (clic sur la version en bas de la fenêtre, ou Paramètres > Mises à jour), ou chaque jour à l'ouverture s'ils ont activé la recherche automatique (voir « Publier une version »).
 
 ## Où sont les données
 
@@ -95,7 +95,7 @@ Pour obtenir les installeurs des trois systèmes sans les construire soi-même :
 1. Sur une branche : monter le numéro de version dans `package.json` **et** `src-tauri/Cargo.toml` (puis `npm install` et `cargo check` pour mettre à jour les fichiers de verrouillage), et dater la section du `CHANGELOG.md`. Fusionner.
 2. Sur GitHub, onglet Actions > atelier « Publication » > « Run workflow » sur la branche `main`.
 3. L'atelier construit, signe et crée un **brouillon** de version (onglet Releases). Essayer les installeurs.
-4. Publier le brouillon : GitHub pose l'étiquette `v…`, l'atelier « Téléchargements » dépose installeurs et manifeste (`latest.json`) sur dnmax.fr, et les postes déjà installés la trouveront en lançant une recherche : clic sur la version en bas de la fenêtre, ou Paramètres > Mises à jour.
+4. Publier le brouillon : GitHub pose l'étiquette `v…`, l'atelier « Téléchargements » dépose installeurs et manifeste (`latest.json`) sur dnmax.fr, et les postes déjà installés la trouveront en lançant une recherche (clic sur la version en bas de la fenêtre, ou Paramètres > Mises à jour), ou à l'ouverture suivante si la recherche automatique est activée.
 
 Si la construction macOS est annulée faute de machine disponible chez GitHub, relancer les jobs en échec depuis la page de l'exécution (« Re-run failed jobs »). Si les machines macOS manquent durablement :
 
@@ -122,13 +122,13 @@ Mise en place, une seule fois (Settings > Secrets and variables > Actions) :
 
 Pour obtenir la clé du serveur : renseigner d'abord `OVH_SITE_SERVEUR`, lancer l'atelier « Site » avec l'action **afficher-cle-serveur**, puis copier la ligne affichée dans le résumé de l'exécution dans le secret `OVH_SITE_CLE_HOTE`. La lecture se fait depuis les machines de GitHub, ce qui fonctionne même si le port 22 est fermé sur le réseau de l'enseignant.
 
-L'atelier « Téléchargements » (`.github/workflows/telechargements.yml`) dépose dans `www/telechargements/`, à chaque publication de version (ou à la demande), les installeurs Windows, macOS et `.deb` de la dernière version publiée ; l'atelier « Site » ne touche pas à ce dossier. L'AppImage et les fichiers de mise à jour restent sur GitHub.
+L'atelier « Téléchargements » (`.github/workflows/telechargements.yml`) dépose dans `www/telechargements/`, à chaque publication de version (ou à la demande), les installeurs Windows, macOS et `.deb` de la dernière version publiée ; l'atelier « Site » ne touche pas à ce dossier. L'AppImage et les archives de mise à jour macOS et Linux restent sur GitHub ; le manifeste `latest.json` et l'installeur Windows, qui sert aussi de mise à jour, sont servis par dnmax.fr.
 
 **À la main, en secours** : client FTP (FileZilla, par exemple) en **« Connexion FTP explicite sur TLS »**, jamais en FTP clair ; copier le contenu de `site/`, y compris le fichier caché `.htaccess`, dans `www`. Vérifier ensuite <https://dnmax.fr>, puis <http://dnmax.fr> et <https://www.dnmax.fr>, qui doivent rediriger vers la première.
 
 Le formulaire « Idées et bugs » de la page ouvre, au choix, un ticket prérempli sur GitHub ou un message prérempli adressé à contact@dnmax.fr.
 
-Les boutons de téléchargement pointent sur des fichiers à nom fixe de la dernière version publiée (`DNMAX-windows.exe`, `DNMAX-macos.dmg`, `DNMAX-linux.AppImage`, `DNMAX-linux.deb`), que l'atelier « Publication » joint à chaque version.
+Les boutons Windows, macOS et `.deb` pointent sur `telechargements/DNMAX-windows.exe`, `DNMAX-macos.dmg` et `DNMAX-linux.deb`, déposés sur dnmax.fr par l'atelier « Téléchargements » ; le bouton Linux pointe sur `releases/latest/download/DNMAX-linux.AppImage` sur GitHub. L'atelier « Publication » joint ces quatre copies à nom fixe à chaque version.
 
 ## Organisation du code
 

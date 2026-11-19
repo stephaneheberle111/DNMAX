@@ -90,7 +90,7 @@ export function peindreFormulation(contexte: ContexteFormulation): void {
     conseil.textContent =
       contexte.selection().length > 0
         ? `${String(contexte.selection().length)} ligne(s) cochée(s)`
-        : "Glissez-déposez, ou cochez deux lignes et cliquez « Lier ».";
+        : "Glissez-déposez, ou cochez deux lignes et cliquez « Lier les lignes cochées ».";
   }
   if (hote === null) return;
   if (lignes.length === 0) {
