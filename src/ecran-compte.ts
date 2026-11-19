@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: CECILL-2.1
 import "./ecran-compte.css";
-import { longueurMinimaleExigee, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
+import { refusChangementMotDePasse } from "./domaine/activation-eleves";
+import { motsInterditsDe } from "./domaine/robustesse-mot-de-passe";
+import { longueurMinimaleExigee } from "./domaine/saisie-coffre";
 import { moduleElevesActif } from "./domaine/securite";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
@@ -65,14 +67,11 @@ function montrerMotDePasse(acces: AccesDonnees): void {
   const formulaire = creer("form", "compte-formulaire");
   formulaire.addEventListener("submit", (evenement) => {
     evenement.preventDefault();
-    const defaut = verifierNouveauMotDePasse(nouveau.champ.value, confirmation.champ.value, longueurMinimale);
-    if (defaut !== null) {
-      dire(
-        defaut === "trop-court"
-          ? `Le nouveau mot de passe doit compter au moins ${String(longueurMinimale)} caractères.`
-          : "Les deux saisies du nouveau mot de passe ne sont pas identiques.",
-        true,
-      );
+    // Relu à l'envoi : le module a pu être activé ou le nom corrigé depuis l'ouverture de la fenêtre.
+    const entrees = acces.lireEntrees();
+    const refus = refusChangementMotDePasse(nouveau.champ.value, confirmation.champ.value, moduleElevesActif(entrees), motsInterditsDe(entrees));
+    if (refus !== null) {
+      dire(refus, true);
       return;
     }
     changer.disabled = true;
