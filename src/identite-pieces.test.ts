@@ -40,6 +40,16 @@ describe("logotype en pièces", () => {
   });
 });
 
+describe("logotype du site", () => {
+  const SITE = readFileSync(new URL("../site/index.html", import.meta.url), "utf8");
+
+  it("reprend les tracés du module dans l'en-tête et dans la reconstitution de l'application", () => {
+    expect(SITE).toContain(svgLogotype("logo-site"));
+    expect(SITE).toContain(svgLogotype("logo-app"));
+    expect(SITE).not.toContain("signe-plein");
+  });
+});
+
 describe("logotype de la barre de l'application", () => {
   it("reprend les tracés du module, sans l'ancien nom « DNMA » suivi du X", () => {
     expect(INDEX).toContain(svgLogotype("logotype"));

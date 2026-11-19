@@ -19,6 +19,9 @@
   --ink:#1C1A15; --ink-2:#5A5345; --line:#D6CDB9;
   --accent:#10555F; --accent-ink:#FFFFFF; --accent-soft:#DCEBEA;
   --signal:#8A4A0E; --signal-ink:#FFFFFF;
+  --piece-design:#10555F; --piece-art:#C27A2C;
+  --gaufre-ombre-large:rgba(58,44,22,.122); --gaufre-lumiere-large:rgba(255,255,255,.405);
+  --gaufre-ombre:rgba(58,44,22,.27); --gaufre-lumiere:rgba(255,255,255,.9);
   --bug:#A3352B; --ok:#1E7A4F; --focus:#2A7F88;
   --l0:#ECE5D6; --l1:#A8D2D4; --l2:#62A9AE; --l3:#2A7F88; --l4:#10555F;
   --display:"Bricolage Grotesque","Helvetica Neue",Arial,system-ui,sans-serif;
@@ -34,7 +37,7 @@
     --paper:#1A1A18; --surface:#24221E; --sunk:#2B2924;
     --ink:#EEE8DB; --ink-2:#ABA290; --line:#3A362E;
     --accent:#62A9AE; --accent-ink:#10181A; --accent-soft:#1D3537;
-    --signal:#D9A066; --signal-ink:#1B1A17;
+    --signal:#D9A066; --signal-ink:#1B1A17; --piece-design:#62A9AE; --piece-art:#D9A066; --gaufre-ombre-large:rgba(0,0,0,.25); --gaufre-lumiere-large:rgba(255,255,255,.03); --gaufre-ombre:rgba(0,0,0,.5); --gaufre-lumiere:rgba(255,255,255,.08);
     --bug:#E8795F; --ok:#5ACB92; --focus:#62A9AE;
     --l0:#2B2924;
     color-scheme:dark;
@@ -44,7 +47,7 @@
   --paper:#1A1A18; --surface:#24221E; --sunk:#2B2924;
   --ink:#EEE8DB; --ink-2:#ABA290; --line:#3A362E;
   --accent:#62A9AE; --accent-ink:#10181A; --accent-soft:#1D3537;
-  --signal:#D9A066; --signal-ink:#1B1A17;
+  --signal:#D9A066; --signal-ink:#1B1A17; --piece-design:#62A9AE; --piece-art:#D9A066; --gaufre-ombre-large:rgba(0,0,0,.25); --gaufre-lumiere-large:rgba(255,255,255,.03); --gaufre-ombre:rgba(0,0,0,.5); --gaufre-lumiere:rgba(255,255,255,.08);
   --bug:#E8795F; --ok:#5ACB92; --focus:#62A9AE;
   --l0:#2B2924;
   color-scheme:dark;
@@ -63,11 +66,12 @@ a{color:var(--accent);text-underline-offset:3px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:29;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 header.top .wrap{display:flex;align-items:center;gap:24px;height:64px}
-/* Le nom comme dans l'en-tête de l'application : « DNMA » suivi du signe X, délié à l'encre et plein pétrole. */
-.logo{display:flex;align-items:baseline;gap:1px;text-decoration:none;color:var(--ink);font:800 26px/1 var(--display);letter-spacing:-.02em}
-.logo .signe{width:.885em;height:.885em;flex-shrink:0;margin-bottom:-.115em}
-.logo .signe-delie{fill:none;stroke:var(--ink);stroke-width:4.6;stroke-linecap:round}
-.logo .signe-plein{fill:var(--accent)}
+/* Le logotype en pièces, comme dans l'en-tête de l'application : pétrole pour le design, ambre pour les métiers d'art
+   (nuances claires en thème sombre). */
+.logo{display:flex;align-items:center;text-decoration:none}
+.logo svg{display:block;width:117px;height:26px}
+.piece-design{fill:var(--piece-design)}
+.piece-art{fill:var(--piece-art)}
 nav.main{display:flex;gap:4px;margin-left:auto;min-width:0;overflow-x:auto;scrollbar-width:none}
 /* Téléphone : le menu passe sous le logo, et ses liens vont à la ligne plutôt que de sortir de l'écran */
 @media (max-width:640px){
@@ -101,11 +105,21 @@ nav.main a.cta{background:var(--accent);color:var(--accent-ink)}
 .hero-roue svg{width:100%;height:100%}
 .hero-roue .tourne{transform-origin:380px 380px;animation:tourne 160s linear infinite}
 @keyframes tourne{to{transform:rotate(360deg)}}
-.defiler{position:absolute;left:50%;bottom:22px;z-index:2;transform:translateX(-50%);background:none;border:0;color:var(--ink-2);font:500 14px/1.2 var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+/* Bandeau gaufré, comme au bas des pages de l'application : le nom du diplôme écrit en pièces, à 30 px du bas,
+   ombres et lumières décalées puis texte à la couleur du papier. Trop petit pour se lire sur un téléphone : masqué. */
+.hero{padding-bottom:116px}
+.bandeau-gaufre{position:absolute;left:50%;bottom:30px;z-index:1;width:min(1200px,100%);height:auto;aspect-ratio:1200/16;transform:translateX(-50%);overflow:visible;pointer-events:none}
+.bandeau-gaufre .gaufre-ombre-large{fill:var(--gaufre-ombre-large)}
+.bandeau-gaufre .gaufre-lumiere-large{fill:var(--gaufre-lumiere-large)}
+.bandeau-gaufre .gaufre-ombre{fill:var(--gaufre-ombre)}
+.bandeau-gaufre .gaufre-lumiere{fill:var(--gaufre-lumiere)}
+.bandeau-gaufre .gaufre-fond{fill:var(--paper)}
+@media (max-width:640px){.bandeau-gaufre{display:none}}
+.defiler{position:absolute;left:50%;bottom:62px;z-index:2;transform:translateX(-50%);background:none;border:0;color:var(--ink-2);font:500 14px/1.2 var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
 .defiler svg{width:18px;height:18px;animation:respire 2.4s ease-in-out infinite}
 @keyframes respire{50%{transform:translateY(5px)}}
 @media (max-width:900px){
-  .hero{min-height:auto;padding:48px 0 96px}
+  .hero{min-height:auto;padding:48px 0 130px}
   .hero-roue{right:-45vw;width:110vw;opacity:.28}
 }
 
@@ -152,7 +166,9 @@ nav.main a.cta{background:var(--accent);color:var(--accent-ink)}
 .chrome span{margin:0 auto;transform:translateX(-1.4em)}
 /* Barre du haut : la même que celle de l’application (onglets groupés, « Échanger… » et « Mon compte » à droite). */
 .onglets{display:flex;align-items:center;gap:.55em;padding:.45em .8em;background:var(--a-surface);border-bottom:1px solid var(--a-line);font-size:.8em;transition:opacity .4s}
-.onglets b{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.15em;margin-right:.35em}
+.onglets .logo-app{display:block;flex:none;width:4.7em;height:1.05em;margin-right:.35em}
+.app .piece-design{fill:#10555F}
+.app .piece-art{fill:#C27A2C}
 .ong-groupe{display:flex;gap:.15em;background:var(--a-paper);border:1px solid var(--a-line);border-radius:.45em;padding:.15em}
 .onglet{padding:.4em .62em;border-radius:.32em;color:var(--a-muted);white-space:nowrap;transition:background .3s,color .3s}
 .onglet.on{background:var(--a-surface);color:var(--a-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
@@ -562,7 +578,7 @@ footer a{color:var(--ink-2)}
 <header class="top">
   <div class="wrap">
     <a class="logo" href="#accueil" aria-label="DNMAX, accueil">
-      <b aria-hidden="true">DNMA</b><svg class="signe" viewBox="0 0 100 100" aria-hidden="true"><path class="signe-delie" d="M13 87 42.1 57.9M64.5 35.5 87 13M8 82l10 10M82 8l10 10"/><path class="signe-plein" d="M15 26.5 42.5 13C59.5 33 72.5 55.5 81 82.5L74 86C56.5 66.5 38.5 45.5 15 26.5Z"/></svg>
+      <svg class="logo-site" viewBox="0 0 448 100" role="img" aria-label="DNMAX"><g transform="translate(0.00 0)"><path d="M10 10 H34 V90 H10 Z" class="piece-design"/><path d="M38 10 A40 40 0 0 1 38 90 Z" class="piece-art"/></g><g transform="translate(80.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 18.00 L38.00 42.00 L86.00 90.00 L86.00 66.00 Z" class="piece-art"/><path d="M62.00 10.00 L86.00 10.00 L86.00 60.34 L62.00 36.34 Z" class="piece-design"/></g><g transform="translate(168.00 0)"><path d="M10.00 10.00 L34.00 34.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M15.66 10.00 L100.34 10.00 L58.00 52.34 Z" class="piece-art"/><path d="M106.00 10.00 L106.00 90.00 L82.00 90.00 L82.00 34.00 Z" class="piece-design"/></g><g transform="translate(276.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 10.00 L38.00 34.00 L94.00 90.00 L94.00 66.00 Z" class="piece-art"/><path d="M38.00 62.00 L60.34 62.00 L72.34 74.00 L38.00 74.00 Z" class="piece-design"/></g><g transform="translate(372.00 0)"><path d="M10.00 10.00 L10.00 34.00 L66.00 90.00 L66.00 66.00 Z" class="piece-art"/><path d="M10.00 66.00 L10.00 90.00 L35.17 64.83 L23.17 52.83 Z M66.00 34.00 L66.00 10.00 L40.83 35.17 L52.83 47.17 Z" class="piece-design"/></g></svg>
     </a>
     <nav class="main" aria-label="Pages">
       <a href="#accueil" data-lien="accueil">Présentation</a>
@@ -589,6 +605,14 @@ footer a{color:var(--ink-2)}
         <p class="meta">Windows, macOS et Linux · Logiciel libre</p>
       </div>
     </div>
+    <svg class="bandeau-gaufre" viewBox="0 0 1200 16" aria-hidden="true" focusable="false">
+      <defs><g id="bandeau-texte" transform="translate(0 -1.50)"><path d="M10 10 H34 V90 H10 Z" transform="translate(58.86 2.00) scale(0.1500)"/><path d="M38 10 A40 40 0 0 1 38 90 Z" transform="translate(58.86 2.00) scale(0.1500)"/><path d="M38 10 H62 V48 H38 Z" transform="translate(78.31 2.00) scale(0.1500)"/><path d="M38 52 H62 V90 H38 Z" transform="translate(78.31 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(99.56 2.00) scale(0.1500)"/><path d="M38 10 H62 A24 24 0 0 1 62 58 H38 Z" transform="translate(99.56 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(125.01 2.00) scale(0.1500)"/><path d="M38 72 H84 V90 H38 Z" transform="translate(125.01 2.00) scale(0.1500)"/><path d="M48 10 A40 40 0 0 0 48 90 Z" transform="translate(150.46 2.00) scale(0.1500)"/><path d="M52 10 A40 40 0 0 1 52 90 Z" transform="translate(150.46 2.00) scale(0.1500)"/><path d="M36 3 L50 -10 L64 3 Z" transform="translate(150.46 2.00) scale(0.1500)"/><path d="M10.00 10.00 L34.00 34.00 L34.00 90.00 L10.00 90.00 Z" transform="translate(175.91 2.00) scale(0.1500)"/><path d="M15.66 10.00 L100.34 10.00 L58.00 52.34 Z" transform="translate(175.91 2.00) scale(0.1500)"/><path d="M106.00 10.00 L106.00 90.00 L82.00 90.00 L82.00 34.00 Z" transform="translate(175.91 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(203.76 2.00) scale(0.1500)"/><path d="M38 10 H90 V28 H38 Z M38 41 H78 V59 H38 Z M38 72 H90 V90 H38 Z" transform="translate(203.76 2.00) scale(0.1500)"/><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" transform="translate(246.87 2.00) scale(0.1500)"/><path d="M38.00 18.00 L38.00 42.00 L86.00 90.00 L86.00 66.00 Z" transform="translate(246.87 2.00) scale(0.1500)"/><path d="M62.00 10.00 L86.00 10.00 L86.00 60.34 L62.00 36.34 Z" transform="translate(246.87 2.00) scale(0.1500)"/><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" transform="translate(271.72 2.00) scale(0.1500)"/><path d="M38.00 10.00 L38.00 34.00 L94.00 90.00 L94.00 66.00 Z" transform="translate(271.72 2.00) scale(0.1500)"/><path d="M38.00 62.00 L60.34 62.00 L72.34 74.00 L38.00 74.00 Z" transform="translate(271.72 2.00) scale(0.1500)"/><path d="M10 10 H90 V28 H10 Z" transform="translate(297.77 2.00) scale(0.1500)"/><path d="M38 32 H62 V90 H38 Z" transform="translate(297.77 2.00) scale(0.1500)"/><path d="M38 10 H62 V48 H38 Z" transform="translate(319.02 2.00) scale(0.1500)"/><path d="M38 52 H62 V90 H38 Z" transform="translate(319.02 2.00) scale(0.1500)"/><path d="M48 10 A40 40 0 0 0 48 90 Z" transform="translate(340.27 2.00) scale(0.1500)"/><path d="M52 10 A40 40 0 0 1 52 90 Z" transform="translate(340.27 2.00) scale(0.1500)"/><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" transform="translate(365.72 2.00) scale(0.1500)"/><path d="M38.00 18.00 L38.00 42.00 L86.00 90.00 L86.00 66.00 Z" transform="translate(365.72 2.00) scale(0.1500)"/><path d="M62.00 10.00 L86.00 10.00 L86.00 60.34 L62.00 36.34 Z" transform="translate(365.72 2.00) scale(0.1500)"/><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" transform="translate(390.57 2.00) scale(0.1500)"/><path d="M38.00 10.00 L38.00 34.00 L94.00 90.00 L94.00 66.00 Z" transform="translate(390.57 2.00) scale(0.1500)"/><path d="M38.00 62.00 L60.34 62.00 L72.34 74.00 L38.00 74.00 Z" transform="translate(390.57 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(416.62 2.00) scale(0.1500)"/><path d="M38 72 H84 V90 H38 Z" transform="translate(416.62 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(459.73 2.00) scale(0.1500)"/><path d="M38 10 A40 40 0 0 1 38 90 Z" transform="translate(459.73 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(483.38 2.00) scale(0.1500)"/><path d="M38 10 H90 V28 H38 Z M38 41 H78 V59 H38 Z M38 72 H90 V90 H38 Z" transform="translate(483.38 2.00) scale(0.1500)"/><path d="M90 10 H50 A20 20 0 0 0 50 50 Z" transform="translate(508.83 2.00) scale(0.1500)"/><path d="M10 90 H50 A20 20 0 0 0 50 50 Z" transform="translate(508.83 2.00) scale(0.1500)"/><path d="M10.00 10.00 L34.00 34.00 L34.00 90.00 L10.00 90.00 Z" transform="translate(551.94 2.00) scale(0.1500)"/><path d="M15.66 10.00 L100.34 10.00 L58.00 52.34 Z" transform="translate(551.94 2.00) scale(0.1500)"/><path d="M106.00 10.00 L106.00 90.00 L82.00 90.00 L82.00 34.00 Z" transform="translate(551.94 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(579.79 2.00) scale(0.1500)"/><path d="M38 10 H90 V28 H38 Z M38 41 H78 V59 H38 Z M38 72 H90 V90 H38 Z" transform="translate(579.79 2.00) scale(0.1500)"/><path d="M44 -10 H66 L56 3 H34 Z" transform="translate(579.79 2.00) scale(0.1500)"/><path d="M10 10 H90 V28 H10 Z" transform="translate(605.24 2.00) scale(0.1500)"/><path d="M38 32 H62 V90 H38 Z" transform="translate(605.24 2.00) scale(0.1500)"/><path d="M38 10 H62 V48 H38 Z" transform="translate(626.49 2.00) scale(0.1500)"/><path d="M38 52 H62 V90 H38 Z" transform="translate(626.49 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(647.74 2.00) scale(0.1500)"/><path d="M38 10 H90 V28 H38 Z M38 41 H78 V59 H38 Z M38 72 H90 V90 H38 Z" transform="translate(647.74 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(673.19 2.00) scale(0.1500)"/><path d="M38 10 H62 A22 22 0 0 1 62 54 H38 Z M38 58 H52 L84 90 H60 L38 68 Z" transform="translate(673.19 2.00) scale(0.1500)"/><path d="M90 10 H50 A20 20 0 0 0 50 50 Z" transform="translate(698.64 2.00) scale(0.1500)"/><path d="M10 90 H50 A20 20 0 0 0 50 50 Z" transform="translate(698.64 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(741.75 2.00) scale(0.1500)"/><path d="M38 10 A40 40 0 0 1 38 90 Z" transform="translate(741.75 2.00) scale(0.1500)"/><path d="M10 10 H24 L16 34 H10 Z" transform="translate(765.40 2.00) scale(0.1500)"/><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" transform="translate(779.75 2.00) scale(0.1500)"/><path d="M38.00 10.00 L38.00 34.00 L94.00 90.00 L94.00 66.00 Z" transform="translate(779.75 2.00) scale(0.1500)"/><path d="M38.00 62.00 L60.34 62.00 L72.34 74.00 L38.00 74.00 Z" transform="translate(779.75 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(805.80 2.00) scale(0.1500)"/><path d="M38 10 H62 A22 22 0 0 1 62 54 H38 Z M38 58 H52 L84 90 H60 L38 68 Z" transform="translate(805.80 2.00) scale(0.1500)"/><path d="M10 10 H90 V28 H10 Z" transform="translate(831.25 2.00) scale(0.1500)"/><path d="M38 32 H62 V90 H38 Z" transform="translate(831.25 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(874.37 2.00) scale(0.1500)"/><path d="M38 10 H90 V28 H38 Z M38 41 H78 V59 H38 Z M38 72 H90 V90 H38 Z" transform="translate(874.37 2.00) scale(0.1500)"/><path d="M10 10 H90 V28 H10 Z" transform="translate(899.82 2.00) scale(0.1500)"/><path d="M38 32 H62 V90 H38 Z" transform="translate(899.82 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(942.93 2.00) scale(0.1500)"/><path d="M38 10 A40 40 0 0 1 38 90 Z" transform="translate(942.93 2.00) scale(0.1500)"/><path d="M10 10 H48 V90 A38 38 0 0 1 10 52 Z" transform="translate(966.58 2.00) scale(0.1500)"/><path d="M90 10 H52 V90 A38 38 0 0 0 90 52 Z" transform="translate(966.58 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(1009.69 2.00) scale(0.1500)"/><path d="M38 10 A40 40 0 0 1 38 90 Z" transform="translate(1009.69 2.00) scale(0.1500)"/><path d="M10 10 H34 V90 H10 Z" transform="translate(1033.34 2.00) scale(0.1500)"/><path d="M38 10 H90 V28 H38 Z M38 41 H78 V59 H38 Z M38 72 H90 V90 H38 Z" transform="translate(1033.34 2.00) scale(0.1500)"/><path d="M90 10 H50 A20 20 0 0 0 50 50 Z" transform="translate(1058.79 2.00) scale(0.1500)"/><path d="M10 90 H50 A20 20 0 0 0 50 50 Z" transform="translate(1058.79 2.00) scale(0.1500)"/><path d="M38 10 H62 V48 H38 Z" transform="translate(1080.04 2.00) scale(0.1500)"/><path d="M38 52 H62 V90 H38 Z" transform="translate(1080.04 2.00) scale(0.1500)"/><path d="M50 10 A40 40 0 0 0 50 90 Z" transform="translate(1101.28 2.00) scale(0.1500)"/><path d="M54 10 H88 V32 H54 Z M54 50 H88 V90 H54 Z" transform="translate(1101.28 2.00) scale(0.1500)"/><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" transform="translate(1126.74 2.00) scale(0.1500)"/><path d="M38.00 18.00 L38.00 42.00 L86.00 90.00 L86.00 66.00 Z" transform="translate(1126.74 2.00) scale(0.1500)"/><path d="M62.00 10.00 L86.00 10.00 L86.00 60.34 L62.00 36.34 Z" transform="translate(1126.74 2.00) scale(0.1500)"/></g></defs>
+      <use href="#bandeau-texte" class="gaufre-ombre-large" transform="translate(-0.45 -1.00)"/>
+      <use href="#bandeau-texte" class="gaufre-lumiere-large" transform="translate(0.45 1.00)"/>
+      <use href="#bandeau-texte" class="gaufre-ombre" transform="translate(-0.23 -0.50)"/>
+      <use href="#bandeau-texte" class="gaufre-lumiere" transform="translate(0.23 0.50)"/>
+      <use href="#bandeau-texte" class="gaufre-fond"/>
+    </svg>
     <button class="defiler" type="button" id="defiler" aria-label="Commencer la visite">Faites défiler
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
   </section>
@@ -661,7 +685,7 @@ footer a{color:var(--ink-2)}
             <div class="app-fs">
               <div class="chrome" aria-hidden="true"><i></i><i></i><i></i><span>DNMAX</span></div>
               <div class="onglets" aria-hidden="true">
-                <b>DNMAX</b>
+                <svg class="logo-app" viewBox="0 0 448 100" role="img" aria-label="DNMAX"><g transform="translate(0.00 0)"><path d="M10 10 H34 V90 H10 Z" class="piece-design"/><path d="M38 10 A40 40 0 0 1 38 90 Z" class="piece-art"/></g><g transform="translate(80.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 18.00 L38.00 42.00 L86.00 90.00 L86.00 66.00 Z" class="piece-art"/><path d="M62.00 10.00 L86.00 10.00 L86.00 60.34 L62.00 36.34 Z" class="piece-design"/></g><g transform="translate(168.00 0)"><path d="M10.00 10.00 L34.00 34.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M15.66 10.00 L100.34 10.00 L58.00 52.34 Z" class="piece-art"/><path d="M106.00 10.00 L106.00 90.00 L82.00 90.00 L82.00 34.00 Z" class="piece-design"/></g><g transform="translate(276.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 10.00 L38.00 34.00 L94.00 90.00 L94.00 66.00 Z" class="piece-art"/><path d="M38.00 62.00 L60.34 62.00 L72.34 74.00 L38.00 74.00 Z" class="piece-design"/></g><g transform="translate(372.00 0)"><path d="M10.00 10.00 L10.00 34.00 L66.00 90.00 L66.00 66.00 Z" class="piece-art"/><path d="M10.00 66.00 L10.00 90.00 L35.17 64.83 L23.17 52.83 Z M66.00 34.00 L66.00 10.00 L40.83 35.17 L52.83 47.17 Z" class="piece-design"/></g></svg>
                 <span class="ong-groupe"><span class="onglet">Mes évaluations</span><span class="onglet">Progression</span><span class="onglet">Référentiel</span><span class="onglet">Mon établissement</span><span class="onglet">Paramètres</span></span>
                 <span class="outils">
                   <span class="outil" id="outil-echange"><svg viewBox="0 0 20 20"><path d="M4 7h11m0 0-3-3m3 3-3 3M16 13H5m0 0 3-3m-3 3 3 3"/></svg>Échanger…</span>
@@ -1005,7 +1029,7 @@ footer a{color:var(--ink-2)}
 <p>Cette étape n’apparaît qu’avec le module Étudiants (voir «&nbsp;Avec ou sans étudiants&nbsp;»).</p>
 <h4>L’échelle</h4>
 <p>Une seule échelle, la même pour tous, officielle pour les DN MADE&nbsp;: les niveaux de maîtrise (Insuffisant, Fragile, Satisfaisant, Très bonne maîtrise). Une compétence est acquise à partir de «&nbsp;Satisfaisant&nbsp;». Deux collègues lisent ainsi de la même façon une évaluation qu’ils s’échangent.</p>
-<p>«&nbsp;Mon compte&nbsp;» &gt; «&nbsp;Préférences&nbsp;» règle la liste des livrables proposés, le thème (clair, sombre ou comme le système) et le fond de page&nbsp;: lisse, feutre, toile ou vergé, plus ou moins marqué, sur un papier plus ou moins coloré (de Pâle à Soutenue), avec ou sans le X en creux. Votre prénom et votre nom se corrigent sur votre ligne «&nbsp;C’est moi&nbsp;» de «&nbsp;Mon établissement&nbsp;» &gt; «&nbsp;Enseignants&nbsp;».</p>
+<p>«&nbsp;Mon compte&nbsp;» &gt; «&nbsp;Préférences&nbsp;» règle la liste des livrables proposés, le thème (clair, sombre ou comme le système) et le fond de page&nbsp;: lisse, feutre, toile ou vergé, plus ou moins marqué, sur un papier plus ou moins coloré (de Pâle à Soutenue), avec ou sans le bandeau gaufré («&nbsp;Diplôme national des métiers d’art et du design&nbsp;» écrit en creux au bas des pages). Votre prénom et votre nom se corrigent sur votre ligne «&nbsp;C’est moi&nbsp;» de «&nbsp;Mon établissement&nbsp;» &gt; «&nbsp;Enseignants&nbsp;».</p>
 <p>Chaque évaluation garde la date et l’auteur de sa dernière modification. Vos changements sont enregistrés automatiquement, y compris quand vous fermez la fenêtre.</p>
 <p><strong>Les règles, sans lire le code.</strong> Paramètres &gt; Règles d’évaluation rappelle les règles appliquées à tous (échelle, seuils de la jauge, ce qu’il faut pour enregistrer, acquisition d’une compétence, suivi). On peut y masquer la comparaison à la promotion dans Progression étudiant, et choisir un suivi simplifié dans Mes évaluations&nbsp;: «&nbsp;À faire&nbsp;», puis «&nbsp;Faite&nbsp;» une fois la fiche distribuée, le suivi détaillé restant enregistré.</p>
 </div>

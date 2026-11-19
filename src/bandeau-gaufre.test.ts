@@ -19,6 +19,11 @@ describe("bandeau gaufré du fond de page", () => {
     expect(INDEX).toContain('id="fond-bandeau"');
   });
 
+  it("est le même sur la page d'accueil du site", () => {
+    const site = readFileSync(new URL("../site/index.html", import.meta.url), "utf8");
+    expect(texteDuBandeau(site)).toBe(texteDuBandeau(INDEX));
+  });
+
   it("superpose ombres, lumières et texte à la couleur du papier", () => {
     for (const couche of ["gaufre-ombre-large", "gaufre-lumiere-large", "gaufre-ombre", "gaufre-lumiere", "gaufre-fond"]) {
       expect(INDEX).toContain(`<use href="#bandeau-texte" class="${couche}"`);
