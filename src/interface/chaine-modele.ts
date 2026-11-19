@@ -1,26 +1,27 @@
 // SPDX-License-Identifier: CECILL-2.1
 /**
- * Modèle de la carte heuristique (chaîne) : cinq colonnes (semestre,
- * compétence, EC, UE, diplôme), l'une verrouillée en roue sur un pivot, les
- * autres réduites à ce qui lui est associé, dans le respect du filtre des
+ * Modèle de la carte heuristique (chaîne) : cinq colonnes (par défaut
+ * semestre, compétence, EC, UE, diplôme, dans l'ordre choisi par
+ * l'enseignant), l'une verrouillée en roue sur un pivot, les autres réduites
+ * à ce qu'un chemin réel relie au pivot, dans le respect du filtre des
  * tuiles ; texte et hauteur de chaque case.
  *
- * Repris du fichier historique (décision 38) à l'identique, ordre des tris
- * compris. Le dessin de la chaîne est dans `interface/chaine-dessin`.
+ * Les chemins réels (semestre, compétence, EC, UE, diplôme) et leur lecture
+ * sont dans `domaine/chaine`. Pour l'ordre par défaut, le résultat est celui
+ * de l'ancien modèle par paires voisines et triplets (test d'équivalence),
+ * hormis les défauts corrigés décrits dans `chaine-modele.test.ts`.
  */
 import { semItems, semLie, refFilter, ecName, ecsMiens } from "./carte-donnees";
 import { ecNum, ecOrd } from "./aides-communes";
 import { ecCodeLbl } from "./donnees";
 import { etat, type Objet } from "./etat";
 import { SEMESTRES } from "../domaine/constituer";
+import { cheminsReels, estSorteChaine, passagesParLePivot, SORTES_CHAINE, type SorteChaine } from "../domaine/chaine";
+import { ordonnerParBarycentre } from "../domaine/chaine-barycentre";
+import { ordreChaine } from "../domaine/preferences";
 
-/** Les cinq colonnes de la chaîne, de gauche à droite : le semestre d'abord, demande de l'auteur. */
-export const CH_KINDS = ["sem", "comp", "ec", "ue", "dip"] as const;
-
-/** Place d'une sorte de colonne dans la chaîne. */
-function rang(sorte: string): number {
-  return (CH_KINDS as readonly string[]).indexOf(sorte);
-}
+/** Les cinq colonnes de la chaîne dans l'ordre par défaut, de gauche à droite : le semestre d'abord, demande de l'auteur. */
+export const CH_KINDS = SORTES_CHAINE;
 
 /** Libellé de chaque colonne. */
 export const CH_LBL: Readonly<Record<string, string>> = {
@@ -35,7 +36,7 @@ type Element = Objet;
 
 /** Ce que rend `chainModel` : pivot, colonnes, et la relation qui relie deux cases voisines. */
 export interface ModeleChaine {
-  kind: string;
+  kind: SorteChaine;
   p: number;
   piv: Element;
   sets: Record<number, Element[]>;
@@ -43,6 +44,8 @@ export interface ModeleChaine {
   rel(sorte: string, gauche: Element, droite: Element): boolean;
   dip: Element;
   ueOfE(ec: Element | null | undefined): Element | null;
+  /** Ordre des colonnes, retenu dans les préférences. */
+  ordre: SorteChaine[];
 }
 
 function liste(valeur: unknown): Element[] {
@@ -119,12 +122,9 @@ export function chainModel(): ModeleChaine | null {
     const semestres = new Set(semItems(lists.ec).map((x) => x.id));
     lists.sem = (lists.sem as Element[]).filter((x) => semestres.has(x.id as string));
   }
-  // Relation entre une case (a, colonne k) et une case de la colonne suivante (b).
-  const rel = (k: string, a: Element, b: Element): boolean =>
-    k === "sem" ? semLie(b, a as { sem: unknown }) : k === "comp" ? ((a.ecIds || []) as unknown[]).includes(b.id) : k === "ec" ? a.ueId === b.id : true;
   // Pivot.
   const old = (carte.piv as Element | undefined) || { kind: "comp", id: "" };
-  let kind: string = (CH_KINDS as readonly string[]).includes(old.kind as string) ? (old.kind as string) : "comp";
+  let kind: SorteChaine = estSorteChaine(old.kind) ? old.kind : "comp";
   if (!old.id && kind === "comp" && carte.chain) {
     const c = competences.find((x) => x.code === carte.chain);
     if (c) old.id = c.id;
@@ -138,70 +138,41 @@ export function chainModel(): ModeleChaine | null {
   const piv = kind === "dip" ? dip : (items.find((x) => x.id === old.id) || (items[0]));
   if (!piv) return null;
   carte.piv = { kind, id: piv.id };
-  // Colonnes associées.
-  const p = (CH_KINDS as readonly string[]).indexOf(kind);
+  // Chemins réels qui passent par le pivot : ils donnent les cases de chaque colonne et les liens.
+  const ordre = ordreChaine(etat.preferences);
+  const ueParEc = new Map(ecs.map((e) => [String(e.id), e.ueId]));
+  const retenus = (k: string): Set<unknown> => new Set((lists[k] as Element[]).map((x) => x.id));
+  const chemins = cheminsReels({
+    competences,
+    retenus: { sem: retenus("sem"), comp: retenus("comp"), ec: retenus("ec"), ue: retenus("ue") },
+    ueDe: (id) => ueParEc.get(id),
+    diplome: String(dip.id),
+  });
+  const passages = passagesParLePivot(chemins, ordre, kind, String(piv.id));
+  const p = ordre.indexOf(kind);
   const sets: Record<number, Element[]> = {};
-  sets[p] = [piv];
-  for (let i = p + 1; i < CH_KINDS.length; i++) {
-    const k = CH_KINDS[i] as string;
-    const prev = sets[i - 1] as Element[];
-    const pk = CH_KINDS[i - 1] as string;
-    sets[i] = k === "dip" ? [dip] : (lists[k] as Element[]).filter((b) => prev.some((a) => rel(pk, a, b)));
-  }
-  for (let i = p - 1; i >= 0; i--) {
-    const k = CH_KINDS[i] as string;
-    const nxt = sets[i + 1] as Element[];
-    sets[i] = (lists[k] as Element[]).filter((a) => nxt.some((b) => rel(k, a, b)));
-  }
-  // Un semestre, une compétence et un EC ne vont ensemble que si la compétence est rattachée à l'EC
-  // ce semestre-là : on ne garde que les triplets réels.
-  const iSem = rang("sem");
-  const iComp = rang("comp");
-  const iEc = rang("ec");
-  const iUe = rang("ue");
-  let ok3: { c: unknown; s: unknown; e: unknown }[] | null = null;
-  {
-    const tri: { c: unknown; s: unknown; e: unknown }[] = [];
-    competences.forEach((c) => {
-      ((c.ecs || []) as Element[]).forEach((l) => {
-        ((l.sems || []) as unknown[]).forEach((sm) => tri.push({ c: c.id, s: sm, e: l.id }));
-      });
-    });
-    const enSet = (i: number): Set<unknown> => new Set((sets[i] as Element[]).map((x) => x.id));
-    const SC = enSet(iComp);
-    const SS = enSet(iSem);
-    const SE = enSet(iEc);
-    const keep = tri.filter((t) => SC.has(t.c) && SS.has(t.s) && SE.has(t.e));
-    if (keep.length) {
-      const gardes = new Map<number, Set<unknown>>([
-        [iComp, new Set(keep.map((t) => t.c))],
-        [iSem, new Set(keep.map((t) => t.s))],
-        [iEc, new Set(keep.map((t) => t.e))],
-      ]);
-      for (const [i, ids] of gardes) if (i !== p) sets[i] = (sets[i] as Element[]).filter((x) => ids.has(x.id));
-      if (p < iUe) sets[iUe] = (sets[iUe] as Element[]).filter((u) => (sets[iEc] as Element[]).some((e) => e.ueId === u.id));
-      ok3 = keep;
-    }
-  }
-  const triplets = ok3;
-  const pair = (k: string, gauche: Element, droite: Element): boolean =>
-    rel(k, gauche, droite) &&
-    (!triplets ||
-      (k === "sem"
-        ? triplets.some((t) => t.s === gauche.id && t.c === droite.id)
-        : k === "comp"
-          ? triplets.some((t) => t.c === gauche.id && t.e === droite.id)
-          : true));
-  // Ordre : semestres dans l'ordre, compétences au barycentre de leurs semestres.
+  ordre.forEach((k, i) => {
+    sets[i] = i === p ? [piv] : k === "dip" ? [dip] : (lists[k] as Element[]).filter((x) => passages.presents[k].has(String(x.id)));
+  });
+  const pair = (k: string, gauche: Element, droite: Element): boolean => {
+    const i = (ordre as string[]).indexOf(k);
+    return i >= 0 && i < ordre.length - 1 && passages.relie(i, String(gauche.id), String(droite.id));
+  };
+  // Ordre des cases : semestres dans l'ordre chronologique ; les autres colonnes partent de l'ordre de leur liste
+  // (compétences par bloc puis code, EC par UE puis code, UE du référentiel) et se rangent au barycentre de leurs
+  // voisins reliés, de proche en proche, pour croiser le moins de liens possible.
+  const iSem = ordre.indexOf("sem");
   if ((sets[iSem] as Element[]).length > 1) (sets[iSem] as Element[]).sort((a, b) => cmp(ecKey(a), ecKey(b)));
-  if (p !== iComp && (sets[iComp] as Element[]).length > 1) {
-    const ix = (c: Element): number => {
-      const l = (sets[iSem] as Element[]).map((e, i) => (semLie(c, e as { sem: unknown }) ? i : -1)).filter((i) => i >= 0);
-      return l.length ? l.reduce((somme, i) => somme + i, 0) / l.length : 999;
-    };
-    (sets[iComp] as Element[]).sort((a, b) => ix(a) - ix(b) || Number(a.bloc) - Number(b.bloc) || ecNum(a.code) - ecNum(b.code));
-  }
-  return { kind, p, piv, sets, items: kind === "dip" ? (lists.dip as Element[]) : items, rel: pair, dip, ueOfE };
+  const parId = ordre.map((_k, i) => new Map((sets[i] as Element[]).map((x) => [String(x.id), x])));
+  const rangees = ordonnerParBarycentre(
+    ordre.map((_k, i) => (sets[i] as Element[]).map((x) => String(x.id))),
+    (rang, gauche, droite) => passages.relie(rang, gauche, droite),
+    new Set([p, iSem]),
+  );
+  rangees.forEach((ids, i) => {
+    sets[i] = ids.map((id) => (parId[i] as Map<string, Element>).get(id) as Element);
+  });
+  return { kind, p, piv, sets, items: kind === "dip" ? (lists.dip as Element[]) : items, rel: pair, dip, ueOfE, ordre };
 }
 
 /** Code et libellé d'une case de la chaîne, selon sa colonne. */

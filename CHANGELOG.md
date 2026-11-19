@@ -6,6 +6,7 @@
 
 - Référentiel > Explorer, carte radiale : « Ajuster » montre la roue entière, avec la place des compétences éclatées et les flèches de rotation, quelle que soit la taille de la fenêtre ; dans un cadre étroit, la carte s'ouvre aussi sur la roue entière. Avant, il revenait au quart de la roue de départ.
 - Référentiel > Explorer, carte heuristique : le semestre devient la première colonne, avant la compétence (semestre, compétence, EC, UE, diplôme).
+- Référentiel > Explorer, carte heuristique : les cases de chaque colonne se rangent selon les cases auxquelles elles sont reliées, de proche en proche, pour que les liens se croisent beaucoup moins ; les semestres restent dans l'ordre chronologique.
 - Mes évaluations, filtre « Promotions » : vos promotions et vos évaluations d'abord ; « + Autres promotions » propose, plus discrètes, celles hors de votre répartition de service, dont les évaluations s'affichent quand vous en cochez une.
 - Mes évaluations : la case « Seulement mes évaluations », dans la barre des filtres, ne garde que les évaluations dont vous êtes l'enseignant ; elle se combine avec les autres filtres. Elle n'apparaît qu'une fois « C'est moi » choisi dans Mon établissement > Enseignants.
 - Visite guidée : les pages de « Constituer » sont éclairées en entier, pour corriger chaque UE, EC, bloc ou compétence pendant la visite ; le curseur se déplace d'un geste à l'autre comme une main, au lieu de repartir de la bulle (à la validation, il coche la case puis va sur « Valider cette version ») ; un collègue ajouté compte une fois son prénom et son nom saisis, et la visite laisse quelques secondes pour finir ; le lien entre compétences n'est montré qu'à partir de deux compétences ; « Enregistrer l'évaluation » fait passer à la suite, avec des confettis, sans recliquer « Mes évaluations ».
@@ -34,6 +35,7 @@
 
 ### Ajouté
 
+- Référentiel > Explorer, carte heuristique : changez l'ordre des colonnes en glissant leur en-tête (ou, au clavier, avec les flèches sur l'en-tête), dans l'ordre qui vous parle : chaque colonne ne montre que ce qui est réellement relié à l'élément choisi, et deux cases voisines sont reliées quand une compétence est rattachée à un EC à un semestre. « Vue verticale » superpose les colonnes en rangées : la roue y devient un ruban qui défile de gauche à droite (molette, flèches, boutons ‹ ›, clic sur un élément), et les semestres s'y serrent, groupés par année. L'ordre et la vue sont retenus ; « Ordre par défaut » revient à semestre, compétence, EC, UE, diplôme, en colonnes.
 - Référentiel > Explorer : la case « Seulement ma répartition de service », sous les filtres, ne montre que les EC que vous assurez cette année d'après Mon établissement > Répartition, avec leurs compétences, leurs UE et leurs semestres, sur la carte radiale, la carte heuristique, les deux tableaux et la recherche. Elle n'apparaît qu'une fois « C'est moi » choisi et au moins un EC affecté. Cochée, les tuiles de filtre ne proposent et ne comptent que ce qui reste affiché.
 - Visites guidées : un bouquet final de confettis salue la fin de la visite, à l'arrivée sur sa dernière page (sauf si le système demande de réduire les animations).
 - Paramètres > Règles d'évaluation : suivi simplifié dans Mes évaluations, « À faire » puis « Faite » une fois la fiche distribuée. Ce n'est qu'un affichage : le suivi détaillé reste enregistré, et se retrouve en décochant la case.
@@ -48,6 +50,8 @@
 
 ### Corrigé
 
+- Référentiel > Explorer, carte heuristique : l'en-tête « Enseignement constitutif » n'est plus coupé ; la colonne des EC est un peu plus large.
+- Carte heuristique : un clic sur un élément voisin dans la roue de la colonne verrouillée le choisit bien ; la roue se repliait avant le clic. Une compétence rattachée à un EC sans semestre ne montre plus cet EC comme s'ils étaient liés, et, diplôme verrouillé, les UE sans compétence rattachée disparaissent tandis que les EC sans UE apparaissent, comme avec les autres colonnes.
 - Thème sombre : l'état « Restituée », la pastille « en dessous » de Progression et les pastilles « À évaluer », « Vue au S… » et « Évalué(e) » gardaient les couleurs du thème clair, parfois peu lisibles ; elles ont désormais leurs teintes sombres.
 - Référentiel > Constituer : les cartes des étapes ont toutes la même hauteur, même quand un titre passe sur deux lignes.
 - Thème sombre, couleur du papier : l'intensité était inversée (« pâle » donnait le papier le plus foncé, « soutenue » le plus clair) ; de « pâle » à « soutenue », le papier s'écarte désormais de plus en plus des cartes, comme en thème clair.

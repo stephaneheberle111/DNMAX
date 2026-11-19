@@ -114,3 +114,56 @@ describe("chainModel avec « Seulement ma répartition de service »", () => {
     expect(ids(modele?.sets[3])).toEqual(["u2"]);
   });
 });
+
+describe("chainModel avec un autre ordre des colonnes", () => {
+  it("suit l'ordre retenu dans les préférences et relie les colonnes devenues voisines", () => {
+    etat.preferences = { chaineOrdre: ["ue", "sem", "dip", "comp", "ec"] };
+    (etat.ui.ref as Objet).piv = { kind: "ec", id: "e1" };
+    const modele = chainModel();
+    expect(modele?.ordre).toEqual(["ue", "sem", "dip", "comp", "ec"]);
+    expect(modele?.p).toBe(4);
+    expect(ids(modele?.sets[0])).toEqual(["u1"]);
+    expect(ids(modele?.sets[1])).toEqual(["S1"]);
+    expect(ids(modele?.sets[3])).toEqual(["c1"]);
+    const [u1] = etat.donnees.ues as Objet[];
+    expect(modele?.rel("ue", u1 as Objet, { id: "S1", sem: "S1" })).toBe(true);
+    expect(modele?.rel("ue", u1 as Objet, { id: "S2", sem: "S2" })).toBe(false);
+  });
+
+  it("revient à l'ordre par défaut quand l'ordre enregistré n'est pas valable", () => {
+    etat.preferences = { chaineOrdre: ["ue", "ue", "dip", "comp", "ec"] };
+    expect(chainModel()?.ordre).toEqual(["sem", "comp", "ec", "ue", "dip"]);
+  });
+
+  it("range les compétences au barycentre des semestres, l'ordre chronologique des semestres restant fixe", () => {
+    etat.donnees.competences = [
+      { id: "c2", code: "C2.1", bloc: 2, libelle: "Modeler", ecIds: ["e1"], ecs: [{ id: "e1", sems: ["S1"] }] },
+      { id: "c1", code: "C1.1", bloc: 1, libelle: "Dessiner", ecIds: ["e1"], ecs: [{ id: "e1", sems: ["S2"] }] },
+    ];
+    (etat.ui.ref as Objet).piv = { kind: "ec", id: "e1" };
+    const modele = chainModel();
+    expect(ids(modele?.sets[0])).toEqual(["S1", "S2"]);
+    expect(ids(modele?.sets[1])).toEqual(["c2", "c1"]);
+  });
+
+  it("range aussi les colonnes éloignées du pivot, de proche en proche, pour ne croiser aucun lien", () => {
+    etat.donnees.competences = [
+      { id: "c1", code: "C1.1", bloc: 1, libelle: "Dessiner", ecIds: ["e1"], ecs: [{ id: "e1", sems: ["S2"] }] },
+      { id: "c2", code: "C2.1", bloc: 2, libelle: "Modeler", ecIds: ["e2"], ecs: [{ id: "e2", sems: ["S1"] }] },
+    ];
+    (etat.ui.ref as Objet).piv = { kind: "dip", id: "d1" };
+    const modele = chainModel();
+    expect(ids(modele?.sets[0])).toEqual(["S1", "S2"]);
+    expect(ids(modele?.sets[1])).toEqual(["c2", "c1"]);
+    expect(ids(modele?.sets[2])).toEqual(["e2", "e1"]);
+    expect(ids(modele?.sets[3])).toEqual(["u2", "u1"]);
+  });
+
+  it("garde l'ordre des listes quand il ne croise aucun lien", () => {
+    (etat.ui.ref as Objet).piv = { kind: "dip", id: "d1" };
+    const modele = chainModel();
+    expect(ids(modele?.sets[1])).toEqual(["c1", "c2"]);
+    expect(ids(modele?.sets[2])).toEqual(["e1", "e2"]);
+    expect(ids(modele?.sets[3])).toEqual(["u1", "u2"]);
+  });
+});

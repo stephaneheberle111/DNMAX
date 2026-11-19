@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { CH_WH, chainSetPivot, chainSvgNode, paintChain, brancherChaineDessin, type CaseChaine } from "./chaine-dessin";
+import { CH_WH, chainResetOrder, chainSetOrder, chainSetPivot, chainSetVertical, chainSvgNode, paintChain, placerSemestresParAnnee, decalageRuban, brancherChaineDessin, type CaseChaine } from "./chaine-dessin";
 
-const { paintRef, saveData } = vi.hoisted(() => ({ paintRef: vi.fn(), saveData: vi.fn() }));
+const { paintRef, saveData, savePrefs } = vi.hoisted(() => ({ paintRef: vi.fn(), saveData: vi.fn(), savePrefs: vi.fn() }));
 vi.mock("./referentiel", () => ({ peindreReferentiel: paintRef }));
-vi.mock("./donnees", async (importOriginal) => ({ ...(await importOriginal<typeof import("./donnees")>()), saveData }));
+vi.mock("./donnees", async (importOriginal) => ({ ...(await importOriginal<typeof import("./donnees")>()), saveData, savePrefs }));
 
 const fenetre: Record<string, unknown> = {};
 
 beforeEach(() => {
   paintRef.mockReset();
   saveData.mockReset();
+  savePrefs.mockReset();
   for (const cle of Object.keys(fenetre)) Reflect.deleteProperty(fenetre, cle);
   brancherChaineDessin(null);
   Object.assign(etat, etatVide());
@@ -132,5 +133,120 @@ describe("chainSetPivot", () => {
     expect(etat.donnees.activeDiplome).toBe("d1");
     expect(paintRef).toHaveBeenCalledTimes(1);
     expect(saveData).not.toHaveBeenCalled();
+  });
+});
+
+describe("paintChain dans un autre ordre et en rangées", () => {
+  it("dessine les colonnes dans l'ordre retenu, avec les en-têtes déplaçables et la zone d'annonce", () => {
+    etat.preferences = { chaineOrdre: ["dip", "ue", "ec", "comp", "sem"] };
+    const balisage = paintChain();
+    const ordre = [...balisage.matchAll(/data-lock="(\w+)"/g)].map((resultat) => resultat[1]);
+    expect(ordre).toEqual(["dip", "ue", "ec", "comp", "sem"]);
+    expect(balisage).toContain(`data-link="ue:u1|ec:e1"`);
+    expect(balisage).toContain(`aria-roledescription="en-tête déplaçable"`);
+    expect(balisage).toContain(`class="chlive" role="status" aria-live="polite"`);
+  });
+
+  it("passe en rangées superposées, avec un ruban pour pivot, quand c'est demandé", () => {
+    etat.preferences = { chaineVerticale: true };
+    const balisage = paintChain();
+    expect(balisage).toContain(`class="chainbox vert"`);
+    expect(balisage).toContain(`class="wheel tall ruban"`);
+    expect(balisage).toContain(`data-pas="-1"`);
+    expect(balisage).toContain(`data-pas="1"`);
+    expect(balisage.match(/<rect class="ccol/g)).toHaveLength(5);
+    expect(balisage).toContain(`data-link="comp:c1|ec:e1"`);
+    expect(balisage).toContain("flèches haut et bas");
+  });
+
+  it("élargit la colonne des EC, hors pivot, pour que son en-tête tienne sur une ligne", () => {
+    const largeur = (balisage: string, sorte: string): string | undefined => new RegExp(`data-lock="${sorte}" style="left:\\d+px;width:(\\d+)px`).exec(balisage)?.[1];
+    const colonnes = paintChain();
+    expect(largeur(colonnes, "ec")).toBe("230");
+    expect(largeur(colonnes, "ue")).toBe("190");
+    carte().piv = { kind: "ec", id: "e1" };
+    expect(largeur(paintChain(), "ec")).toBe("256");
+  });
+
+  it("montre en rangées des semestres compacts, groupés par année", () => {
+    etat.preferences = { chaineVerticale: true };
+    const balisage = paintChain();
+    expect(balisage.match(/<g class="cannee">/g)).toHaveLength(2);
+    expect(balisage).toContain(">Année 1</text>");
+    expect(balisage).toContain(">Année 2</text>");
+    expect(balisage).toMatch(/data-node="sem:S1"[^]*?width="92"/);
+    expect(balisage).not.toContain("Année 1 · ");
+  });
+
+  it("ne groupe pas les semestres quand leur rangée porte le ruban", () => {
+    etat.preferences = { chaineVerticale: true };
+    carte().piv = { kind: "sem", id: "S1" };
+    expect(paintChain()).not.toContain(`class="cannee"`);
+  });
+
+  it("ne groupe pas les semestres en colonnes côte à côte", () => {
+    expect(paintChain()).not.toContain(`class="cannee"`);
+  });
+
+  it("reste en colonnes côte à côte par défaut", () => {
+    expect(paintChain()).not.toContain("chainbox vert");
+  });
+});
+
+describe("ordre et sens retenus", () => {
+  it("retient un nouvel ordre, l'enregistre et redessine, focus et annonce compris", () => {
+    chainSetOrder(["comp", "sem", "ec", "ue", "dip"], "comp", "annonce");
+    expect(etat.preferences.chaineOrdre).toEqual(["comp", "sem", "ec", "ue", "dip"]);
+    expect(savePrefs).toHaveBeenCalledTimes(1);
+    expect(paintRef).toHaveBeenCalledTimes(1);
+    expect(carte().chFocus).toBe("lock:comp");
+    expect(carte().chAnnonce).toBe("annonce");
+  });
+
+  it("bascule en rangées superposées et retour", () => {
+    chainSetVertical(true);
+    expect(etat.preferences.chaineVerticale).toBe(true);
+    chainSetVertical(false);
+    expect(etat.preferences.chaineVerticale).toBe(false);
+    expect(savePrefs).toHaveBeenCalledTimes(2);
+  });
+
+  it("« Ordre par défaut » rétablit l'ordre et les colonnes côte à côte", () => {
+    etat.preferences = { chaineOrdre: ["dip", "ue", "ec", "comp", "sem"], chaineVerticale: true };
+    chainResetOrder();
+    expect(etat.preferences).toEqual({ chaineOrdre: ["sem", "comp", "ec", "ue", "dip"], chaineVerticale: false });
+    expect(savePrefs).toHaveBeenCalledTimes(1);
+    expect(paintRef).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("placerSemestresParAnnee", () => {
+  it("serre les semestres d'une année derrière son étiquette et écarte un peu plus deux années", () => {
+    const cases = [
+      { x: 0, annee: 1 },
+      { x: 0, annee: 1 },
+      { x: 0, annee: 2 },
+    ];
+    const { groupes, largeur } = placerSemestresParAnnee(cases, 10);
+    expect(cases.map((c) => c.x)).toEqual([72, 170, 340]);
+    expect(groupes.map((g) => [g.x, g.largeur, g.annee])).toEqual([
+      [10, 252, 1],
+      [278, 154, 2],
+    ]);
+    expect(largeur).toBe(422);
+  });
+
+  it("rend une largeur nulle et aucun groupe sans semestre", () => {
+    expect(placerSemestresParAnnee([], 10)).toEqual({ groupes: [], largeur: 0 });
+  });
+});
+
+describe("decalageRuban", () => {
+  it("met l'élément courant au centre et ses voisins de part et d'autre, à pas réguliers", () => {
+    expect(decalageRuban(0)).toBe(0);
+    expect(decalageRuban(1)).toBe(190);
+    expect(decalageRuban(-1)).toBe(-190);
+    expect(decalageRuban(2) - decalageRuban(1)).toBe(146);
+    expect(decalageRuban(-3)).toBe(-482);
   });
 });
