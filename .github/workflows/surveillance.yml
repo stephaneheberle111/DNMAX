@@ -9,13 +9,26 @@ name: Surveillance
 # 2. Aucune faille connue n'a été publiée sur une dépendance livrée dans
 #    l'application, hors celles déjà acceptées (outils/audit-npm.ts).
 #
-# Aucun secret requis. GitHub ne lance un atelier planifié que depuis la
+# En cas d'échec, un courriel marqué urgent part vers l'adresse de contact si
+# les réglages d'envoi sont renseignés (Settings → Secrets and variables → Actions) :
+#   ALERTE_SMTP_SERVEUR (variable)        serveur d'envoi de la boîte, par exemple ssl0.ovh.net
+#   ALERTE_SMTP_UTILISATEUR (secret)      adresse de la boîte qui envoie
+#   ALERTE_SMTP_MOT_DE_PASSE (secret)     son mot de passe
+#   ALERTE_DESTINATAIRE (variable)        facultative ; contact@dnmax.fr par défaut
+# Sans eux, l'atelier échoue quand même et GitHub prévient à sa façon.
+#
+# Les vérifications elles-mêmes ne demandent aucun secret. GitHub ne lance un atelier planifié que depuis la
 # branche principale, et le suspend après 60 jours sans activité du dépôt.
 on:
   schedule:
     # 5 h 23 en temps universel : hors des heures pleines des machines de GitHub.
     - cron: "23 5 * * *"
   workflow_dispatch:
+    inputs:
+      essai_courriel:
+        description: "Envoyer un courriel d'essai, pour vérifier les réglages d'envoi"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -37,33 +50,43 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir -p publies en-ligne
+          mkdir -p publies en-ligne alertes
           ecarts=0
+          signaler() { echo "::error::$1"; echo "$1" >> alertes/installeurs.txt; ecarts=1; }
           for fichier in $FICHIERS; do
             # Une version peut paraître sans les Mac : l'installeur absent n'a pas d'original à comparer.
             if ! gh release download --repo "$GITHUB_REPOSITORY" --pattern "$fichier" --dir publies 2>/dev/null; then
               echo "::warning::$fichier absent de la dernière version publiée : non comparé."
               continue
             fi
-            curl -sS --fail --max-time 300 -o "en-ligne/$fichier" "$ADRESSE/$fichier"
+            if ! curl -sS --fail --max-time 300 -o "en-ligne/$fichier" "$ADRESSE/$fichier"; then
+              # Un site injoignable n'est pas un installeur remplacé : l'atelier échoue, sans alerte par courriel.
+              echo "::error::$fichier : dnmax.fr ne répond pas, comparaison impossible."
+              exit 1
+            fi
             publie="$(sha256sum "publies/$fichier" | cut -d' ' -f1)"
             en_ligne="$(sha256sum "en-ligne/$fichier" | cut -d' ' -f1)"
             if [ "$publie" = "$en_ligne" ]; then
               echo "$fichier : conforme ($publie)"
             else
-              echo "::error::$fichier : l'installeur servi par dnmax.fr ($en_ligne) n'est pas celui de la version publiée ($publie)."
-              ecarts=1
+              signaler "$fichier : l'installeur servi par dnmax.fr ($en_ligne) n'est pas celui de la version publiée ($publie)."
             fi
             # L'empreinte affichée sur le site doit être celle du fichier servi.
             affichee="$(curl -sS --fail --max-time 30 "$ADRESSE/SHA256SUMS.txt" | grep -E "^[0-9a-f]{64}  $fichier\$" | cut -d' ' -f1 || true)"
             if [ -z "$affichee" ]; then
               echo "::warning::$fichier : aucune empreinte affichée sur le site (elle paraît au prochain dépôt des installeurs)."
             elif [ "$affichee" != "$publie" ]; then
-              echo "::error::$fichier : l'empreinte affichée sur dnmax.fr ($affichee) n'est pas celle de la version publiée ($publie)."
-              ecarts=1
+              signaler "$fichier : l'empreinte affichée sur dnmax.fr ($affichee) n'est pas celle de la version publiée ($publie)."
             fi
           done
           exit "$ecarts"
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: alerte-installeurs
+          path: alertes/
+          if-no-files-found: ignore
+          retention-days: 7
 
   dependances:
     name: Dépendances sans faille connue
@@ -76,21 +99,84 @@ jobs:
           node-version: "22.23.4"
       - name: Bibliothèques de l'interface livrées dans l'application
         run: |
+          mkdir -p alertes
           # --omit=dev : ce qui part chez les enseignants. Les outils de développement sont listés à part, sans faire échouer.
           npm audit --omit=dev --json > audit-livre.json || true
-          node outils/verifier-audit-npm.ts < audit-livre.json
+          if ! node outils/verifier-audit-npm.ts < audit-livre.json > sortie-interface.txt 2>&1; then
+            cat sortie-interface.txt
+            sed 's/^::error:://' sortie-interface.txt > alertes/dependances-interface.txt
+            exit 1
+          fi
+          cat sortie-interface.txt
       - name: Outils de développement (pour information)
+        if: ${{ !cancelled() }}
         run: |
           npm audit --json > audit-complet.json || true
           node outils/verifier-audit-npm.ts < audit-complet.json || echo "::warning::Des outils de développement ont une alerte : voir ci-dessus. Ils ne sont pas livrés."
       - name: Outil d'audit Rust
+        if: ${{ !cancelled() }}
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: outil-audit
         with:
           path: ~/.cargo/bin/cargo-audit
           key: cargo-audit-0.23.0-${{ runner.os }}
-      - if: steps.outil-audit.outputs.cache-hit != 'true'
+      - if: ${{ !cancelled() && steps.outil-audit.outputs.cache-hit != 'true' }}
         run: cargo install cargo-audit --locked --version 0.23.0
       - name: Bibliothèques de l'enveloppe de bureau
-        run: cargo audit
+        if: ${{ !cancelled() }}
         working-directory: src-tauri
+        run: |
+          mkdir -p ../alertes
+          # Sans couleurs : la sortie est recopiée dans le courriel d'alerte.
+          if ! cargo audit --color never > ../sortie-enveloppe.txt 2>&1; then
+            cat ../sortie-enveloppe.txt
+            # Une faille trouvée laisse son identifiant ; une panne de l'outil (base injoignable) n'est pas une alerte.
+            if grep -q "RUSTSEC-" ../sortie-enveloppe.txt; then cp ../sortie-enveloppe.txt ../alertes/dependances-enveloppe.txt; fi
+            exit 1
+          fi
+          cat ../sortie-enveloppe.txt
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: alerte-dependances
+          path: alertes/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  alerte:
+    name: Courriel d'alerte
+    needs: [installeurs, dependances]
+    if: ${{ always() && (contains(needs.*.result, 'failure') || inputs.essai_courriel) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22.23.4"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: alerte-*
+          path: alertes
+      - name: Envoi
+        env:
+          SERVEUR: ${{ vars.ALERTE_SMTP_SERVEUR }}
+          UTILISATEUR: ${{ secrets.ALERTE_SMTP_UTILISATEUR }}
+          MOT_DE_PASSE: ${{ secrets.ALERTE_SMTP_MOT_DE_PASSE }}
+          DESTINATAIRE: ${{ vars.ALERTE_DESTINATAIRE || 'contact@dnmax.fr' }}
+          ESSAI: ${{ inputs.essai_courriel }}
+          LIEN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # On ne regarde que la présence des réglages, jamais leur contenu.
+          if [ -z "$SERVEUR" ] || [ -z "$UTILISATEUR" ] || [ -z "$MOT_DE_PASSE" ]; then
+            echo "::warning::Courriel d'alerte non envoyé : réglages ALERTE_SMTP_* manquants (voir README, « Surveillance »)."
+            exit 0
+          fi
+          mkdir -p alertes
+          if [ "$ESSAI" = "true" ]; then echo "Essai demandé à la main depuis l'onglet Actions." > alertes/essai.txt; fi
+          EXPEDITEUR="$UTILISATEUR" node outils/ecrire-courriel-alerte.ts alertes courriel.eml
+          # Connexion chiffrée exigée (port 465) ; l'identifiant et le mot de passe ne sont jamais affichés.
+          curl --silent --show-error --fail --max-time 60 \
+            --url "smtps://$SERVEUR:465" --user "$UTILISATEUR:$MOT_DE_PASSE" \
+            --mail-from "$UTILISATEUR" --mail-rcpt "$DESTINATAIRE" --upload-file courriel.eml
+          echo "Courriel d'alerte envoyé."

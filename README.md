@@ -132,6 +132,17 @@ Les boutons Windows, macOS et `.deb` pointent sur `telechargements/DNMAX-windows
 
 L'atelier « Surveillance » (`.github/workflows/surveillance.yml`) tourne chaque jour, sans secret : il compare les installeurs servis par dnmax.fr à ceux de la dernière version publiée (et l'empreinte `SHA256SUMS.txt` affichée sur le site), puis audite les dépendances livrées (`npm audit --omit=dev`, `cargo audit`). S'il échoue, GitHub prévient par courriel : un installeur différent en ligne est à traiter comme un accès OVH compromis (changer le mot de passe SFTP, relancer « Téléchargements »). Une alerte de dépendance acceptée après examen s'ajoute à `ALERTES_ADMISES` dans `outils/audit-npm.ts`, avec sa raison.
 
+**Courriel d'alerte.** Quand une vérification trouve quelque chose (installeur différent en ligne, faille dans une dépendance livrée), l'atelier envoie un courriel marqué urgent, dont l'objet commence par « URGENT - DNMAX », qui dit ce qui se passe et quoi faire. Il lui faut une boîte d'envoi, à renseigner une fois dans Settings → Secrets and variables → Actions :
+
+| Réglage | Sorte | Valeur |
+|---|---|---|
+| `ALERTE_SMTP_SERVEUR` | variable | serveur d'envoi de la boîte (chez OVH, celui indiqué dans l'espace client pour la boîte, souvent `ssl0.ovh.net`) ; connexion chiffrée, port 465 |
+| `ALERTE_SMTP_UTILISATEUR` | secret | adresse de la boîte qui envoie |
+| `ALERTE_SMTP_MOT_DE_PASSE` | secret | son mot de passe |
+| `ALERTE_DESTINATAIRE` | variable, facultative | adresse qui reçoit ; `contact@dnmax.fr` par défaut |
+
+Une boîte réservée à cet envoi vaut mieux que la boîte de contact elle-même : son mot de passe est confié à GitHub. Sans ces réglages, aucun courriel ne part ; l'atelier échoue quand même et GitHub prévient à sa façon (adresse du compte, objet non choisi). Un site injoignable ou une panne de l'outil d'audit font échouer l'atelier sans courriel d'alerte : ce ne sont pas des failles. Pour essayer l'envoi une fois les réglages posés : onglet Actions → « Surveillance » → « Run workflow », en cochant « Envoyer un courriel d'essai » ; le message reçu dit qu'il s'agit d'un essai.
+
 ## Organisation du code
 
 ```mermaid

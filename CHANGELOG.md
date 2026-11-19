@@ -90,7 +90,7 @@
 - Échange en direct : le code expire bien au bout de son délai, même si un autre poste du réseau multiplie les connexions muettes.
 - La page de l'application ne peut plus envoyer un formulaire ni changer son adresse de base.
 - Site : chaque installeur est accompagné de son empreinte SHA-256, et une vérification automatique compare chaque jour les installeurs en ligne à ceux de la version publiée.
-- Les bibliothèques livrées dans DNMAX sont contrôlées chaque jour contre les failles connues.
+- Les bibliothèques livrées dans DNMAX sont contrôlées chaque jour contre les failles connues ; une alerte part par courriel à l'auteur.
 
 ## 0.8.0 — 2026-11-15
 
