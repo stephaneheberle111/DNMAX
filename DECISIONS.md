@@ -525,3 +525,5 @@ Arbitrées par l'auteur le 15 novembre 2026, règle par règle, avec un principe
 **Pourquoi pas autrement** : déclarer l'état dans un module et réécrire d'un coup les quelque 1 500 appels du fichier historique ferait un changement impossible à vérifier pas à pas. Les accesseurs ne changent aucun comportement et permettent de déplacer une fonction à la fois.
 
 **Fin** : quand le fichier historique est vide, les accesseurs, les noms publiés sur la fenêtre et l'exception du linter (décision 5) disparaissent.
+
+**Accomplie** (0.9.2, 19 novembre 2026) : la carte radiale reprise (`src/interface/radiale-dessin.ts`, `radiale-gestes.ts`, `explorer.ts`) à l'identique, vérifiée au pixel ; `public/heritage/application.js` est supprimé, le pont démarre l'interface juste après avoir publié ses fonctions, et l'exception du linter est retirée. Les accesseurs et les noms publiés restent pour l'instant : les modules repris s'appellent encore entre eux par la fenêtre, ce que vérifie `src/heritage/appels-historiques.test.ts`. Leur retrait sera un réaménagement à part.
