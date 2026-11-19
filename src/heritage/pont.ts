@@ -50,6 +50,7 @@ import { publierAidesCommunes } from "../interface/aides-communes";
 import { publierCarteDonnees } from "../interface/carte-donnees";
 import { publierChaineModele } from "../interface/chaine-modele";
 import { publierChaineDessin } from "../interface/chaine-dessin";
+import { publierRadialeDessin } from "../interface/radiale-dessin";
 import { publierDonnees } from "../interface/donnees";
 import { publierEvaluationCourante } from "../interface/evaluation-courante";
 import { brancherEtDessiner, chargerEtat, terminerDemarrage, type BranchementsDemarrage } from "../interface/demarrage";
@@ -453,6 +454,7 @@ export async function chargerInterfaceHistorique(
     publierCarteDonnees(window as unknown as Record<string, unknown>);
     publierChaineModele(window as unknown as Record<string, unknown>);
     publierChaineDessin(window as unknown as Record<string, unknown>, document);
+    publierRadialeDessin(window as unknown as Record<string, unknown>, document);
     publierDonnees(window as unknown as Record<string, unknown>, {
       ecrireStockage: (cle, valeur) => {
         magasin.setItem(cle, valeur);
