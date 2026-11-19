@@ -3,7 +3,7 @@
  * Mes évaluations : les actions de suivi proposées dans la fenêtre des
  * actions d'une évaluation (terminer ou rouvrir, restituer, annuler,
  * rétablir, supprimer les évaluations individuelles). Règles reprises telles
- * quelles de l'interface historique.
+ * quelles de l'ancienne interface.
  */
 
 type Evaluation = Record<string, unknown>;

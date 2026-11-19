@@ -7,8 +7,8 @@ import type { Entrees } from "../domaine/magasin-memoire";
  * Dresse la liste des référentiels présents sur ce poste, avec leur empreinte :
  * pour chaque diplôme, son référentiel de travail et chacune de ses versions validées.
  *
- * Le contenu lisible de chaque référentiel est demandé à l'interface
- * historique, seule à savoir le reconstituer à partir de son dictionnaire.
+ * Le contenu lisible de chaque référentiel est demandé à l'interface, seule à
+ * savoir le reconstituer à partir de son dictionnaire.
  * Un référentiel qu'elle ne sait pas fournir est laissé de côté.
  */
 export async function dresserCatalogue(entrees: Entrees): Promise<ReferentielLocal[]> {

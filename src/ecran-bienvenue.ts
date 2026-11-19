@@ -188,7 +188,7 @@ function afficher(acces: AccesDonnees, etablissementSaisi: string): void {
     bouton.disabled = true;
     erreur.hidden = true;
     preparerEntrees(acces, choixCourant(), saisie.value, new Date())
-      // L'interface historique ne relit ses données qu'au chargement : la page se recharge, puis la visite démarre.
+      // L'interface ne relit ses données qu'au chargement : la page se recharge, puis la visite démarre.
       .then((entrees) => acces.remplacerEntrees(entrees))
       .catch((echec: unknown) => {
         erreur.textContent =

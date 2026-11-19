@@ -39,7 +39,7 @@ function texte(valeur: unknown): string {
   return typeof valeur === "number" && valeur !== 0 ? String(valeur) : "";
 }
 
-/** Comme `a+" · "+b` dans l'interface historique : une valeur absente s'écrit « undefined ». */
+/** Comme `a+" · "+b` dans l'interface : une valeur absente s'écrit « undefined ». */
 function brut(valeur: unknown): string {
   return typeof valeur === "string" ? valeur : typeof valeur === "number" || valeur === undefined || valeur === null ? String(valeur) : "";
 }

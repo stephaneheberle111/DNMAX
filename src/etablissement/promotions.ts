@@ -3,8 +3,8 @@
  * Mon établissement > Promotions : diplôme et mention, année de début, état
  * à l'année scolaire, et, avec le module Étudiants, la liste des étudiants
  * de chaque promotion. Les règles sont dans `domaine/promotions` ; le nom
- * automatique, l'année de formation et le nom court restent calculés par
- * l'interface historique, qui les fournit.
+ * automatique, l'année de formation et le nom court sont calculés par
+ * `interface/promotions-calendrier`, et fournis par `interface/etablissement`.
  */
 import { MODULES } from "../domaine/modules";
 import { completerPersonne, composerNom } from "../domaine/personnes";

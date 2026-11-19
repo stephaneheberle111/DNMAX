@@ -2,7 +2,7 @@
 /**
  * Référentiel > Constituer, étape 4 : la planification par semestre, où
  * chaque compétence se rattache aux EC qui la portent, semestre par
- * semestre. Règles reprises telles quelles de l'interface historique ; les
+ * semestre. Règles reprises telles quelles de l'ancienne interface ; les
  * compétences sont modifiées sur place, comme elle les tient.
  */
 import { ordreEc, SEMESTRES } from "./constituer";

@@ -14,7 +14,7 @@ export type Listes = Record<Partie, Element[]>;
 /**
  * Un référentiel tel qu'il voyage dans un fichier d'échange.
  *
- * L'interface historique range un référentiel en deux morceaux : sa
+ * L'interface range un référentiel en deux morceaux : sa
  * `structure` (qui est rattaché à quoi, sur quels semestres), dont les
  * éléments renvoient par identifiant à un `dictionnaire` de libellés commun à
  * tous les diplômes. Les deux voyagent ensemble, avec le `contenuLisible` qui

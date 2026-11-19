@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: CECILL-2.1
 /*
  * Zoom de la carte radiale du référentiel : calculs seuls, sans accès au
- * document. L'interface historique les appelle par `window.dnmaxPont.zoomCarte`.
+ * document. Les gestes de la carte (`interface/radiale-gestes`) les appellent
+ * par `window.dnmaxPont.zoomCarte`.
  *
  * Toutes les longueurs sont en unités du dessin (le `viewBox` du SVG), sauf
  * mention contraire. Une « vue » est le rectangle du dessin montré dans le cadre :

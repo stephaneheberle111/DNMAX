@@ -3,7 +3,7 @@
  * Mes évaluations : la colonne de suivi. Une frise de cinq étapes (franchies
  * pleines, étape en cours à moitié pleine si elle n'est que commencée), et
  * dessous la prochaine chose à faire. Le statut lui-même est calculé par
- * `domaine/suivi-evaluation`. Règles reprises telles quelles de l'interface
+ * `domaine/suivi-evaluation`. Règles reprises telles quelles de l'ancienne interface
  * historique.
  */
 import { ETAPES_FRISE, POSITIONS_FRISE } from "./suivi-evaluation";

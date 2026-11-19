@@ -3,7 +3,8 @@
  * Référentiel > Explorer, vue « Recherche » : les listes de regroupement et
  * d'année, les semestres, et le tableau des compétences trouvées. Les règles
  * sont dans `domaine/exploration`. La carte radiale et la chaîne ne passent
- * pas par ici : l'interface historique les dessine toujours.
+ * pas par ici : `interface/radiale-dessin` et `interface/chaine-dessin` les
+ * dessinent.
  */
 import { numeroCode, sansAccents, SEMESTRES } from "../domaine/constituer";
 import {
@@ -19,7 +20,7 @@ import { balise } from "../etablissement/editeur-commun";
 
 type Element = Record<string, unknown>;
 
-/** État de la recherche, tenu par l'interface historique et modifié sur place. */
+/** État de la recherche, tenu par l'interface et modifié sur place. */
 export interface EtatRecherche {
   q: string;
   group: string;
@@ -52,7 +53,7 @@ function element(id: string): HTMLElement {
   return trouve;
 }
 
-/** Comme `esc(x)` dans l'interface historique : une valeur absente s'écrit vide. */
+/** Comme `esc(x)` dans l'interface : une valeur absente s'écrit vide. */
 function affiche(valeur: unknown): string {
   if (typeof valeur === "string") return valeur;
   return typeof valeur === "number" || typeof valeur === "boolean" ? String(valeur) : "";
@@ -66,7 +67,7 @@ function marque(texte: unknown, cherche: string): Node[] {
   });
 }
 
-/** Pastilles séparées par une espace, comme dans l'interface historique. */
+/** Pastilles séparées par une espace, comme dans l'interface. */
 function pastilles(liste: readonly HTMLElement[]): Node[] {
   return liste.flatMap((pastille, rang) => (rang === 0 ? [pastille] : [document.createTextNode(" "), pastille]));
 }

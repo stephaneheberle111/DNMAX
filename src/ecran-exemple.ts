@@ -9,7 +9,7 @@ import {
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
 import { messagePourErreur } from "./ecran-coffre";
 
-/** Boutons de l'interface historique qui chargent l'exemple. */
+/** Boutons de l'interface qui chargent l'exemple. */
 const SELECTEUR_BOUTONS_EXEMPLE = "#bDemo, #bDemo2";
 /** Boutons à côté desquels « Retirer l'exemple » est proposé. */
 const IDENTIFIANTS_VOISINS = ["bNew", "bDemo"];
@@ -87,7 +87,7 @@ export function suivreExemple(acces: AccesDonnees): void {
       if (!(evenement.target instanceof Element) || evenement.target.closest(SELECTEUR_BOUTONS_EXEMPLE) === null) {
         return;
       }
-      // Phase de capture : l'interface historique n'a pas encore chargé l'exemple.
+      // Phase de capture : l'interface n'a pas encore chargé l'exemple.
       const avant = acces.lireEntrees();
       // Son chargement est synchrone : au prochain tour, les données sont celles d'après.
       window.setTimeout(() => {

@@ -85,7 +85,7 @@ function montrerMotDePasse(acces: AccesDonnees): void {
   ancien.champ.focus();
 }
 
-/** Ouvre la page Préférences, tenue par l'interface historique. */
+/** Ouvre la page Préférences, tenue par l'interface. */
 function ouvrirPreferences(): void {
   window.dnmaxPont?.ouvrirPreferences?.();
 }
