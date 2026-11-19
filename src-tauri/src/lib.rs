@@ -368,6 +368,33 @@ fn changer_mot_de_passe(
     Ok(())
 }
 
+/// Renouvelle mot de passe, code de secours et clé des données du coffre ouvert,
+/// après vérification du mot de passe actuel. Rend le nouveau code de secours,
+/// à montrer une seule fois ; l'ancien n'ouvre plus le coffre.
+#[tauri::command(async)]
+fn renouveler_coffre(
+    application: AppHandle,
+    session: State<'_, Session>,
+    ancien_mot_de_passe: String,
+    nouveau_mot_de_passe: String,
+) -> Result<CoffreCree, ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let mut session = session.verrou();
+    if session.is_none() {
+        return Err(ErreurCommande::CoffreVerrouille);
+    }
+    let fichier = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
+    let (coffre, octets, code_secours) = coffre::renouveler(
+        &fichier,
+        &ancien_mot_de_passe,
+        &nouveau_mot_de_passe,
+        &mut OsRng,
+    )?;
+    depot::ecrire(&dossier, &octets)?;
+    *session = Some(coffre);
+    Ok(CoffreCree { code_secours })
+}
+
 /// Vérifie le mot de passe du coffre ouvert, sans rien changer.
 ///
 /// Sert quand l'interface doit s'assurer que c'est bien l'enseignant qui est
@@ -841,6 +868,7 @@ pub fn lancer() {
             exporter_coffre,
             installer_coffre,
             changer_mot_de_passe,
+            renouveler_coffre,
             lister_sauvegardes,
             restaurer_sauvegarde,
             lire_politique_sauvegardes,

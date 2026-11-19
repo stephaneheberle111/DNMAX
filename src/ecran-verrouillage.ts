@@ -51,7 +51,7 @@ export function lireVerrouillageParInactivite(): boolean {
  *
  * @returns `false` si le verrouillage n'a pas pu se faire (écriture ou enveloppe en échec).
  */
-async function verrouiller(options: OptionsVerrouillage): Promise<boolean> {
+async function verrouiller(options: Pick<OptionsVerrouillage, "ecrireEnAttente">, parInactivite: boolean): Promise<boolean> {
   // Le voile cache les données tout de suite et arrête les clics ; quitter le
   // champ en cours de saisie le fait enregistrer avant l'écriture qui suit.
   const voile = document.createElement("div");
@@ -71,9 +71,22 @@ async function verrouiller(options: OptionsVerrouillage): Promise<boolean> {
     voile.remove();
     return false;
   }
-  noterVerrouillage();
+  // L'explication « après inactivité » ne vaut pas pour un verrouillage demandé.
+  if (parInactivite) {
+    noterVerrouillage();
+  }
   window.location.reload();
   return true;
+}
+
+/**
+ * Verrouille tout de suite, à la demande de l'enseignant (« Mon compte » >
+ * « Verrouiller »), que le module Étudiants soit actif ou non.
+ *
+ * @returns `false` si une écriture en attente a échoué : rien n'est alors verrouillé, pour ne rien perdre.
+ */
+export function verrouillerMaintenant(ecrireEnAttente: OptionsVerrouillage["ecrireEnAttente"]): Promise<boolean> {
+  return verrouiller({ ecrireEnAttente }, false);
 }
 
 /**
@@ -92,7 +105,7 @@ export function surveillerInactivite(options: OptionsVerrouillage): void {
       return;
     }
     verrouillageEnCours = true;
-    void verrouiller(options).then((verrouille) => {
+    void verrouiller(options, true).then((verrouille) => {
       if (!verrouille) {
         // Le bandeau d'enregistrement signale déjà l'échec ; on réessaiera après un nouveau délai.
         surveillance.repartir();

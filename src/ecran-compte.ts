@@ -4,7 +4,7 @@ import { longueurMinimaleExigee, verifierNouveauMotDePasse } from "./domaine/sai
 import { moduleElevesActif } from "./domaine/securite";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
-import { changerMotDePasse } from "./enveloppe";
+import { changerMotDePasse, renouvelerCoffre } from "./enveloppe";
 
 const IDENTIFIANT_BOUTON = "bouton-compte";
 const IDENTIFIANT_MENU = "menu-compte";
@@ -42,6 +42,24 @@ function montrerMotDePasse(acces: AccesDonnees): void {
   const nouveau = creerChamp("password", `Nouveau mot de passe (${String(longueurMinimale)} caractères au moins)`, "new-password");
   const confirmation = creerChamp("password", "Nouveau mot de passe, une seconde fois", "new-password");
   const { zone, dire } = creerMessage();
+  // Changer de mot de passe ne suffit pas si l'ancien a été vu : la clé des données et le code de secours restent les mêmes.
+  const ligneRenouveler = creer("label", "compte-case");
+  const renouveler = creer("input");
+  renouveler.type = "checkbox";
+  ligneRenouveler.append(
+    renouveler,
+    creer("span", "", "Mon mot de passe ou mon code de secours a pu être vu : renouveler aussi le code de secours et la clé des données"),
+  );
+  const zoneCode = creer("div", "compte-code");
+  zoneCode.hidden = true;
+  const montrerCode = (codeSecours: string): void => {
+    zoneCode.replaceChildren(
+      creer("p", "", "Votre nouveau code de secours, affiché cette seule fois. Notez-le hors de cet ordinateur : l'ancien n'ouvre plus vos données."),
+      creer("code", "", codeSecours),
+      creer("p", "", "Les sauvegardes faites avant ce changement s'ouvrent encore avec l'ancien mot de passe et l'ancien code."),
+    );
+    zoneCode.hidden = false;
+  };
   const changer = creer("button", "btn primary", "Changer le mot de passe");
   changer.type = "submit";
   const formulaire = creer("form", "compte-formulaire");
@@ -61,12 +79,23 @@ function montrerMotDePasse(acces: AccesDonnees): void {
     // Ce qui est en attente est écrit d'abord : le changement réécrit le fichier des données.
     acces
       .enregistrerMaintenant()
-      .then(() => changerMotDePasse(ancien.champ.value, nouveau.champ.value))
-      .then(() => {
+      .then(() =>
+        renouveler.checked
+          ? renouvelerCoffre(ancien.champ.value, nouveau.champ.value)
+          : changerMotDePasse(ancien.champ.value, nouveau.champ.value).then(() => null),
+      )
+      .then((codeSecours) => {
         for (const { champ } of [ancien, nouveau, confirmation]) {
           champ.value = "";
         }
-        dire("Mot de passe changé. Votre code de secours reste le même.", false);
+        renouveler.checked = false;
+        if (codeSecours === null) {
+          zoneCode.hidden = true;
+          dire("Mot de passe changé. Votre code de secours reste le même.", false);
+        } else {
+          montrerCode(codeSecours);
+          dire("Mot de passe, code de secours et clé des données renouvelés.", false);
+        }
       })
       .catch((erreur: unknown) => {
         dire(messagePourErreur(erreur), true);
@@ -77,9 +106,9 @@ function montrerMotDePasse(acces: AccesDonnees): void {
   });
   const actions = creer("div", "echange-actions");
   actions.append(creerBouton("Fermer", "btn ghost", fermer), changer);
-  formulaire.append(ancien.ligne, nouveau.ligne, confirmation.ligne, zone, actions);
+  formulaire.append(ancien.ligne, nouveau.ligne, confirmation.ligne, ligneRenouveler, zone, zoneCode, actions);
   boite.append(
-    creer("p", "", "Le mot de passe protège les données enregistrées sur cet ordinateur. Votre code de secours ne change pas."),
+    creer("p", "", "Le mot de passe protège les données enregistrées sur cet ordinateur. Votre code de secours ne change pas, sauf si vous cochez la case ci-dessous."),
     formulaire,
   );
   ancien.champ.focus();
@@ -97,8 +126,9 @@ function ouvrirPreferences(): void {
  * d'une entrée ; les flèches passent d'une entrée à l'autre.
  *
  * @param acces `null` hors de l'enveloppe : le menu ne propose alors que les préférences.
+ * @param verrouiller referme les données et redemande le mot de passe ; `null` : l'entrée « Verrouiller » n'est pas proposée.
  */
-export function installerCompte(acces: AccesDonnees | null): void {
+export function installerCompte(acces: AccesDonnees | null, verrouiller: (() => void) | null = null): void {
   const bouton = document.getElementById(IDENTIFIANT_BOUTON);
   if (bouton === null || bouton.parentElement === null) {
     return;
@@ -129,6 +159,9 @@ export function installerCompte(acces: AccesDonnees | null): void {
     });
   }
   ajouterEntree("Préférences", "Thème et fond de page, échelles, vocabulaire, livrables, documents exportés", ouvrirPreferences);
+  if (verrouiller !== null) {
+    ajouterEntree("Verrouiller", "Refermer vos données : le mot de passe sera redemandé", verrouiller);
+  }
   menu.append(nom, ...entrees);
   bouton.parentElement.append(menu);
   bouton.setAttribute("aria-haspopup", "menu");

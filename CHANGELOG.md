@@ -50,6 +50,8 @@
 - Paramètres > Mises à jour : rechercher une mise à jour à la demande. DNMAX ne se connecte jamais à Internet sans votre accord.
 - Mon compte > Préférences > Documents exportés : choix du dossier dans lequel s'ouvre la boîte « Enregistrer sous » (Documents par défaut). S'il n'existe plus, elle s'ouvre dans Documents.
 - Mon compte > Préférences > Documents exportés : afficher ou non le sceau DN MADE en tête des documents Word et OpenDocument (désactivé par défaut).
+- « Mon compte » > « Verrouiller » : referme vos données sans quitter DNMAX ; le mot de passe est redemandé.
+- « Mon compte » > « Mot de passe… » : une case renouvelle aussi le code de secours et la clé des données, pour le cas où votre mot de passe ou votre code a pu être vu. L'ancien mot de passe et l'ancien code n'ouvrent alors plus vos données.
 
 ### Corrigé
 
@@ -80,7 +82,7 @@
 ### Sécurité
 
 - Module Étudiants : le mot de passe doit désormais compter au moins 12 caractères, trois types de caractères (minuscules, majuscules, chiffres, symboles), sans suite toute faite, sans DNMAX ni votre nom ni celui de l'établissement, et ne pas être parmi les plus courants. Un mot de passe qui ne convient plus est à changer à la prochaine ouverture.
-- Échange : un fichier reçu est contrôlé d'un bloc avant d'être lu. Il est refusé si l'un de ses identifiants n'a pas la forme de ceux de DNMAX ; une couleur qui n'en est pas une est ignorée, et une date de modification fantaisiste ne peut plus faire passer une version reçue pour la plus récente.
+- Échange : un fichier reçu est contrôlé d'un bloc avant d'être lu. Il est refusé si l'un de ses identifiants n'a pas la forme de ceux de DNMAX ; une couleur qui n'en est pas une est ignorée, et une date de modification fantaisiste ou située dans le futur ne peut plus faire passer une version reçue pour la plus récente.
 - Carte heuristique : l'identifiant d'une case est échappé comme le reste, pour qu'un référentiel reçu ne puisse rien glisser dans la page.
 - Export tableur : seuls des textes et des nombres sont écrits dans les cellules, jamais une formule venue d'un fichier reçu.
 - « Ouvrir le document » n'ouvre que les documents que DNMAX produit (Word, OpenDocument, tableur, PDF).

@@ -34,7 +34,7 @@ import { installerEchange, type AccesDonnees } from "./ecran-echange";
 import { suivreExemple } from "./ecran-exemple";
 import { confirmerExportEleves, proposerOuvertureExport } from "./ecran-export";
 import { motsInterditsDe } from "./domaine/robustesse-mot-de-passe";
-import { lireVerrouillageParInactivite, surveillerInactivite } from "./ecran-verrouillage";
+import { lireVerrouillageParInactivite, surveillerInactivite, verrouillerMaintenant } from "./ecran-verrouillage";
 import { moduleElevesActif } from "./domaine/securite";
 import { installerSauvegardes } from "./ecran-sauvegardes";
 import {
@@ -225,7 +225,7 @@ async function demarrer(): Promise<void> {
   installerDonneesEleves(acces);
   installerSauvegardes(acces);
   rappelerConservation(acces);
-  installerCompte(acces);
+  installerCompte(acces, () => void verrouillerMaintenant(ecrireEnAttente));
   installerPiedDePage(acces);
   installerMisesAJourParametres(acces);
   installerReglesParametres(acces);

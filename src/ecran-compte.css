@@ -31,6 +31,31 @@
   overflow-wrap: anywhere;
 }
 
+.compte-case {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 13px;
+}
+
+.compte-code {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-2);
+}
+
+.compte-code code {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+
 .compte-liens {
   display: flex;
   gap: 6px 18px;
