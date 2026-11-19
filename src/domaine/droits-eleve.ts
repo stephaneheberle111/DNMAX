@@ -8,7 +8,7 @@ import { CLE_INSTANTANE_EXEMPLE } from "./retrait-exemple";
  * Droits d'un étudiant sur ses données (RGPD, articles 15 et 17) : retrouver tout
  * ce qui le concerne, le lui remettre, l'effacer partout.
  *
- * Un étudiant vit à plusieurs endroits des données de l'interface historique :
+ * Un étudiant vit à plusieurs endroits des données de l'interface :
  * - dans la liste d'une promotion (`liste`, et sa copie texte `eleves`), sous un identifiant ;
  * - dans les évaluations et le brouillon : résultats `res` indexés par cet
  *   identifiant, étudiants visés `eleveIds`, et liste saisie à la main `eleves`
@@ -16,7 +16,7 @@ import { CLE_INSTANTANE_EXEMPLE } from "./retrait-exemple";
  * - dans l'instantané gardé pour retirer l'exemple, qui copie tout cela.
  */
 
-/** Clé du brouillon de l'interface historique : une évaluation complète en cours d'édition. */
+/** Clé du brouillon de l'interface : une évaluation complète en cours d'édition. */
 export const CLE_BROUILLON = "dnmade.draft";
 
 const PREFIXE_LIBRE = "libre";

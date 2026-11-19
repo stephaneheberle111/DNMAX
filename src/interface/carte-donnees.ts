@@ -5,11 +5,9 @@
  * secteurs, compétences d'un EC, semestres d'une sélection d'EC, nom d'un EC.
  *
  * Repris du fichier historique (décision 38) à l'identique. Le dessin des
- * deux cartes reste dans ce fichier (0.9.2) et appelle ces fonctions par leur
- * ancien nom, publié sur la fenêtre.
+ * deux cartes est dans `interface/radiale-dessin` et `interface/chaine-dessin`.
  */
 import { SEMESTRES } from "../domaine/constituer";
-import { arcPath, fitN, polar, wrapN } from "../domaine/carte-geometrie";
 import { ecOrd } from "./aides-communes";
 import { ecCodeLbl } from "./donnees";
 import { anneeScolaire } from "./promotions-calendrier";
@@ -159,9 +157,4 @@ export function semLie(competence: Objet | null | undefined, element: { sem: unk
 export function ecName(ec: Objet | null | undefined): string {
   // eslint-disable-next-line @typescript-eslint/no-base-to-string -- conversion de l'historique gardée à l'identique (décision 37)
   return ec ? String(ec.nom || "").trim() || ecCodeLbl(ec) : "";
-}
-
-/** Pose ces fonctions, et les calculs de géométrie, sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierCarteDonnees(cible: Record<string, unknown>): void {
-  Object.assign(cible, { arcPath, polar, wrapN, fitN, refFilter, filtUes, filtEcs, filtComps, radialGroups, compsOfEc, semItems, semLie, ecName, ecsMiens, repartitionCarte });
 }

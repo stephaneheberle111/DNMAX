@@ -18,8 +18,6 @@ import { filtComps } from "./carte-donnees";
 import { etat, type Objet } from "./etat";
 import { RAD, anneeOf, radInfo, roue } from "./radiale-dessin";
 
-type Fenetre = Record<string, unknown>;
-
 /** Pastille d'une compétence, posée autour de la roue (angle `a`, rayon `r`, largeur `w`). */
 interface Pastille {
   g: SVGElement;
@@ -744,7 +742,7 @@ export function radialWire(host: HTMLElement): void {
 
 /**
  * Écoute le redimensionnement de la fenêtre pour remettre la carte affichée
- * à l'échelle. À appeler une fois, là où le fichier historique posait cet
+ * à l'échelle. À appeler une fois, là où l'ancien script posait cet
  * écouteur (à sa lecture, juste avant le démarrage).
  */
 export function ecouterRedimensionnement(fenetre: Pick<Window, "addEventListener">): void {
@@ -753,8 +751,7 @@ export function ecouterRedimensionnement(fenetre: Pick<Window, "addEventListener
   });
 }
 
-/** Pose `radialWire` sur `cible` (la fenêtre) sous son nom historique. */
-export function publierRadialeGestes(cible: Fenetre, document: Document | null): void {
+/** Donne aux gestes de la carte radiale le document où ils agissent. */
+export function brancherRadialeGestes(document: Document | null): void {
   documentCourant = document;
-  Object.assign(cible, { radialWire });
 }

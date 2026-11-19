@@ -5,9 +5,8 @@
  * d'une étape à l'autre, contextes de la formulation (étape 3) et de la
  * saisie des étudiants (étape 4).
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom ; l'étape 1, les
- * compétences (étape 2) et le suivi restent préparés dans le fichier historique.
+ * Repris du fichier historique (décision 38). L'étape 1 et les compétences
+ * (étape 2) sont préparées par `editeur-etape1`, le suivi par `evaluations`.
  */
 import { etatEnregistrement as etatDEnregistrement } from "../domaine/evaluation";
 import { derniereEtape, etapeAffichee } from "../domaine/etapes-editeur";
@@ -15,33 +14,15 @@ import { evaluationCommencee } from "../domaine/saisie-resultats";
 import { peindreBarreEtapes, peindreEnregistrement } from "../editeur/barre-etapes";
 import { lierSelection, peindreFormulation, type ContexteFormulation } from "../editeur/formulation";
 import { peindreSaisieEtudiants, type ContexteSaisieEtudiants } from "../editeur/saisie-etudiants";
+import { toast } from "./aides-communes";
+import { critLabel } from "./donnees";
+import { peindreCompetencesChoisies, peindreFormulaire } from "./editeur-etape1";
 import { etat, type Objet } from "./etat";
+import { compsFor, evalStats, ligKey, ligTitre, lignesOf, studentsOf, uid } from "./evaluation-courante";
+import { suiviDe } from "./evaluations";
 import { dateEnLettres, versionDeLEvaluationEnCours } from "./versions-referentiel";
 
-/** Ce que le module appelle encore dans le fichier historique. */
-interface FonctionsHistoriques {
-  suiviOf(evaluation: Objet): void;
-  evalStats(evaluation?: Objet): { els: number; faits: number; partiels: number };
-  compsFor(semestre: unknown): unknown[];
-  paintForm(): void;
-  paintPick(): void;
-  critLabel(): string;
-  uid(): string;
-  toast(message: string): void;
-  studentsOf(evaluation: Objet): ContexteSaisieEtudiants["etudiants"];
-  lignesOf(evaluation: Objet): unknown[];
-  ligKey(ligne: unknown): string;
-  ligTitre(ligne: unknown): { code: string; lib: string };
-}
-
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
 let ecrire: (cle: string, valeur: string) => void = () => undefined;
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function evaluation(): Objet {
   return etat.evaluation;
@@ -95,7 +76,7 @@ export function enregistrerDansLaListe(valide: boolean): void {
   if (rang < 0 && !evaluationCommencee(courante)) return;
   if (valide) delete courante.brouillon;
   else if (rang < 0) courante.brouillon = true;
-  historique().suiviOf(courante);
+  suiviDe(courante);
   if (!courante.refV) {
     const version = versionDeLEvaluationEnCours();
     if (version) courante.refV = version.id;
@@ -126,8 +107,8 @@ export function allerALEtape(demandee: unknown): void {
   ui().step = etapeAffichee(Number(demandee), derniere());
   if (ui().step === 3) ui().sel = [];
   peindreEtapes();
-  if (ui().step === 1) historique().paintForm();
-  if (ui().step === 2) historique().paintPick();
+  if (ui().step === 1) peindreFormulaire();
+  if (ui().step === 2) peindreCompetencesChoisies();
   if (ui().step === 3) peindreLignes();
   if (ui().step === 4) peindreEtudiants();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -136,14 +117,14 @@ export function allerALEtape(demandee: unknown): void {
 /** Barre des étapes ; un brouillon ne s'évalue pas, l'étape 4 se referme (décision 29). */
 export function peindreEtapes(): void {
   ui().step = etapeAffichee(ui().step as number, derniere());
-  const bilan = historique().evalStats(evaluation());
+  const bilan = evalStats(evaluation()) as { els: number; faits: number; partiels: number };
   peindreBarreEtapes({
     evaluation: evaluation(),
     etape: ui().step as number,
     moduleEleves: !!etat.modules.eleves,
     brouillon: estBrouillon(),
     semestre: evaluation().semestre as string,
-    competencesDisponibles: historique().compsFor(evaluation().semestre).length,
+    competencesDisponibles: compsFor(evaluation().semestre).length,
     bilan: { etudiants: bilan.els, faits: bilan.faits, partiels: bilan.partiels },
   });
   peindreLigneEnregistrement();
@@ -153,7 +134,7 @@ export function peindreEtapes(): void {
 export function contexteFormulation(): ContexteFormulation {
   return {
     evaluation: evaluation(),
-    libelleCritere: historique().critLabel(),
+    libelleCritere: critLabel(),
     libelleCompetence: (code) => {
       const competences = Array.isArray(etat.referentiel.competences) ? (etat.referentiel.competences as Objet[]) : [];
       return ((competences.find((competence) => competence.code === code) ?? {}).libelle as string) || "";
@@ -162,13 +143,13 @@ export function contexteFormulation(): ContexteFormulation {
     retenirSelection: (cles) => {
       ui().sel = [...cles];
     },
-    nouvelIdentifiant: () => historique().uid(),
+    nouvelIdentifiant: () => uid(),
     enregistrer: () => {
       enregistrer();
     },
     apresChangement: peindreEtapes,
     annoncer: (message) => {
-      historique().toast(message);
+      toast(message);
     },
   };
 }
@@ -188,13 +169,11 @@ export function contexteSaisie(): ContexteSaisieEtudiants {
   return {
     resultats: courante.res as Objet,
     niveaux: (courante.niveaux as string[] | undefined) || [],
-    etudiants: historique().studentsOf(courante),
-    lignes: historique()
-      .lignesOf(courante)
-      .map((ligne) => {
-        const titre = historique().ligTitre(ligne);
-        return { cle: historique().ligKey(ligne), code: titre.code, libelle: titre.lib };
-      }),
+    etudiants: studentsOf(courante),
+    lignes: lignesOf(courante).map((ligne) => {
+      const titre = ligTitre(ligne);
+      return { cle: ligKey(ligne), code: titre.code, libelle: titre.lib };
+    }),
     vue: { mode: ui().emode === "fiche" ? "fiche" : "grille", etudiant: (ui().eleve as string) || "" },
     aujourdhui: () => new Date().toISOString().slice(0, 10),
     retenirVue: (vue) => {
@@ -206,7 +185,7 @@ export function contexteSaisie(): ContexteSaisieEtudiants {
     },
     apresSaisie: peindreEtapes,
     annoncer: (message) => {
-      historique().toast(message);
+      toast(message);
     },
   };
 }
@@ -217,26 +196,7 @@ export function peindreEtudiants(): void {
   peindreSaisieEtudiants(hote, contexteSaisie());
 }
 
-/**
- * Publie ces fonctions sous leurs anciens noms, pour le fichier historique.
- * `ecrireStockage` enregistre une entrée (évaluations, brouillon).
- */
-export function publierEditeur(cible: Fenetre, ecrireStockage: (cle: string, valeur: string) => void): void {
-  fenetre = cible;
+/** Donne au module l'écriture du stockage (évaluations, brouillon). */
+export function brancherEditeur(ecrireStockage: (cle: string, valeur: string) => void): void {
   ecrire = ecrireStockage;
-  Object.assign(cible, {
-    save: enregistrer,
-    evaluationCommencee,
-    etatEnregistrement,
-    enregistrerDansListe: enregistrerDansLaListe,
-    paintEnregistrement: peindreLigneEnregistrement,
-    brouillonF: estBrouillon,
-    goStep: allerALEtape,
-    paintSteps: peindreEtapes,
-    contexteFormulation,
-    paintLignes: peindreLignes,
-    linkSelection: lierLaSelection,
-    contexteSaisie,
-    paintEleves: peindreEtudiants,
-  });
 }

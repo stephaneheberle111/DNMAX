@@ -32,7 +32,7 @@ export interface DonneesEleves {
   champs: ObjetJson;
 }
 
-/** Préfixe des identifiants que l'interface historique donne aux étudiants d'une liste saisie à la main. */
+/** Préfixe des identifiants que l'interface donne aux étudiants d'une liste saisie à la main. */
 const PREFIXE_ELEVE_LIBRE = "libre";
 
 function lireEleves(liste: unknown): Eleve[] {
@@ -90,7 +90,7 @@ export function extraireDonneesEleves(evaluation: Evaluation, promotionId: strin
   return { promotionId, champs };
 }
 
-/** Lit une promotion enregistrée par l'interface historique, pour l'envoyer. */
+/** Lit une promotion enregistrée par l'interface, pour l'envoyer. */
 export function decrirePromotion(brute: unknown, diplome: string, mention: string): PromotionEchangee | null {
   if (!estObjet(brute) || typeof brute.id !== "string" || brute.id === "") {
     return null;
@@ -214,7 +214,7 @@ function lireNoms(texte: unknown): string[] {
 
 /**
  * Rapproche deux listes d'étudiants saisies à la main (un nom par ligne), où
- * l'interface historique identifie chaque étudiant par son rang : « libre0 »,
+ * l'interface identifie chaque étudiant par son rang : « libre0 »,
  * « libre1 »… Les noms inconnus d'ici sont ajoutés en fin de liste.
  */
 export function rapprocherListeLibre(

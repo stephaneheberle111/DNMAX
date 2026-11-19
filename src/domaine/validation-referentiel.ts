@@ -27,7 +27,7 @@ export function diplomeAReferentielValide(donnees: DonneesEtablissement, diplome
 /**
  * Version du référentiel que suit une promotion : celle qui lui a été
  * appliquée si elle existe encore, sinon la version en vigueur de son
- * diplôme (même règle que l'interface historique). Texte vide s'il n'y en a aucune.
+ * diplôme (même règle que l'interface). Texte vide s'il n'y en a aucune.
  */
 export function versionSuivie(donnees: DonneesEtablissement, promotion: Pick<Promotion, "diplomeId" | "versionId">): string {
   const versions = donnees.versions.get(promotion.diplomeId) ?? [];

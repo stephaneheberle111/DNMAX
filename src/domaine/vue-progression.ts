@@ -3,7 +3,7 @@
  * Progression : quelles promotions et quels semestres proposer, et comment
  * ranger les compétences de la vue « Promotion ». Les calculs de couverture
  * et de niveaux sont dans `domaine/progression`. Règles reprises telles
- * quelles de l'interface historique.
+ * quelles de l'ancienne interface.
  */
 import { SEMESTRES } from "./constituer";
 import { semestresDeLAnnee } from "./evaluation";

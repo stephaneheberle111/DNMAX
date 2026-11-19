@@ -20,7 +20,7 @@ import { CLE_INSTANTANE_EXEMPLE } from "./retrait-exemple";
  * signale. Il est alors proposé à garder.
  */
 
-/** Durée d'un diplôme quand elle n'est pas renseignée (même règle que l'interface historique). */
+/** Durée d'un diplôme quand elle n'est pas renseignée (même règle que l'interface). */
 const DUREE_DIPLOME_PAR_DEFAUT = 3;
 /** Jour où une promotion est considérée comme sortie : lendemain de la fin de l'année scolaire. */
 const JOUR_DE_SORTIE = "07-01";
@@ -265,7 +265,7 @@ function transformer(
 
 /**
  * Dans les évaluations rattachées à ces promotions, retire la liste d'étudiants
- * saisie à la main et ses résultats : l'interface historique ne s'en sert plus
+ * saisie à la main et ses résultats : l'interface ne s'en sert plus
  * dès qu'une promotion est choisie, mais les noms y restent écrits.
  */
 function sansListeSaisie(evaluation: ObjetJson, promotions: ObjetJson[]): ObjetJson {

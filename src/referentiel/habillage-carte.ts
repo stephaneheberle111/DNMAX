@@ -3,8 +3,9 @@
  * Référentiel > Explorer : l'habillage autour de la carte. Choix du diplôme
  * et de la mention, état de la version, tuiles de filtre, barre des vues, et
  * les deux tableaux (EC × semestres, compétences × semestres). La carte
- * radiale et la chaîne ne sont pas dessinées ici : l'interface historique
- * fournit leur balisage tel quel, et les anime ensuite.
+ * radiale et la chaîne ne sont pas dessinées ici : `interface/explorer`
+ * fournit leur balisage tel quel (`interface/radiale-dessin`,
+ * `interface/chaine-dessin`), et les anime ensuite.
  */
 import { codeAuSemestre, codesEc, mentionsDuDiplome, nomEc, nomsDiplomes, sansAccents, SEMESTRES, ANNEES } from "../domaine/constituer";
 import { blocsTableau, casesEc, competencesTableau, ecsAuSemestre, restreindreAuxEcs, titreBloc } from "../domaine/exploration";
@@ -39,7 +40,7 @@ export interface ContexteHabillage {
   readonly teinteBlocs: string;
   /** Années et niveaux d'acquisition, quand le module est actif ; sinon `null`. */
   readonly niveaux: string | null;
-  /** Balisage de la carte radiale (sans son cadre de zoom) et de la chaîne, produits par l'interface historique. */
+  /** Balisage de la carte radiale (sans son cadre de zoom) et de la chaîne, produits par `interface/radiale-dessin` et `interface/chaine-dessin`. */
   carteRadiale(): string;
   carteChaine(): string;
   choisirVue(vue: string): void;
@@ -85,18 +86,18 @@ function texte(valeur: unknown): string {
   return typeof valeur === "number" && valeur !== 0 ? String(valeur) : "";
 }
 
-/** Comme la concaténation de l'interface historique : une valeur absente s'écrit « undefined ». */
+/** Comme la concaténation de l'interface : une valeur absente s'écrit « undefined ». */
 function brut(valeur: unknown): string {
   return typeof valeur === "string" ? valeur : typeof valeur === "number" || valeur === undefined || valeur === null ? String(valeur) : "";
 }
 
-/** Comme `esc(x)` dans l'interface historique : une valeur absente s'écrit vide. */
+/** Comme `esc(x)` dans l'interface : une valeur absente s'écrit vide. */
 function affiche(valeur: unknown): string {
   if (typeof valeur === "string") return valeur;
   return typeof valeur === "number" || typeof valeur === "boolean" ? String(valeur) : "";
 }
 
-/** Balisage HTML fourni par l'interface historique (carte radiale, chaîne), inséré tel quel. */
+/** Balisage HTML fourni par l'interface (carte radiale, chaîne), inséré tel quel. */
 function fragment(html: string): DocumentFragment {
   const modele = document.createElement("template");
   modele.innerHTML = html;

@@ -4,7 +4,7 @@
  * « Référentiel > Constituer » : un panneau titré, une ligne d'en-tête, des
  * lignes à saisir, et la suppression en deux temps (un premier clic arme le
  * bouton, qui devient « Confirmer » ; le second supprime). Le balisage reprend
- * celui de l'interface historique, attribut par attribut, pour que les styles
+ * celui de l'interface, attribut par attribut, pour que les styles
  * et les visites guidées le retrouvent tel quel.
  */
 import { bulleAide } from "./volets";
@@ -40,7 +40,7 @@ export interface PanneauEditeur {
   readonly aide: string;
 }
 
-/** Panneau de l'éditeur commun (`edPanel` de l'interface historique). */
+/** Panneau de l'éditeur commun (`edPanel` de l'interface). */
 export function panneauEditeur(options: PanneauEditeur): HTMLElement {
   const panneau = balise("div", [["class", "panel"]]);
   const tete = balise("div", [["class", "pick-head"]]);
@@ -79,7 +79,7 @@ export interface Armement {
   armer(id: string, supprimer: () => void): void;
 }
 
-/** Bouton « Supprimer » à deux temps (`delBtn` de l'interface historique). */
+/** Bouton « Supprimer » à deux temps (`delBtn` de l'interface). */
 export function boutonSupprimer(id: string, libelle: string, armement: Armement, supprimer: () => void): HTMLButtonElement {
   const arme = armement.arme === id;
   const bouton = balise(
@@ -110,7 +110,7 @@ export function boutonAction(texte: string, id: string, action: () => void): HTM
   return bouton;
 }
 
-/** Champ texte d'une ligne ; `valeur` est posée en attribut, comme dans l'interface historique. */
+/** Champ texte d'une ligne ; `valeur` est posée en attribut, comme dans l'interface. */
 export function champLigne(attributs: readonly (readonly [string, string])[], saisie: (valeur: string) => void): HTMLInputElement {
   const champ = balise("input", [["type", "text"], ...attributs]);
   champ.addEventListener("input", () => {

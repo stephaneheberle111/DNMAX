@@ -1,12 +1,24 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { paintExplore, paintMap, publierExplorer } from "./explorer";
+import { paintExplore, paintMap, brancherExplorer } from "./explorer";
+import { MODES_REGROUPEMENT } from "./constantes";
+
+const { paintRef, saveData, allerEtape } = vi.hoisted(() => ({ paintRef: vi.fn(), saveData: vi.fn(), allerEtape: vi.fn() }));
+vi.mock("./referentiel", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./referentiel")>()),
+  peindreReferentiel: paintRef,
+  allerALEtape: allerEtape,
+}));
+vi.mock("./donnees", async (importOriginal) => ({ ...(await importOriginal<typeof import("./donnees")>()), saveData }));
+vi.mock("./promotions-calendrier", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./promotions-calendrier")>()),
+  libelleAnnee: (annee: unknown) => "Année " + String(annee),
+  semestresDeLaAnnee: () => ["S1", "S2"],
+}));
+vi.mock("./versions-referentiel", async (importOriginal) => ({ ...(await importOriginal<typeof import("./versions-referentiel")>()), referentielAJour: () => true }));
 
 const fenetre: Record<string, unknown> = {};
-const paintRef = vi.fn();
-const saveData = vi.fn();
-const allerEtape = vi.fn();
 const peindreHabillageCarte = vi.fn();
 const peindreRecherche = vi.fn();
 const recherche = { hidden: false };
@@ -16,16 +28,7 @@ const page = { getElementById: (id: string) => (id === "refMeta" ? hote : id ===
 beforeEach(() => {
   for (const espion of [paintRef, saveData, allerEtape, peindreHabillageCarte, peindreRecherche]) espion.mockReset();
   for (const cle of Object.keys(fenetre)) Reflect.deleteProperty(fenetre, cle);
-  publierExplorer(fenetre, page);
-  Object.assign(fenetre, {
-    paintRef,
-    saveData,
-    allerEtape,
-    anneeLabel: (annee: unknown) => "Année " + String(annee),
-    semsOfAnnee: () => ["S1", "S2"],
-    refAJour: () => true,
-    GROUPS: { ue: "Par UE" },
-  });
+  brancherExplorer(page);
   vi.stubGlobal("window", { dnmaxPont: { referentiel: { peindreHabillageCarte, peindreRecherche } } });
   Object.assign(etat, etatVide());
   etat.donnees = {
@@ -58,13 +61,6 @@ function contexteHabillage(): Record<string, unknown> {
 function carte(): Objet {
   return etat.ui.ref as Objet;
 }
-
-describe("publierExplorer", () => {
-  it("publie Explorer sous ses noms historiques", () => {
-    expect(fenetre.paintExplore).toBe(paintExplore);
-    expect(fenetre.paintMap).toBe(paintMap);
-  });
-});
 
 describe("paintMap", () => {
   it("passe la vue radiale par défaut, sans tableau, et les EC rangés par code", () => {
@@ -130,7 +126,7 @@ describe("paintExplore", () => {
     expect(peindreHabillageCarte).toHaveBeenCalledTimes(1);
     expect(recherche.hidden).toBe(true);
     const contexte = peindreRecherche.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(contexte.modes).toEqual({ ue: "Par UE" });
+    expect(contexte.modes).toBe(MODES_REGROUPEMENT);
     expect(contexte.annees).toEqual([{ annee: "1", libelle: "Année 1" }]);
     expect(contexte.diplome).toBe("DN MADE");
     expect(contexte.redessiner).toBe(paintRef);

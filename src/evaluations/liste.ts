@@ -4,7 +4,7 @@
  * suivi (frise de cinq étapes, ou suivi simplifié) et la petite fenêtre de
  * chaque étape. Les règles sont dans `domaine/frise-suivi`,
  * `domaine/suivi-evaluation` et `domaine/suivi-simplifie`. La fenêtre des
- * actions reste ouverte par l'interface historique.
+ * actions est ouverte par `interface/evaluations`.
  */
 import { derniereDate, etatEtape, infobulleSuivi, pointsFrise, prochaineEtape } from "../domaine/frise-suivi";
 import { ETAPES_FRISE, LIBELLES_STATUT } from "../domaine/suivi-evaluation";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { publierDonnees } from "./donnees";
+import { brancherDonnees } from "./donnees";
 import {
   compsFor,
   ecsOfSem,
@@ -12,7 +12,7 @@ import {
   lignesOf,
   migF,
   promoElevesOf,
-  publierEvaluationCourante,
+  brancherEvaluationCourante,
   setClasses,
   setSemestre,
   studentsOf,
@@ -20,20 +20,14 @@ import {
   uid,
 } from "./evaluation-courante";
 
-let fenetre: Record<string, unknown> = {};
-
 function competence(code: string, ecs: Objet[]): Objet {
   return { code, libelle: "Libellé " + code, ecs };
 }
 
 beforeEach(() => {
   Object.assign(etat, etatVide());
-  fenetre = {
-    ecNum: (code: string) => Number(/(\d+)/.exec(code)?.[1] ?? 0),
-    ecsOfUe: (ue: string) => (ue === "UE1" ? ["EC 2"] : []),
-  };
-  publierDonnees(fenetre, { ecrireStockage: () => undefined, maintenant: () => 0, hasard: () => 0.25 });
-  publierEvaluationCourante(fenetre, () => 0.123456789);
+  brancherDonnees({ ecrireStockage: () => undefined, maintenant: () => 0, hasard: () => 0.25 });
+  brancherEvaluationCourante(() => 0.123456789);
   etat.referentiel = {
     competences: [
       competence("C1", [
@@ -44,14 +38,6 @@ beforeEach(() => {
       competence("C3", []),
     ],
   };
-});
-
-describe("publierEvaluationCourante", () => {
-  it("publie les fonctions sous leurs noms historiques", () => {
-    for (const nom of ["studentsOf", "lignesOf", "ligKey", "syncListe", "ecsOfSem", "uid", "migF"]) {
-      expect(typeof fenetre[nom]).toBe("function");
-    }
-  });
 });
 
 describe("liste des étudiants d'une promotion", () => {

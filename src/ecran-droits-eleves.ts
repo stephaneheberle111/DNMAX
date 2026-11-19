@@ -317,7 +317,7 @@ export function rappelerConservation(acces: AccesDonnees): void {
 }
 
 const IDENTIFIANT_PANNEAU = "panneau-donnees-eleves";
-/** Clé des modules de l'interface historique ; `eleves` vaut vrai quand le module Étudiants est actif. */
+/** Clé des modules de l'interface ; `eleves` vaut vrai quand le module Étudiants est actif. */
 const CLE_MODULES = "dnmade.modules";
 
 /** Vrai si le module Étudiants est actif, ou si des étudiants sont encore enregistrés. */
@@ -354,7 +354,7 @@ export function installerDonneesEleves(acces: AccesDonnees): void {
   document.getElementById("bouton-donnees-promotions")?.addEventListener("click", () => {
     ouvrirConservation(acces);
   });
-  // L'interface historique active ou coupe le module Étudiants dans Paramètres, et peut charger l'exemple.
+  // L'interface active ou coupe le module Étudiants dans Paramètres, et peut charger l'exemple.
   document.addEventListener("change", () => {
     window.setTimeout(actualiser, 0);
   });

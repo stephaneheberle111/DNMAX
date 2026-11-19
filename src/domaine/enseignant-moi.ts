@@ -4,7 +4,7 @@ import type { Identite } from "./identite";
 
 /**
  * Liste des enseignants de l'établissement et enseignant « c'est moi »,
- * tels que les tient l'interface historique (`DATA.enseignants`, `DATA.moi`).
+ * tels que les tient l'interface (`DATA.enseignants`, `DATA.moi`).
  * Les éléments ne sont pas typés : ils viennent de données enregistrées.
  */
 export interface EnseignantsEtMoi {
@@ -12,7 +12,7 @@ export interface EnseignantsEtMoi {
   moi: unknown;
 }
 
-/** Enseignant tel que l'enregistre l'interface historique. */
+/** Enseignant tel que l'enregistre l'interface. */
 export interface Enseignant {
   id: string;
   prenom: string;

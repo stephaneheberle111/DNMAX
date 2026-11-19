@@ -2,7 +2,7 @@
 /**
  * Versions datées du référentiel d'une mention : quelle version suit une
  * promotion, une évaluation, qui utilise une version, et quel diplôme bloque
- * une évaluation. Règles reprises de l'interface historique (décision 38),
+ * une évaluation. Règles reprises de l'ancienne interface (décision 38),
  * appliquées aux données telles qu'elle les tient (champs non typés).
  *
  * Une promotion suit la version qui lui a été appliquée (`refV`) si elle

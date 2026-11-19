@@ -12,42 +12,25 @@
 import { blocName, ecColor, ecNomRef, ecOrd, ueColor, ueOrd } from "./aides-communes";
 import { ecsMiens, filtEcs, filtUes, refFilter, repartitionCarte } from "./carte-donnees";
 import { chainBind, paintChain } from "./chaine-dessin";
-import { norm } from "./constantes";
-import { anneeCode } from "./donnees";
+import { MODES_REGROUPEMENT, norm } from "./constantes";
+import { anneeCode, saveData } from "./donnees";
 import { etat, type Objet } from "./etat";
+import { libelleAnnee, semestresDeLaAnnee } from "./promotions-calendrier";
 import { paintRadial } from "./radiale-dessin";
 import { radialWire } from "./radiale-gestes";
-import { versionActive } from "./versions-referentiel";
+import { allerALEtape, peindreReferentiel } from "./referentiel";
+import { referentielAJour, versionActive } from "./versions-referentiel";
 import type { ContexteHabillage } from "../referentiel/habillage-carte";
 import type { ContexteRecherche } from "../referentiel/recherche";
 
-/** Ce que le module appelle par la fenêtre, comme le faisait le fichier historique. */
-interface FonctionsHistoriques {
-  /** Passée telle quelle aux écrans pour redessiner, comme avant : déclarée en propriété. */
-  paintRef: () => void;
-  saveData(redessiner?: boolean, depuisDictionnaire?: boolean): void;
-  anneeLabel(annee: unknown): string;
-  semsOfAnnee(annee: unknown): string[];
-  refAJour(diplome: unknown): boolean;
-  allerEtape(etape: string, filtre?: unknown): void;
-  GROUPS: Readonly<Record<string, string>>;
-}
-
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
 let documentCourant: Document | null = null;
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function page(): Document {
   if (documentCourant === null) throw new Error("Explorer : document absent");
   return documentCourant;
 }
 
-/** État d'Explorer (`ui.ref`), relu à chaque appel comme le faisait le fichier historique. */
+/** État d'Explorer (`ui.ref`), relu à chaque appel. */
 function carte(): Objet {
   return etat.ui.ref as Objet;
 }
@@ -65,8 +48,8 @@ export function paintExplore(): void {
     competences: etat.referentiel.competences,
     recherche: carte(),
     filtre: refFilter(),
-    modes: historique().GROUPS,
-    annees: ((m.niveaux || []) as Objet[]).map((n) => ({ annee: String(n.annee), libelle: historique().anneeLabel(n.annee) })),
+    modes: MODES_REGROUPEMENT,
+    annees: ((m.niveaux || []) as Objet[]).map((n) => ({ annee: String(n.annee), libelle: libelleAnnee(n.annee as number) })),
     teinteBlocs: etat.teinteBlocs,
     nomBloc: blocName,
     rangUe: ueOrd,
@@ -76,10 +59,10 @@ export function paintExplore(): void {
     sousTitreAnnee: (p: Objet) =>
       etat.modules.dn
         ? (p.dn as string) + " · " + ((((((etat.referentiel.meta as Objet).niveaux || []) as Objet[]).find((n) => +(n.annee as string) === p.annee) || {}).label || "") as string)
-        : "Semestres " + historique().semsOfAnnee(p.annee).join(" et "),
+        : "Semestres " + semestresDeLaAnnee(p.annee as number).join(" et "),
     sousTitreSemestre: (p: Objet) => "Année " + (p.annee as string) + (etat.modules.dn ? " · " + (p.dn as string) : ""),
     diplome: ((etat.referentiel.meta as Objet).diplome || "") as string,
-    redessiner: historique().paintRef,
+    redessiner: peindreReferentiel,
     ecsRetenus: ecsMiens(),
   };
   pont().referentiel.peindreRecherche(contexte as unknown as ContexteRecherche);
@@ -107,7 +90,7 @@ export function paintMap(): void {
   const toSearch = (v: string): void => {
     carte().q = v;
     carte().view = "search";
-    historique().paintRef();
+    peindreReferentiel();
     const t = page().getElementById("r-search");
     if (t) t.scrollIntoView({ block: "center", behavior: "smooth" });
   };
@@ -116,7 +99,7 @@ export function paintMap(): void {
     diplomes: D.diplomes,
     actif: D.activeDiplome,
     versionActive: versionActive(D.activeDiplome as string),
-    aJour: historique().refAJour(D.activeDiplome),
+    aJour: referentielAJour(D.activeDiplome as string),
     filtre: refFilter(),
     vue: view,
     ues: etat.referentiel.ues,
@@ -136,7 +119,7 @@ export function paintMap(): void {
     carteChaine: () => paintChain(),
     choisirVue: (v: string) => {
       carte().view = v;
-      historique().paintRef();
+      peindreReferentiel();
     },
     filtrer: (kind: string, value: string) => {
       carte().filter = value ? { kind, value } : { kind: "", value: "" };
@@ -153,29 +136,29 @@ export function paintMap(): void {
                 : null;
         if (hit && pk === cur.kind) carte().piv = { kind: pk, id: hit.id };
       }
-      historique().paintRef();
+      peindreReferentiel();
     },
     choisirMention: (id: string) => {
       D.activeDiplome = id;
       carte().filter = { kind: "", value: "" };
-      historique().saveData();
+      saveData();
     },
     choisirDiplome: (nom: string) => {
       const dp = (D.diplomes as Objet[]).find((x) => norm(x.nom || "") === norm(nom));
       if (!dp) return false;
       D.activeDiplome = dp.id;
       carte().filter = { kind: "", value: "" };
-      historique().saveData();
+      saveData();
       return true;
     },
     allerALEc: (nom: string) => {
-      historique().allerEtape("ecs", nom);
+      allerALEtape("ecs", nom);
     },
     rechercher: (texte: string, parUe: boolean) => {
       if (parUe) carte().group = "ue";
       toSearch(texte);
     },
-    repartition: repartitionCarte(historique().paintRef),
+    repartition: repartitionCarte(peindreReferentiel),
   };
   pont().referentiel.peindreHabillageCarte(host, contexte as unknown as ContexteHabillage);
   if (host.querySelector(".chainbox")) chainBind(host);
@@ -183,9 +166,7 @@ export function paintMap(): void {
   if (svgHost) radialWire(svgHost);
 }
 
-/** Pose ces fonctions sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierExplorer(cible: Fenetre, document: Document | null): void {
-  fenetre = cible;
+/** Donne à Explorer le document où il dessine. */
+export function brancherExplorer(document: Document | null): void {
   documentCourant = document;
-  Object.assign(cible, { paintExplore, paintMap });
 }

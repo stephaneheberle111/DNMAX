@@ -141,7 +141,7 @@ flowchart LR
 ```
 
 - `index.html` et `public/heritage/application.css` : la page et sa feuille de style. `src/interface/` : l'état de l'interface (`etat.ts`), le démarrage, les onglets, les cartes du référentiel et les écrans réécrits depuis l'ancienne interface (décisions 37 et 38).
-- `src/heritage/pont.ts` : ce que l'application fournit aux écrans (stockage, enregistrement de fichiers), et la publication de leurs fonctions sur la fenêtre.
+- `src/heritage/pont.ts` : ce que l'application fournit aux écrans (stockage, enregistrement de fichiers), et l'état de l'interface publié sur la fenêtre avec quelques fonctions, pour le banc de comparaison (`src/heritage/noms-banc.ts`).
 - `src/domaine/` : ce qui calcule. Aucune dépendance au navigateur ni à Tauri, donc testable directement.
 - `src/enveloppe.ts` : ce qui parle à l'extérieur.
 - `src/ecran-coffre.ts` : l'écran de mot de passe.

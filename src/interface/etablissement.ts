@@ -4,16 +4,20 @@
  * Établissement, Répartition de service (historisée par année scolaire),
  * volet Promotions, et suppression en deux temps commune aux éditeurs.
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom, que le fichier
- * historique appelle encore ; les écrans sont dans `etablissement/`, les
- * règles dans `domaine/repartition`.
+ * Repris du fichier historique (décision 38) ; les écrans sont dans
+ * `etablissement/`, les règles dans `domaine/repartition`.
  */
 import { referentielDe } from "../domaine/modele-donnees";
 import { aEuLaPromotion, anneesProposees, ecsDeLAnnee, type EcDeLAnnee } from "../domaine/repartition";
 import { peindrePromotions } from "../etablissement/promotions";
 import { peindreRepartition, peindreVoletEtablissement } from "../etablissement/volets";
+import { toast } from "./aides-communes";
+import { dipLabel, dipVisibles, newId, persistData } from "./donnees";
+import { enregistrer } from "./editeur";
 import { etat, type Objet } from "./etat";
+import { uid } from "./evaluation-courante";
+import { paintEditor, paintPrefs } from "./preferences-parametres";
+import { peindreReferentiel } from "./referentiel";
 import {
   anneeDeFormation,
   anneeScolaire,
@@ -35,29 +39,6 @@ export const VOLETS: Readonly<Record<string, string>> = {
   enseignants: "Enseignants",
   affect: "Répartition de service",
 };
-
-/** Ce que le module appelle encore dans le fichier historique. */
-interface FonctionsHistoriques {
-  persistData(): void;
-  toast(message: string): void;
-  paintRef(): void;
-  paintPrefs(): void;
-  paintEditor(volet: string, hote: HTMLElement): void;
-  dipVisibles(): Objet[];
-  dipLabel(diplome: Objet): string;
-  newId(prefixe: string): string;
-  uid(): string;
-  save(): void;
-}
-
-/** Fenêtre où vivent les fonctions publiées et celles du fichier historique. */
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function donnees(): Objet {
   return etat.donnees;
@@ -81,7 +62,7 @@ function anneeDuJour(): string {
 
 /** Libellé d'une UE sans les tirets entre majuscules (« A-B » devient « AB »). */
 function nomUe(nom: unknown): string {
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface historique
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface
   return String(nom == null ? "" : nom)
     .replace(/([A-ZÀ-Ý])-([A-ZÀ-Ý])/g, "$1$2")
     .trim();
@@ -92,8 +73,8 @@ export function armerSuppression(id: unknown, supprimer: () => void): void {
   if (etat.armement !== id) {
     etat.armement = id;
     if (etat.ui.tab === "org") peindreEtablissement();
-    else if (etat.ui.tab === "pref") historique().paintPrefs();
-    else historique().paintRef();
+    else if (etat.ui.tab === "pref") paintPrefs();
+    else peindreReferentiel();
     return;
   }
   etat.armement = null;
@@ -140,7 +121,7 @@ export function peindreEtablissement(): void {
     peindreVoletRepartition(hote);
     return;
   }
-  historique().paintEditor(volet, hote);
+  paintEditor(volet, hote);
 }
 
 /** Volet Établissement : fiche de l'établissement, créée vide au besoin, et calendrier. */
@@ -151,7 +132,7 @@ export function peindreVoletEtablissementCourant(hote: HTMLElement): void {
     etablissement: donnees().etab as Objet,
     calendrier: { rentree: calendrierEtablissement.rentree, bascule: calendrierEtablissement.bascule },
     enregistrer: () => {
-      historique().persistData();
+      persistData();
     },
   });
 }
@@ -213,7 +194,7 @@ export function peindreVoletRepartition(hote: HTMLElement): void {
       id: candidate.id as string,
       court: nomCourt(candidate) || "",
       nom: (candidate.nom as string) || "",
-      diplome: historique().dipLabel(diplomes().find((diplome) => diplome.id === candidate.diplomeId) ?? {}),
+      diplome: dipLabel(diplomes().find((diplome) => diplome.id === candidate.diplomeId) ?? {}),
     })),
     promotion: promotion ? (promotion.id as string) : "",
     ecs: promotion ? ecsDeLaPromotion(promotion, annee) : [],
@@ -236,7 +217,7 @@ export function peindreVoletRepartition(hote: HTMLElement): void {
       const historiqueComplet = historiqueRepartition();
       const parPromotion = (historiqueComplet[annee] = historiqueComplet[annee] || {});
       parPromotion[promotion.id as string] = nouvelle;
-      historique().persistData();
+      persistData();
       peindreEtablissement();
     },
   });
@@ -247,13 +228,11 @@ export function peindreVoletPromotions(hote: HTMLElement): void {
   const lesDonnees = donnees();
   const annee = anneeDuJour();
   etat.promotions.forEach(normaliserPromotion);
-  const libelle = (id: unknown): string => historique().dipLabel(diplomes().find((diplome) => diplome.id === id) ?? {});
+  const libelle = (id: unknown): string => dipLabel(diplomes().find((diplome) => diplome.id === id) ?? {});
   peindrePromotions(hote, {
     promotions: () => etat.promotions,
     ordreDiplomes: diplomes().map((diplome) => diplome.id as string),
-    diplomes: historique()
-      .dipVisibles()
-      .map((diplome) => ({ id: diplome.id as string, libelle: historique().dipLabel(diplome) })),
+    diplomes: dipVisibles().map((diplome) => ({ id: diplome.id as string, libelle: dipLabel(diplome) })),
     libelleDiplome: libelle,
     anneeScolaire: annee,
     moduleEleves: !!etat.modules.eleves,
@@ -269,7 +248,7 @@ export function peindreVoletPromotions(hote: HTMLElement): void {
       promotion.nom = nomAutomatique(promotion);
     },
     ajouterPromotion: () => {
-      const promotion: Objet = { id: historique().uid(), nom: "", debut: debutAnneeScolaire(annee), diplomeId: lesDonnees.activeDiplome, eleves: "", liste: [] };
+      const promotion: Objet = { id: uid(), nom: "", debut: debutAnneeScolaire(annee), diplomeId: lesDonnees.activeDiplome, eleves: "", liste: [] };
       promotion.nom = nomAutomatique(promotion);
       etat.promotions.push(promotion);
       enregistrerPromotions();
@@ -280,32 +259,15 @@ export function peindreVoletPromotions(hote: HTMLElement): void {
       etat.promotions = etat.promotions.filter((promotion) => promotion.id !== id);
       if (etat.evaluation.promoId === id) {
         etat.evaluation.promoId = "";
-        historique().save();
+        enregistrer();
       }
     },
-    nouvelIdentifiantEtudiant: () => historique().newId("s"),
+    nouvelIdentifiantEtudiant: () => newId("s"),
     enregistrer: enregistrerPromotions,
     redessiner: peindreEtablissement,
     armement: armement(),
     annoncer: (texte) => {
-      historique().toast(texte);
+      toast(texte);
     },
-  });
-}
-
-/** Publie ces fonctions sous leurs anciens noms, pour le fichier historique. */
-export function publierEtablissement(cible: Fenetre): void {
-  fenetre = cible;
-  Object.assign(cible, {
-    paintOrg: peindreEtablissement,
-    paintEtab: peindreVoletEtablissementCourant,
-    promoEcs: ecsDeLaPromotion,
-    affH: historiqueRepartition,
-    affectOf: repartitionDe,
-    affGet: repartitionLue,
-    teachesPromo: aEuLaPromotionDonnee,
-    paintAffect: peindreVoletRepartition,
-    paintPromosOrg: peindreVoletPromotions,
-    armDel: armerSuppression,
   });
 }

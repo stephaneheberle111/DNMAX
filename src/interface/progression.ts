@@ -4,9 +4,8 @@
  * semestre affiché, vue « Promotion » (ce qui reste à évaluer au semestre)
  * et vue « Étudiant » (module Étudiants).
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom ; les règles
- * sont dans `domaine/progression` et `domaine/vue-progression`.
+ * Repris du fichier historique (décision 38) ; les règles sont dans
+ * `domaine/progression` et `domaine/vue-progression`.
  */
 import { SEMESTRES } from "../domaine/constituer";
 import { anneeScolaireDe } from "../domaine/etablissement";
@@ -21,28 +20,13 @@ import { creer } from "../ecran-echange";
 import { peindreProgressionEtudiant } from "../progression/etudiant";
 import { peindreProgressionPromotion } from "../progression/promotion";
 import { ecsDeLaPromotion, aEuLaPromotionDonnee, repartitionLue } from "./etablissement";
+import { dipLabel, saveData } from "./donnees";
 import { etat, type Objet } from "./etat";
+import { compsFor, ligKey, lignesOf, studentsOf as etudiantsDe } from "./evaluation-courante";
 import { estEvalueeDonnee, saisieDansDnmax } from "./evaluations";
 import { anneeDeFormation, anneeScolaire, dureePromotion, nomCourt, normaliserPromotion, rangSemestre } from "./promotions-calendrier";
 
-/** Ce que le module appelle encore dans le fichier historique. */
-interface FonctionsHistoriques {
-  compsFor(semestre: string): Objet[];
-  studentsOf(evaluation: Objet): { id: string; nom: string }[];
-  lignesOf(evaluation: Objet): unknown[];
-  ligKey(ligne: unknown): string;
-  dipLabel(diplome: Objet): string;
-  saveData(redessiner?: boolean): void;
-}
-
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
 let lire: (cle: string) => string | null = () => null;
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 const SEMS: readonly string[] = SEMESTRES;
 
@@ -126,7 +110,7 @@ export function peindreProgression(): void {
   // La progression lit le référentiel de la mention de la promotion affichée.
   if (promotion.diplomeId !== donnees.activeDiplome) {
     donnees.activeDiplome = promotion.diplomeId;
-    historique().saveData(false);
+    saveData(false);
   }
   if (choix.t == null && moi && mienne(promotion)) choix.t = [moi.id];
   const semestres = semestresProgression(anneeDeFormation(promotion, scolaire), dureePromotion(promotion), rangSemestre(new Date()));
@@ -148,7 +132,7 @@ export function peindreProgression(): void {
     groupes:
       diplomesSuivis.length > 1
         ? diplomesSuivis.map((diplome) => ({
-            diplome: historique().dipLabel(diplomes.find((candidat) => candidat.id === diplome) ?? {}),
+            diplome: dipLabel(diplomes.find((candidat) => candidat.id === diplome) ?? {}),
             promotions: promotions.filter((candidate) => candidate.diplomeId === diplome).map(option),
           }))
         : [{ diplome: null, promotions: promotions.map(option) }],
@@ -185,7 +169,7 @@ export function peindreProgression(): void {
   const repartition = Object.keys(repartitionDuSemestre).length ? repartitionDuSemestre : repartitionLue(promotion.id as string);
   const assure = (id: unknown): boolean => Object.values(repartition).some((liste_) => (Array.isArray(liste_) ? (liste_ as unknown[]) : []).includes(id));
   const choisis = moi ? (assure(moi.id) ? [moi.id] : []) : liste(choix.t).filter((id) => enseignants.some((enseignant) => enseignant.id === id));
-  let attendues = historique().compsFor(semestre);
+  let attendues = compsFor(semestre);
   const disponibles = moi ? [] : enseignants.filter((enseignant) => assure(enseignant.id));
   if (choisis.length) {
     const scolaireChoisie = `${String(Number(promotion.debut) + anneeDeLaPromotion - 1)}-${String(Number(promotion.debut) + anneeDeLaPromotion)}`;
@@ -256,7 +240,7 @@ export function peindreVueEtudiant(hote: HTMLElement, vue: VueEtudiant): void {
   const nombreNiveaux = niveaux.length;
   const etudiant = etudiants.find((candidat) => candidat.id === choix.el) ?? etudiants[0];
   if (etudiant) choix.el = etudiant.id;
-  const studentsOf = (evaluation: Objet): { id: string }[] => historique().studentsOf(evaluation);
+  const studentsOf = (evaluation: Objet): { id: string }[] => etudiantsDe(evaluation);
   const dateDe = (evaluation: Objet): string => calculs.dateDeLEvaluation(evaluation);
   const vivantes = evaluations.filter((evaluation) => !evaluation.annulee && etudiant && studentsOf(evaluation).some((candidat) => candidat.id === etudiant.id));
   // A. Avancement du semestre.
@@ -264,7 +248,7 @@ export function peindreVueEtudiant(hote: HTMLElement, vue: VueEtudiant): void {
     .filter((evaluation) => evaluation.semestre === semestre)
     .sort((une, autre) => dateDe(une).localeCompare(dateDe(autre)))
     .map((evaluation) => {
-      const cles = historique().lignesOf(evaluation).map((ligne) => historique().ligKey(ligne));
+      const cles = lignesOf(evaluation).map((ligne) => ligKey(ligne));
       const resultat = ((((evaluation.res || {}) as Objet)[etudiant?.id ?? ""] as Objet | undefined) || {});
       const saisie = saisieDansDnmax(evaluation);
       const etatEtudiant = calculs.etatEtudiantDansEvaluation(resultat, cles, saisie.any);
@@ -347,18 +331,7 @@ export function peindreVueEtudiant(hote: HTMLElement, vue: VueEtudiant): void {
   } as never);
 }
 
-/**
- * Publie ces fonctions sous leurs anciens noms, pour le fichier historique.
- * `lireStockage` lit les réglages (comparaison masquée).
- */
-export function publierProgression(cible: Fenetre, lireStockage: (cle: string) => string | null): void {
-  fenetre = cible;
+/** Donne au module la lecture des réglages (comparaison masquée). */
+export function brancherProgression(lireStockage: (cle: string) => string | null): void {
   lire = lireStockage;
-  Object.assign(cible, {
-    paintProg: peindreProgression,
-    paintProgEleve: (hote: HTMLElement, contexte: { pr: Objet; sem: string; els: { id: string; nom: string }[]; fs: Objet[]; communs: Objet }) => {
-      peindreVueEtudiant(hote, { promotion: contexte.pr, semestre: contexte.sem, etudiants: contexte.els, evaluations: contexte.fs, communs: contexte.communs });
-    },
-    dnPalier: palierDeLAnnee,
-  });
 }

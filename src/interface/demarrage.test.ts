@@ -1,14 +1,60 @@
 // SPDX-License-Identifier: CECILL-2.1
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { publierDonnees } from "./donnees";
-import { publierEvaluationCourante } from "./evaluation-courante";
+import { brancherDonnees } from "./donnees";
+import { brancherEvaluationCourante } from "./evaluation-courante";
 import { brancherEtDessiner, chargerEtat, terminerDemarrage, type BranchementsDemarrage } from "./demarrage";
 
 let stockage: Map<string, string>;
-let appels: string[];
-let fenetre: Record<string, unknown>;
+let fenetre: Pick<Window, "scrollTo">;
 let branchements: BranchementsDemarrage;
+
+const appels = vi.hoisted(() => [] as string[]);
+const noter = vi.hoisted(() => (nom: string) => () => {
+  appels.push(nom);
+});
+
+// Ce que le démarrage appelle dans les autres modules, relevé sous les anciens noms, dans l'ordre.
+vi.mock("./aides-communes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./aides-communes")>()),
+  paintTabs: noter("paintTabs"),
+  toast: (message: string) => appels.push("toast:" + message),
+}));
+vi.mock("./editeur", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./editeur")>()),
+  enregistrer: (fin?: boolean) => appels.push(fin ? "save(fin)" : "save"),
+  peindreLignes: noter("paintLignes"),
+  peindreEtapes: noter("paintSteps"),
+  peindreEtudiants: noter("paintEleves"),
+  lierLaSelection: noter("linkSelection"),
+  allerALEtape: (etape: unknown) => appels.push("goStep:" + String(etape)),
+}));
+vi.mock("./editeur-etape1", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./editeur-etape1")>()),
+  peindreFormulaire: noter("paintForm"),
+  peindreCompetencesChoisies: noter("paintPick"),
+  nouvelleEvaluation: noter("nouvelleFiche"),
+}));
+vi.mock("./evaluations", async (importOriginal) => ({ ...(await importOriginal<typeof import("./evaluations")>()), peindreEvaluations: noter("paintSaved") }));
+vi.mock("./progression", async (importOriginal) => ({ ...(await importOriginal<typeof import("./progression")>()), peindreProgression: noter("paintProg") }));
+vi.mock("./referentiel", async (importOriginal) => ({ ...(await importOriginal<typeof import("./referentiel")>()), peindreReferentiel: noter("paintRef") }));
+vi.mock("./etablissement", async (importOriginal) => ({ ...(await importOriginal<typeof import("./etablissement")>()), peindreEtablissement: noter("paintOrg") }));
+vi.mock("./preferences-parametres", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./preferences-parametres")>()),
+  paintSet: noter("paintSet"),
+  paintPrefs: noter("paintPrefs"),
+}));
+vi.mock("./promotions-calendrier", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./promotions-calendrier")>()),
+  caleSemestreSurLaDate: noter("applySemDate"),
+}));
+vi.mock("./exemple", async (importOriginal) => ({ ...(await importOriginal<typeof import("./exemple")>()), chargerExemple: noter("loadDemo") }));
+vi.mock("./versions-referentiel", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./versions-referentiel")>()),
+  referentielAffiche: () => ({ competences: [], meta: {} }),
+  versionsDe: () => [{ id: "v1", snap: { competences: [{ code: "C9" }] } }],
+  projeterCopie: (_donnees: unknown, diplomeId: string, instantane: unknown) => ({ diplomeId, instantane }),
+}));
 
 /** Faux élément : garde ses écouteurs pour les déclencher dans le test. */
 interface FauxElement {
@@ -69,31 +115,21 @@ for (const nom of ["HTMLInputElement", "HTMLSelectElement", "HTMLTextAreaElement
 beforeEach(() => {
   Object.assign(etat, etatVide());
   stockage = new Map();
-  appels = [];
+  appels.length = 0;
   elements = new Map();
-  fenetre = {};
-  for (const nom of ["paintTabs", "paintForm", "paintPick", "paintLignes", "paintSaved", "paintProg", "paintRef", "paintOrg", "paintSet", "paintPrefs", "paintSteps", "paintEleves", "applySemDate", "loadDemo", "nouvelleFiche", "linkSelection"]) {
-    fenetre[nom] = () => appels.push(nom);
-  }
-  fenetre.save = (fin?: boolean) => appels.push(fin ? "save(fin)" : "save");
-  fenetre.toast = (message: string) => appels.push("toast:" + message);
-  fenetre.goStep = (etape: unknown) => appels.push("goStep:" + String(etape));
-  fenetre.scrollTo = () => appels.push("scrollTo");
-  fenetre.computeREF = () => ({ competences: [], meta: {} });
-  fenetre.versionsOf = () => [{ id: "v1", snap: { competences: [{ code: "C9" }] } }];
-  fenetre.projectSnap = (_donnees: unknown, diplomeId: string, instantane: unknown) => ({ diplomeId, instantane });
+  fenetre = { scrollTo: () => appels.push("scrollTo") };
   branchements = {
     lireStockage: (cle) => stockage.get(cle) ?? null,
     ecrireStockage: ecrireDansLeStockage,
     maintenant: () => new Date("2026-11-18T10:00:00Z"),
   };
-  publierDonnees(fenetre, { ecrireStockage: ecrireDansLeStockage, maintenant: () => 1, hasard: () => 0.5 });
-  publierEvaluationCourante(fenetre, () => 0.5);
+  brancherDonnees({ ecrireStockage: ecrireDansLeStockage, maintenant: () => 1, hasard: () => 0.5 });
+  brancherEvaluationCourante(() => 0.5);
 });
 
 describe("chargement de l'état", () => {
   it("part d'une installation neuve sans rien d'enregistré", () => {
-    chargerEtat(fenetre, branchements);
+    chargerEtat(branchements);
     expect(Array.isArray(etat.donnees.diplomes)).toBe(true);
     expect(etat.evaluations).toEqual([]);
     expect(etat.promotions).toEqual([]);
@@ -107,7 +143,7 @@ describe("chargement de l'état", () => {
 
   it("garde les modules enregistrés et désactive celui qui perd le module qu'il requiert", () => {
     stockage.set("dnmade.modules", JSON.stringify({ eleves: false, dn: true }));
-    chargerEtat(fenetre, branchements);
+    chargerEtat(branchements);
     expect(etat.modules.eleves).toBe(false);
     expect(etat.modules.dn).toBe(false);
   });
@@ -115,22 +151,22 @@ describe("chargement de l'état", () => {
   it("reprend une évaluation enregistrée plutôt que le brouillon qui s'en écartait", () => {
     stockage.set("dnmade.draft", JSON.stringify({ id: "f1", titre: "Brouillon" }));
     stockage.set("dnmade.fiches", JSON.stringify([null, { id: "f1", titre: "Enregistrée", items: [] }]));
-    chargerEtat(fenetre, branchements);
+    chargerEtat(branchements);
     expect(etat.evaluation.titre).toBe("Enregistrée");
     expect(etat.evaluation).not.toBe(etat.evaluations[1]);
   });
 
   it("ignore une entrée illisible et prend la valeur par défaut", () => {
     stockage.set("dnmade.promos", "{pas du json");
-    chargerEtat(fenetre, branchements);
+    chargerEtat(branchements);
     expect(etat.promotions).toEqual([]);
   });
 });
 
 describe("branchements et premier dessin", () => {
   beforeEach(() => {
-    chargerEtat(fenetre, branchements);
-    appels = [];
+    chargerEtat(branchements);
+    appels.length = 0;
   });
 
   it("dessine chaque page au démarrage, dans l'ordre", () => {
@@ -140,7 +176,7 @@ describe("branchements et premier dessin", () => {
 
   it("ouvre la page d'un onglet et la redessine", () => {
     brancherEtDessiner(fenetre, fauxDocument(), branchements);
-    appels = [];
+    appels.length = 0;
     cliquer("t-ref");
     expect(etat.ui.tab).toBe("ref");
     expect(appels).toEqual(["paintTabs", "paintRef"]);
@@ -148,7 +184,7 @@ describe("branchements et premier dessin", () => {
 
   it("refuse de terminer un brouillon incomplet et dit ce qui manque", () => {
     brancherEtDessiner(fenetre, fauxDocument(), branchements);
-    appels = [];
+    appels.length = 0;
     cliquer("bSave3");
     const message = appels.find((appel) => appel.startsWith("toast:")) ?? "";
     expect(message).toContain("il lui manque");
@@ -165,13 +201,13 @@ describe("branchements et premier dessin", () => {
 
 describe("ponts vers l'application", () => {
   beforeEach(() => {
-    chargerEtat(fenetre, branchements);
+    chargerEtat(branchements);
   });
 
   it("ouvre les Préférences en désarmant une suppression en attente", () => {
     etat.armement = "ens1";
     const ponts = brancherEtDessiner(fenetre, fauxDocument(), branchements);
-    appels = [];
+    appels.length = 0;
     ponts.ouvrirPreferences();
     expect(etat.ui.tab).toBe("pref");
     expect(etat.armement).toBeNull();

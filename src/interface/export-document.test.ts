@@ -1,26 +1,30 @@
 // SPDX-License-Identifier: CECILL-2.1
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide } from "./etat";
-import { etudiantsNonFinis, nomDuFichier, nomsDesEcs, proposerFichier, publierExportDocument } from "./export-document";
-import { publierPromotionsCalendrier } from "./promotions-calendrier";
+import { etudiantsNonFinis, nomDuFichier, nomsDesEcs, proposerFichier, brancherExportDocument } from "./export-document";
+import { brancherPromotionsCalendrier } from "./promotions-calendrier";
 
-let messages: string[];
+const messages = vi.hoisted(() => [] as string[]);
+vi.mock("./evaluation-courante", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./evaluation-courante")>()),
+  studentsOf: () => [
+    { id: "a", nom: "Ana" },
+    { id: "b", nom: "Ben" },
+    { id: "c", nom: "Chloé" },
+  ],
+  lignesOf: () => ["l1", "l2"],
+  ligKey: (ligne: string) => ligne,
+}));
+vi.mock("./aides-communes", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./aides-communes")>()),
+  toast: (message: string) => messages.push(message),
+}));
 
 beforeEach(() => {
   Object.assign(etat, etatVide());
-  messages = [];
-  const fenetre: Record<string, unknown> = {
-    studentsOf: () => [
-      { id: "a", nom: "Ana" },
-      { id: "b", nom: "Ben" },
-      { id: "c", nom: "Chloé" },
-    ],
-    lignesOf: () => ["l1", "l2"],
-    ligKey: (ligne: string) => ligne,
-    toast: (message: string) => messages.push(message),
-  };
-  publierPromotionsCalendrier(fenetre, () => undefined);
-  publierExportDocument(fenetre, () => undefined);
+  messages.length = 0;
+  brancherPromotionsCalendrier(() => undefined);
+  brancherExportDocument(() => undefined);
 });
 
 describe("nom du fichier", () => {

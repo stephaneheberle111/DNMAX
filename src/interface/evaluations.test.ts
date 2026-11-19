@@ -1,18 +1,14 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it } from "vitest";
 import { etat, etatVide } from "./etat";
-import { publierEtablissement } from "./etablissement";
-import { evaluationsIndividuelles, mesPromotions, promotionsDe, publierEvaluations, suiviDe, suiviSimplifie } from "./evaluations";
+import { evaluationsIndividuelles, mesPromotions, promotionsDe, brancherEvaluations, suiviDe, suiviSimplifie } from "./evaluations";
 
 let entrees: Map<string, string>;
 
 beforeEach(() => {
   Object.assign(etat, etatVide());
   entrees = new Map();
-  const fenetre: Record<string, unknown> = {};
-  publierEtablissement(fenetre);
-  publierEvaluations(
-    fenetre,
+  brancherEvaluations(
     (cle, valeur) => {
       entrees.set(cle, valeur);
     },

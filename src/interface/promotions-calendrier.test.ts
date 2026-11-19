@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { etat, etatVide } from "./etat";
+
+vi.mock("./evaluation-courante", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./evaluation-courante")>()),
+  setSemestre: (semestre: string) => {
+    etat.evaluation.semestre = semestre;
+  },
+}));
 import {
   anneeDeFormation,
   anneeDeLEvaluation,
@@ -14,7 +21,7 @@ import {
   normaliserPromotion,
   promotionALAnnee,
   promotionsAffichees,
-  publierPromotionsCalendrier,
+  brancherPromotionsCalendrier,
 } from "./promotions-calendrier";
 
 function preparer(): void {
@@ -112,12 +119,7 @@ describe("évaluation en cours", () => {
   });
 
   it("cale le semestre sur la date, sauf s'il a été choisi à la main", () => {
-    const fenetre: Record<string, unknown> = {
-      setSemestre: (semestre: string) => {
-        etat.evaluation.semestre = semestre;
-      },
-    };
-    publierPromotionsCalendrier(fenetre, () => undefined);
+    brancherPromotionsCalendrier(() => undefined);
     etat.promotions = [{ id: "p1", diplomeId: "d1", debut: 2025, liste: [] }];
     etat.evaluation = { promoId: "p1", distribPrev: "2027-03-01", semestre: "S3" };
     expect(caleSemestreSurLaDate()).toBe(true);

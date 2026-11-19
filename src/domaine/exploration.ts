@@ -2,8 +2,9 @@
 /**
  * Référentiel > Explorer, vue « Recherche » : quelles compétences répondent
  * à la recherche et aux filtres, et comment les regrouper. Règles reprises
- * telles quelles de l'interface historique. La carte radiale et la chaîne,
- * elles, restent dessinées par l'interface historique.
+ * telles quelles de l'ancienne interface. La carte radiale et la chaîne,
+ * elles, sont dessinées par `interface/radiale-dessin` et
+ * `interface/chaine-dessin`.
  */
 import { anneeDuSemestre, codeAuSemestre, numeroCode, sansAccents, SEMESTRES } from "./constituer";
 

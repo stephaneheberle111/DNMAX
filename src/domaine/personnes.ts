@@ -3,10 +3,10 @@
  * Prénom et nom des enseignants et des étudiants de « Mon établissement ».
  * Ils se saisissent à part (`prenom`, `nomFam`) ; `nom` reste le nom affiché
  * « Prénom Nom », utilisé partout ailleurs (listes, exports, échanges,
- * rapprochements). Règles reprises telles quelles de l'interface historique.
+ * rapprochements). Règles reprises telles quelles de l'ancienne interface.
  */
 
-/** Une personne telle que l'interface historique la range. */
+/** Une personne telle que l'interface la range. */
 export interface Personne {
   id: string;
   prenom: string;
@@ -15,7 +15,7 @@ export interface Personne {
 }
 
 /**
- * Comme `String(valeur || "")` dans l'interface historique pour du texte, un
+ * Comme `String(valeur || "")` dans l'interface pour du texte, un
  * nombre ou un booléen : toute valeur fausse devient une chaîne vide. Un objet,
  * qui n'est jamais un nom, devient aussi une chaîne vide.
  */

@@ -79,7 +79,7 @@ function dureeDuDiplome(donnees: ObjetJson, diplomeId: string): number {
  *
  * Idempotent : une promotion du même diplôme et de la même année d'entrée
  * n'est jamais créée deux fois, et un nom vide ne remplace pas celui déjà saisi.
- * Les promotions sont créées sans étudiants, au format de l'interface historique
+ * Les promotions sont créées sans étudiants, au format de l'interface
  * (qui leur donne leur nom au chargement).
  */
 export function installerPremierEtablissement(entrees: Entrees, installation: Installation): Entrees {

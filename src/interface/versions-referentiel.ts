@@ -6,9 +6,8 @@
  * passent à la nouvelle version), retour à une version, changement de la
  * mention affichée.
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom, que le fichier
- * historique appelle encore ; les règles sont dans `domaine/versions-referentiel`.
+ * Repris du fichier historique (décision 38) ; les règles sont dans
+ * `domaine/versions-referentiel`.
  */
 import { absorber, materialiser, projeterReferentiel, projeterVersion, referentielDe, SORTES, type Referentiel } from "../domaine/modele-donnees";
 import {
@@ -22,19 +21,13 @@ import {
   versionDeLaPromotion,
   versionDeLEvaluation,
 } from "../domaine/versions-referentiel";
+import { toast } from "./aides-communes";
+import { newId, persistData } from "./donnees";
+import { peindreLignes } from "./editeur";
+import { peindreCompetencesChoisies, peindreFormulaire } from "./editeur-etape1";
 import { etat, type Objet } from "./etat";
+import { peindreReferentiel } from "./referentiel";
 import { anneeDeFormation, anneeScolaire, dureePromotion, enregistrerPromotions, nomCourt, normaliserPromotion, promotionALAnnee } from "./promotions-calendrier";
-
-/** Ce que le module appelle encore dans le fichier historique. */
-interface FonctionsHistoriques {
-  newId(prefixe: string): string;
-  persistData(): void;
-  toast(message: string): void;
-  paintRef(): void;
-  paintForm(): void;
-  paintPick(): void;
-  paintLignes(): void;
-}
 
 /** Ce que le module reçoit de l'application. */
 export interface Branchements {
@@ -48,20 +41,12 @@ export interface Branchements {
   maintenant(): Date;
 }
 
-/** Fenêtre où vivent les fonctions publiées et celles du fichier historique. */
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
 let branchements: Branchements = {
   ecrireStockage: () => undefined,
   promotionValide: () => false,
   diplomeValide: () => false,
   maintenant: () => new Date(),
 };
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function donnees(): Objet {
   return etat.donnees;
@@ -80,7 +65,7 @@ function aujourdhui(): string {
 }
 
 function nouvelIdentifiant(prefixe: string): string {
-  return historique().newId(prefixe);
+  return newId(prefixe);
 }
 
 function copie<T>(valeur: T): T {
@@ -94,12 +79,6 @@ export function versionsDe(diplome: string): Objet[] {
   const parDiplome = lesDonnees.versions as Record<string, Objet[] | undefined>;
   parDiplome[diplome] = parDiplome[diplome] ?? [];
   return parDiplome[diplome];
-}
-
-/** Référentiel de travail du diplôme, sorte par sorte, en texte. */
-export function referentielEnTexte(diplome: string): string {
-  const referentiel = referentielDe(donnees(), diplome);
-  return JSON.stringify(SORTES.map((sorte) => referentiel[sorte]));
 }
 
 /** Version en vigueur du diplôme, ou `null`. */
@@ -197,7 +176,7 @@ function enregistrerEvaluations(): void {
 /** Relit le référentiel affiché et redessine le référentiel. */
 function rafraichirReferentiel(): void {
   etat.referentiel = referentielAffiche();
-  historique().paintRef();
+  peindreReferentiel();
 }
 
 /**
@@ -215,9 +194,9 @@ export function validerVersion(date?: unknown, note?: unknown): void {
   const active = versionActive(diplome);
   if (active && !active.attestation && referentielAJour(diplome)) {
     active.attestation = jour;
-    historique().persistData();
+    persistData();
     rafraichirReferentiel();
-    historique().toast(`Référentiel validé — version du ${String(dateEnLettres(active.date))}, vérifiée par vous.`);
+    toast(`Référentiel validé — version du ${String(dateEnLettres(active.date))}, vérifiée par vous.`);
     return;
   }
   const version: Objet = {
@@ -245,11 +224,11 @@ export function validerVersion(date?: unknown, note?: unknown): void {
   versionsDe(diplome).unshift(version);
   donnees().valide = Object.assign({}, donnees().valide ?? {});
   (donnees().valide as Objet)[diplome] = version.id;
-  historique().persistData();
+  persistData();
   rafraichirReferentiel();
   const enCours = promotionsEnCours(diplome);
   if (precedente && enCours.length) demanderPromotionsDeLaVersion(diplome, version, enCours);
-  else historique().toast(`Référentiel validé — version du ${String(dateEnLettres(version.date))}${enCours.length ? ", appliquée aux promotions de cette mention." : "."}`);
+  else toast(`Référentiel validé — version du ${String(dateEnLettres(version.date))}${enCours.length ? ", appliquée aux promotions de cette mention." : "."}`);
 }
 
 /**
@@ -260,18 +239,18 @@ export function validerVersion(date?: unknown, note?: unknown): void {
 export function libellePromotion(promotion: Objet): string {
   promotionALAnnee(promotion);
   const court = nomCourt(promotion);
-  /* eslint-disable @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-base-to-string -- même concaténation que l'interface historique */
+  /* eslint-disable @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-base-to-string -- même concaténation que l'interface */
   return `${court ? `${court} — ` : ""}${(promotion.nom as string) || "Sans nom"} · Année ${promotion.annee}${promotion.as ? ` · ${promotion.as}` : ""} (${String(nombreEtudiants(promotion.eleves))})`;
   /* eslint-enable @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-base-to-string */
 }
 
-/** Texte d'une valeur affichée dans la fenêtre : rien pour une valeur absente, comme l'interface historique. */
+/** Texte d'une valeur affichée dans la fenêtre : rien pour une valeur absente, comme l'interface. */
 function affiche(valeur: unknown): string {
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface historique
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- même conversion que l'interface
   return valeur == null ? "" : String(valeur);
 }
 
-/** Élément sans attribut `class` vide, pour garder le balisage de l'interface historique. */
+/** Élément sans attribut `class` vide, pour garder le balisage de l'interface. */
 function element<Balise extends keyof HTMLElementTagNameMap>(balise: Balise, attributs: Record<string, string> = {}, ...enfants: (Node | string)[]): HTMLElementTagNameMap[Balise] {
   const noeud = document.createElement(balise);
   for (const [nom, valeur] of Object.entries(attributs)) noeud.setAttribute(nom, valeur);
@@ -317,13 +296,13 @@ export function demanderPromotionsDeLaVersion(diplome: string, version: Objet, e
     document.removeEventListener("keydown", clavier);
     precedent?.focus();
     etat.referentiel = referentielAffiche();
-    historique().paintRef();
-    historique().paintForm();
-    historique().paintPick();
+    peindreReferentiel();
+    peindreFormulaire();
+    peindreCompetencesChoisies();
   };
   const aucune = (): void => {
     fermer();
-    historique().toast("Version validée, appliquée à aucune promotion en cours.");
+    toast("Version validée, appliquée à aucune promotion en cours.");
   };
   const clavier = (evenement: KeyboardEvent): void => {
     if (evenement.key === "Escape") aucune();
@@ -342,7 +321,7 @@ export function demanderPromotionsDeLaVersion(diplome: string, version: Objet, e
     });
     enregistrerPromotions();
     fermer();
-    historique().toast(`Version du ${String(dateEnLettres(version.date))} appliquée à ${String(nombre)} promotion${nombre > 1 ? "s" : ""}.`);
+    toast(`Version du ${String(dateEnLettres(version.date))} appliquée à ${String(nombre)} promotion${nombre > 1 ? "s" : ""}.`);
   };
   document.addEventListener("keydown", clavier);
   document.body.appendChild(fenetreModale);
@@ -362,12 +341,12 @@ export function restaurerVersion(id: unknown): void {
   (donnees().valide as Objet)[diplome] = version.id;
   materialiser(donnees());
   etat.referentiel = referentielAffiche();
-  historique().persistData();
-  historique().paintRef();
-  historique().paintForm();
-  historique().paintPick();
-  historique().paintLignes();
-  historique().toast(`Version du ${String(dateEnLettres(version.date))} rétablie.${version.attestation ? "" : " Validez-la avant d'évaluer avec."}`);
+  persistData();
+  peindreReferentiel();
+  peindreFormulaire();
+  peindreCompetencesChoisies();
+  peindreLignes();
+  toast(`Version du ${String(dateEnLettres(version.date))} rétablie.${version.attestation ? "" : " Validez-la avant d'évaluer avec."}`);
 }
 
 /**
@@ -385,7 +364,7 @@ export function afficherMention(diplome: string): void {
   donnees().activeDiplome = diplome;
   materialiser(donnees());
   etat.referentiel = referentielAffiche();
-  historique().persistData();
+  persistData();
 }
 
 /** « 1 septembre 2026 » ; une date illisible est rendue telle quelle. */
@@ -394,32 +373,7 @@ export function dateEnLettres(date: unknown): unknown {
   return Number.isNaN(jour.getTime()) ? date : jour.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 }
 
-/** Publie ces fonctions sous leurs anciens noms, pour le fichier historique. */
-export function publierVersionsReferentiel(cible: Fenetre, recu: Branchements): void {
-  fenetre = cible;
+/** Donne au module ce qu'il reçoit de l'application (stockage, règles de validation, horloge). */
+export function brancherVersionsReferentiel(recu: Branchements): void {
   branchements = recu;
-  Object.assign(cible, {
-    versionsOf: versionsDe,
-    refJSON: referentielEnTexte,
-    versionActive,
-    refAJour: referentielAJour,
-    dipRefValide: diplomeAReferentielValide,
-    promoRefValide: promotionAReferentielValide,
-    promosDeF: promotionsDe,
-    dipBloquant: diplomeQuiBloque,
-    promoDeF: promotionDe,
-    promoVid: versionDeLaPromotionDonnee,
-    promosEnCours: promotionsEnCours,
-    versionPourF: versionDeLEvaluationEnCours,
-    projectSnap: projeterCopie,
-    computeREF: referentielAffiche,
-    versionUsage: usageVersion,
-    validerVersion,
-    promoLabel: libellePromotion,
-    askPromosVersion: demanderPromotionsDeLaVersion,
-    restaurerVersion,
-    mentionDeFiche: mentionDe,
-    vueMention: afficherMention,
-    frDate: dateEnLettres,
-  });
 }

@@ -4,13 +4,13 @@ import { estObjet, type ObjetJson } from "./echange/modele";
 /**
  * Règles de la saisie des résultats d'un étudiant dans une évaluation.
  *
- * Le résultat d'un étudiant, tel que l'interface historique le range dans
+ * Le résultat d'un étudiant, tel que l'interface le range dans
  * `res[idEtudiant]` : `n` (niveau atteint, par ligne évaluée), `p` (position
  * du curseur, en pourcentage, par ligne), `obs` (observation par ligne), `appr` (appréciation), et au plus une des
  * dates `rendu`, `nr` (non rendu) ou `disp` (dispensé).
  *
  * Ces fonctions ne modifient jamais ce qu'on leur passe : elles rendent un
- * nouveau résultat. Les valeurs viennent de l'interface historique, non
+ * nouveau résultat. Les valeurs viennent de l'interface, non
  * typée : tout ce qui n'a pas la forme attendue vaut « rien de saisi ».
  */
 

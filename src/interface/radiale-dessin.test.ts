@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it } from "vitest";
 import { etat, etatVide } from "./etat";
-import { ANNEES, RAD, anneeOf, paintRadial, publierRadialeDessin, radInfo, roue, tlabel } from "./radiale-dessin";
+import { anneeOf, brancherRadialeDessin, paintRadial, radInfo, roue, tlabel } from "./radiale-dessin";
 
 const fenetre: Record<string, unknown> = {};
 const encadre = { innerHTML: "" };
@@ -10,7 +10,7 @@ const page = { getElementById: (id: string) => (id === "radInfo" && avecEncadre 
 
 beforeEach(() => {
   for (const cle of Object.keys(fenetre)) Reflect.deleteProperty(fenetre, cle);
-  publierRadialeDessin(fenetre, page);
+  brancherRadialeDessin(page);
   roue.angle = 0;
   encadre.innerHTML = "";
   avecEncadre = true;
@@ -34,14 +34,6 @@ beforeEach(() => {
   };
   etat.referentiel = { meta: { diplome: "DN MADE", mention: "Objet" } };
   etat.ui = { ref: { filter: { kind: "", value: "" } } };
-});
-
-describe("publierRadialeDessin", () => {
-  it("publie le dessin sous ses noms historiques", () => {
-    for (const nom of ["anneeOf", "tlabel", "paintRadial", "radInfo"]) expect(typeof fenetre[nom]).toBe("function");
-    expect(fenetre.RAD).toBe(RAD);
-    expect(fenetre.ANNEES).toBe(ANNEES);
-  });
 });
 
 describe("anneeOf", () => {

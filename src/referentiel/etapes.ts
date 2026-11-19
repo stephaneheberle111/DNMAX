@@ -5,7 +5,7 @@
  * mais ne s'y renomme pas, l'EC d'une compétence se rattache à l'étape 4.
  * Les règles sont dans `domaine/constituer` ; ce module affiche, sur
  * l'éditeur commun, et transmet. Noms, codes et intitulés passent par la vue
- * du référentiel actif que tient l'interface historique, qui les range dans
+ * du référentiel actif que tient l'interface, qui les range dans
  * le dictionnaire commun à l'enregistrement.
  */
 import {

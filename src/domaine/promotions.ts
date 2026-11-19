@@ -2,7 +2,7 @@
 /**
  * Mon établissement > Promotions : ordre des promotions, état à l'année
  * scolaire, et liste des étudiants de chaque promotion. Règles reprises
- * telles quelles de l'interface historique ; les promotions sont modifiées
+ * telles quelles de l'ancienne interface ; les promotions sont modifiées
  * sur place, comme elle les tient.
  */
 import { completerPersonne, lignesNoms, nouvellePersonne } from "./personnes";

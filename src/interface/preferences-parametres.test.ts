@@ -38,9 +38,38 @@ vi.mock("../preferences/preferences", () => ({
   },
 }));
 
-const { appliquerModule, paintEditor, paintMatrice, paintPrefs, paintSet, publierPreferencesParametres } = await import("./preferences-parametres");
+/** Appels aux autres modules, relevés sous un nom court, avec leurs arguments. */
+const appels = vi.hoisted(() => [] as string[]);
+const noterAppel = vi.hoisted(() => (nom: string) => (...valeurs: unknown[]) => {
+  appels.push(valeurs.length ? `${nom}:${valeurs.map(String).join(":")}` : nom);
+});
 
-let appels: string[];
+vi.mock("./aides-communes", () => ({ toast: noterAppel("toast"), paintTabs: noterAppel("onglets") }));
+vi.mock("./editeur-etape1", () => ({ peindreFormulaire: noterAppel("formulaire"), peindreCompetencesChoisies: noterAppel("competences") }));
+vi.mock("./editeur", () => ({ peindreLignes: noterAppel("lignes") }));
+vi.mock("./referentiel", () => ({ peindreReferentiel: noterAppel("referentiel"), allerALEtape: noterAppel("etape") }));
+vi.mock("./donnees", () => ({
+  saveData: (redessiner?: boolean) => appels.push(`enregistrer:${String(redessiner)}`),
+  persistData: noterAppel("persist"),
+  savePrefs: noterAppel("prefs"),
+  critLabel: () => "Critère",
+  modDeps: () => {
+    if (!etat.modules.eleves) etat.modules.dn = false;
+  },
+  dipVisibles: () => [{ id: "d1" }],
+  estCadreVierge: () => false,
+  addMention: () => ({ id: "d2" }),
+  newId: (prefixe: string) => `${prefixe}1`,
+}));
+vi.mock("./export-document", () => ({ sceauActif: () => true }));
+vi.mock("./etablissement", () => ({ armerSuppression: noterAppel("armer") }));
+vi.mock("./promotions-calendrier", () => ({
+  normaliserPromotion: (promotion: { id: string }) => appels.push(`migrer:${promotion.id}`),
+  enregistrerPromotions: noterAppel("promos"),
+}));
+
+const { appliquerModule, paintEditor, paintMatrice, paintPrefs, paintSet, brancherPreferencesParametres } = await import("./preferences-parametres");
+
 let stockage: Record<string, string>;
 let fenetre: Record<string, unknown>;
 let horloge: number;
@@ -66,14 +95,11 @@ beforeEach(() => {
   etat.promotions = [{ id: "p1" }, { id: "p2" }];
   etat.donnees = { diplomes: [], enseignants: [{ id: "t1" }], moi: "t1", livrables: [{ nom: "Carnet" }], etab: { nom: "Lycée" } };
   recus.ecrans = [];
-  appels = [];
+  appels.length = 0;
   stockage = {};
   horloge = 36 ** 3;
   // Sans navigateur : chaque zone demandée est rendue par son identifiant.
   vi.stubGlobal("document", { getElementById: (id: string) => ({ id }) });
-  const noterAppel = (nom: string) => (...valeurs: unknown[]) => {
-    appels.push(valeurs.length ? `${nom}:${valeurs.map(String).join(":")}` : nom);
-  };
   fenetre = {
     dnmaxPont: {
       dossierExports: { lire: () => Promise.resolve(null) },
@@ -83,30 +109,8 @@ beforeEach(() => {
         return Promise.resolve(true);
       },
     },
-    toast: noterAppel("toast"),
-    paintTabs: noterAppel("onglets"),
-    paintForm: noterAppel("formulaire"),
-    paintPick: noterAppel("competences"),
-    paintLignes: noterAppel("lignes"),
-    paintRef: noterAppel("referentiel"),
-    saveData: (redessiner?: boolean) => appels.push(`enregistrer:${String(redessiner)}`),
-    persistData: noterAppel("persist"),
-    savePrefs: noterAppel("prefs"),
-    critLabel: () => "Critère",
-    sceauActif: () => true,
-    modDeps: () => {
-      if (!etat.modules.eleves) etat.modules.dn = false;
-    },
-    allerEtape: noterAppel("etape"),
-    armDel: noterAppel("armer"),
-    dipVisibles: () => [{ id: "d1" }],
-    estCadreVierge: () => false,
-    addMention: () => ({ id: "d2" }),
-    newId: (prefixe: string) => `${prefixe}1`,
-    migPromoCohorte: (promotion: { id: string }) => appels.push(`migrer:${promotion.id}`),
-    savePromos: noterAppel("promos"),
   };
-  publierPreferencesParametres(fenetre, {
+  brancherPreferencesParametres(fenetre, {
     ecrireStockage: (cle, valeur) => {
       stockage[cle] = valeur;
     },
@@ -116,14 +120,6 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
-});
-
-describe("publication", () => {
-  it("pose les fonctions sous leurs noms historiques", () => {
-    for (const nom of ["paintMatrice", "paintEditor", "paintSceau", "paintVocab", "paintPrefs", "paintSet", "appliquerModule"]) {
-      expect(typeof fenetre[nom]).toBe("function");
-    }
-  });
 });
 
 describe("planification par semestre", () => {
@@ -281,7 +277,7 @@ describe("Paramètres > Modules", () => {
   });
 
   it("continue quand le stockage refuse l'écriture", () => {
-    publierPreferencesParametres(fenetre, {
+    brancherPreferencesParametres(fenetre, {
       ecrireStockage: () => {
         throw new Error("plein");
       },

@@ -6,8 +6,7 @@
  * tuiles ; texte et hauteur de chaque case.
  *
  * Repris du fichier historique (décision 38) à l'identique, ordre des tris
- * compris. Le dessin de la chaîne reste dans ce fichier (0.9.2) et appelle
- * ces fonctions par leur ancien nom, publié sur la fenêtre.
+ * compris. Le dessin de la chaîne est dans `interface/chaine-dessin`.
  */
 import { semItems, semLie, refFilter, ecName, ecsMiens } from "./carte-donnees";
 import { ecNum, ecOrd } from "./aides-communes";
@@ -221,9 +220,4 @@ export function chainNode<T extends { code?: unknown; t: unknown[]; sub?: unknow
   const pad = 9;
   const h = Math.max(34, (o.code ? 13 : 0) + o.t.length * lh + (o.sub ? 13 : 0) + pad * 2 - 4);
   return { ...o, h };
-}
-
-/** Pose ces fonctions et constantes sur `cible` (la fenêtre) sous leurs noms historiques. */
-export function publierChaineModele(cible: Record<string, unknown>): void {
-  Object.assign(cible, { chainModel, chainItemText, chainNode, CH_KINDS: [...CH_KINDS], CH_LBL: { ...CH_LBL } });
 }

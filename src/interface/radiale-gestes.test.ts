@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { ecouterRedimensionnement, publierRadialeGestes, radialWire } from "./radiale-gestes";
-
-describe("publierRadialeGestes", () => {
-  it("publie radialWire sous son nom historique", () => {
-    const fenetre: Record<string, unknown> = {};
-    publierRadialeGestes(fenetre, null);
-    expect(fenetre.radialWire).toBe(radialWire);
-  });
-});
+import { ecouterRedimensionnement, radialWire } from "./radiale-gestes";
 
 describe("radialWire", () => {
   it("ne fait rien quand l'hôte ne contient pas de carte radiale", () => {

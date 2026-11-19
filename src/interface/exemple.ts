@@ -5,58 +5,30 @@
  * d'évaluations avec résultats), et la validation du référentiel que
  * l'exemple apporte lui-même.
  *
- * Repris du fichier historique (décision 38). Le temps de la reprise, ces
- * fonctions sont publiées sur la fenêtre sous leur ancien nom ; le contenu et
- * les tirages de l'exemple sont dans `domaine/exemple`. L'ordre des tirages
- * (identifiants, hasard) est celui de l'interface historique : le changer
- * changerait l'exemple.
+ * Repris du fichier historique (décision 38) ; le contenu et les tirages de
+ * l'exemple sont dans `domaine/exemple`. L'ordre des tirages (identifiants,
+ * hasard) est celui de l'ancienne interface : le changer changerait l'exemple.
  */
 import { SEMESTRES } from "../domaine/constituer";
 import { ECHELLE } from "../domaine/evaluation";
 import * as EXEMPLE from "../domaine/exemple";
 import { absorber, materialiser, referentielDe } from "../domaine/modele-donnees";
 import { nettoyerDiplomesVierges } from "../domaine/diplome-vierge";
+import { paintTabs, toast } from "./aides-communes";
+import { addMention, livrNames, newId, persistData, saveData } from "./donnees";
 import { enregistrer, peindreEtapes, peindreEtudiants, peindreLignes } from "./editeur";
+import { peindreCompetencesChoisies, peindreFormulaire } from "./editeur-etape1";
 import { repartitionDe, ecsDeLaPromotion } from "./etablissement";
 import { etat, type Objet } from "./etat";
+import { compsFor, itemEcs, ligKey, lignesOf, migF, migPromo, nouvellePersonne, studentsOf, syncListe, uid } from "./evaluation-courante";
 import { peindreEvaluations } from "./evaluations";
 import { anneeScolaire, debutAnneeScolaire, enregistrerPromotions, normaliserPromotion, rangSemestre } from "./promotions-calendrier";
 import { anneeScolaireDe } from "../domaine/etablissement";
 import { diplomeAReferentielValide, referentielAffiche, versionsDe } from "./versions-referentiel";
 
-/** Ce que le module appelle encore dans le fichier historique. */
-interface FonctionsHistoriques {
-  livrNames(): string[];
-  newId(prefixe: string): string;
-  addMention(source: unknown, nom: unknown): Objet;
-  migF(evaluation: Objet): Objet;
-  nouvellePersonne(id: string, ligne: string): Objet;
-  syncListe(promotion: Objet, texte: string): void;
-  migPromo(promotion: Objet): Objet;
-  uid(): string;
-  compsFor(semestre: string): Objet[];
-  itemEcs(competence: unknown, semestre: unknown): string[];
-  studentsOf(evaluation: Objet): { id: string }[];
-  lignesOf(evaluation: Objet): unknown[];
-  ligKey(ligne: unknown): string;
-  persistData(): void;
-  saveData(redessiner?: boolean): void;
-  toast(message: string): void;
-  paintTabs(): void;
-  paintForm(): void;
-  paintPick(): void;
-}
-
-type Fenetre = Record<string, unknown>;
-
-let fenetre: Fenetre = {};
 let ecrire: (cle: string, valeur: string) => void = () => undefined;
 let lire: (cle: string) => string | null = () => null;
 let installerReferentiel: () => Promise<string | null> = () => Promise.resolve(null);
-
-function historique(): FonctionsHistoriques {
-  return fenetre as unknown as FonctionsHistoriques;
-}
 
 function liste(valeur: unknown): Objet[] {
   return Array.isArray(valeur) ? (valeur as Objet[]) : [];
@@ -85,12 +57,8 @@ const NIVEAUX: string[] = [...ECHELLE.niveaux];
 /** Résultats détaillés tirés pour une évaluation de l'exemple. */
 export function remplirResultats(evaluation: Objet, graine: number, part: number): Objet {
   evaluation.res = EXEMPLE.resultatsDetailles(
-    historique()
-      .studentsOf(evaluation)
-      .map((etudiant) => etudiant.id),
-    historique()
-      .lignesOf(evaluation)
-      .map((ligne) => historique().ligKey(ligne)),
+    studentsOf(evaluation).map((etudiant) => etudiant.id),
+    lignesOf(evaluation).map((ligne) => ligKey(ligne)),
     (Array.isArray(evaluation.niveaux) ? evaluation.niveaux.length : 0) || 4,
     graine,
     part,
@@ -101,8 +69,8 @@ export function remplirResultats(evaluation: Objet, graine: number, part: number
 export function contexteDetaille(): Parameters<typeof EXEMPLE.evaluationMobilier>[0] {
   return {
     competence: (code: unknown) => liste(etat.referentiel.competences).find((competence) => competence.code === code),
-    ecsRetenus: (competence: unknown, semestre: unknown) => historique().itemEcs(competence, semestre),
-    nouvelIdentifiant: () => historique().uid(),
+    ecsRetenus: (competence: unknown, semestre: unknown) => itemEcs(competence as Objet, semestre),
+    nouvelIdentifiant: () => uid(),
     maintenant: Date.now(),
     niveaux: NIVEAUX,
   } as unknown as Parameters<typeof EXEMPLE.evaluationMobilier>[0];
@@ -120,34 +88,34 @@ export function jeuEtendu(): { fiches: Objet[]; nPr: number; nEl: number; nM: nu
   EXEMPLE.MENTIONS_EXEMPLE.forEach(([mention, code, theme]) => {
     let diplome = liste(donnees.diplomes).find((candidat) => candidat.nom === base.nom && candidat.mention === mention);
     if (!diplome) {
-      diplome = historique().addMention(base.id, base.nom);
+      diplome = addMention(base.id as string, base.nom as string);
       diplome.mention = mention;
       diplome.code = code;
       diplome.duree = Number(base.duree) || 3;
     }
     mentions.push([diplome, theme]);
   });
-  historique().saveData(false);
+  saveData(false);
   const professeurs = EXEMPLE.ENSEIGNANTS_EXEMPLE;
   const enseignants = liste(donnees.enseignants);
   professeurs.forEach((nom) => {
-    if (!enseignants.some((enseignant) => enseignant.nom === nom)) enseignants.push(historique().nouvellePersonne(historique().uid(), nom));
+    if (!enseignants.some((enseignant) => enseignant.nom === nom)) enseignants.push(nouvellePersonne(uid(), nom) as unknown as Objet);
   });
   if (!donnees.moi) donnees.moi = (enseignants.find((enseignant) => enseignant.nom === professeurs[0]) ?? {}).id;
-  const livrables = historique().livrNames().length ? historique().livrNames() : EXEMPLE.LIVRABLES_PAR_DEFAUT;
+  const livrables = livrNames().length ? livrNames() : EXEMPLE.LIVRABLES_PAR_DEFAUT;
   const fiches: Objet[] = [];
   let nombreEtudiants = 0;
   let nombrePromotions = 0;
   mentions.forEach(([diplome, theme]) => {
     donnees.activeDiplome = diplome.id;
-    historique().saveData(false);
+    saveData(false);
     const duree = Number(diplome.duree) || 3;
     // k : années depuis l'entrée ; k = durée : promotion sortie.
     for (let annees = 0; annees <= duree; annees++) {
       const debut = debutAnnee - annees;
       let promotion = etat.promotions.find((candidate) => normaliserPromotion(candidate).diplomeId === diplome.id && candidate.debut === debut);
       if (!promotion) {
-        promotion = { id: historique().uid(), debut, diplomeId: diplome.id, eleves: "", liste: [] };
+        promotion = { id: uid(), debut, diplomeId: diplome.id, eleves: "", liste: [] };
         etat.promotions.push(promotion);
       }
       normaliserPromotion(promotion);
@@ -173,14 +141,14 @@ export function jeuEtendu(): { fiches: Objet[]; nPr: number; nEl: number; nM: nu
         if (deja) {
           inscrits.forEach((etudiant, rang) => (etudiant.nom = noms[rang]));
           promotion.eleves = noms.join("\n");
-        } else historique().syncListe(promotion, noms.join("\n"));
+        } else syncListe(promotion, noms.join("\n"));
       }
-      const etudiants = liste(historique().migPromo(promotion).liste);
+      const etudiants = liste(migPromo(promotion).liste);
       nombreEtudiants += etudiants.length;
       const semestresOuverts = EXEMPLE.semestresOuverts(annees, duree, rangSemestre(new Date()));
       for (let rang = 0; rang < semestresOuverts && rang < SEMS.length; rang++) {
         const semestre = SEMS[rang] as string;
-        const disponibles = historique().compsFor(semestre);
+        const disponibles = compsFor(semestre);
         if (!disponibles.length) continue;
         fiches.push(
           ...(EXEMPLE.evaluationsDuSemestre({
@@ -188,14 +156,14 @@ export function jeuEtendu(): { fiches: Objet[]; nPr: number; nEl: number; nM: nu
             rang,
             semestre,
             competences: disponibles,
-            ecsRetenus: (competence: unknown, sem: unknown) => historique().itemEcs(competence, sem),
+            ecsRetenus: (competence: unknown, sem: unknown) => itemEcs(competence as Objet, sem),
             livrables,
             theme,
             promotion: { id: promotion.id, nom: promotion.nom },
             debut,
             etudiants: etudiants.map((etudiant) => etudiant.id),
             maintenant: Date.now(),
-            nouvelIdentifiant: () => historique().uid(),
+            nouvelIdentifiant: () => uid(),
             preset: "maitrise",
             niveaux: NIVEAUX,
           } as never) as unknown as Objet[]),
@@ -204,16 +172,16 @@ export function jeuEtendu(): { fiches: Objet[]; nPr: number; nEl: number; nM: nu
     }
   });
   donnees.activeDiplome = actif;
-  historique().saveData(false);
+  saveData(false);
   enregistrerPromotions();
-  historique().persistData();
+  persistData();
   fiches.sort((une, autre) => String(autre.date).localeCompare(String(une.date)));
   return { fiches, nPr: nombrePromotions, nEl: nombreEtudiants, nM: mentions.length };
 }
 
 /** Valide, pour la démonstration, le référentiel des mentions que l'exemple a installées lui-même. */
 export function validerExemple(diplomes: string[]): void {
-  const nouvelIdentifiant = (prefixe: string): string => historique().newId(prefixe);
+  const nouvelIdentifiant = (prefixe: string): string => newId(prefixe);
   absorber(etat.donnees, nouvelIdentifiant);
   const jour = new Date().toISOString().slice(0, 10);
   diplomes.forEach((diplome) => {
@@ -230,7 +198,7 @@ export function validerExemple(diplomes: string[]): void {
     etat.donnees.valide = Object.assign({}, etat.donnees.valide ?? {});
     (etat.donnees.valide as Objet)[diplome] = version.id;
   });
-  historique().persistData();
+  persistData();
   etat.referentiel = referentielAffiche();
 }
 
@@ -242,14 +210,14 @@ export function validerExemple(diplomes: string[]): void {
 export async function chargerExemple(): Promise<void> {
   const referentielApporte = !referentielDe(etat.donnees, etat.donnees.activeDiplome as string).competences.length;
   if (referentielApporte) {
-    historique().persistData();
+    persistData();
     let diplome: string | null;
     try {
       diplome = await installerReferentiel();
     } catch (erreur) {
       const message = erreur instanceof Error ? erreur.message : erreur;
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions -- message tel quel, comme avant
-      historique().toast(`Exemple : ${message || erreur}`);
+      toast(`Exemple : ${message || erreur}`);
       return;
     }
     etat.donnees = lireEntree("dnmade.data") as Objet;
@@ -261,24 +229,24 @@ export async function chargerExemple(): Promise<void> {
       materialiser(etat.donnees);
     }
     etat.referentiel = referentielAffiche();
-    historique().persistData();
+    persistData();
   }
   const diplomesAvant = new Set(referentielApporte ? [] : liste(etat.donnees.diplomes).map((diplome) => diplome.id));
   const enseignants = liste(etat.donnees.enseignants);
   EXEMPLE.ENSEIGNANTS_DETAILLES.forEach(([nom, discipline]) => {
-    if (!enseignants.some((enseignant) => enseignant.nom === nom)) enseignants.push({ ...historique().nouvellePersonne(historique().uid(), nom), discipline });
+    if (!enseignants.some((enseignant) => enseignant.nom === nom)) enseignants.push({ ...nouvellePersonne(uid(), nom), discipline });
   });
-  historique().persistData();
+  persistData();
   const debutAnnee = debutAnneeScolaire(anneeScolaire(new Date())) ?? 0;
   const promotionDeLAnnee = (annee: number, noms: readonly string[]): Objet => {
     const debut = debutAnnee - annee + 1;
     let promotion = etat.promotions.find((candidate) => normaliserPromotion(candidate).diplomeId === etat.donnees.activeDiplome && candidate.debut === debut);
     if (!promotion) {
-      promotion = { id: historique().uid(), debut, diplomeId: etat.donnees.activeDiplome, eleves: "", liste: [] };
+      promotion = { id: uid(), debut, diplomeId: etat.donnees.activeDiplome, eleves: "", liste: [] };
       etat.promotions.push(promotion);
     }
     normaliserPromotion(promotion);
-    historique().syncListe(promotion, noms.join("\n"));
+    syncListe(promotion, noms.join("\n"));
     return promotion;
   };
   const deuxieme = promotionDeLAnnee(2, EXEMPLE.ETUDIANTS_DEUXIEME_ANNEE);
@@ -288,7 +256,7 @@ export async function chargerExemple(): Promise<void> {
     evaluation.promoId = promotion.id;
     evaluation.classe = promotion.nom;
     evaluation.classes = [promotion.nom];
-    historique().migF(evaluation);
+    migF(evaluation);
     return evaluation;
   };
   const mobilier = rattacher(EXEMPLE.evaluationMobilier(contexteDetaille()), deuxieme);
@@ -310,7 +278,7 @@ export async function chargerExemple(): Promise<void> {
     ...etat.evaluations.filter((evaluation) => !titres.includes(evaluation.titre) && !evaluation.demo),
   ];
   ecrireEntree("dnmade.fiches", etat.evaluations);
-  etat.evaluation = historique().migF(mobilier);
+  etat.evaluation = migF(mobilier);
   enregistrer();
   let active = "";
   if (!etat.modules.eleves) {
@@ -324,38 +292,29 @@ export async function chargerExemple(): Promise<void> {
   ui.emode = "grille";
   ui.eleve = "";
   ui.tab = "saved";
-  historique().paintTabs();
-  historique().paintForm();
-  historique().paintPick();
+  paintTabs();
+  peindreFormulaire();
+  peindreCompetencesChoisies();
   peindreLignes();
   peindreEvaluations();
   peindreEtapes();
   peindreEtudiants();
-  historique().toast(
+  toast(
     `Exemple chargé : ${String(etendu.nM)} mentions, ${String(etendu.nPr)} promotions, ${String(etendu.fiches.length + 3)} évaluations, résultats saisis${active}.`,
   );
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /**
- * Publie ces fonctions sous leurs anciens noms, pour le fichier historique.
- * `installer` installe le référentiel livré avec l'exemple et rend l'identifiant de son diplôme.
+ * Donne au module l'accès aux entrées enregistrées et `installer`, qui
+ * installe le référentiel livré avec l'exemple et rend l'identifiant de son diplôme.
  */
-export function publierExemple(
-  cible: Fenetre,
+export function brancherExemple(
   ecrireStockage: (cle: string, valeur: string) => void,
   lireStockage: (cle: string) => string | null,
   installer: () => Promise<string | null>,
 ): void {
-  fenetre = cible;
   ecrire = ecrireStockage;
   lire = lireStockage;
   installerReferentiel = installer;
-  Object.assign(cible, {
-    fillRes: remplirResultats,
-    contexteDetaille,
-    demoMass: jeuEtendu,
-    validerExemple,
-    loadDemo: chargerExemple,
-  });
 }
