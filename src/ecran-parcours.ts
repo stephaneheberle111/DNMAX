@@ -34,6 +34,8 @@ function gesteDe(etape: Etape): Geste | undefined {
 
 /** Durée de la halte du curseur sur chaque élément, pour le geste « parcourir ». */
 const DUREE_HALTE_PARCOURS = 1300;
+/** Durée de chaque geste d'un enchaînement : une boucle de l'animation « glisser » (2,6 s dans la feuille de style). */
+const DUREE_MOUVEMENT = 2600;
 
 /** Marge autour de la zone éclairée, en pixels. */
 const MARGE = 8;
@@ -324,14 +326,22 @@ function lireRepriseSession(): ReturnType<typeof lireReprise> {
   }
 }
 
-/** Ferme la visite ; elle est notée comme vue, qu'elle soit terminée ou passée. */
+/**
+ * Ferme la visite ; elle est notée comme vue, qu'elle soit terminée ou passée.
+ * Fermée depuis sa dernière page, elle ramène à « Mes évaluations », le point
+ * de départ du travail quotidien.
+ */
 export function terminer(): void {
+  const finie = visite !== null && visite.index >= PARCOURS_DEFINIS[visite.identifiant].etapes.length - 1;
   if (visite !== null) {
     noterVu(visite.identifiant);
   }
   demonter();
   visite = null;
   noterReprise();
+  if (finie) {
+    document.getElementById("t-saved")?.click();
+  }
 }
 
 function aller(index: number): void {
@@ -783,6 +793,21 @@ function defilerVers(cible: Element | null): void {
 /** Instant où l'étape en cours a commencé. */
 let debutEtape = 0;
 
+/** Geste d'enchaînement montré à l'image précédente : son changement relance l'animation du curseur. */
+let mouvementMontre = "";
+
+/**
+ * L'étape telle que le curseur la montre à cet instant : elle-même, ou, quand
+ * elle a un enchaînement, le geste de l'enchaînement en cours (tour à tour, en boucle).
+ */
+function etapeDuMoment(etape: Etape): Etape {
+  const enchainement = etape.enchainement === undefined ? [] : lire(etape.enchainement);
+  if (enchainement.length === 0) return etape;
+  const rang = Math.floor(Math.max(0, performance.now() - debutEtape) / DUREE_MOUVEMENT) % enchainement.length;
+  const mouvement = enchainement[rang] ?? enchainement[0];
+  return mouvement === undefined ? etape : { ...etape, geste: mouvement.geste, pointe: mouvement.pointe, depuis: mouvement.depuis };
+}
+
 /** Vrai une fois le curseur posé quelque part : il glisse ensuite de là, au lieu de surgir de la bulle. */
 let curseurPose = false;
 
@@ -808,11 +833,20 @@ function poserCurseur(curseur: HTMLElement, x: number, y: number): void {
  * glisse jusqu'à l'élément visé, où il clique ou écrit. Seul le geste
  * « glisser » part d'un autre point, l'élément à emporter.
  */
-function placerCurseur(trou: DOMRect | null, etape: Etape): void {
+function placerCurseur(trou: DOMRect | null, etapeEntiere: Etape): void {
   const curseur = elements.curseur;
   const bulle = elements.bulle;
   if (curseur === null || bulle === null) {
     return;
+  }
+  const etape = etapeDuMoment(etapeEntiere);
+  const mouvement = etape === etapeEntiere ? "" : `${String(gesteDe(etape))}|${String(etape.depuis)}|${String(pointeDe(etape))}`;
+  if (mouvement !== mouvementMontre) {
+    mouvementMontre = mouvement;
+    // Chaque geste de l'enchaînement repart du début de l'animation, depuis son propre point de départ.
+    curseur.style.animation = "none";
+    curseur.getBoundingClientRect();
+    curseur.style.animation = "";
   }
   const geste = visite !== null && (visite.dejaFait || visite.salut !== null) ? undefined : gesteDe(etape);
   // Masqué sans être retiré de l'affichage : il garde sa position, d'où il repartira.
