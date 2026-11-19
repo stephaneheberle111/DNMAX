@@ -1,0 +1,101 @@
+// SPDX-License-Identifier: CECILL-2.1
+import { beforeEach, describe, expect, it } from "vitest";
+import { etat, etatVide, type Objet } from "./etat";
+import { CH_KINDS, chainItemText, chainModel, chainNode, publierChaineModele } from "./chaine-modele";
+
+function ids(liste: Objet[] | undefined): unknown[] {
+  return (liste ?? []).map((element) => element.id);
+}
+
+beforeEach(() => {
+  Object.assign(etat, etatVide());
+  etat.donnees = {
+    activeDiplome: "d1",
+    diplomes: [{ id: "d1", nom: "DN MADE", mention: "Objet" }],
+    ues: [
+      { id: "u1", nom: "UE 1" },
+      { id: "u2", nom: "UE 2" },
+    ],
+    ecs: [
+      { id: "e1", ueId: "u1", nom: "Dessin", codes: { 1: "EC 1.1" }, sems: ["S1", "S2"] },
+      { id: "e2", ueId: "u2", nom: "Volume", codes: { 1: "EC 1.2" }, sems: ["S2"] },
+    ],
+    competences: [
+      { id: "c1", code: "C1.1", bloc: 1, libelle: "Dessiner", ecIds: ["e1"], ecs: [{ id: "e1", sems: ["S1"] }] },
+      { id: "c2", code: "C2.1", bloc: 2, libelle: "Modeler", ecIds: ["e2"], ecs: [{ id: "e2", sems: ["S2"] }] },
+    ],
+  };
+  etat.ui = { ref: { filter: { kind: "", value: "" } } };
+});
+
+describe("publierChaineModele", () => {
+  it("publie le modèle et les colonnes sous leurs noms historiques", () => {
+    const fenetre: Record<string, unknown> = {};
+    publierChaineModele(fenetre);
+    expect(typeof fenetre.chainModel).toBe("function");
+    expect(fenetre.CH_KINDS).toEqual([...CH_KINDS]);
+  });
+});
+
+describe("chainModel", () => {
+  it("prend par défaut la première compétence pour pivot, et ne garde que ce qui lui est lié", () => {
+    const modele = chainModel();
+    expect(modele?.kind).toBe("comp");
+    expect(modele?.piv.id).toBe("c1");
+    expect(ids(modele?.sets[1])).toEqual(["S1"]);
+    expect(ids(modele?.sets[2])).toEqual(["e1"]);
+    expect(ids(modele?.sets[3])).toEqual(["u1"]);
+    expect((etat.ui.ref as Objet).piv).toEqual({ kind: "comp", id: "c1" });
+  });
+
+  it("verrouille la roue sur le semestre choisi", () => {
+    (etat.ui.ref as Objet).piv = { kind: "sem", id: "S2" };
+    const modele = chainModel();
+    expect(modele?.p).toBe(1);
+    expect(ids(modele?.sets[0])).toEqual(["c2"]);
+    expect(ids(modele?.sets[2])).toEqual(["e2"]);
+  });
+
+  it("reprend la compétence demandée par son code quand aucun pivot n'est retenu", () => {
+    (etat.ui.ref as Objet).chain = "C2.1";
+    expect(chainModel()?.piv.id).toBe("c2");
+  });
+
+  it("respecte le filtre des tuiles", () => {
+    (etat.ui.ref as Objet).filter = { kind: "ue", value: "UE 2" };
+    (etat.ui.ref as Objet).piv = { kind: "ec", id: "" };
+    const modele = chainModel();
+    expect(modele?.items.map((ec) => ec.id)).toEqual(["e2"]);
+  });
+
+  it("revient aux compétences pour une sorte de pivot inconnue", () => {
+    (etat.ui.ref as Objet).piv = { kind: "inconnue", id: "" };
+    expect(chainModel()?.kind).toBe("comp");
+  });
+
+  it("ne montre rien sans compétence", () => {
+    etat.donnees.competences = [];
+    expect(chainModel()).toBeNull();
+  });
+
+  it("relie deux cases seulement par un triplet compétence, semestre, EC réel", () => {
+    const modele = chainModel();
+    const [c1] = etat.donnees.competences as Objet[];
+    expect(modele?.rel("comp", c1 as Objet, { id: "S1", sem: "S1" })).toBe(true);
+    expect(modele?.rel("comp", c1 as Objet, { id: "S2", sem: "S2" })).toBe(false);
+  });
+});
+
+describe("chainItemText et chainNode", () => {
+  it("écrit le texte de chaque sorte de case", () => {
+    expect(chainItemText("sem", { num: "3", annee: 2 })).toEqual({ code: "", label: "Semestre 3 · année 2" });
+    expect(chainItemText("dip", { nom: "DN MADE", mention: "Objet" }).label).toBe("DN MADE · mention Objet");
+    expect(chainItemText("dip", {}).label).toBe("Aucun diplôme");
+    expect(chainItemText("comp", { code: "C1", libelle: "" }).label).toBe("C1");
+  });
+
+  it("donne au moins 34 de haut à une case, plus pour un code, des lignes et un sous-titre", () => {
+    expect(chainNode({ t: [] }).h).toBe(34);
+    expect(chainNode({ code: "C1", t: ["a", "b", "c"], sub: "s" }).h).toBe(13 + 37.5 + 13 + 14);
+  });
+});

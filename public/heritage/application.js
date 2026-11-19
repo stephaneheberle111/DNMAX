@@ -119,11 +119,6 @@ function paintRadial(){
     <path class="zone" d="${arcPath(c,c,HUB+2,332,-Math.PI/4,Math.PI/4)}"/>
   </svg>`;
 }
-function chainNode(o){
-  const lh=12.5,pad=9;
-  const h=Math.max(34,(o.code?13:0)+o.t.length*lh+(o.sub?13:0)+pad*2-4);
-  return {...o,h};
-}
 function chainSvgNode(o,w){
   const lh=12.5,pad=9;
   let ty=o.y+pad+6,t="";
@@ -138,86 +133,9 @@ function chainSvgNode(o,w){
 }
 /* ---- Carte heuristique : cinq colonnes, l'une verrouillée en roue, les autres montrent ce qui lui est associé.
    Le semestre s'intercale entre la compétence et l'EC : c'est lui qui porte le code de l'année. ---- */
-const CH_KINDS=["comp","sem","ec","ue","dip"];
-const CH_LBL={comp:"Compétence",sem:"Semestre",ec:"Enseignement constitutif",ue:"Unité d'enseignement",dip:"Diplôme"};
+/* Modèle de la chaîne (chainModel, chainItemText, chainNode, CH_KINDS, CH_LBL) : écrit en TypeScript
+   (src/interface/chaine-modele.ts) et publié sous son ancien nom. Le dessin reste ici. */
 const CH_WH=236;
-function chainModel(){
-  const D=DATA, f=refFilter();
-  const dip=D.diplomes.find(x=>x.id===D.activeDiplome)||{id:"",nom:"Diplôme",mention:""};
-  const uIdx=id=>D.ues.findIndex(u=>u.id===id);
-  const ueOfE=e=>e?D.ues.find(u=>u.id===e.ueId)||null:null;
-  // ensembles autorisés par le filtre des tuiles
-  let A=null;
-  if(f.kind){
-    let C=[],E=[],U=[];
-    const compsOfE=es=>D.competences.filter(c=>(c.ecIds||[]).some(x=>es.some(e=>e.id===x)));
-    const ecsOfC=cs=>D.ecs.filter(e=>cs.some(c=>c.ecIds.includes(e.id)));
-    const up=es=>{U=D.ues.filter(u=>es.some(e=>e.ueId===u.id))};
-    if(f.kind==="ue"){U=D.ues.filter(u=>u.nom===f.value);E=D.ecs.filter(e=>U.some(u=>u.id===e.ueId));C=compsOfE(E)}
-    else if(f.kind==="ec"){E=D.ecs.filter(e=>e.id===f.value);up(E);C=compsOfE(E)}
-    else if(f.kind==="comp"){C=D.competences.filter(c=>c.code===f.value);E=ecsOfC(C);up(E)}
-    else if(f.kind==="bloc"){C=D.competences.filter(c=>String(c.bloc)===f.value);E=ecsOfC(C);up(E)}
-    const S2=semItems(E).filter(x=>C.some(c=>semLie(c,x)));
-    A={comp:new Set(C.map(x=>x.id)),sem:new Set(S2.map(x=>x.id)),ec:new Set(E.map(x=>x.id)),ue:new Set(U.map(x=>x.id))};
-  }
-  const ok=(k,x)=>!A||k==="dip"||A[k].has(x.id);
-  const ecKey=x=>[SEMS.indexOf(x.sem)];
-  const cmp=(a,b)=>{for(let i=0;i<a.length;i++)if(a[i]!==b[i])return a[i]-b[i];return 0};
-  const lists={
-    comp:D.competences.slice().sort((a,b)=>(+a.bloc-+b.bloc)||ecNum(a.code)-ecNum(b.code)),
-    sem:semItems(D.ecs),
-    ec:D.ecs.slice().sort((a,b)=>(uIdx(a.ueId)-uIdx(b.ueId))||ecOrd(a)-ecOrd(b)),
-    ue:D.ues.slice(),
-    dip:D.diplomes.slice()};
-  Object.keys(lists).forEach(k=>lists[k]=lists[k].filter(x=>ok(k,x)));
-  const rel=(k,a,b)=>k==="comp"?semLie(a,b):k==="sem"?(b.sems||[]).includes(a.sem):k==="ec"?a.ueId===b.id:true;
-  // pivot
-  const old=ui.ref.piv||{kind:"comp",id:""};
-  let kind=CH_KINDS.includes(old.kind)?old.kind:"comp";
-  if(!old.id&&kind==="comp"&&ui.ref.chain){const c=D.competences.find(x=>x.code===ui.ref.chain);if(c)old.id=c.id}
-  let items=lists[kind];
-  if(!items.length){kind="comp";items=lists.comp}
-  let piv=kind==="dip"?dip:(items.find(x=>x.id===old.id)||items[0]);
-  if(!piv)return null;
-  ui.ref.piv={kind,id:piv.id};
-  // colonnes associées
-  const p=CH_KINDS.indexOf(kind), sets={};
-  sets[p]=[piv];
-  for(let i=p+1;i<CH_KINDS.length;i++){const k=CH_KINDS[i], prev=sets[i-1], pk=CH_KINDS[i-1];
-    sets[i]=k==="dip"?[dip]:lists[k].filter(b=>prev.some(a=>rel(pk,a,b)))}
-  for(let i=p-1;i>=0;i--){const k=CH_KINDS[i], nxt=sets[i+1];
-    sets[i]=lists[k].filter(a=>nxt.some(b=>rel(k,a,b)))}
-  // le semestre est commun à tous les EC : on ne garde que les triplets compétence–semestre–EC réels
-  let ok3=null;
-  if(sets[0]&&sets[1]&&sets[2]){
-    const tri=[];
-    D.competences.forEach(c=>(c.ecs||[]).forEach(l=>(l.sems||[]).forEach(sm=>tri.push({c:c.id,s:sm,e:l.id}))));
-    const S0=new Set(sets[0].map(x=>x.id)),S1=new Set(sets[1].map(x=>x.id)),S2=new Set(sets[2].map(x=>x.id));
-    const keep=tri.filter(t=>S0.has(t.c)&&S1.has(t.s)&&S2.has(t.e));
-    if(keep.length){
-      const k=[new Set(),new Set(),new Set()];
-      keep.forEach(t=>{k[0].add(t.c);k[1].add(t.s);k[2].add(t.e)});
-      [0,1,2].forEach(i=>{if(i!==p)sets[i]=sets[i].filter(x=>k[i].has(x.id))});
-      if(p<3)sets[3]=sets[3].filter(u=>sets[2].some(e=>e.ueId===u.id));
-      ok3=keep;
-    }
-  }
-  const pair=(k,A,B)=>rel(k,A,B)&&(!ok3||(k==="comp"?ok3.some(t=>t.c===A.id&&t.s===B.id)
-    :k==="sem"?ok3.some(t=>t.s===A.id&&t.e===B.id):true));
-  // ordre : hiérarchique, compétences au barycentre de leurs EC
-  if(sets[1].length>1)sets[1].sort((a,b)=>cmp(ecKey(a),ecKey(b)));
-  if(p!==0&&sets[0].length>1){const ix=c=>{const l=sets[1].map((e,i)=>semLie(c,e)?i:-1).filter(i=>i>=0);
-      return l.length?l.reduce((s2,i)=>s2+i,0)/l.length:999};
-    sets[0].sort((a,b)=>(ix(a)-ix(b))||(+a.bloc-+b.bloc)||ecNum(a.code)-ecNum(b.code))}
-  return {kind,p,piv,sets,items:kind==="dip"?lists.dip:items,rel:pair,dip,ueOfE};
-}
-function chainItemText(k,x,M){
-  if(k==="comp")return {code:x.code,label:x.libelle||x.code};
-  if(k==="sem")return {code:"",label:"Semestre "+x.num+" · année "+x.annee};
-  if(k==="ec")return {code:ecCodeLbl(x),label:ecName(x)};
-  if(k==="ue")return {code:x.code||"",label:x.nom};
-  return {code:"",label:(x.nom||"Aucun diplôme")+(x.mention?" · mention "+x.mention:"")};
-}
 function paintChain(){
   const D=DATA, f=refFilter(), M=chainModel();
   if(!M)return `<div class="empty">Aucun élément ne correspond au filtre.</div>`;
