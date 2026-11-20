@@ -54,7 +54,7 @@ const AIDE_ETUDIANTS =
   " Ouvrez « étudiant·es » pour gérer la liste : renommer, retirer, ajouter plusieurs noms d'un coup, ou faire passer un·e étudiant·e dans une autre promotion, y compris d'une autre mention. Ses résultats déjà saisis restent attachés aux évaluations de son ancienne promotion.";
 // Le nom du module vient du catalogue : l'aide suit un changement de nom.
 export const AIDE_SANS_ETUDIANTS = ` Le module « ${MODULES.eleves?.nom ?? "Étudiant·es"} » (Paramètres) permet en plus de gérer la liste des étudiant·es de chaque promotion.`;
-const CSS_ETUDIANT = "grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px 92px";
+const CSS_ETUDIANT = "grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px 6.6em";
 const INVITATION_AJOUT =
   "Ajouter des étudiant·es — un·e par ligne : prénom puis nom, ou deux colonnes Prénom / Nom collées d'un tableur";
 
@@ -74,7 +74,7 @@ function option(valeur: string, libelle: string, choisie: boolean): HTMLOptionEl
 export function peindrePromotions(hote: HTMLElement, contexte: ContextePromotions): void {
   const toutes = contexte.promotions();
   const rangees = ordrePromotions(toutes, contexte.ordreDiplomes);
-  const css = `grid-template-columns:240px 92px minmax(0,1fr) 118px${contexte.moduleEleves ? " 120px" : ""} 92px`;
+  const css = `grid-template-columns:240px 92px minmax(0,1fr) 118px${contexte.moduleEleves ? " 9em" : ""} 6.6em`;
   const trouver = (id: string): Promotion | undefined => contexte.promotions().find((promotion) => promotion.id === id);
 
   /** Promotions où faire passer un étudiant, groupées par diplôme et mention. */

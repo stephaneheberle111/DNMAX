@@ -211,12 +211,22 @@ nav.tabs button[aria-selected="true"] .picto-art {
 .vue-entete {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 18px;
 }
 .vue-entete .vue-titre {
   margin-right: auto;
+}
+/* Titre que l'onglet actif dit déjà : gardé pour les lecteurs d'écran, retiré de la vue. */
+.vue-titre.hors-vue {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .vue-entete .btn.primary {
   min-height: 44px;

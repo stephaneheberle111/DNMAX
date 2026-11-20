@@ -56,9 +56,11 @@ nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink)
 .btn.primary:hover{filter:brightness(1.08);color:var(--on-accent,#fff)}
 .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);padding:6px 8px}
 .btn.ghost:hover{background:var(--surface-2);color:var(--ink)}
-/* Boutons de suppression des listes (« Supprimer », « Retirer ») : à la taille des autres commandes de la ligne,
-   et de largeur fixe pour que le passage à « Confirmer » ne déplace rien. */
-.btn.ghost[data-eddel]{font-size:13px;padding:5px 8px;min-width:84px;justify-content:center}
+/* Boutons de suppression des listes (« Supprimer », « Retirer ») : un peu plus petits que le texte, et de
+   largeur fixe pour que le passage à « Confirmer » ne déplace rien. Tout est en em : sur un grand écran, le
+   texte grandit (voir plus bas), et ces boutons, comme leur colonne, doivent grandir avec lui. */
+.btn.ghost[data-eddel]{font-size:.93em;padding:5px 8px;min-width:6em;justify-content:center}
+.ed .btn{white-space:nowrap}
 .btn:focus-visible,nav.tabs button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,input.cbox:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 
@@ -643,7 +645,8 @@ table.mx.mtx th.ecc2 .rot{position:absolute;left:50%;bottom:2px;transform-origin
 table.mx.mtx th.an{background:color-mix(in srgb,var(--c) 22%,var(--surface-2));border-bottom:1px solid var(--line)}
 table.mx.mtx th.an span{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 table.mx.mtx td{text-align:center;padding:3px 4px}
-table.mx.mtx td.alt{background:color-mix(in srgb,var(--line) 22%,transparent)}
+/* Une colonne d'EC sur deux, pour suivre les colonnes de l'œil : un voile du pétrole de l'identité. */
+table.mx.mtx td.alt{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 table.mx.mtx td.ecend,table.mx.mtx th.ecend,
 table.mx.mtx td.ueend,table.mx.mtx th.ueend{border-right:2px solid var(--line-strong)}
 table.mx.mtx td.hs{background:repeating-linear-gradient(135deg,var(--surface-2),var(--surface-2) 4px,transparent 4px,transparent 8px)}
