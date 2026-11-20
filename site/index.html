@@ -164,17 +164,24 @@ nav.main a.cta{background:var(--accent);color:var(--accent-ink)}
 .chrome{display:flex;align-items:center;gap:.5em;padding:.55em .9em;background:var(--a-surface);border-bottom:1px solid var(--a-line);font-size:.85em;color:var(--a-muted)}
 .chrome i{width:.85em;height:.85em;border-radius:50%;background:var(--a-line);display:inline-block}
 .chrome span{margin:0 auto;transform:translateX(-1.4em)}
-/* Barre du haut : la même que celle de l’application (onglets groupés, « Échanger… » et « Mon compte » à droite). */
-.onglets{display:flex;align-items:center;gap:.55em;padding:.45em .8em;background:var(--a-surface);border-bottom:1px solid var(--a-line);font-size:.8em;transition:opacity .4s}
+/* Barre du haut : la même que celle de l’application, pétrole dans les deux thèmes (onglets à picto, « Échanger… » et « Mon compte » à droite). */
+.onglets{display:flex;align-items:center;gap:.55em;padding:.5em .8em;background:#10555F;border-bottom:1px solid #0C444C;font-size:.8em;transition:opacity .4s}
 .onglets .logo-app{display:block;flex:none;width:4.7em;height:1.05em;margin-right:.35em}
+.app .onglets .piece-design{fill:#FFFFFF}
+.app .onglets .piece-art{fill:#E9B978}
 .app .piece-design{fill:#10555F}
 .app .piece-art{fill:#C27A2C}
-.ong-groupe{display:flex;gap:.15em;background:var(--a-paper);border:1px solid var(--a-line);border-radius:.45em;padding:.15em}
-.onglet{padding:.4em .62em;border-radius:.32em;color:var(--a-muted);white-space:nowrap;transition:background .3s,color .3s}
-.onglet.on{background:var(--a-surface);color:var(--a-ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.ong-groupe{display:flex;gap:.15em}
+.onglet{display:inline-flex;align-items:center;gap:.4em;padding:.4em .55em;border-radius:.35em;color:#D6E6E6;white-space:nowrap;transition:background .3s,color .3s}
+.onglet.on{background:#0C444C;color:#FFFFFF;font-weight:600}
+.onglet .pic{width:1.15em;height:1.15em;flex:none}
+.onglet .pic-d{fill:#D6E6E6;transition:fill .3s}
+.onglet .pic-a{fill:#8FB5B8;stroke:#10555F;transition:fill .3s}
+.onglet.on .pic-d{fill:#FFFFFF}
+.onglet.on .pic-a{fill:#E9B978;stroke:#0C444C}
 .outils{margin-left:auto;display:flex;gap:.35em}
-.outil{display:inline-flex;align-items:center;gap:.4em;padding:.4em .62em;border:1px solid var(--a-line);border-radius:.45em;background:var(--a-paper);color:var(--a-muted);white-space:nowrap;transition:background .3s,color .3s}
-.outil.on{background:var(--a-surface);color:var(--a-ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.outil{display:inline-flex;align-items:center;gap:.4em;padding:.4em .62em;border:1px solid #5F9296;border-radius:.45em;color:#FFFFFF;white-space:nowrap;transition:background .3s,color .3s}
+.outil.on{background:#0C444C;border-color:#D6E6E6}
 .outil svg{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .outil svg.chev{width:.85em;height:.85em}
 .app.ferme .onglets{opacity:0}
@@ -420,15 +427,20 @@ svg.dim .dot.off{opacity:.1}
 .actions-m{display:flex;justify-content:flex-end;gap:.5em}
 
 /* Coffre */
-.coffre-a{position:absolute;inset:0;display:grid;place-items:center;background:var(--a-paper)}
-.coffre-a .carte-c{width:52%;text-align:center}
-.coffre-a .cad{width:3.2em;height:3.2em;margin:0 auto .8em;border-radius:50%;background:var(--a-soft);display:grid;place-items:center;color:var(--a-accent)}
-.coffre-a .cad svg{width:1.6em;height:1.6em}
-.coffre-a h4{font-size:1.5em}
-.coffre-a .intro{font-size:.92em;color:var(--a-muted);margin:.4em 0 1em}
+/* Écran d’ouverture : volet pétrole à gauche, formulaire sur le papier à droite, comme dans l’application. */
+.coffre-a{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;background:var(--a-paper)}
+.coffre-a .volet-c{background:#10555F;display:flex;align-items:center;justify-content:center;gap:1.1em;padding:0 1em}
+.coffre-a .volet-c .piece-design{fill:#FFFFFF}
+.coffre-a .volet-c .piece-art{fill:#E9B978}
+.coffre-a .dn-c{width:8.4em;height:auto;flex:none}
+.coffre-a .mots-c{display:flex;flex-direction:column;gap:.1em;margin:0;font:800 1.25em/1.05 "Bricolage Grotesque",sans-serif;white-space:nowrap;color:#FFFFFF}
+.coffre-a .mots-c span:first-child{color:#E9B978}
+.coffre-a .carte-c{align-self:center;width:66%;margin:0 auto}
+.coffre-a .logo-c{display:block;width:9.5em;height:auto;margin-bottom:1.3em}
 .coffre-a .lab{text-align:left}
 .coffre-a .mdp{border:1px solid var(--a-line);border-radius:.5em;padding:.6em .8em;background:var(--a-surface);text-align:left;letter-spacing:.25em;min-height:2.4em;margin:0 0 .9em;font-size:1.05em}
-.coffre-a .cact{display:flex;align-items:center;justify-content:space-between;gap:1em}
+.coffre-a .cact{display:flex;flex-direction:column;align-items:stretch;gap:.8em;text-align:center}
+.coffre-a .cact .bt{padding:.7em .9em}
 .coffre-a .lien{font-size:.85em;color:var(--a-accent)}
 
 /* Dernier appel */
@@ -698,7 +710,7 @@ footer a{color:var(--ink-2)}
               <div class="chrome" aria-hidden="true"><i></i><i></i><i></i><span>DNMAX</span></div>
               <div class="onglets" aria-hidden="true">
                 <svg class="logo-app" viewBox="0 0 448 100" role="img" aria-label="DNMAX"><g transform="translate(0.00 0)"><path d="M10 10 H34 V90 H10 Z" class="piece-design"/><path d="M38 10 A40 40 0 0 1 38 90 Z" class="piece-art"/></g><g transform="translate(80.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 18.00 L38.00 42.00 L86.00 90.00 L86.00 66.00 Z" class="piece-art"/><path d="M62.00 10.00 L86.00 10.00 L86.00 60.34 L62.00 36.34 Z" class="piece-design"/></g><g transform="translate(168.00 0)"><path d="M10.00 10.00 L34.00 34.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M15.66 10.00 L100.34 10.00 L58.00 52.34 Z" class="piece-art"/><path d="M106.00 10.00 L106.00 90.00 L82.00 90.00 L82.00 34.00 Z" class="piece-design"/></g><g transform="translate(276.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 10.00 L38.00 34.00 L94.00 90.00 L94.00 66.00 Z" class="piece-art"/><path d="M38.00 62.00 L60.34 62.00 L72.34 74.00 L38.00 74.00 Z" class="piece-design"/></g><g transform="translate(372.00 0)"><path d="M10.00 10.00 L10.00 34.00 L66.00 90.00 L66.00 66.00 Z" class="piece-art"/><path d="M10.00 66.00 L10.00 90.00 L35.17 64.83 L23.17 52.83 Z M66.00 34.00 L66.00 10.00 L40.83 35.17 L52.83 47.17 Z" class="piece-design"/></g></svg>
-                <span class="ong-groupe"><span class="onglet">Mes évaluations</span><span class="onglet">Progression</span><span class="onglet">Référentiel</span><span class="onglet">Mon établissement</span><span class="onglet">Paramètres</span></span>
+                <span class="ong-groupe"><span class="onglet"><svg class="pic" viewBox="0 0 100 100"><path class="pic-d" d="M38 12 H90 V32 H38 Z M38 40 H90 V60 H38 Z M38 68 H90 V88 H38 Z"/><path class="pic-a" d="M10 12 H30 V32 H10 Z M10 40 H30 V60 H10 Z M10 68 H30 V88 H10 Z"/></svg>Mes évaluations</span><span class="onglet"><svg class="pic" viewBox="0 0 100 100"><path class="pic-d" d="M10 60 H34 V90 H10 Z M38 38 H62 V90 H38 Z"/><path class="pic-a" d="M66 10 H90 V90 H66 Z"/></svg>Progression</span><span class="onglet"><svg class="pic" viewBox="0 0 100 100"><path class="pic-d" d="M12 10 H60 V90 H12 Z"/><circle class="pic-a" cx="66" cy="66" r="22" stroke-width="5"/></svg>Référentiel</span><span class="onglet"><svg class="pic" viewBox="0 0 100 100"><path class="pic-d" d="M18 50 H82 V90 H18 Z"/><path class="pic-a" d="M50 10 L92 46 H8 Z"/></svg>Mon établissement</span><span class="onglet"><svg class="pic" viewBox="0 0 100 100"><path class="pic-d" d="M10 24 H90 V36 H10 Z M10 64 H90 V76 H10 Z"/><circle class="pic-a" cx="64" cy="30" r="14" stroke-width="5"/><circle class="pic-a" cx="36" cy="70" r="14" stroke-width="5"/></svg>Paramètres</span></span>
                 <span class="outils">
                   <span class="outil" id="outil-echange"><svg viewBox="0 0 20 20"><path d="M4 7h11m0 0-3-3m3 3-3 3M16 13H5m0 0 3-3m-3 3 3 3"/></svg>Échanger…</span>
                   <span class="outil"><svg viewBox="0 0 20 20"><circle cx="10" cy="7" r="3.2"/><path d="M3.8 16.5c.9-3 3.3-4.6 6.2-4.6s5.3 1.6 6.2 4.6"/></svg>Mon compte<svg class="chev" viewBox="0 0 20 20"><path d="m6 8 4 4 4-4"/></svg></span>
@@ -708,7 +720,7 @@ footer a{color:var(--ink-2)}
 
                 <div class="scr" data-scr="saved">
                   <div class="pan">
-                    <div class="tete a"><span class="bt">Nouvelle évaluation</span><h4>Évaluations enregistrées</h4><span class="nb">4</span></div>
+                    <div class="tete a"><h4>Évaluations enregistrées</h4><span class="nb">4</span><span class="bt pousse">Nouvelle évaluation</span></div>
                     <div class="filtres-a a" style="--d:80"><span class="lab" style="margin:0">Filtrer</span><span class="flt"><span class="mut">Promotions</span> En cours ▾</span><span class="flt"><span class="mut">Semestres</span> Tous les semestres ▾</span><span class="flt"><span class="mut">Suivi</span> Tous les suivis ▾</span><span class="rch">Rechercher un intitulé</span></div>
                     <table class="slist">
                       <thead class="a" style="--d:100"><tr><th>Promotion</th><th>Sem.</th><th>Intitulé</th><th>Livrables</th><th>Comp.</th><th>Suivi</th><th></th></tr></thead>
@@ -894,13 +906,15 @@ footer a{color:var(--ink-2)}
 
                 <div class="scr" data-scr="coffre">
                   <div class="coffre-a">
+                    <div class="volet-c">
+                      <svg class="dn-c" viewBox="10 10 156 80"><g><path d="M10 10 H34 V90 H10 Z" class="piece-design"/><path d="M38 10 A40 40 0 0 1 38 90 Z" class="piece-art"/></g><g transform="translate(80 0)"><path d="M10 10 L34 10 L34 90 L10 90 Z" class="piece-design"/><path d="M38 18 L38 42 L86 90 L86 66 Z" class="piece-art"/><path d="M62 10 L86 10 L86 60.34 L62 36.34 Z" class="piece-design"/></g></svg>
+                      <p class="mots-c"><span>Métiers d’art</span><span>Design</span></p>
+                    </div>
                     <div class="carte-c">
-                      <div class="cad a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-                      <h4 class="a" style="--d:100">DNMAX</h4>
-                      <p class="intro a" style="--d:150">Saisissez votre mot de passe pour ouvrir vos données.</p>
-                      <p class="lab a" style="--d:200">Mot de passe</p>
-                      <div class="mdp a" style="--d:200"><span id="mdp"></span></div>
-                      <div class="cact a" style="--d:300"><span class="lien">Mot de passe oublié&nbsp;?</span><span class="bt">Ouvrir</span></div>
+                      <svg class="logo-c a" viewBox="0 0 448 100"><g transform="translate(0.00 0)"><path d="M10 10 H34 V90 H10 Z" class="piece-design"/><path d="M38 10 A40 40 0 0 1 38 90 Z" class="piece-art"/></g><g transform="translate(80.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 18.00 L38.00 42.00 L86.00 90.00 L86.00 66.00 Z" class="piece-art"/><path d="M62.00 10.00 L86.00 10.00 L86.00 60.34 L62.00 36.34 Z" class="piece-design"/></g><g transform="translate(168.00 0)"><path d="M10.00 10.00 L34.00 34.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M15.66 10.00 L100.34 10.00 L58.00 52.34 Z" class="piece-art"/><path d="M106.00 10.00 L106.00 90.00 L82.00 90.00 L82.00 34.00 Z" class="piece-design"/></g><g transform="translate(276.00 0)"><path d="M10.00 10.00 L34.00 10.00 L34.00 90.00 L10.00 90.00 Z" class="piece-design"/><path d="M38.00 10.00 L38.00 34.00 L94.00 90.00 L94.00 66.00 Z" class="piece-art"/><path d="M38.00 62.00 L60.34 62.00 L72.34 74.00 L38.00 74.00 Z" class="piece-design"/></g><g transform="translate(372.00 0)"><path d="M10.00 10.00 L10.00 34.00 L66.00 90.00 L66.00 66.00 Z" class="piece-art"/><path d="M10.00 66.00 L10.00 90.00 L35.17 64.83 L23.17 52.83 Z M66.00 34.00 L66.00 10.00 L40.83 35.17 L52.83 47.17 Z" class="piece-design"/></g></svg>
+                      <p class="lab a" style="--d:150">Mot de passe</p>
+                      <div class="mdp a" style="--d:150"><span id="mdp"></span></div>
+                      <div class="cact a" style="--d:250"><span class="bt">Ouvrir</span><span class="lien">Mot de passe oublié&nbsp;?</span></div>
                     </div>
                   </div>
                 </div>
