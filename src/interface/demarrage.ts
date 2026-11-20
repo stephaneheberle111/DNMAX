@@ -15,6 +15,7 @@ import { ECHELLE, enumerer, manquesPourEnregistrer } from "../domaine/evaluation
 import { appliquerDependances, modulesParDefaut } from "../domaine/modules";
 import { preferencesInitiales } from "../domaine/preferences";
 import type { Referentiel } from "../domaine/modele-donnees";
+import { TEINTE_BLOCS, teinteBlocsAffichee } from "../domaine/teinte-blocs";
 import { brancherInterface } from "./branchements";
 import { brancherOnglets } from "./onglets";
 import { brancherFormulaire } from "../editeur/formulaire";
@@ -35,7 +36,7 @@ import { peindreReferentiel } from "./referentiel";
 import { projeterCopie, referentielAffiche, versionsDe } from "./versions-referentiel";
 
 /** Référentiel d'une installation neuve : rien, sinon la teinte des blocs. */
-const REFERENTIEL_VIDE = { meta: { diplome: "", niveaux: [], blocTint: "#D1F1DA" }, blocs: [], ues: [], familles: [], competences: [] };
+const REFERENTIEL_VIDE = { meta: { diplome: "", niveaux: [], blocTint: TEINTE_BLOCS }, blocs: [], ues: [], familles: [], competences: [] };
 
 /** Ce que le démarrage demande à l'extérieur. */
 export interface BranchementsDemarrage {
@@ -132,7 +133,7 @@ export function chargerEtat(branchements: BranchementsDemarrage): void {
   syncItemEcs();
   etat.ui = { tab: "saved", step: 1, sel: [], q: "", org: { pane: "etab" }, ref: { pane: "explorer", chain: "", cq: "", q: "", group: "bloc", annee: "*", sems: [] } };
   const meta = etat.referentiel.meta as Objet | undefined;
-  etat.teinteBlocs = (meta && (meta.blocTint as string)) || "#D1F1DA";
+  etat.teinteBlocs = teinteBlocsAffichee(meta?.blocTint);
 }
 
 /** Branche onglets, formulaire et boutons, dessine la page et rend les ponts (lignes de fin de l'ancien script). */

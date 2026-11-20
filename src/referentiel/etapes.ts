@@ -222,7 +222,7 @@ function texteAffiche(valeur: unknown): string {
   return typeof valeur === "number" && valeur !== 0 ? String(valeur) : "";
 }
 
-const CSS_UES = "grid-template-columns:44px 96px minmax(0,1fr) 216px 64px 92px";
+const CSS_UES = "grid-template-columns:44px 96px minmax(0,1fr) 216px 64px 6.6em";
 
 /** Étape 1 : les unités d'enseignement, leur code, leur nom et leurs semestres. */
 export function peindreEtapeUes(hote: HTMLElement, contexte: ContexteEtape): void {
@@ -287,7 +287,7 @@ export function champFiltre(contexte: ContexteEtape): HTMLInputElement {
   return champ;
 }
 
-const CSS_ECS = "grid-template-columns:44px 228px minmax(0,1fr) 190px 216px 54px 92px";
+const CSS_ECS = "grid-template-columns:44px 228px minmax(0,1fr) 190px 216px 54px 6.6em";
 
 /** Étape 2 : les enseignements constitutifs, leurs codes par année, leur UE, leurs semestres et leurs ECTS. */
 export function peindreEtapeEcs(hote: HTMLElement, contexte: ContexteEtape): void {
@@ -378,7 +378,7 @@ export function peindreEtapeEcs(hote: HTMLElement, contexte: ContexteEtape): voi
   );
 }
 
-const CSS_BLOCS = "grid-template-columns:90px minmax(0,1.4fr) 104px minmax(0,1fr) 92px";
+const CSS_BLOCS = "grid-template-columns:90px minmax(0,1.4fr) 104px minmax(0,1fr) 6.6em";
 
 function pluriel(nombre: number, mot: string): string {
   return `${String(nombre)} ${mot}${nombre > 1 ? "s" : ""}`;

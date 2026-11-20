@@ -22,7 +22,7 @@ export interface ContexteEnseignants {
   annoncer(texte: string): void;
 }
 
-const CSS = "grid-template-columns:60px minmax(0,1fr) minmax(0,1fr) 92px";
+const CSS = "grid-template-columns:60px minmax(0,1fr) minmax(0,1fr) 6.6em";
 const AIDE =
   "Proposé·es dans le champ « Enseignant·es » de l'étape 1. « C'est moi » désigne l'utilisateur·rice de DNMAX : son prénom et son nom signent ses envois, sa répartition de service cadre la page Progression, et son nom est coché d'office dans une nouvelle évaluation.";
 
