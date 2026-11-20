@@ -1,5 +1,11 @@
 # Journal des modifications
 
+## À venir
+
+### Corrigé
+
+- Première page de bienvenue : elle tient désormais dans la fenêtre, sans ascenseur, jusqu'à sa plus petite taille. Les conseils sont resserrés, et seuls ceux de votre système (Windows, macOS ou Linux) sont cités pour le verrouillage de l'écran et le chiffrement du disque ; le volet pétrole se resserre, et le bandeau gaufré, que le texte recouvrait, s'efface le temps de cette page.
+
 ## 1.0.0 — 2026-11-20
 
 ### Modifié

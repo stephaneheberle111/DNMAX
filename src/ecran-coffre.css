@@ -182,7 +182,53 @@
 }
 
 .ecran-coffre form.coffre-large {
-  max-width: 600px;
+  max-width: 660px;
+  gap: 10px;
+}
+
+/* Première page de bienvenue, la plus longue : elle doit tenir dans la fenêtre sans défiler, jusqu'à sa
+   taille minimale (900 × 600). Le volet pétrole se resserre, ses mots passent sous le DN, les marges se
+   réduisent, et le bandeau gaufré, que le texte recouvrirait, s'efface le temps de cette page. */
+.ecran-coffre:has(form.coffre-large) {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+}
+.ecran-coffre:has(form.coffre-large) > .bandeau-gaufre {
+  display: none;
+}
+.ecran-coffre:has(form.coffre-large) .coffre-volet {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0 clamp(16px, 3vw, 36px);
+}
+.ecran-coffre:has(form.coffre-large) .coffre-dn {
+  width: min(180px, 100%);
+}
+.coffre-colonne:has(form.coffre-large) {
+  gap: 12px;
+  padding: 16px clamp(20px, 3vw, 40px);
+}
+.coffre-colonne:has(form.coffre-large) .coffre-logotype {
+  width: 144px;
+  height: 32px;
+  align-self: flex-start;
+  margin-left: max(0px, calc((100% - 660px) / 2));
+}
+.ecran-coffre form.coffre-large h1 {
+  font-size: 24px;
+}
+.ecran-coffre form.coffre-large p,
+.ecran-coffre form.coffre-large .coffre-pratiques {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.ecran-coffre form.coffre-large .coffre-pratiques {
+  gap: 5px;
+}
+/* Fenêtre à sa hauteur minimale : le logotype, déjà présent dans le volet, cède sa place. */
+@media (max-height: 640px) {
+  .coffre-colonne:has(form.coffre-large) .coffre-logotype {
+    display: none;
+  }
 }
 
 .ecran-coffre .coffre-pratiques {
