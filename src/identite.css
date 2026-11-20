@@ -148,23 +148,10 @@ html[data-bandeau="non"] .bandeau-gaufre {
   }
 }
 
-/* ---------- Bandeau et onglets à picto (planche 43) ----------
-   Le bandeau est pétrole, dans les deux thèmes : le logotype y prend le blanc et l'ambre clair de l'icône.
-   Ses couleurs sont les siennes, pas celles du thème, puisque son fond ne change pas avec lui. */
+/* ---------- Bandeau et onglets à picto (planche 43) ---------- */
 header.bar {
-  --bandeau: #10555f;
-  --bandeau-fonce: #0c444c;
-  --bandeau-filet: #5f9296;
-  --bandeau-texte: #d6e6e6;
-  --bandeau-ambre: #e9b978;
-  background: var(--bandeau);
-  border-bottom-color: var(--bandeau-fonce);
-}
-header.bar .piece-design {
-  fill: #fff;
-}
-header.bar .piece-art {
-  fill: var(--bandeau-ambre);
+  background: var(--surface);
+  border-bottom-color: var(--line);
 }
 nav.tabs {
   background: none;
@@ -178,10 +165,10 @@ nav.tabs button {
   gap: 7px;
   padding: 9px 12px;
   border-radius: 6px;
-  color: var(--bandeau-texte);
+  color: var(--muted);
   font-weight: 400;
 }
-/* Le menu actif porte ses deux couleurs sur le pétrole foncé ; les autres sont en clair, d'un seul ton.
+/* Le menu actif porte ses deux couleurs sur le fond pétrole pâle ; les autres sont en gris.
    Les ronds sont détourés de la couleur du fond de l'onglet, pour se détacher du fût. */
 .picto {
   width: 20px;
@@ -189,49 +176,27 @@ nav.tabs button {
   flex-shrink: 0;
 }
 .picto-design {
-  fill: var(--bandeau-texte);
+  fill: var(--picto-design);
 }
 .picto-art {
-  fill: #8fb5b8;
-  stroke: var(--bandeau);
+  fill: var(--picto-art);
+  stroke: var(--surface);
 }
 nav.tabs button:hover {
-  color: #fff;
-  background: var(--bandeau-fonce);
-}
-nav.tabs button:hover .picto-art {
-  stroke: var(--bandeau-fonce);
+  color: var(--ink);
 }
 nav.tabs button[aria-selected="true"] {
-  background: var(--bandeau-fonce);
-  color: #fff;
+  background: var(--accent-soft);
+  color: var(--accent);
   box-shadow: none;
   font-weight: 600;
 }
 nav.tabs button[aria-selected="true"] .picto-design {
-  fill: #fff;
+  fill: var(--piece-design);
 }
 nav.tabs button[aria-selected="true"] .picto-art {
-  fill: var(--bandeau-ambre);
-  stroke: var(--bandeau-fonce);
-}
-/* « Échanger… » et « Mon compte » : en filet clair sur le pétrole. */
-header.bar .bar-outil {
-  background: transparent;
-  border-color: var(--bandeau-filet);
-  color: #fff;
-}
-header.bar .bar-outil:hover,
-header.bar .bar-outil[aria-expanded="true"],
-header.bar .bar-outil.actif {
-  background: var(--bandeau-fonce);
-  border-color: var(--bandeau-texte);
-  color: #fff;
-  box-shadow: none;
-}
-/* Le contour de focus du thème est pétrole : invisible ici, il passe à l'ambre. */
-header.bar button:focus-visible {
-  outline-color: var(--bandeau-ambre);
+  fill: var(--piece-art);
+  stroke: var(--accent-soft);
 }
 
 /* ---------- Titres, cartes, boutons ---------- */
