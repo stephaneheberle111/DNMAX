@@ -645,8 +645,7 @@ table.mx.mtx th.ecc2 .rot{position:absolute;left:50%;bottom:2px;transform-origin
 table.mx.mtx th.an{background:color-mix(in srgb,var(--c) 22%,var(--surface-2));border-bottom:1px solid var(--line)}
 table.mx.mtx th.an span{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 table.mx.mtx td{text-align:center;padding:3px 4px}
-/* Une colonne d'EC sur deux, pour suivre les colonnes de l'œil : un voile du pétrole de l'identité. */
-table.mx.mtx td.alt{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+table.mx.mtx td.alt{background:color-mix(in srgb,var(--line) 22%,transparent)}
 table.mx.mtx td.ecend,table.mx.mtx th.ecend,
 table.mx.mtx td.ueend,table.mx.mtx th.ueend{border-right:2px solid var(--line-strong)}
 table.mx.mtx td.hs{background:repeating-linear-gradient(135deg,var(--surface-2),var(--surface-2) 4px,transparent 4px,transparent 8px)}
