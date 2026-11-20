@@ -11,7 +11,7 @@ name: Surveillance
 #
 # En cas d'échec, un courriel marqué urgent part vers l'adresse de contact si
 # les réglages d'envoi sont renseignés (Settings → Secrets and variables → Actions) :
-#   ALERTE_SMTP_SERVEUR (variable)        serveur d'envoi de la boîte, par exemple ssl0.ovh.net
+#   ALERTE_SMTP_SERVEUR (variable ou secret)  serveur d'envoi de la boîte, par exemple ssl0.ovh.net
 #   ALERTE_SMTP_UTILISATEUR (secret)      adresse de la boîte qui envoie
 #   ALERTE_SMTP_MOT_DE_PASSE (secret)     son mot de passe
 #   ALERTE_DESTINATAIRE (variable)        facultative ; contact@dnmax.fr par défaut
@@ -42,6 +42,11 @@ jobs:
     name: Installeurs en ligne conformes à la version publiée
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    # Même file que « Site » et « Téléchargements » : la comparaison attend la fin d'un dépôt en cours.
+    # Lancée pendant qu'une version se dépose, elle verrait encore les installeurs de la précédente.
+    concurrency:
+      group: site
+      cancel-in-progress: false
     env:
       FICHIERS: "DNMAX-windows.exe DNMAX-macos.dmg DNMAX-linux.deb"
       ADRESSE: "https://dnmax.fr/telechargements"
@@ -160,7 +165,8 @@ jobs:
           path: alertes
       - name: Envoi
         env:
-          SERVEUR: ${{ vars.ALERTE_SMTP_SERVEUR }}
+          # Accepté comme variable ou comme secret : l'erreur de rangement est facile à faire et ne se voit pas.
+          SERVEUR: ${{ vars.ALERTE_SMTP_SERVEUR || secrets.ALERTE_SMTP_SERVEUR }}
           UTILISATEUR: ${{ secrets.ALERTE_SMTP_UTILISATEUR }}
           MOT_DE_PASSE: ${{ secrets.ALERTE_SMTP_MOT_DE_PASSE }}
           DESTINATAIRE: ${{ vars.ALERTE_DESTINATAIRE || 'contact@dnmax.fr' }}
