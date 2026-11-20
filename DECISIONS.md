@@ -54,7 +54,7 @@ La consigne est de préférer, à fonction égale, un outil référencé au [SIL
 
 **Icône** : « D + N en grand, le D seul en petit ». Sur un pavé pétrole arrondi (rx 22 sur 100), le D et le N blancs et ambre clair `#E9B978` à partir de 64 px, le D seul en dessous (favicon de l'application et du site, petites tailles du `.ico`). Dans la barre des tâches de Windows et de Linux, la fenêtre prend le D sans fond : pétrole et ambre sur une barre claire, blanc et ambre clair sur une barre sombre, d'après le thème du système (`src-tauri/src/lib.rs`). Le pavé reste l'icône des raccourcis, de l'installeur et du Dock de macOS, qui ignore l'icône de fenêtre. Les icônes de `src-tauri/icons/` se régénèrent avec `node outils/generer-icones.ts` (dessin dans `outils/icones.ts`), le sceau des exports avec `node outils/generer-sceau.ts`.
 
-**Menus** : un picto en deux pièces par onglet (planche 43), en couleurs sur le fond pétrole pâle pour le menu actif, en deux gris pour les autres.
+**Menus** : un picto en deux pièces par onglet (planche 43), en couleurs sur le fond pétrole pâle pour le menu actif, en deux gris pour les autres. Un bandeau pétrole, avec le logotype en blanc et ambre clair, a été essayé puis écarté en novembre 2026 : le bandeau reste clair. La reconstitution de l'application sur le site suit ce bandeau.
 
 **Écran d'ouverture** (planche 44) : volet pétrole à gauche, avec le DN en pièces et « Métiers d'art / Design » ; à droite, le logotype, le mot de passe et « Ouvrir ». La bienvenue et les autres formulaires du coffre prennent le même écran.
 
@@ -556,11 +556,35 @@ Arbitrées par l'auteur le 15 novembre 2026, règle par règle, avec un principe
 
 **Suite** (19 novembre 2026) : les modules de `src/interface/` s'appellent par des imports ; chaque `publierX(fenetre, …)` est devenu `brancherX(…)`, qui ne fait plus que donner au module ce qu'il demande à l'extérieur (stockage, horloge, hasard, document). Les cycles d'import entre modules sont sans risque, aucun n'utilisant à son chargement ce qu'il importe d'un autre. Restent publiés sur la fenêtre, pour le seul banc de comparaison (`outils/banc/banc.cjs`), qui rejoue ses gestes dans la page sur `main` et sur une branche : l'état, par les accesseurs de `src/interface/etat.ts`, et les 19 fonctions de `src/heritage/noms-banc.ts` (`paintTabs`, `paintForm`, `paintPick`, `paintLignes`, `paintRef`, `paintOrg`, `paintSet`, `paintPrefs`, `paintProg`, `paintSaved`, `goStep`, `nouvelleFiche`, `migF`, `computeREF`, `materialize`, `saveData`, `loadDemo`, `exportFiche`, `askRestitWarn`). Aucun gabarit HTML ni test de bout en bout n'appelle ces noms. Le garde-fou vérifie que chaque nom libre que le banc exécute dans la page est publié, dans l'état ou fourni par le navigateur, et que chaque fonction publiée y est appelée.
 
+## 39. Installeur Windows dessiné, sur un modèle dérivé de celui de Tauri
+
+**Constat** (20 novembre 2026) : l'installeur produit par Tauri gardait l'habillage par défaut de NSIS, étranger à DNMAX : bandeau bleu générique, quatre pages à « Suivant > », texte standard.
+
+**Retenu** : une fenêtre sans barre de titre, sur le pétrole de l'icône, avec le logotype et les polices du site (Public Sans, Bricolage Grotesque). Le parcours par défaut tient en un bouton ; « Personnaliser l'installation » ouvre à la demande le choix des raccourcis et du dossier. Le désinstalleur suit le même dessin, et fait confirmer sur une seconde page la suppression des données, décochée d'office.
+
+**Comment** : Tauri ne permet de changer les pages qu'en fournissant son propre modèle. `src-tauri/windows/installeur.nsi` est donc une copie du modèle de Tauri (tauri-cli 2.12.4), dont chaque écart est marqué « DNMAX : » ; les pages elles-mêmes sont dans `habillage-installeur.nsh`. Ce qui installe, met à jour et désinstalle (sections, WebView2, raccourcis, registre, modes discret et silencieux) reste celui de Tauri. Les images, une par échelle d'affichage de Windows, et les polices sont produites par `node outils/generer-habillage-installeur.ts`.
+
+**Prix à payer** : à chaque montée de version de `@tauri-apps/cli`, le modèle est à comparer au nouveau modèle d'origine, sans quoi ses correctifs seraient perdus. Un test (`outils/habillage-installeur.test.ts`) échoue tant que le numéro de version noté en tête du modèle n'est pas celui du paquet, pour que la comparaison ne soit pas oubliée. La marche à suivre est dans le README.
+
+**Écarts de comportement assumés** :
+
+- le raccourci sur le bureau n'est plus créé d'office dans l'installeur à pages (il l'est toujours en installation silencieuse ou discrète, comme avant) ;
+- une version déjà installée est remplacée sur place, sans proposer de la désinstaller d'abord : c'est ce que fait déjà la mise à jour depuis l'application ;
+- la liste détaillée des opérations n'est plus affichée ; si l'installation de WebView2 échoue, le message s'écrit sous la barre de progression.
+
+**Accessibilité** : Entrée lance l'action principale de la page, Échap ferme, Tab parcourt les liens et les cases, qui sont de vrais contrôles Windows. Sur la page qui confirme la suppression des données, Entrée ramène en arrière : il faut choisir « Tout supprimer ».
+
+**Poids** : environ 160 Ko de plus pour l'installeur (images, polices, et leur copie dans le désinstalleur), mesurés sur le banc d'essai.
+
+**Outils** : NSIS est celui que Tauri emploie déjà ; aucun outil nouveau. Les polices sont celles du site, sous licence SIL OFL 1.1 (`site/polices/`).
+
+**Limite** : le rendu n'a été vérifié qu'avec Wine avant le premier essai sur un vrai Windows ; les coins arrondis de la fenêtre et son liseré n'existent que sous Windows 11.
+
 ## 40. Fenêtre d'installation macOS : bandeau pétrole, icônes sur le papier
 
 **Retenu** (20 novembre 2026) : sous macOS, il n'y a pas d'installeur à pages ; le `.dmg` ouvre une fenêtre où l'on glisse DNMAX vers Applications. Son fond (`src-tauri/macos/fond-dmg.png`) porte le logotype sur un bandeau pétrole, puis, sur le papier, une flèche entre les deux icônes et la consigne. Il se régénère avec `node outils/generer-fond-dmg.ts` ; la taille de la fenêtre et la place des icônes sont dans `tauri.conf.json`, et un test vérifie qu'elles sont celles du dessin.
 
 **Pourquoi pas tout en pétrole, comme l'installeur Windows** : macOS écrit lui-même le nom des icônes, en noir quand le Mac est en mode clair, et l'icône de DNMAX est elle-même pétrole ; l'un et l'autre se perdraient sur ce fond.
 
-**Limites** : en mode sombre, macOS écrit ces noms en blanc, moins lisibles sur le papier ; aucun fond ne convient aux deux modes. L'image compte deux pixels par point, avec sa densité inscrite, pour rester nette sur un écran Retina ; ce rendu n'a pas été vérifié sur un Mac avant le premier essai.
+**Limites** : en mode sombre, macOS écrit ces noms en blanc, moins lisibles sur le papier ; aucun fond ne convient aux deux modes. L'image compte deux pixels par point, avec sa densité inscrite, pour rester nette sur un écran Retina. La 1.0.1 est partie sans que ce rendu ait été vu sur un Mac, l'auteur n'en ayant pas : la place des icônes par rapport à la flèche et la netteté du fond restent à confirmer par un·e utilisateur·rice de Mac.
 

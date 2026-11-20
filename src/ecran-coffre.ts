@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { defautsRobustesse, expliquerDefauts, motsInterditsDe } from "./domaine/robustesse-mot-de-passe";
 import "./ecran-coffre.css";
+import { deduireSysteme } from "./domaine/adresse-retours";
+import { conseilsSelonSysteme } from "./domaine/bonnes-pratiques";
 import { LONGUEUR_MAXIMALE_NOM, creerIdentite, type Identite } from "./domaine/identite";
 import type { Entrees } from "./domaine/magasin-memoire";
 import {
@@ -57,29 +59,29 @@ function marqueEtape(rang: number): string {
 /** Longueur maximale du nom de l'établissement saisi à la bienvenue. */
 const LONGUEUR_MAXIMALE_ETABLISSEMENT = 120;
 
+/**
+ * Première page de bienvenue. Elle doit tenir dans la fenêtre sans défiler, à sa
+ * taille minimale comprise : chaque conseil tient en une phrase, et ceux qui
+ * dépendent du système (`data-role`) sont écrits à l'affichage pour l'ordinateur
+ * utilisé seulement (src/domaine/bonnes-pratiques.ts).
+ */
 const GABARIT_BONNES_PRATIQUES = `
   ${marqueEtape(1)}
   <h1>Bienvenue dans DNMAX</h1>
   <p>En quatre étapes, DNMAX se prépare pour vous : votre nom et celui de votre établissement, un mot de passe
-     qui protège vos données, puis votre mention, dont le référentiel et les trois promotions en cours sont installés d'office.
-     La visite guidée prendra ensuite le relais pour explorer l'application.</p>
-  <p>DNMAX chiffre vos données par votre mot de passe. Quelques réflexes protègent le reste de l'ordinateur ;
-     ce sont des conseils, rien ne vous empêche de continuer.</p>
+     qui chiffre vos données, puis votre mention, avec son référentiel et les trois promotions en cours.
+     La visite guidée prendra ensuite le relais.</p>
+  <p>Quelques réflexes protègent le reste de l'ordinateur&nbsp;; ce sont des conseils, rien ne vous empêche de continuer.</p>
   <ul class="coffre-pratiques">
-    <li><b>Une session à vous, protégée par un mot de passe.</b> Ne partagez ni votre session ni l'ordinateur
-        avec d'autres personnes, même pour un instant.</li>
-    <li><b>L'écran verrouillé dès que vous vous éloignez</b>&nbsp;: Windows + L, Ctrl + Cmd + Q sur Mac, Super + L sous Linux.</li>
-    <li><b>Le disque de l'ordinateur chiffré (conseillé).</b> En cas de vol ou de perte, rien n'est lisible.
-      <ul>
-        <li>Windows&nbsp;: BitLocker, ou «&nbsp;Chiffrement de l'appareil&nbsp;», s'active dans Paramètres &gt; Confidentialité et sécurité.</li>
-        <li>macOS&nbsp;: FileVault s'active dans Réglages Système &gt; Confidentialité et sécurité.</li>
-        <li>Linux&nbsp;: LUKS se choisit à l'installation du système («&nbsp;chiffrer le disque&nbsp;»).</li>
-      </ul></li>
-    <li><b>Des sauvegardes.</b> DNMAX fait chaque jour d'utilisation une copie chiffrée sur cet ordinateur et en garde une par semaine pendant trois mois, puis une par mois pendant un an ; de temps en temps,
+    <li><b>Une session à vous, protégée par un mot de passe</b>, que vous ne partagez avec personne, même pour un instant.</li>
+    <li><b>L'écran verrouillé dès que vous vous éloignez</b>&nbsp;: <span data-role="verrouillage"></span>.</li>
+    <li><b>Le disque de l'ordinateur chiffré (conseillé)</b>, pour que rien ne soit lisible en cas de vol ou de perte.
+        <span data-role="chiffrement"></span>.</li>
+    <li><b>Des sauvegardes.</b> DNMAX fait chaque jour d'utilisation une copie chiffrée sur cet ordinateur&nbsp;; de temps en temps,
         emportez-en une sur une clé ou un disque externe avec «&nbsp;Échanger… &gt; Changer d'ordinateur&nbsp;».</li>
     <li><b>Les exports Word, Excel et OpenDocument ne sont pas chiffrés.</b> Rangez-les à l'abri et supprimez ceux qui
         contiennent des étudiant·es dès qu'ils ne servent plus.</li>
-    <li><b>Le code de secours</b>, affiché à l'étape suivante, se garde sur papier, hors de l'ordinateur.</li>
+    <li><b>Le code de secours</b>, affiché après le choix du mot de passe, se garde sur papier, hors de l'ordinateur.</li>
   </ul>
   <p class="coffre-erreur" role="alert" hidden></p>
   <div class="coffre-actions">
@@ -284,6 +286,13 @@ function signalerDefautMotDePasse(
 function montrerBonnesPratiques(ecran: HTMLElement, terminer: (ouverture: OuvertureCoffre) => void, profil: Profil | null = null): void {
   const formulaire = afficherFormulaire(ecran, GABARIT_BONNES_PRATIQUES);
   formulaire.classList.add("coffre-large");
+  const conseils = conseilsSelonSysteme(deduireSysteme(navigator.userAgent));
+  const verrouillage = formulaire.querySelector("[data-role=verrouillage]");
+  const chiffrement = formulaire.querySelector("[data-role=chiffrement]");
+  if (verrouillage && chiffrement) {
+    verrouillage.textContent = conseils.verrouillage;
+    chiffrement.textContent = conseils.chiffrement;
+  }
   formulaire.querySelector<HTMLButtonElement>("button[type=submit]")?.focus();
   formulaire.addEventListener("submit", (evenement) => {
     evenement.preventDefault();

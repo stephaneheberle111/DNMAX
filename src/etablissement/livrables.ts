@@ -31,7 +31,7 @@ export interface ContexteLivrables {
   annoncer(texte: string): void;
 }
 
-const CSS = "grid-template-columns:minmax(0,1fr) 190px 92px";
+const CSS = "grid-template-columns:minmax(0,1fr) 190px 6.6em";
 const NATURES = ["Écrit", "Oral", "Plastique", "Numérique", "Maquette", "Dossier"];
 
 export function peindreLivrables(hote: HTMLElement, contexte: ContexteLivrables): void {

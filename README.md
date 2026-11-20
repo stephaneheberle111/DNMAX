@@ -69,6 +69,16 @@ Les installeurs sont produits dans `src-tauri/target/release/bundle/`, pour le s
 
 Pour obtenir les installeurs des trois systèmes sans les construire soi-même : onglet « Actions » du dépôt, atelier « Installeurs », bouton « Run workflow ». Ils sont joints à l'exécution, en bas de sa page. Pousser une branche nommée `essai-installeurs/…` déclenche le même atelier.
 
+### L'installeur Windows
+
+Ses pages sont dessinées par DNMAX (décision 39) ; trois fichiers de `src-tauri/windows/` y pourvoient :
+
+- `installeur.nsi` : le modèle de Tauri, retouché là où un commentaire « DNMAX : » le dit ;
+- `habillage-installeur.nsh` : les pages, leurs textes, leurs couleurs et leurs cotes ;
+- `habillage/` : images et polices, à régénérer avec `node outils/generer-habillage-installeur.ts` après un changement du logotype ou des couleurs.
+
+**À chaque montée de version de `@tauri-apps/cli`**, un test échoue exprès. Comparer alors le modèle d'origine de l'ancienne version à celui de la nouvelle (`crates/tauri-bundler/src/bundle/windows/nsis/installer.nsi`, dans le dépôt de Tauri, aux étiquettes `tauri-cli-v…`), reporter les différences dans `installeur.nsi`, puis mettre à jour le numéro de version noté en tête de ce fichier. Essayer ensuite l'installeur sur un vrai Windows (branche `essai-installeurs/…`) : installation, mise à jour depuis l'application, désinstallation.
+
 Le fond de la fenêtre du `.dmg` (macOS) est `src-tauri/macos/fond-dmg.png` ; il se régénère avec `node outils/generer-fond-dmg.ts` (décision 40).
 
 ### Installer une version d'essai (non signée)
@@ -181,6 +191,8 @@ flowchart LR
 | Les tests du chiffrement sont lents | Leur passer `DERIVATION_DE_TEST` (coût minimal), jamais `PARAMETRES_PAR_DEFAUT`. |
 | Changer `document.title` ne change pas le titre de la fenêtre | Le fixer côté Rust avec `set_title`. |
 | `npm run lint` signale une erreur de type sur `import.meta.dirname` | `@types/node` doit être installé et listé dans `types` de `tsconfig.json`. |
+| Dans l'installeur Windows, un texte posé sur un aplat ou une image disparaît | Deux zones superposées se redessinent l'une sur l'autre dans un ordre qui n'est pas garanti. Créer celle du dessous avec `HabillageFond` et monter celle du dessus avec `HabillageAuDessus` (`habillage-installeur.nsh`). |
+| Dans l'installeur Windows, le bas de la page d'installation est coupé | NSIS ne met pas ses propres pages à la taille de la fenêtre : `HabillagePageInstallation` l'agrandit elle-même. |
 | Après une mise à jour Windows, la barre des tâches et les raccourcis gardent l'ancienne icône | Windows met en cache l'icône d'un programme remplacé au même endroit, et l'installeur de Tauri ne le prévient que pour les associations de fichiers. Le crochet `src-tauri/windows/crochets-installeur.nsh` le prévient et reconstruit le cache après chaque installation. À défaut : désépingler puis réépingler DNMAX. |
 
 ## Documents
