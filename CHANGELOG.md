@@ -1,6 +1,6 @@
 # Journal des modifications
 
-## À venir
+## 1.0.1 — 2026-11-20
 
 ### Modifié
 
