@@ -17,6 +17,7 @@
  */
 import { SEMESTRES, anneeDuSemestre, codesEc } from "./constituer";
 import { codeDiplome, libelleDiplome } from "./diplomes";
+import { teinteBlocsAffichee } from "./teinte-blocs";
 
 export type Sorte = "ues" | "ecs" | "blocs" | "competences";
 export type Element = Record<string, unknown>;
@@ -410,7 +411,7 @@ export function donneesDuReferentiel(source: ReferentielSource, livrables: reado
   const meta = source.meta ?? {};
   return {
     diplome: meta.diplome || "",
-    blocTint: meta.blocTint || "#D1F1DA",
+    blocTint: teinteBlocsAffichee(meta.blocTint),
     niveaux: meta.niveaux || [],
     blocs: (source.blocs ?? []).map((bloc) => ({ num: commeString(bloc.num), nom: bloc.nom || "" })),
     ues,

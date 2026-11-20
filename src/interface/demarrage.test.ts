@@ -138,7 +138,7 @@ describe("chargement de l'état", () => {
     expect(etat.evaluation.id).toBe((0.5).toString(36).slice(2, 9));
     expect(etat.modules.base).toBe(true);
     expect(etat.ui.tab).toBe("saved");
-    expect(etat.teinteBlocs).toBe("#D1F1DA");
+    expect(etat.teinteBlocs).toBe("#B9D6D8");
   });
 
   it("garde les modules enregistrés et désactive celui qui perd le module qu'il requiert", () => {

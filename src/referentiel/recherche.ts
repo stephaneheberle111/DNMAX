@@ -122,7 +122,8 @@ export function peindreRecherche(contexte: ContexteRecherche): void {
     ...groupes.map((groupe) => {
       const competences = competencesDuGroupe(groupe);
       const cadre = balise("div", [["class", "bloc grp"]]);
-      const teinte = groupe.couleur === null && recherche.group === "bloc" && groupe.rang % 2 ? "tint" : "";
+      // Tous les blocs portent la même teinte : en alterner un sur deux les faisait passer pour deux sortes de groupes.
+      const teinte = groupe.couleur === null && recherche.group === "bloc" ? "tint" : "";
       const tete = balise("div", [
         ["class", `bh ${groupe.couleur === null ? teinte : "rail"}`],
         ["style", groupe.couleur === null ? `--bloc:${contexte.teinteBlocs}` : `--c:${groupe.couleur}`],
