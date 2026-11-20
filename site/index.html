@@ -471,7 +471,12 @@ svg.dim .dot.off{opacity:.1}
 .note ul{margin:0;padding-left:20px}
 .note li{margin:4px 0}
 .note p{margin:0 0 10px}
-.note h4{margin:18px 0 6px;font:700 15px/1.3 var(--display)}
+.note details{border-top:1px solid var(--line);padding:8px 0}
+.note details:last-child{padding-bottom:0}
+.note summary{cursor:pointer;font:700 15px/1.4 var(--display)}
+.note summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.note details[open] summary{margin-bottom:8px}
+.note details p:last-child{margin-bottom:0}
 .note ol{margin:0;padding-left:22px}
 .note code{font-family:var(--mono);font-size:.9em;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 5px;overflow-wrap:anywhere}
 .apres{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
@@ -967,33 +972,35 @@ footer a{color:var(--ink-2)}
       </div>
       <div class="note" id="installer">
         <h3>Votre système bloque l’installation ou affiche un avertissement&nbsp;?</h3>
-        <p>C’est attendu. Les installeurs de DNMAX ne portent pas encore de certificat payant de Microsoft ni d’Apple&nbsp;: votre système ne connaît pas leur éditeur et le signale, comme pour tout logiciel libre distribué sans certificat. Voici quoi faire, système par système.</p>
-        <p>Avant de passer outre, vous pouvez vérifier que le fichier téléchargé est le bon&nbsp;: son empreinte doit être celle affichée sous le bouton de téléchargement. Pour la calculer&nbsp;: sous Windows, dans PowerShell, <code>Get-FileHash DNMAX-windows.exe</code>&nbsp;; sous macOS, dans le Terminal, <code>shasum -a 256 DNMAX-macos.dmg</code>&nbsp;; sous Linux, <code>sha256sum DNMAX-linux.deb</code>.</p>
-
-        <h4>Windows</h4>
-        <ol>
+        <p>C’est attendu&nbsp;: les installeurs de DNMAX ne portent pas encore de certificat payant de Microsoft ni d’Apple. Cliquez sur votre système pour la marche à suivre.</p>
+        <details><summary>Windows</summary>
+          <ol>
           <li><strong>Le navigateur retient le téléchargement.</strong> Edge peut afficher «&nbsp;DNMAX-windows.exe n’est pas couramment téléchargé&nbsp;». Survolez le fichier dans la liste des téléchargements, cliquez «&nbsp;…&nbsp;» puis «&nbsp;Conserver&nbsp;», puis «&nbsp;Afficher plus&nbsp;» et «&nbsp;Conserver quand même&nbsp;».</li>
           <li><strong>«&nbsp;Windows a protégé votre ordinateur&nbsp;»</strong> (SmartScreen, fenêtre bleue). Cliquez «&nbsp;Informations complémentaires&nbsp;», puis «&nbsp;Exécuter quand même&nbsp;». L’installation se poursuit normalement.</li>
           <li><strong>«&nbsp;Le Contrôle intelligent des applications a bloqué une application&nbsp;»</strong> (Windows&nbsp;11), sans bouton pour continuer. Ce contrôle n’accepte aucune exception application par application&nbsp;: tant que DNMAX n’a pas de certificat, il ne s’installe et ne se lance que si ce contrôle est désactivé. Ouvrez Sécurité Windows &gt; Contrôle des applications et du navigateur &gt; Paramètres du Contrôle intelligent des applications, et choisissez «&nbsp;Désactivé&nbsp;». Sur un Windows&nbsp;11 à jour (24H2 ou 25H2), vous pourrez le réactiver au même endroit&nbsp;; sur une version plus ancienne, le désactiver est définitif jusqu’à une réinstallation de Windows. Les autres protections (antivirus, SmartScreen) restent actives. À vous de juger si vous souhaitez le faire.</li>
         </ol>
-
-        <h4>macOS</h4>
-        <ol>
+        </details>
+        <details><summary>macOS</summary>
+          <ol>
           <li>Ouvrez le fichier .dmg et faites glisser DNMAX dans Applications, puis lancez DNMAX.</li>
           <li>macOS affiche «&nbsp;Apple n’a pas pu vérifier que «&nbsp;DNMAX&nbsp;» ne contenait pas de logiciel malveillant&nbsp;». Cliquez «&nbsp;Terminé&nbsp;» (pas «&nbsp;Placer dans la corbeille&nbsp;»).</li>
           <li>Ouvrez Réglages Système &gt; Confidentialité et sécurité, descendez jusqu’à «&nbsp;Sécurité&nbsp;»&nbsp;: une ligne signale que DNMAX a été bloqué. Cliquez «&nbsp;Ouvrir quand même&nbsp;», confirmez, et saisissez le mot de passe de votre session si macOS le demande.</li>
           <li>C’est à faire une seule fois&nbsp;: DNMAX s’ouvre ensuite normalement. Sur un macOS antérieur à la version&nbsp;15, un clic droit sur DNMAX puis «&nbsp;Ouvrir&nbsp;» suffit.</li>
         </ol>
-
-        <h4>Linux</h4>
-        <ol>
+        </details>
+        <details><summary>Linux</summary>
+          <ol>
           <li><strong>Paquet .deb</strong> (Debian, Ubuntu, Mint)&nbsp;: double-cliquez le fichier pour l’installer avec le gestionnaire de logiciels, ou, dans un terminal, <code>sudo apt install ./DNMAX-linux.deb</code>.</li>
           <li><strong>AppImage</strong>&nbsp;: le fichier doit être rendu exécutable. Clic droit &gt; Propriétés &gt; Permissions, cochez «&nbsp;Autoriser l’exécution du fichier comme un programme&nbsp;»&nbsp;; ou, dans un terminal, <code>chmod +x DNMAX-linux.AppImage</code>. Lancez-le ensuite d’un double-clic.</li>
           <li>Si l’AppImage ne démarre pas et parle de «&nbsp;FUSE&nbsp;», installez la bibliothèque qui lui manque&nbsp;: <code>sudo apt install libfuse2</code> (<code>libfuse2t64</code> sur Ubuntu&nbsp;24.04 et suivants).</li>
         </ol>
-
-        <h4>Sur un ordinateur de l’établissement</h4>
-        <p>Si ces réglages sont grisés ou si l’installation demande un compte d’administration que vous n’avez pas, adressez-vous à la personne qui gère les postes&nbsp;: elle peut installer DNMAX ou l’autoriser pour vous. Cette page lui donne ce qu’il lui faut.</p>
+        </details>
+        <details><summary>Vérifier le fichier téléchargé</summary>
+          <p>Avant de passer outre, vous pouvez vérifier que le fichier téléchargé est le bon&nbsp;: son empreinte doit être celle affichée sous le bouton de téléchargement. Pour la calculer&nbsp;: sous Windows, dans PowerShell, <code>Get-FileHash DNMAX-windows.exe</code>&nbsp;; sous macOS, dans le Terminal, <code>shasum -a 256 DNMAX-macos.dmg</code>&nbsp;; sous Linux, <code>sha256sum DNMAX-linux.deb</code>.</p>
+        </details>
+        <details><summary>Sur un ordinateur de l’établissement</summary>
+          <p>Si ces réglages sont grisés ou si l’installation demande un compte d’administration que vous n’avez pas, adressez-vous à la personne qui gère les postes&nbsp;: elle peut installer DNMAX ou l’autoriser pour vous. Cette page lui donne ce qu’il lui faut.</p>
+        </details>
       </div>
       <div class="apres">
         <div><h3>Au premier lancement</h3><p>Une page de bienvenue vous demande votre nom et votre établissement, un mot de passe, puis votre mention&nbsp;; notez le code de secours hors de l’ordinateur. <a href="#documentation" data-doc-lien="demarrer">Voir le détail</a>.</p></div>
