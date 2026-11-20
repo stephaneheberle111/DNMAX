@@ -127,7 +127,7 @@ Seuls les documents que l'application produit (`docx`, `odt`, `xlsx`, `ods`, `pd
 
 **Retenu** : l'atelier `.github/workflows/installeurs.yml` construit les installeurs Windows (`.exe`), macOS (`.dmg` universel, Intel et Apple Silicon) et Linux (`.deb`, `.AppImage`) et les joint à son exécution. Il ne publie rien et n'utilise aucun secret.
 
-**Signature** : aucun certificat payant pour l'instant (voir décision 1). Sous macOS, l'application reçoit une signature locale « ad hoc » (`signingIdentity: "-"`) : sans elle, un Mac Apple Silicon refuse purement de la lancer. Elle ne supprime pas l'avertissement de Gatekeeper.
+**Signature** : aucun certificat payant pour l'instant (voir décision 1). Sous macOS, l'application reçoit une signature locale « ad hoc » (`signingIdentity: "-"`) : sans elle, un Mac Apple Silicon refuse purement de la lancer. Elle ne supprime pas l'avertissement de Gatekeeper. La page Télécharger du site détaille, système par système, quoi faire quand l'installation est retenue (navigateur, SmartScreen et Contrôle intelligent des applications sous Windows, Gatekeeper sous macOS, droit d'exécution et FUSE sous Linux). Le Contrôle intelligent des applications de Windows 11 n'admet aucune exception par application : sans certificat, DNMAX ne s'y lance que si ce contrôle est désactivé, ce que la page dit sans détour.
 
 ## 10. Échange d'évaluations par fichier, avec un plan avant d'appliquer
 

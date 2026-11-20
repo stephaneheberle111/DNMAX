@@ -1,9 +1,10 @@
 # Journal des modifications
 
-## 0.9.0 — 2026-11-19
+## 1.0.0 — 2026-11-20
 
 ### Modifié
 
+- Site, page Télécharger : la marche à suivre quand le système bloque l'installation est détaillée pas à pas pour Windows (navigateur, SmartScreen, Contrôle intelligent des applications), macOS et Linux, avec la façon de vérifier l'empreinte du fichier téléchargé.
 - Documents Word et OpenDocument : la consigne « Niveau de maîtrise : griser la jauge… » ne figure plus au-dessus de la grille ; les noms des niveaux au-dessus de chaque jauge suffisent.
 - Écriture inclusive dans toute l'application, sur le site, dans la documentation et dans les documents produits : « étudiant·e », « enseignant·es », « un·e collègue »… Le module s'appelle désormais « Étudiant·es », le volet « Enseignant·es ».
 - Référentiel > Explorer : l'en-tête des tableaux EC × semestres et compétences × semestres reste visible quand la page défile ; dans « Recherche », les colonnes ont la même largeur d'un groupe à l'autre. L'annonce « Ouvrir le document » après un export s'affiche au centre de la fenêtre. La visite guidée ouvre le Référentiel directement sur « Constituer », sans passer un instant par « Explorer ».
