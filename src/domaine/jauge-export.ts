@@ -58,7 +58,7 @@ export function largeursLibellesNiveaux(bornes: readonly number[], total: number
     const reste = total - [...fixes].reduce((somme, rang) => somme + (minimums[rang] ?? 0), 0);
     const zonesLibres = zones.reduce((somme, zone, rang) => (fixes.has(rang) ? somme : somme + zone), 0);
     largeurs = zones.map((zone, rang) => (fixes.has(rang) ? (minimums[rang] ?? 0) : (reste * zone) / zonesLibres));
-    const tropEtroits = largeurs.map((largeur, rang) => rang).filter((rang) => !fixes.has(rang) && (largeurs[rang] ?? 0) < (minimums[rang] ?? 0));
+    const tropEtroits = largeurs.map((_largeur, rang) => rang).filter((rang) => !fixes.has(rang) && (largeurs[rang] ?? 0) < (minimums[rang] ?? 0));
     if (tropEtroits.length === 0) {
       break;
     }

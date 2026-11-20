@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { describe, expect, it } from "vitest";
-import { refusNouveauMotDePasse, suiteApresMotDePasseActuel } from "./activation-eleves";
+import { refusChangementMotDePasse, refusNouveauMotDePasse, suiteApresMotDePasseActuel } from "./activation-eleves";
 
 const contexte = ["Camille", "Durand", "Lycée Jean-Moulin"];
 
@@ -40,5 +40,28 @@ describe("refusNouveauMotDePasse", () => {
   it("compte les caractères et non les unités de codage : douze émojis suffisent en longueur", () => {
     const emojis = "🙂".repeat(12);
     expect(refusNouveauMotDePasse(emojis, emojis, contexte)).not.toContain("au moins 12 caractères");
+  });
+});
+
+describe("refusChangementMotDePasse", () => {
+  it("sans le module Étudiant·es, n'exige que huit caractères et deux saisies identiques", () => {
+    expect(refusChangementMotDePasse("motdepasse", "motdepasse", false, contexte)).toBeNull();
+    expect(refusChangementMotDePasse("court", "court", false, contexte)).toBe("Le nouveau mot de passe doit compter au moins 8 caractères.");
+    expect(refusChangementMotDePasse("motdepasse", "motdepassf", false, contexte)).toBe("Les deux saisies du nouveau mot de passe ne sont pas identiques.");
+  });
+
+  it("avec le module, applique toutes les règles de l'activation : un mot de passe long mais faible est refusé", () => {
+    expect(refusChangementMotDePasse("motdepassemotdepasse", "motdepassemotdepasse", true, contexte)).not.toBeNull();
+    expect(refusChangementMotDePasse("Ab1!xyz", "Ab1!xyz", true, contexte)).toBe("Le nouveau mot de passe doit compter au moins 12 caractères.");
+  });
+
+  it("avec le module, accepte un mot de passe solide", () => {
+    expect(refusChangementMotDePasse("Le chat dort 3 fois", "Le chat dort 3 fois", true, contexte)).toBeNull();
+  });
+
+  it("avec le module, rend le même verdict que l'activation", () => {
+    for (const motDePasse of ["motdepasse", "Camille Durand 2026", "azertyuiop123", "Le chat dort 3 fois"]) {
+      expect(refusChangementMotDePasse(motDePasse, motDePasse, true, contexte)).toBe(refusNouveauMotDePasse(motDePasse, motDePasse, contexte));
+    }
   });
 });

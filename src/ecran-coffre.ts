@@ -26,7 +26,7 @@ const MESSAGES_ERREUR: Record<CodeErreurCoffre, string> = {
   "mot-de-passe-trop-court": `Le mot de passe doit compter au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères.`,
   "acces-refuse": "Mot de passe ou code de secours incorrect.",
   "fichier-illisible":
-    "Ce fichier de données est illisible, endommagé, ou n'est pas un fichier DNMAX. Pour vos propres données, des copies quotidiennes se trouvent dans le dossier « sauvegardes ».",
+    "Ce fichier de données est illisible, endommagé, ou n'est pas un fichier DNMAX. Pour vos propres données, des copies de sauvegarde se trouvent dans le dossier « sauvegardes ».",
   "version-inconnue":
     "Ces données ont été enregistrées par une version plus récente de DNMAX. Mettez l'application à jour pour les ouvrir.",
   "coffre-deja-present": "Des données protégées existent déjà sur cet ordinateur. Relancez l'application.",
@@ -137,7 +137,7 @@ const GABARIT_OUVERTURE = `
 
 const GABARIT_SECOURS = `
   <h1>Mot de passe oublié</h1>
-  <p>Saisissez le code de secours noté à la création, puis choisissez un nouveau mot de passe.</p>
+  <p>Saisissez votre code de secours (le dernier qui vous a été remis), puis choisissez un nouveau mot de passe.</p>
   <label>Code de secours
     <input type="text" name="codeSecours" autocomplete="off" spellcheck="false" required></label>
   <label>Nouveau mot de passe (${String(LONGUEUR_MINIMALE_MOT_DE_PASSE)} caractères au moins)
@@ -475,7 +475,7 @@ export function demanderOuvertureCoffre(coffreExiste: boolean, verrouilleParInac
 const GABARIT_IDENTITE = `
   <h1>Qui êtes-vous ?</h1>
   <p>Votre prénom et votre nom accompagnent ce que vous modifiez et signent les fichiers que vous envoyez à d'autres enseignant·es :
-     chacun voit ainsi qui a écrit quoi.</p>
+     chacun·e voit ainsi qui a écrit quoi.</p>
   <label>Votre prénom
     <input type="text" name="prenom" autocomplete="given-name" maxlength="${String(LONGUEUR_MAXIMALE_NOM)}" required></label>
   <label>Votre nom

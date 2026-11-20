@@ -454,7 +454,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "3. Vos collègues",
       texte:
-        "Vous êtes déjà dans la liste, marqué « C'est moi » : la progression montrera vos promotions. Ajoutez vos collègues avec « + Ajouter » : prénom et nom.",
+        "Vous êtes déjà dans la liste, sur la ligne « C'est moi » : la progression montrera vos promotions. Ajoutez vos collègues avec « + Ajouter » : prénom et nom.",
       texteFait: "L'équipe est déclarée. Vous pourrez ajouter d'autres collègues ici.",
       cibles: ["#orgPane"],
       pointe: "#edAdd",
@@ -563,7 +563,7 @@ const PRISE_EN_MAIN: Parcours = {
       texte: "Ouvrez « Mon compte », puis « Préférences ».",
       // Menu ouvert : c'est lui qu'on éclaire, la bulle se place dessous sans le cacher.
       cibles: ["#menu-compte:not([hidden])", "#bouton-compte"],
-      pointe: () => (visible("#menu-compte") ? ".menu-compte-entree:last-child" : undefined),
+      pointe: () => (visible("#menu-compte") ? '.menu-compte-entree[data-entree="preferences"]' : undefined),
       geste: "cliquer",
       atteinte: ongletOuvert("v-pref"),
       ouvrir: () => window.dnmaxPont?.ouvrirPreferences?.(),
@@ -648,7 +648,7 @@ const MODULE_ELEVES: Parcours = {
     },
     {
       titre: "Suivre chaque étudiant·e",
-      texte: "Dans « Progression », la vue « Étudiant·e » montre où en est chacun·e dans le semestre, comparé au reste de la promotion.",
+      texte: "Dans « Progression », la vue « Étudiant·e » montre où en est chacun·e dans le semestre, par rapport au reste de la promotion.",
       cibles: ["#t-prog"],
       geste: "cliquer",
     },

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: CECILL-2.1
 import "./ecran-compte.css";
-import { longueurMinimaleExigee, verifierNouveauMotDePasse } from "./domaine/saisie-coffre";
+import { refusChangementMotDePasse } from "./domaine/activation-eleves";
+import { motsInterditsDe } from "./domaine/robustesse-mot-de-passe";
+import { longueurMinimaleExigee } from "./domaine/saisie-coffre";
 import { moduleElevesActif } from "./domaine/securite";
 import { messagePourErreur } from "./ecran-coffre";
 import { creer, creerBouton, ouvrirBoite, type AccesDonnees } from "./ecran-echange";
@@ -65,14 +67,11 @@ function montrerMotDePasse(acces: AccesDonnees): void {
   const formulaire = creer("form", "compte-formulaire");
   formulaire.addEventListener("submit", (evenement) => {
     evenement.preventDefault();
-    const defaut = verifierNouveauMotDePasse(nouveau.champ.value, confirmation.champ.value, longueurMinimale);
-    if (defaut !== null) {
-      dire(
-        defaut === "trop-court"
-          ? `Le nouveau mot de passe doit compter au moins ${String(longueurMinimale)} caractères.`
-          : "Les deux saisies du nouveau mot de passe ne sont pas identiques.",
-        true,
-      );
+    // Relu à l'envoi : le module a pu être activé ou le nom corrigé depuis l'ouverture de la fenêtre.
+    const entrees = acces.lireEntrees();
+    const refus = refusChangementMotDePasse(nouveau.champ.value, confirmation.champ.value, moduleElevesActif(entrees), motsInterditsDe(entrees));
+    if (refus !== null) {
+      dire(refus, true);
       return;
     }
     changer.disabled = true;
@@ -143,13 +142,15 @@ export function installerCompte(acces: AccesDonnees | null, verrouiller: (() => 
   const nom = creer("div", "menu-compte-nom");
   nom.setAttribute("role", "presentation");
   const entrees: HTMLButtonElement[] = [];
-  const ajouterEntree = (libelle: string, detail: string, action: () => void): void => {
+  const ajouterEntree = (libelle: string, detail: string, action: () => void, repere = ""): void => {
     const entree = creerBouton("", "menu-compte-entree", () => {
       fermer(false);
       action();
     });
     entree.setAttribute("role", "menuitem");
     entree.tabIndex = -1;
+    // Repère stable pour la visite guidée, qui désigne une entrée précise quel que soit son rang.
+    if (repere !== "") entree.dataset.entree = repere;
     entree.append(creer("b", "", libelle), creer("span", "", detail));
     entrees.push(entree);
   };
@@ -158,7 +159,7 @@ export function installerCompte(acces: AccesDonnees | null, verrouiller: (() => 
       montrerMotDePasse(acces);
     });
   }
-  ajouterEntree("Préférences", "Thème et fond de page, échelles, vocabulaire, livrables, documents exportés", ouvrirPreferences);
+  ajouterEntree("Préférences", "Thème et fond de page, vocabulaire, livrables, documents exportés", ouvrirPreferences, "preferences");
   if (verrouiller !== null) {
     ajouterEntree("Verrouiller", "Refermer vos données : le mot de passe sera redemandé", verrouiller);
   }

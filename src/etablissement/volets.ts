@@ -197,7 +197,7 @@ export function peindreRepartition(hote: HTMLElement, contexte: ContexteRepartit
     const vide = creer(
       "div",
       "empty",
-      `${contexte.manque.enseignants ? "Ajoutez d'abord les enseignants (volet Enseignants)." : ""} ${contexte.manque.promotions ? `Aucune promotion en ${contexte.annee} (volet Promotions).` : ""}`,
+      `${contexte.manque.enseignants ? "Ajoutez d'abord les enseignant·es (volet Enseignant·es)." : ""} ${contexte.manque.promotions ? `Aucune promotion en ${contexte.annee} (volet Promotions).` : ""}`,
     );
     panneau.append(entete, vide);
     hote.replaceChildren(panneau);

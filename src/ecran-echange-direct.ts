@@ -143,7 +143,7 @@ export function montrerEnvoiDirect(texte: string, protege: boolean): void {
       const consigne = creer(
         "p",
         "",
-        "Il le saisit dans « Échanger… > Échange en direct > Recevoir en direct », sur le même réseau (même wifi). " +
+        "Votre collègue le saisit dans « Échanger… > Échange en direct > Recevoir en direct », sur le même réseau (même wifi). " +
           `Le code est valable ${decrireValidite(etape.validiteSecondes)}, pour un seul essai. Gardez cette fenêtre ouverte.`,
       );
       const motDePasse = creer(

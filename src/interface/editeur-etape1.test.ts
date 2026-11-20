@@ -197,8 +197,8 @@ describe("contexte des compétences", () => {
 
 describe("consigne sous la liste des étudiants", () => {
   it("dit combien d'étudiants sont visés, au singulier ou au pluriel", () => {
-    expect(consigneEtudiants(1, 3)).toBe("1 étudiant·e sur 3 : seuls lui est noté à l'étape 4 et exporté.");
-    expect(consigneEtudiants(2, 3)).toBe("2 étudiant·es sur 3 : seuls eux sont notés à l'étape 4 et exportés.");
+    expect(consigneEtudiants(1, 3)).toBe("1 étudiant·e sur 3 : seul·e cet·te étudiant·e est noté·e à l'étape 4 et exporté·e.");
+    expect(consigneEtudiants(2, 3)).toBe("2 étudiant·es sur 3 : seul·es ces étudiant·es sont noté·es à l'étape 4 et exporté·es.");
   });
 
   it("vise toute la promotion sans choix", () => {

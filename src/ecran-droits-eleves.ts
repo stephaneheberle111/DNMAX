@@ -55,9 +55,9 @@ function nomFichier(eleve: EleveRepere, date: string): string {
 
 function decrireBilan(eleve: EleveRepere, bilan: BilanEffacement): string[] {
   return [
-    `${eleve.nom} sera retiré(e) de ${String(bilan.promotions)} promotion(s) et de ${String(bilan.evaluations)} évaluation(s), brouillon en cours compris.`,
+    `${eleve.nom} sera retiré·e de ${String(bilan.promotions)} promotion(s) et de ${String(bilan.evaluations)} évaluation(s), brouillon en cours compris.`,
     bilan.listesSaisies > 0
-      ? `Son nom sera aussi retiré de ${String(bilan.listesSaisies)} liste(s) saisie(s) à la main : vérifiez qu'il ne s'agit pas d'un homonyme.`
+      ? `Son nom sera aussi retiré de ${String(bilan.listesSaisies)} liste(s) saisie(s) à la main : vérifiez qu'il ne s'agit pas d'un·e homonyme.`
       : "",
     "Cet effacement est définitif. Les sauvegardes automatiques de DNMAX, chiffrées, en gardent une trace jusqu'à leur remplacement : une par semaine récente, puis une par mois, selon Paramètres > Sauvegardes (par défaut trois mois et un an).",
     "Un nom cité dans un texte libre (appréciation, consignes) n'est pas recherché : relisez-les si besoin.",

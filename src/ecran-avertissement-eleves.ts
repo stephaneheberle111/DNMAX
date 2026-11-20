@@ -149,7 +149,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
     const obligations = creer("ul", "avertissement-liste");
     for (const obligation of [
       "informez-les\u00a0: remettez-leur la note d'information, avec son accusé de réception à signer\u00a0;",
-      "prévenez votre chef·fe d'établissement ou le délégué ou la déléguée à la protection des données, avec la note prévue pour eux\u00a0;",
+      "prévenez la direction de l'établissement ou le délégué ou la déléguée à la protection des données, avec la note prévue à cet effet\u00a0;",
       `gardez leurs données au plus ${ecrireDuree(contexte.moisConservation)} après la sortie de leur promotion\u00a0: DNMAX vous le rappellera\u00a0;`,
       "une demande d'accès ou d'effacement se traite dans Paramètres > Données des étudiant·es.",
     ]) {
@@ -165,7 +165,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
       creer(
         "p",
         "avertissement-securite",
-        `Sécurité : avec ce module, DNMAX exige un mot de passe d'au moins ${LONGUEUR} caractères et se verrouille après ${String(MINUTES_VERROUILLAGE)} minutes sans activité. Chiffrez aussi le disque de l'ordinateur (BitLocker sous Windows, FileVault sur Mac, LUKS sous Linux) : c'est conseillé, pas obligatoire. Les exports Word, Excel et OpenDocument, eux, ne sont pas chiffrés.`,
+        `Sécurité : avec ce module, DNMAX exige un mot de passe d'au moins ${LONGUEUR} caractères et se verrouille après ${String(MINUTES_VERROUILLAGE)} minutes sans activité (ou tout de suite, par « Mon compte » > « Verrouiller »). Chiffrez aussi le disque de l'ordinateur (BitLocker sous Windows, FileVault sur Mac, LUKS sous Linux) : c'est conseillé, pas obligatoire. Les exports Word, Excel et OpenDocument, eux, ne sont pas chiffrés.`,
       ),
       creerDocuments(
         contexte,

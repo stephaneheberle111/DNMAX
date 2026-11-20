@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: CECILL-2.1
 import { beforeEach, describe, expect, it } from "vitest";
 import { etat, etatVide, type Objet } from "./etat";
-import { CH_KINDS, chainItemText, chainModel, chainNode } from "./chaine-modele";
+import { SORTES_CHAINE } from "../domaine/chaine";
+import { chainItemText, chainModel, chainNode } from "./chaine-modele";
 import { anneeScolaire } from "./promotions-calendrier";
 
 function ids(liste: Objet[] | undefined): unknown[] {
@@ -31,7 +32,7 @@ beforeEach(() => {
 
 describe("ordre des colonnes", () => {
   it("met le semestre en premier, puis la compétence, l'EC, l'UE et le diplôme", () => {
-    expect([...CH_KINDS]).toEqual(["sem", "comp", "ec", "ue", "dip"]);
+    expect([...SORTES_CHAINE]).toEqual(["sem", "comp", "ec", "ue", "dip"]);
   });
 });
 

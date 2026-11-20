@@ -48,8 +48,10 @@ describe("écriture inclusive", () => {
 
   it.each(["index.html", "site/index.html"])("%s n'emploie que des formes inclusives dans ses textes", (fichier) => {
     const page = readFileSync(new URL(fichier, RACINE), "utf8").replace(/<style[\s\S]*?<\/style>/g, "");
-    // Hors balises : ce qui est lu, pas les identifiants ni les classes.
-    const textes = sansCommentaires(page.replace(/<!--[\s\S]*?-->/g, "")).replace(/<(?!\/?script)[^>]*>/g, " ");
+    // Hors balises : ce qui est lu, pas les identifiants ni les classes. Les attributs lus par une
+    // personne (titre d'une rubrique, infobulle, libellé pour lecteur d'écran) sont gardés à part.
+    const attributsLus = [...page.matchAll(/\b(?:data-titre|title|aria-label|placeholder|alt)="([^"]*)"/g)].map((attribut) => attribut[1] ?? "").join("\n");
+    const textes = `${sansCommentaires(page.replace(/<!--[\s\S]*?-->/g, "")).replace(/<(?!\/?script)[^>]*>/g, " ")}\n${attributsLus}`;
     expect(fautes(textes, [ETUDIANT_NON_INCLUSIF])).toEqual([]);
   });
 
