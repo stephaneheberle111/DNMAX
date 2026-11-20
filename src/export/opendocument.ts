@@ -19,8 +19,6 @@ import {
 import { imageJauge, SCEAU_LARGEUR, SCEAU_PX } from "./word";
 
 const LARGEUR_PAGE = 10500;
-const CONSIGNE_JAUGE =
-  "Niveau de maîtrise : griser la jauge de gauche à droite jusqu'au point atteint, en suivant les niveaux indiqués au-dessus ; dans la zone du premier niveau, ne rien griser, dans celle du dernier, griser jusqu'au bout.";
 
 /** Vingtièmes de point en centimètres. */
 function cm(vingtiemes: number): string {
@@ -101,7 +99,7 @@ class Redaction {
     if (etudiant !== null && etudiant.nom !== "") entete += texte(`Étudiant·e : ${etudiant.nom}`);
     let xml = fiche.sceau === null ? entete : this.avecSceau(entete, fiche.sceau);
     if (fiche.consignes !== "") xml += texte("Consignes et attendus", "Ps") + texte(fiche.consignes);
-    xml += texte("Compétences évaluées", "Ps") + texte(CONSIGNE_JAUGE, "Pi");
+    xml += texte("Compétences évaluées", "Ps");
     let rangees = rangee(
       colonnes
         .map((colonne, rang) =>
