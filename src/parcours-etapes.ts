@@ -417,12 +417,12 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "1. Ajouter un référentiel",
       texte:
-        "Un autre référentiel (une autre mention, une nouvelle version) s'ajoute par « Échanger… > Recevoir », avec le fichier d'un collègue " +
+        "Un autre référentiel (une autre mention, une nouvelle version) s'ajoute par « Échanger… > Recevoir », avec le fichier d'un·e collègue " +
         "ou celui téléchargé sur le site de DNMAX : vous voyez ce qu'il contient avant de l'installer.",
       cibles: ["#bouton-echange"],
       geste: () => (visible(".echange-boite") ? "cliquer" : "regarder"),
       siBoite: {
-        texte: "Rien à faire ici pour l'instant : vous pourrez y revenir quand un collègue vous enverra un fichier. Pour continuer la visite, cliquez « Fermer ».",
+        texte: "Rien à faire ici pour l'instant : vous pourrez y revenir quand un·e collègue vous enverra un fichier. Pour continuer la visite, cliquez « Fermer ».",
         cibles: [".echange-boite .echange-actions .btn"],
       },
       // La boîte ouverte puis refermée, la visite passe d'elle-même aux promotions.
@@ -450,7 +450,7 @@ const PRISE_EN_MAIN: Parcours = {
       objectif: (avancement) => avancement.promotions > 0,
     },
     ALLER_ETABLISSEMENT,
-    allerVolet("enseignants", "Enseignants"),
+    allerVolet("enseignants", "Enseignant·es"),
     {
       titre: "3. Vos collègues",
       texte:
@@ -468,7 +468,7 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "4. Répartir les enseignements",
       texte:
-        "Pour chaque promotion en cours, indiquez qui assure chaque enseignement constitutif (EC) avec « + enseignant ». Une attribution suffit pour continuer ; vous compléterez plus tard.",
+        "Pour chaque promotion en cours, indiquez qui assure chaque enseignement constitutif (EC) avec « + enseignant·e ». Une attribution suffit pour continuer ; vous compléterez plus tard.",
       texteFait: "La répartition de service est commencée.",
       cibles: ["#orgPane"],
       pointe: "[data-afadd]",
@@ -577,11 +577,11 @@ const PRISE_EN_MAIN: Parcours = {
     },
     ALLER_PARAMETRES,
     {
-      titre: "6. Le module Étudiants",
+      titre: "6. Le module Étudiant·es",
       texte:
-        "Pour saisir les résultats de chaque étudiant, activez ici le module Étudiants : il demande quelques précautions (information des étudiants, mot de passe plus long) " +
+        "Pour saisir les résultats de chaque étudiant·e, activez ici le module Étudiant·es : il demande quelques précautions (information des étudiant·es, mot de passe plus long) " +
         "et a sa propre visite, comme le module Niveaux d'acquisition qui s'appuie sur lui.",
-      texteFait: "Le module Étudiants est actif. Sa visite se lance avec « Visite guidée », juste en dessous.",
+      texteFait: "Le module Étudiant·es est actif. Sa visite se lance avec « Visite guidée », juste en dessous.",
       cibles: ['#modList .mod:has([data-mod="eleves"])'],
       pointe: ".tg",
       geste: "regarder",
@@ -596,25 +596,25 @@ const PRISE_EN_MAIN: Parcours = {
     {
       titre: "C'est prêt",
       texte:
-        "Vous avez fait le tour de l'essentiel. Le module Étudiants et le module Niveaux d'acquisition ont chacun leur visite, et celle-ci se relance depuis « Paramètres > Visites guidées ».",
+        "Vous avez fait le tour de l'essentiel. Le module Étudiant·es et le module Niveaux d'acquisition ont chacun leur visite, et celle-ci se relance depuis « Paramètres > Visites guidées ».",
     },
   ],
 };
 
 const MODULE_ELEVES: Parcours = {
-  titre: "Module Étudiants",
+  titre: "Module Étudiant·es",
   etapes: [
     {
-      titre: "Le module Étudiants",
+      titre: "Le module Étudiant·es",
       texte:
-        "Il sert à évaluer chaque étudiant dans l'application : grille de saisie de la promotion, observations, non-rendus, un document par étudiant, et la progression de chacun. Les noms et résultats restent sur cet ordinateur.",
+        "Il sert à évaluer chaque étudiant·e dans l'application : grille de saisie de la promotion, observations, non-rendus, un document par étudiant·e, et la progression de chacun·e. Les noms et résultats restent sur cet ordinateur.",
     },
     ALLER_PARAMETRES,
     {
       titre: "Activer le module",
       texte:
-        "Activez l'interrupteur du module « Étudiants ». Une fenêtre rappelle vos obligations, propose les documents à remettre et demande de confirmer votre mot de passe.",
-      texteFait: "Le module Étudiants est actif. Les documents à remettre restent disponibles dans sa carte, à côté de « Visite guidée ».",
+        "Activez l'interrupteur du module « Étudiant·es ». Une fenêtre rappelle vos obligations, propose les documents à remettre et demande de confirmer votre mot de passe.",
+      texteFait: "Le module Étudiant·es est actif. Les documents à remettre restent disponibles dans sa carte, à côté de « Visite guidée ».",
       cibles: ['#modList .mod:has([data-mod="eleves"])'],
       pointe: ".tg",
       geste: "cliquer",
@@ -623,39 +623,39 @@ const MODULE_ELEVES: Parcours = {
     ALLER_ETABLISSEMENT,
     allerVolet("promos", "Promotions"),
     {
-      titre: "Inscrire les étudiants",
+      titre: "Inscrire les étudiant·es",
       texte:
-        "Dans chaque promotion, collez la liste des étudiants : un étudiant par ligne, prénom puis nom. Vous pourrez corriger chaque nom ensuite.",
-      texteFait: "Des étudiants sont inscrits.",
+        "Dans chaque promotion, collez la liste des étudiant·es : un·e étudiant·e par ligne, prénom puis nom. Vous pourrez corriger chaque nom ensuite.",
+      texteFait: "Des étudiant·es sont inscrit·es.",
       cibles: ["#orgPane"],
       geste: "remplir",
       objectif: (avancement) => avancement.elevesInscrits > 0,
     },
     ALLER_EVALUATIONS,
     {
-      titre: "Évaluer les étudiants",
+      titre: "Évaluer les étudiant·es",
       texte: "Ouvrez les actions d'une évaluation…",
       cibles: ACTIONS_EVALUATION,
       geste: "cliquer",
       avanceAuClic: true,
     },
     {
-      titre: "Évaluer les étudiants",
-      texte: "…puis « Évaluer les étudiants » : la grille de la promotion s'ouvre, une ligne par étudiant, avec observations et appréciation.",
+      titre: "Évaluer les étudiant·es",
+      texte: "…puis « Évaluer les étudiant·es » : la grille de la promotion s'ouvre, une ligne par étudiant·e, avec observations et appréciation.",
       cibles: ["[data-sai]", ...FENETRE_ACTIONS],
       geste: "cliquer",
       fermeLaBoite: true,
     },
     {
-      titre: "Suivre chaque étudiant",
-      texte: "Dans « Progression », la vue « Étudiant » montre où en est chacun dans le semestre, comparé au reste de la promotion.",
+      titre: "Suivre chaque étudiant·e",
+      texte: "Dans « Progression », la vue « Étudiant·e » montre où en est chacun·e dans le semestre, comparé au reste de la promotion.",
       cibles: ["#t-prog"],
       geste: "cliquer",
     },
     {
-      titre: "Données des étudiants",
+      titre: "Données des étudiant·es",
       texte:
-        "Le panneau « Paramètres > Données des étudiants » répond aux demandes d'accès ou d'effacement et propose d'anonymiser ou d'effacer les promotions dont la durée de conservation, fixée dans Mon établissement > Établissement, est dépassée.",
+        "Le panneau « Paramètres > Données des étudiant·es » répond aux demandes d'accès ou d'effacement et propose d'anonymiser ou d'effacer les promotions dont la durée de conservation, fixée dans Mon établissement > Établissement, est dépassée.",
     },
   ],
 };
@@ -666,13 +666,13 @@ const MODULE_NIVEAUX: Parcours = {
     {
       titre: "Le module Niveaux d'acquisition",
       texte:
-        "Il attribue à chaque étudiant son niveau d'acquisition sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès qu'il y est évalué avec une maîtrise suffisante. Ces niveaux sont facultatifs : le référentiel du diplôme ne les prévoit pas. Le module s'appuie sur le module Étudiants.",
+        "Il attribue à chaque étudiant·e son niveau d'acquisition sur chaque compétence : Initié en année 1, Guidé en année 2, Autonome en année 3, dès que sa maîtrise y est évaluée comme suffisante. Ces niveaux sont facultatifs : le référentiel du diplôme ne les prévoit pas. Le module s'appuie sur le module Étudiant·es.",
     },
     ALLER_PARAMETRES,
     {
-      titre: "Activer le module Étudiants",
-      texte: "Le module Niveaux d'acquisition a besoin du module Étudiants : activez d'abord celui-ci.",
-      texteFait: "Le module Étudiants est actif.",
+      titre: "Activer le module Étudiant·es",
+      texte: "Le module Niveaux d'acquisition a besoin du module Étudiant·es : activez d'abord celui-ci.",
+      texteFait: "Le module Étudiant·es est actif.",
       cibles: ['#modList .mod:has([data-mod="eleves"])'],
       pointe: ".tg",
       geste: "cliquer",
@@ -690,7 +690,7 @@ const MODULE_NIVEAUX: Parcours = {
     {
       titre: "Où voir les niveaux",
       texte:
-        "Les niveaux s'affichent dans « Progression », vue « Étudiant », dans les intitulés d'année et dans les exports. Ils se mettent à jour à chaque résultat saisi.",
+        "Les niveaux s'affichent dans « Progression », vue « Étudiant·e », dans les intitulés d'année et dans les exports. Ils se mettent à jour à chaque résultat saisi.",
       cibles: ["#t-prog"],
       geste: "regarder",
     },

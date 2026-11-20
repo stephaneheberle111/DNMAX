@@ -284,7 +284,7 @@ export async function chargerExemple(): Promise<void> {
   if (!etat.modules.eleves) {
     etat.modules.eleves = true;
     ecrireEntree("dnmade.modules", etat.modules);
-    active = " · module Étudiants activé";
+    active = " · module Étudiant·es activé";
   }
   const ui = etat.ui;
   ui.step = 4;

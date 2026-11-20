@@ -89,7 +89,7 @@ export function peindreVoletEtablissement(hote: HTMLElement, contexte: ContexteE
   const titre = creer("h3", "", "Établissement");
   titre.append(
     bulleAide(
-      "Le nom de l'établissement figure en tête des documents Word et Excel exportés. Avec le contact du délégué à la protection des données, il est repris dans les documents RGPD proposés à l'activation du module Étudiants.",
+      "Le nom de l'établissement figure en tête des documents Word et Excel exportés. Avec le contact du délégué ou de la déléguée à la protection des données, il est repris dans les documents RGPD proposés à l'activation du module Étudiant·es.",
     ),
   );
   entete.append(titre);
@@ -98,7 +98,7 @@ export function peindreVoletEtablissement(hote: HTMLElement, contexte: ContexteE
   const conservation = Number(contexte.etablissement.moisConservation) || 12;
   const blocConservation = creer("div", "field");
   blocConservation.style.gridColumn = "1/-1";
-  const etiquetteConservation = creer("label", "", "Conservation des données d'étudiants après la sortie d'une promotion");
+  const etiquetteConservation = creer("label", "", "Conservation des données d'étudiant·es après la sortie d'une promotion");
   etiquetteConservation.htmlFor = "et-moisConservation";
   blocConservation.append(
     etiquetteConservation,
@@ -108,7 +108,7 @@ export function peindreVoletEtablissement(hote: HTMLElement, contexte: ContexteE
       DUREES_CONSERVATION.map((mois) => [mois, libelleDuree(mois)] as const),
       conservation,
     ),
-    creer("div", "hint", "À valider avec le délégué à la protection des données ; les documents RGPD reprennent cette durée. 1 an par défaut."),
+    creer("div", "hint", "À valider avec le délégué ou la déléguée à la protection des données ; les documents RGPD reprennent cette durée. 1 an par défaut."),
   );
   const note = creer(
     "div",
@@ -121,7 +121,7 @@ export function peindreVoletEtablissement(hote: HTMLElement, contexte: ContexteE
     champTexte(contexte, "uai", "Code UAI (RNE)", "0000000A", "mono"),
     champTexte(contexte, "ville", "Ville", ""),
     champTexte(contexte, "academie", "Académie", ""),
-    champTexte(contexte, "contactDpo", "Contact du délégué à la protection des données", "Adresse électronique, téléphone ou service", "", "grid-column:1/-1"),
+    champTexte(contexte, "contactDpo", "Contact du délégué ou de la déléguée à la protection des données", "Adresse électronique, téléphone ou service", "", "grid-column:1/-1"),
     champMois(contexte, "moisRentree", "Mois de la rentrée", contexte.calendrier.rentree),
     champMois(contexte, "moisBascule", "Début du second semestre", contexte.calendrier.bascule),
     blocConservation,
@@ -186,7 +186,7 @@ function choixAnnees(contexte: ContexteRepartition): HTMLElement {
 }
 
 const AIDE_REPARTITION =
-  "Pour chaque promotion en cours, les enseignements constitutifs de son année dans le référentiel de sa mention, et qui les assure. À l'étape 1 d'une évaluation, choisir un ou plusieurs enseignants limite les EC proposés à ceux qu'ils assurent pour les promotions cochées.";
+  "Pour chaque promotion en cours, les enseignements constitutifs de son année dans le référentiel de sa mention, et qui les assure. À l'étape 1 d'une évaluation, choisir un·e ou plusieurs enseignant·es limite les EC proposés à ceux qu'ils ou elles assurent pour les promotions cochées.";
 
 /** Volet « Répartition de service » : qui assure chaque EC de la promotion, pour une année scolaire. */
 export function peindreRepartition(hote: HTMLElement, contexte: ContexteRepartition): void {
@@ -233,7 +233,7 @@ export function peindreRepartition(hote: HTMLElement, contexte: ContexteRepartit
   ligneNom.append(creer("b", "", promotion?.court || promotion?.nom || ""), ` · ${promotion?.nom ?? ""} · ${promotion?.diplome ?? ""}`);
   const ligneEtat = creer("div", "hint", `Année ${String(contexte.anneeFormation)} en ${contexte.annee} · ${contexte.semestres.join(" et ")} · ${String(ecs.length)} EC`);
   if (sansEnseignant > 0) {
-    ligneEtat.append(" · ", creer("b", "", `${String(sansEnseignant)} sans enseignant`));
+    ligneEtat.append(" · ", creer("b", "", `${String(sansEnseignant)} sans enseignant·e`));
   } else {
     ligneEtat.append(" · tous attribués");
   }
@@ -266,8 +266,8 @@ export function peindreRepartition(hote: HTMLElement, contexte: ContexteRepartit
       if (disponibles.length > 0) {
         const ajout = creer("select");
         ajout.dataset.afadd = ec.id;
-        ajout.setAttribute("aria-label", "Ajouter un enseignant");
-        const invite = creer("option", "", "+ enseignant");
+        ajout.setAttribute("aria-label", "Ajouter un·e enseignant·e");
+        const invite = creer("option", "", "+ enseignant·e");
         invite.value = "";
         ajout.append(invite);
         for (const enseignant of disponibles) {
@@ -290,7 +290,7 @@ export function peindreRepartition(hote: HTMLElement, contexte: ContexteRepartit
     .filter((ligne) => ligne.charges.length > 0);
   if (parEnseignant.length > 0) {
     const bloc = creer("div", "pgbloc");
-    bloc.append(creer("div", "pgbh", "Par enseignant"));
+    bloc.append(creer("div", "pgbh", "Par enseignant·e"));
     for (const { enseignant, charges } of parEnseignant) {
       const rangee = creer("div", "afrow");
       const liste = creer("div", "afch");

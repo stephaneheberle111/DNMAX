@@ -141,7 +141,7 @@ export function aDesNiveaux(resultat: unknown): boolean {
 }
 
 /**
- * Statut de rendu d'un étudiant. « Non rendu » et « Dispensé » l'emportent ;
+ * Statut de rendu d'un étudiant. « Non rendu » et « Dispensé·e » l'emportent ;
  * un niveau saisi vaut « Rendu » même si le statut n'a pas été renseigné.
  */
 export function statutRendu(resultat: unknown): StatutRendu {
@@ -158,7 +158,7 @@ export function statutRendu(resultat: unknown): StatutRendu {
 /**
  * Change le statut de rendu d'un étudiant.
  *
- * « Non rendu » et « Dispensé » effacent ses niveaux, observations et
+ * « Non rendu » et « Dispensé·e » effacent ses niveaux, observations et
  * appréciation (avis `saisie-effacee` s'il y en avait). Revenir à « non
  * renseigné » alors que des niveaux sont saisis est refusé : il reste
  * « Rendu » (avis `reste-rendu`). La restitution (`rest`) n'est pas touchée.

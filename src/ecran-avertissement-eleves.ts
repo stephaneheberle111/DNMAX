@@ -51,7 +51,7 @@ const LONGUEUR = String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES);
 
 const LIBELLES_MANQUANTS: Readonly<Record<ChampManquant, string>> = {
   nom: "le nom de l'établissement",
-  contactDelegue: "le contact du délégué à la protection des données",
+  contactDelegue: "le contact du délégué ou de la déléguée à la protection des données",
 };
 
 /** « a », « a et b » : les champs à saisir, en toutes lettres. */
@@ -95,10 +95,10 @@ function creerDocuments(contexte: ContexteDocumentsEleves, fermer: () => void, a
     minutesVerrouillage: MINUTES_VERROUILLAGE,
   };
   documents.append(
-    creerBouton("Information aux étudiants (avec accusé de réception)", "btn", () => {
+    creerBouton("Information aux étudiant·es (avec accusé de réception)", "btn", () => {
       montrerApercuDocument(composerFicheEleves(champs));
     }),
-    creerBouton("Note au chef d'établissement", "btn", () => {
+    creerBouton("Note à la direction de l'établissement", "btn", () => {
       montrerApercuDocument(composerNoteEtablissement(champs));
     }),
     creer("p", "avertissement-astuce", "Chaque document s'ouvre d'abord en aperçu, pour l'enregistrer en PDF ou l'imprimer."),
@@ -130,7 +130,7 @@ function creerChampMotDePasse(libelle: string, completion: AutoFill): { ligne: H
 export function confirmerActivationEleves(contexte: ContexteAvertissement): Promise<boolean> {
   return new Promise((resoudre) => {
     let confirme = false;
-    const { boite, fermer } = ouvrirBoite("Module Étudiants : données personnelles", () => {
+    const { boite, fermer } = ouvrirBoite("Module Étudiant·es : données personnelles", () => {
       resoudre(confirme);
     });
     const terminer = (): void => {
@@ -142,16 +142,16 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
       creer(
         "p",
         "",
-        "Avec ce module, DNMAX conserve les noms de vos étudiants et leurs résultats (niveaux, observations, appréciations), sur cet ordinateur seulement, chiffrés par votre mot de passe. Ce sont des données personnelles, soumises au RGPD.",
+        "Avec ce module, DNMAX conserve les noms de vos étudiant·es et leurs résultats (niveaux, observations, appréciations), sur cet ordinateur seulement, chiffrés par votre mot de passe. Ce sont des données personnelles, soumises au RGPD.",
       ),
-      creer("p", "avertissement-intro", "Avant de saisir vos étudiants :"),
+      creer("p", "avertissement-intro", "Avant de saisir vos étudiant·es :"),
     );
     const obligations = creer("ul", "avertissement-liste");
     for (const obligation of [
       "informez-les\u00a0: remettez-leur la note d'information, avec son accusé de réception à signer\u00a0;",
-      "prévenez votre chef d'établissement ou le délégué à la protection des données, avec la note prévue pour eux\u00a0;",
+      "prévenez votre chef·fe d'établissement ou le délégué ou la déléguée à la protection des données, avec la note prévue pour eux\u00a0;",
       `gardez leurs données au plus ${ecrireDuree(contexte.moisConservation)} après la sortie de leur promotion\u00a0: DNMAX vous le rappellera\u00a0;`,
-      "une demande d'accès ou d'effacement se traite dans Paramètres > Données des étudiants.",
+      "une demande d'accès ou d'effacement se traite dans Paramètres > Données des étudiant·es.",
     ]) {
       obligations.append(creer("li", "", obligation));
     }
@@ -160,7 +160,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
       creer(
         "p",
         "",
-        "L'accusé de réception n'est pas un consentement : l'évaluation relève de la mission de l'établissement, les étudiants en sont informés.",
+        "L'accusé de réception n'est pas un consentement : l'évaluation relève de la mission de l'établissement, les étudiant·es en sont informé·es.",
       ),
       creer(
         "p",
@@ -209,7 +209,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
         creer(
           "p",
           "avertissement-intro",
-          `Avec le module Étudiants, il faut un mot de passe plus solide. ${expliquerDefauts(defautsRobustesse(actuel.champ.value, motDePasse.motsInterdits()))} Une courte phrase avec un chiffre convient très bien. Votre code de secours reste le même.`,
+          `Avec le module Étudiant·es, il faut un mot de passe plus solide. ${expliquerDefauts(defautsRobustesse(actuel.champ.value, motDePasse.motsInterdits()))} Une courte phrase avec un chiffre convient très bien. Votre code de secours reste le même.`,
         ),
         nouveau.ligne,
         confirmation.ligne,
@@ -272,7 +272,7 @@ export function confirmerActivationEleves(contexte: ContexteAvertissement): Prom
  * depuis sa carte dans Paramètres > Modules.
  */
 export function montrerDocumentsEleves(contexte: ContexteDocumentsEleves): void {
-  const { boite, fermer } = ouvrirBoite("Module Étudiants : documents à remettre");
+  const { boite, fermer } = ouvrirBoite("Module Étudiant·es : documents à remettre");
   boite.classList.add("avertissement-eleves");
   const actions = creer("div", "echange-actions");
   const bouton = creerBouton("Fermer", "btn primary", fermer);
@@ -281,7 +281,7 @@ export function montrerDocumentsEleves(contexte: ContexteDocumentsEleves): void 
     creer(
       "p",
       "",
-      "La note d'information, avec son accusé de réception, se remet à chaque étudiant ; la note au chef d'établissement, à lui ou au délégué à la protection des données.",
+      "La note d'information, avec son accusé de réception, se remet à chaque étudiant·e ; la note à la direction de l'établissement, ou au délégué ou à la déléguée à la protection des données.",
     ),
     creerDocuments(contexte, fermer, ""),
     actions,

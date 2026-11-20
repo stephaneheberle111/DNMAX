@@ -56,7 +56,7 @@
       <li><button type="button" data-step="1"><span class="hd"><b>1</b><span class="l">L'évaluation</span></span><span class="s" id="s1sum"></span></button></li>
       <li><button type="button" data-step="2"><span class="hd"><b>2</b><span class="l">Compétences</span></span><span class="s" id="s2sum"></span></button></li>
       <li><button type="button" data-step="3"><span class="hd"><b>3</b><span class="l">Formulation</span></span><span class="s" id="s3sum"></span></button></li>
-      <li id="li-step4" hidden><button type="button" data-step="4"><span class="hd"><b>4</b><span class="l">Évaluation des étudiants</span></span><span class="s" id="s4sum"></span></button></li>
+      <li id="li-step4" hidden><button type="button" data-step="4"><span class="hd"><b>4</b><span class="l">Évaluation des étudiant·es</span></span><span class="s" id="s4sum"></span></button></li>
     </ol>
 
     <div id="step1">
@@ -66,7 +66,7 @@
           <div class="panel-body">
             <div class="fgroup first">Identification</div>
             <div class="field"><label for="f-titre">Intitulé de l'évaluation</label><input type="text" id="f-titre" placeholder="Évaluation intermédiaire — …"></div>
-            <div class="field" id="fld-consignes"><label for="f-consignes">Consignes données aux étudiants</label><textarea id="f-consignes"></textarea></div>
+            <div class="field" id="fld-consignes"><label for="f-consignes">Consignes données aux étudiant·es</label><textarea id="f-consignes"></textarea></div>
             <div class="field"><label>Livrables attendus <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— sélection multiple</span></label>
               <div class="ecpick" id="f-livr"></div>
             </div>
@@ -76,10 +76,10 @@
               <div class="field"><label>Promotions <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— sélection multiple</span></label>
                 <div class="ecpick" id="f-classes"></div></div>
               <div class="field"><label>Dates prévues <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— facultatives</span></label>
-                <div class="row2"><label class="hint" style="display:flex;flex-direction:column;gap:3px">Distribution aux étudiants<input type="date" id="f-distrib"></label>
+                <div class="row2"><label class="hint" style="display:flex;flex-direction:column;gap:3px">Distribution aux étudiant·es<input type="date" id="f-distrib"></label>
                 <label class="hint" style="display:flex;flex-direction:column;gap:3px">Date butoir de rendu<input type="date" id="f-rendu"></label></div></div>
             </div>
-            <div class="field" id="fld-eleve" hidden><label>Étudiants <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— sélection multiple, aucune : toute la promotion</span></label>
+            <div class="field" id="fld-eleve" hidden><label>Étudiant·es <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400">— sélection multiple, aucune : toute la promotion</span></label>
               <div class="ecpick" id="f-eleve"></div>
               <div class="hint" id="eleveHint"></div></div>
             <div class="field"><label>Semestre</label>
@@ -152,10 +152,10 @@
     <div id="step4" hidden>
       <div class="panel">
         <div class="pick-head">
-          <h3>Évaluation des étudiants</h3><span class="count" id="eCount">0</span>
+          <h3>Évaluation des étudiant·es</h3><span class="count" id="eCount">0</span>
           <span class="hint" id="eProg" style="flex:1 1 auto"></span>
           <div class="subnav" id="eMode" style="margin:0">
-            <button type="button" data-emode="fiche">Fiche par étudiant</button>
+            <button type="button" data-emode="fiche">Fiche par étudiant·e</button>
             <button type="button" data-emode="grille">Grille de la promo</button>
           </div>
         </div>
@@ -227,9 +227,9 @@
     <div class="panel" id="panneau-regles" hidden>
       <div class="pick-head"><h3>Règles d'évaluation</h3></div>
       <div class="panel-body">
-        <div class="hint">Les mêmes pour tous les enseignants, pour que deux collègues lisent de la même façon une évaluation qu'ils s'échangent.</div>
+        <div class="hint">Les mêmes pour tou·tes les enseignant·es, pour que deux collègues lisent de la même façon une évaluation échangée.</div>
         <ul class="liste-regles" id="liste-regles"></ul>
-        <label class="ligne-case"><input type="checkbox" id="r-masquer-comparaison"> Dans Progression étudiant, ne pas situer l'étudiant par rapport à sa promotion</label>
+        <label class="ligne-case"><input type="checkbox" id="r-masquer-comparaison"> Dans Progression étudiant·e, ne pas situer l'étudiant·e par rapport à sa promotion</label>
         <label class="ligne-case"><input type="checkbox" id="r-suivi-simplifie"> Suivi simplifié dans Mes évaluations : « À faire », puis « Faite » une fois la fiche distribuée (le suivi détaillé reste enregistré)</label>
       </div>
     </div>
@@ -240,18 +240,18 @@
         <div class="hint">Relancez une visite pas à pas : elle éclaire là où cliquer et repère ce que vous avez déjà fait.</div>
         <div class="visites-liste">
           <button type="button" class="btn" data-parcours="prise-en-main">Prise en main</button>
-          <button type="button" class="btn" data-parcours="eleves">Module Étudiants</button>
+          <button type="button" class="btn" data-parcours="eleves">Module Étudiant·es</button>
           <button type="button" class="btn" data-parcours="niveaux">Module Niveaux d’acquisition</button>
         </div>
       </div>
     </div>
     <!-- Ajout à l'interface historique : données des étudiants, géré par src/ecran-droits-eleves.ts -->
     <div class="panel" id="panneau-donnees-eleves" hidden>
-      <div class="pick-head"><h3>Données des étudiants</h3></div>
+      <div class="pick-head"><h3>Données des étudiant·es</h3></div>
       <div class="panel-body">
-        <div class="hint">Avec le module Étudiants, DNMAX garde des noms et des résultats d'étudiants. Un étudiant ou sa famille peut demander à consulter ses données ou à les faire effacer ; une promotion se conserve un temps limité après sa sortie, puis s'anonymise ou s'efface.</div>
+        <div class="hint">Avec le module Étudiant·es, DNMAX garde des noms et des résultats d'étudiant·es. Un·e étudiant·e ou sa famille peut demander à consulter ses données ou à les faire effacer ; une promotion se conserve un temps limité après sa sortie, puis s'anonymise ou s'efface.</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" class="btn ghost" id="bouton-donnees-eleve">Données d'un étudiant…</button>
+          <button type="button" class="btn ghost" id="bouton-donnees-eleve">Données d'un·e étudiant·e…</button>
           <button type="button" class="btn ghost" id="bouton-donnees-promotions">Anonymiser ou effacer des promotions…</button>
         </div>
       </div>
@@ -273,7 +273,7 @@
     <div class="panel">
       <div class="pick-head"><h3>Exemple<span class="help " tabindex="0" role="note" aria-label="Aide"><span class="hbub">Ajoute un établissement fictif complet pour voir l'application en situation, et ouvre l'une de ses évaluations. Vos évaluations enregistrées sont gardées ; l'évaluation ouverte est remplacée par celle de l'exemple. « Retirer l'exemple » enlève ensuite ce que l'exemple a ajouté.</span></span></h3>
         <div style="margin-left:auto"><button class="btn" id="bDemo">Charger un exemple</button></div></div>
-      <div class="panel-body"><div class="hint">Données fictives : un établissement complet, avec ses mentions, ses promotions, ses étudiants et plus d'une centaine d'évaluations, résultats compris. Charger l'exemple active le module Étudiants.</div></div>
+      <div class="panel-body"><div class="hint">Données fictives : un établissement complet, avec ses mentions, ses promotions, ses étudiant·es et plus d'une centaine d'évaluations, résultats compris. Charger l'exemple active le module Étudiant·es.</div></div>
     </div>
     </div>
   </section>
@@ -296,7 +296,7 @@
         <div class="choix-fond" id="choix-fond">
           <div class="choix-fond-tete">
             <h4>Fond de page</h4>
-            <div class="hint">Chaque utilisateur choisit son papier. Le réglage vaut pour toutes les pages, jamais pour les exports.</div>
+            <div class="hint">Chaque utilisateur·rice choisit son papier. Le réglage vaut pour toutes les pages, jamais pour les exports.</div>
           </div>
           <div class="choix-fond-trames" role="radiogroup" aria-label="Fond de page">
             <label class="carte-fond"><span class="apercu-fond" data-trame="lisse"></span>

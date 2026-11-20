@@ -91,24 +91,24 @@ function confirmerEffacement(acces: AccesDonnees, eleve: EleveRepere): void {
  * (droit d'accès) ou l'effacer partout (droit à l'effacement).
  */
 export function ouvrirDroitsEleves(acces: AccesDonnees): void {
-  const { boite, fermer } = ouvrirBoite("Données d'un étudiant");
+  const { boite, fermer } = ouvrirBoite("Données d'un·e étudiant·e");
   const eleves = listerEleves(acces.lireEntrees());
   boite.append(
     creer(
       "p",
       "",
-      "Un étudiant ou sa famille peut demander à consulter ses données ou à les faire effacer. Choisissez l'étudiant, puis exportez ses données pour les lui remettre, ou effacez-le de DNMAX.",
+      "Un·e étudiant·e ou sa famille peut demander à consulter ses données ou à les faire effacer. Choisissez l'étudiant·e, puis exportez ses données pour les lui remettre, ou effacez ses données de DNMAX.",
     ),
   );
   const actions = creer("div", "echange-actions");
   if (eleves.length === 0) {
-    boite.append(creer("p", "", "Aucun étudiant n'est enregistré dans DNMAX."));
+    boite.append(creer("p", "", "Aucun·e étudiant·e n'est enregistré·e dans DNMAX."));
     actions.append(creerBouton("Fermer", "btn ghost", fermer));
     boite.append(actions);
     return;
   }
   const choix = creer("select");
-  choix.setAttribute("aria-label", "Étudiant");
+  choix.setAttribute("aria-label", "Étudiant·e");
   eleves.forEach((eleve, position) => {
     const option = creer("option", "", decrireEleve(eleve));
     option.value = String(position);
@@ -132,7 +132,7 @@ export function ouvrirDroitsEleves(acces: AccesDonnees): void {
       .then((ecrit) => {
         if (ecrit) {
           dire(
-            `Données de ${eleve.nom} enregistrées (${String(extrait.evaluations.length)} évaluation(s)). Ce fichier n'est pas protégé : remettez-le directement à l'étudiant ou à sa famille.`,
+            `Données de ${eleve.nom} enregistrées (${String(extrait.evaluations.length)} évaluation(s)). Ce fichier n'est pas protégé : remettez-le directement à l'étudiant·e ou à sa famille.`,
             false,
           );
         }
@@ -141,7 +141,7 @@ export function ouvrirDroitsEleves(acces: AccesDonnees): void {
         dire(messagePourErreur(erreurExport), true);
       });
   });
-  const effacer = creerBouton("Effacer cet étudiant…", "btn ghost", () => {
+  const effacer = creerBouton("Effacer cet·te étudiant·e…", "btn ghost", () => {
     confirmerEffacement(acces, eleveChoisi());
   });
   const boutons = creer("div", "compte-liens");
@@ -151,7 +151,7 @@ export function ouvrirDroitsEleves(acces: AccesDonnees): void {
     choix,
     boutons,
     message,
-    creer("p", "", "Pour corriger le nom d'un étudiant, utilisez l'écran Promotions : la correction s'applique à toutes ses évaluations."),
+    creer("p", "", "Pour corriger le nom d'un·e étudiant·e, utilisez l'écran Promotions : la correction s'applique à toutes ses évaluations."),
     actions,
   );
 }
@@ -162,7 +162,7 @@ function ecrireJour(jourIso: string): string {
 }
 
 function decrirePromotion(promotion: EtatPromotion): string {
-  const eleves = `${String(promotion.eleves)} étudiant(s)`;
+  const eleves = `${String(promotion.eleves)} étudiant·e(s)`;
   if (promotion.sortie === "") {
     return `${promotion.nom} : ${eleves}, année d'entrée inconnue`;
   }
@@ -188,12 +188,12 @@ export function ouvrirConservation(acces: AccesDonnees): void {
     creer(
       "p",
       "",
-      `Les données d'étudiants sont gardées ${ecrireDuree(moisConservationDe(entrees))} après la sortie de leur promotion ; DNMAX le rappelle ensuite. Vous pouvez aussi anonymiser ou effacer une promotion plus tôt. Les évaluations elles-mêmes (grilles, consignes) sont conservées.`,
+      `Les données d'étudiant·es sont gardées ${ecrireDuree(moisConservationDe(entrees))} après la sortie de leur promotion ; DNMAX le rappelle ensuite. Vous pouvez aussi anonymiser ou effacer une promotion plus tôt. Les évaluations elles-mêmes (grilles, consignes) sont conservées.`,
     ),
   );
   const actions = creer("div", "echange-actions");
   if (promotions.length === 0 && orphelins.length === 0) {
-    boite.append(creer("p", "", "Aucune promotion ne compte d'étudiant identifiable."));
+    boite.append(creer("p", "", "Aucune promotion ne compte d'étudiant·e identifiable."));
     actions.append(creerBouton("Fermer", "btn ghost", fermer));
     boite.append(actions);
     return;
@@ -228,7 +228,7 @@ export function ouvrirConservation(acces: AccesDonnees): void {
   }
   const caseOrphelins =
     orphelins.length > 0
-      ? creerCase(`Résultats de ${String(orphelins.length)} étudiant(s) retiré(s) de toute promotion, restés dans des évaluations`, true)
+      ? creerCase(`Résultats de ${String(orphelins.length)} étudiant·e(s) retiré·e(s) de toute promotion, restés dans des évaluations`, true)
       : null;
   const erreur = creer("p", "echange-erreur");
   erreur.hidden = true;
@@ -239,7 +239,7 @@ export function ouvrirConservation(acces: AccesDonnees): void {
     const choisies = cochees.map((element) => element.id);
     const avecOrphelins = caseOrphelins?.checked === true;
     if (choisies.length === 0 && !avecOrphelins) {
-      erreur.textContent = "Cochez au moins une promotion ou les résultats sans étudiant.";
+      erreur.textContent = "Cochez au moins une promotion ou les résultats sans étudiant·e.";
       erreur.hidden = false;
       return;
     }
@@ -268,7 +268,7 @@ export function ouvrirConservation(acces: AccesDonnees): void {
     creer(
       "p",
       "",
-      "Anonymiser : chaque étudiant devient « Étudiant anonyme 1, 2… » ; ses niveaux et ses dates restent, ses observations et son appréciation sont retirées. Effacer : tout disparaît. Dans les deux cas c'est définitif : exportez auparavant ce que vous devez remettre. Les sauvegardes automatiques en gardent une trace jusqu'à leur remplacement.",
+      "Anonymiser : chaque étudiant·e devient « Étudiant·e anonyme 1, 2… » ; ses niveaux et ses dates restent, ses observations et son appréciation sont retirées. Effacer : tout disparaît. Dans les deux cas c'est définitif : exportez auparavant ce que vous devez remettre. Les sauvegardes automatiques en gardent une trace jusqu'à leur remplacement.",
     ),
     erreur,
   );
@@ -309,7 +309,7 @@ export function rappelerConservation(acces: AccesDonnees): void {
     creer(
       "p",
       "",
-      `${String(echues.length)} promotion(s) sont sorties depuis plus de ${ecrireDuree(moisConservationDe(acces.lireEntrees()))} : leurs données d'étudiants sont à effacer ou à anonymiser.`,
+      `${String(echues.length)} promotion(s) sont sorties depuis plus de ${ecrireDuree(moisConservationDe(acces.lireEntrees()))} : leurs données d'étudiant·es sont à effacer ou à anonymiser.`,
     ),
     boutons,
   );

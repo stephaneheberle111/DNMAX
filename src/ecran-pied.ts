@@ -54,7 +54,7 @@ function montrerAPropos(versionInstallee: Promise<string>, adresseRetours: Promi
     creer(
       "p",
       "",
-      "DNMAX aide les enseignants de DN MADE à construire, suivre et restituer leurs évaluations par compétences, à partir du référentiel du diplôme. " +
+      "DNMAX aide les enseignant·es de DN MADE à construire, suivre et restituer leurs évaluations par compétences, à partir du référentiel du diplôme. " +
         "C'est une application de bureau autonome : vos données restent sur cet ordinateur, chiffrées par votre mot de passe, et ne s'échangent avec vos collègues que par fichier ou d'ordinateur à ordinateur.",
     ),
     licence,

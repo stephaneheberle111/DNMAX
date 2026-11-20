@@ -30,7 +30,7 @@ export function reglesAffichees(): RegleAffichee[] {
   return [
     {
       titre: "Échelle",
-      texte: `Une seule échelle pour tous, les ${ECHELLE.nom.toLowerCase()} : ${ECHELLE.niveaux.join(", ")}.`,
+      texte: `Une seule échelle pour tou·tes, les ${ECHELLE.nom.toLowerCase()} : ${ECHELLE.niveaux.join(", ")}.`,
     },
     {
       titre: "Enregistrer une évaluation",
@@ -38,8 +38,8 @@ export function reglesAffichees(): RegleAffichee[] {
         "Il faut un intitulé, une promotion, une consigne, au moins un EC et au moins une compétence. Une UE cochée vaut tous ses EC.",
     },
     { titre: "Seuils de la jauge", texte: `${zonesDeLaJauge().join(" ; ")}.` },
-    { titre: "Rendu", texte: "Saisir un niveau pour un étudiant le marque « Rendu »." },
-    { titre: "Non rendu, dispensé", texte: "Marquer un étudiant « non rendu » ou « dispensé » efface une saisie commencée." },
+    { titre: "Rendu", texte: "Saisir un niveau pour un·e étudiant·e le marque « Rendu »." },
+    { titre: "Non rendu, dispensé·e", texte: "Marquer un·e étudiant·e « non rendu » ou « dispensé·e » efface une saisie commencée." },
     {
       titre: "Compétence acquise",
       texte: `Une compétence est acquise quand le dernier niveau obtenu est « ${acquis} » ou mieux.`,

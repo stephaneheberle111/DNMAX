@@ -109,7 +109,7 @@ function boutonAction(contexte: ContexteActions, rang: number, action: ActionSui
       return bouton(
         [
           ["disabled", ""],
-          ["title", `${String(action.manquants)} étudiant${action.manquants > 1 ? "s" : ""} sans statut de rendu : à renseigner dans l'évaluation`],
+          ["title", `${String(action.manquants)} étudiant·e${action.manquants > 1 ? "s" : ""} sans statut de rendu : à renseigner dans l'évaluation`],
           ["style", "opacity:.5;cursor:not-allowed"],
         ],
         "Terminer l'évaluation ",
@@ -163,7 +163,7 @@ function contenu(contexte: ContexteActions, evaluation: Evaluation, rang: number
   }
   liste.append(bouton([["data-dup", String(rang)]], "Dupliquer"), ...actions);
   const sections: Node[] = [];
-  if (contexte.moduleEleves) sections.push(section("Évaluer", bouton([["class", "btn primary xabig"], ["data-sai", String(rang)]], "Évaluer les étudiants")));
+  if (contexte.moduleEleves) sections.push(section("Évaluer", bouton([["class", "btn primary xabig"], ["data-sai", String(rang)]], "Évaluer les étudiant·es")));
   sections.push(
     section(
       "Exporter",
@@ -171,7 +171,7 @@ function contenu(contexte: ContexteActions, evaluation: Evaluation, rang: number
         ? [
             balise("p", [["class", "xh"]], "L'évaluation · grille vierge"),
             formats(rang, "eval"),
-            balise("p", [["class", "xh"]], "Les restitutions · résultats par étudiant"),
+            balise("p", [["class", "xh"]], "Les restitutions · résultats par étudiant·e"),
             formats(rang, "rest"),
           ]
         : [balise("p", [["class", "xh"]], "Grille à remplir à la main"), formats(rang, "eval")]),
@@ -215,7 +215,7 @@ function relier(corps: HTMLElement, contexte: ContexteActions): void {
       switch (element.dataset.act) {
         case "fin":
           if (!terminerOuRouvrir(suivi, contexte.rendusManquants(evaluation), contexte.moduleEleves ? "dnmax" : "main", contexte.aujourdhui)) {
-            contexte.annoncer("Renseignez d'abord le rendu de chaque étudiant.");
+            contexte.annoncer("Renseignez d'abord le rendu de chaque étudiant·e.");
             return;
           }
           break;

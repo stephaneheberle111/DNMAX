@@ -102,11 +102,11 @@ export function resumeAvancement(comptes: ComptesEtudiant, total: number, semest
     comptes.part > 0 ? { texte: accord(comptes.part, "partielle", "partielles"), gras: false } : null,
     comptes.nr > 0 ? { texte: accord(comptes.nr, "non rendu", "non rendus"), gras: true } : null,
     comptes.disp > 0 ? { texte: accord(comptes.disp, "dispensée", "dispensées"), gras: false } : null,
-    comptes.miss > 0 ? { texte: `${accord(comptes.miss, "non évaluée", "non évaluées")} alors que d'autres étudiants l'ont été`, gras: true } : null,
+    comptes.miss > 0 ? { texte: `${accord(comptes.miss, "non évaluée", "non évaluées")} alors que d'autres étudiant·es l'ont été`, gras: true } : null,
     comptes.wait > 0 ? { texte: `${accord(comptes.wait, "pas encore évaluée", "pas encore évaluées")} (pour personne)`, gras: false } : null,
   ].filter((morceau): morceau is { texte: string; gras: boolean } => morceau !== null);
   if (morceaux.length > 0) return morceaux;
-  return [{ texte: total > 0 ? "Rien en retard." : `Aucune évaluation au ${semestre} pour cet étudiant.`, gras: false }];
+  return [{ texte: total > 0 ? "Rien en retard." : `Aucune évaluation au ${semestre} pour cet·te étudiant·e.`, gras: false }];
 }
 
 /**

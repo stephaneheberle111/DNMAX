@@ -51,12 +51,12 @@ export interface ContextePromotions {
 const AIDE =
   "Une promotion suit un groupe d'un diplôme et d'une mention de son entrée à sa sortie. Choisissez d'abord le diplôme et la mention, puis l'année de début : le nom se compose seul avec le code du diplôme, l'année de début et l'année de fin, qui dépend de la durée du diplôme (Diplômes et mentions) — DNO-2025-2028 pour un DN MADE mention Objet en trois ans commencé en 2025. L'année de formation se déduit de l'année scolaire, et l'étape 1 de l'évaluation propose les promotions de la mention active.";
 const AIDE_ETUDIANTS =
-  " Ouvrez « étudiants » pour gérer la liste : renommer, retirer, ajouter plusieurs noms d'un coup, ou faire passer un étudiant dans une autre promotion, y compris d'une autre mention. Ses résultats déjà saisis restent attachés aux évaluations de son ancienne promotion.";
+  " Ouvrez « étudiant·es » pour gérer la liste : renommer, retirer, ajouter plusieurs noms d'un coup, ou faire passer un·e étudiant·e dans une autre promotion, y compris d'une autre mention. Ses résultats déjà saisis restent attachés aux évaluations de son ancienne promotion.";
 // Le nom du module vient du catalogue : l'aide suit un changement de nom.
-export const AIDE_SANS_ETUDIANTS = ` Le module « ${MODULES.eleves?.nom ?? "Étudiants"} » (Paramètres) permet en plus de gérer la liste des étudiants de chaque promotion.`;
+export const AIDE_SANS_ETUDIANTS = ` Le module « ${MODULES.eleves?.nom ?? "Étudiant·es"} » (Paramètres) permet en plus de gérer la liste des étudiant·es de chaque promotion.`;
 const CSS_ETUDIANT = "grid-template-columns:minmax(0,1fr) minmax(0,1fr) 300px 92px";
 const INVITATION_AJOUT =
-  "Ajouter des étudiants — un par ligne : prénom puis nom, ou deux colonnes Prénom / Nom collées d'un tableur";
+  "Ajouter des étudiant·es — un·e par ligne : prénom puis nom, ou deux colonnes Prénom / Nom collées d'un tableur";
 
 function texte(valeur: unknown): string {
   if (typeof valeur === "string") return valeur;
@@ -148,7 +148,7 @@ export function peindrePromotions(hote: HTMLElement, contexte: ContextePromotion
           ["data-po", id],
           ["aria-expanded", String(ouverte)],
         ],
-        `${String(nombre)} étudiant${nombre > 1 ? "s" : ""} ${ouverte ? "▴" : "▾"}`,
+        `${String(nombre)} étudiant·e${nombre > 1 ? "s" : ""} ${ouverte ? "▴" : "▾"}`,
       );
       bascule.addEventListener("click", () => {
         contexte.basculer(id);
@@ -177,7 +177,7 @@ export function peindrePromotions(hote: HTMLElement, contexte: ContextePromotion
       actions: [ajouter],
       entete: {
         css,
-        cellules: ["Diplôme · mention", "Début", "Promotion", `En ${contexte.anneeScolaire}`, ...(contexte.moduleEleves ? ["Étudiants"] : []), ""],
+        cellules: ["Diplôme · mention", "Début", "Promotion", `En ${contexte.anneeScolaire}`, ...(contexte.moduleEleves ? ["Étudiant·es"] : []), ""],
       },
       lignes,
       aide: AIDE + (contexte.moduleEleves ? AIDE_ETUDIANTS : AIDE_SANS_ETUDIANTS),
@@ -209,7 +209,7 @@ function detailEtudiants(
     };
     const destination = balise("select", [
       ["data-sm", cle],
-      ["aria-label", "Promotion de l'étudiant"],
+      ["aria-label", "Promotion de l'étudiant·e"],
       ["title", "Changer de promotion, ou de mention"],
     ]);
     destination.append(...choixPromotion(id));
@@ -230,7 +230,7 @@ function detailEtudiants(
             ["value", completerPersonne(etudiant).prenom],
             ["data-sp", cle],
             ["placeholder", "Prénom"],
-            ["aria-label", "Prénom de l'étudiant"],
+            ["aria-label", "Prénom de l'étudiant·e"],
           ],
           (valeur) => {
             renommer("prenom", valeur);
@@ -241,7 +241,7 @@ function detailEtudiants(
             ["value", texte(etudiant.nomFam)],
             ["data-sn", cle],
             ["placeholder", "Nom"],
-            ["aria-label", "Nom de l'étudiant"],
+            ["aria-label", "Nom de l'étudiant·e"],
           ],
           (valeur) => {
             renommer("nomFam", valeur);
@@ -256,7 +256,7 @@ function detailEtudiants(
       ]),
     );
   }
-  if (etudiants.length === 0) detail.append(balise("div", [["class", "empty"]], "Aucun étudiant dans cette promotion."));
+  if (etudiants.length === 0) detail.append(balise("div", [["class", "empty"]], "Aucun·e étudiant·e dans cette promotion."));
   const ajout = balise("div", [["class", "padd"]]);
   const saisie = balise("textarea", [
     ["data-sa", id],

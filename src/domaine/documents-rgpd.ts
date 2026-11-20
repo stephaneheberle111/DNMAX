@@ -20,7 +20,7 @@ import { LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES } from "./saisie-coffre";
 export interface SaisieEtablissement {
   /** Nom de l'établissement. */
   nom: string;
-  /** Contact du délégué à la protection des données : adresse, téléphone ou service. */
+  /** Contact du délégué ou de la déléguée à la protection des données : adresse, téléphone ou service. */
   contactDelegue: string;
 }
 
@@ -91,8 +91,8 @@ function majuscule(valeur: string): string {
   return valeur.charAt(0).toUpperCase() + valeur.slice(1);
 }
 
-export const TITRE_FICHE_ELEVES = "Information aux étudiants";
-export const TITRE_NOTE_ETABLISSEMENT = "Note au chef d'établissement";
+export const TITRE_FICHE_ELEVES = "Information aux étudiant·es";
+export const TITRE_NOTE_ETABLISSEMENT = "Note à la direction de l'établissement";
 
 /** Note d'information aux étudiants, suivie d'un accusé de réception à découper et à rendre signé : une seule page. */
 export function composerFicheEleves(champs: ChampsDocumentsRgpd): DocumentImprimable {
@@ -105,7 +105,7 @@ export function composerFicheEleves(champs: ChampsDocumentsRgpd): DocumentImprim
       type: "paragraphe",
       contenu: [
         texte(
-          "Pour évaluer vos compétences tout au long du DN MADE, vos enseignants peuvent utiliser l'application DNMAX. Elle enregistre votre prénom, votre nom, votre promotion, vos niveaux par compétence, leurs observations et leurs appréciations, et les dates de rendu de vos travaux.",
+          "Pour évaluer vos compétences tout au long du DN MADE, vos enseignant·es peuvent utiliser l'application DNMAX. Elle enregistre votre prénom, votre nom, votre promotion, vos niveaux par compétence, leurs observations et leurs appréciations, et les dates de rendu de vos travaux.",
         ),
       ],
     },
@@ -117,7 +117,7 @@ export function composerFicheEleves(champs: ChampsDocumentsRgpd): DocumentImprim
         ),
         gras(etablissement),
         texte(
-          ", représenté par son chef d'établissement, dans le cadre de sa mission d'enseignement. Vous n'avez donc pas à donner votre accord : cette note vous en informe.",
+          ", représenté par son ou sa chef·fe d'établissement, dans le cadre de sa mission d'enseignement. Vous n'avez donc pas à donner votre accord : cette note vous en informe.",
         ),
       ],
     },
@@ -125,7 +125,7 @@ export function composerFicheEleves(champs: ChampsDocumentsRgpd): DocumentImprim
       type: "paragraphe",
       contenu: [
         texte(
-          "Elles restent sur l'ordinateur de votre enseignant, chiffrées et protégées par un mot de passe. Elles ne sont ni envoyées sur Internet ni confiées à une entreprise. Votre enseignant peut les transmettre à un collègue de l'équipe pédagogique, dans un fichier protégé par un mot de passe ou directement d'ordinateur à ordinateur sur le réseau local, protégées de la même façon.",
+          "Elles restent sur l'ordinateur de votre enseignant·e, chiffrées et protégées par un mot de passe. Elles ne sont ni envoyées sur Internet ni confiées à une entreprise. Votre enseignant·e peut les transmettre à un·e collègue de l'équipe pédagogique, dans un fichier protégé par un mot de passe ou directement d'ordinateur à ordinateur sur le réseau local, protégées de la même façon.",
         ),
       ],
     },
@@ -141,13 +141,13 @@ export function composerFicheEleves(champs: ChampsDocumentsRgpd): DocumentImprim
       type: "paragraphe",
       contenu: [
         texte(
-          "Vous pouvez demander à consulter vos données, à les faire corriger ou, dans les cas prévus par la loi, à les faire effacer, auprès de votre enseignant ou du délégué à la protection des données de l'établissement : ",
+          "Vous pouvez demander à consulter vos données, à les faire corriger ou, dans les cas prévus par la loi, à les faire effacer, auprès de votre enseignant·e ou du délégué ou de la déléguée à la protection des données de l'établissement : ",
         ),
         gras(delegue),
         texte(". Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL (cnil.fr)."),
       ],
     },
-    { type: "decoupe", texte: "Partie à découper et à rendre signée à votre enseignant. Gardez la note ci-dessus." },
+    { type: "decoupe", texte: "Partie à découper et à rendre signée à votre enseignant·e. Gardez la note ci-dessus." },
     {
       type: "insecable",
       blocs: [
@@ -163,12 +163,12 @@ export function composerFicheEleves(champs: ChampsDocumentsRgpd): DocumentImprim
         {
           type: "tableau",
           lignes: [
-            { intitule: "Prénom et nom de l'étudiant", contenu: [], aRemplir: "ligne" },
+            { intitule: "Prénom et nom de l'étudiant·e", contenu: [], aRemplir: "ligne" },
             { intitule: "Promotion", contenu: [], aRemplir: "ligne" },
             { intitule: "Date", contenu: [], aRemplir: "ligne" },
-            { intitule: "Signature de l'étudiant", contenu: [], aRemplir: "signature" },
+            { intitule: "Signature de l'étudiant·e", contenu: [], aRemplir: "signature" },
             {
-              intitule: "Signature du représentant légal, si l'étudiant est mineur",
+              intitule: "Signature du ou de la représentant·e légal·e, si l'étudiant·e est mineur·e",
               contenu: [],
               aRemplir: "signature",
             },
@@ -180,18 +180,18 @@ export function composerFicheEleves(champs: ChampsDocumentsRgpd): DocumentImprim
   return { titre: TITRE_FICHE_ELEVES, nomFichier: `DNMAX - ${TITRE_FICHE_ELEVES}.pdf`, pages: [page] };
 }
 
-/** Note au chef d'établissement et au délégué à la protection des données : deux pages. */
+/** Note à la direction de l'établissement et au délégué à la protection des données : deux pages. */
 export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): DocumentImprimable {
   const { etablissement, delegue, date } = exigerChamps(champs);
   const premiere: Bloc[] = [
     { type: "titre", texte: TITRE_NOTE_ETABLISSEMENT },
-    { type: "sous-titre", texte: "DNMAX et le RGPD : les données des étudiants" },
+    { type: "sous-titre", texte: "DNMAX et le RGPD : les données des étudiant·es" },
     { type: "contexte", contenu: [texte("Établissement : "), gras(etablissement), texte(` · ${date}`)] },
     {
       type: "paragraphe",
       contenu: [
         texte(
-          "Cette note s'adresse au chef d'établissement et au délégué à la protection des données. Un enseignant de l'établissement active le module Étudiants de DNMAX pour évaluer ses étudiants ; sans ce module, DNMAX ne contient que des grilles d'évaluation et des référentiels, sans aucune donnée personnelle d'étudiant. Elle peut servir à compléter le registre des activités de traitement de l'établissement. Les étudiants en sont informés par une note remise en classe, dont ils signent l'accusé de réception.",
+          "Cette note s'adresse à la direction de l'établissement et au délégué ou à la déléguée à la protection des données. Un·e enseignant·e de l'établissement active le module Étudiant·es de DNMAX pour évaluer ses étudiant·es ; sans ce module, DNMAX ne contient que des grilles d'évaluation et des référentiels, sans aucune donnée personnelle d'étudiant·e. Elle peut servir à compléter le registre des activités de traitement de l'établissement. Les étudiant·es en sont informé·es par une note remise en classe, dont ils et elles signent l'accusé de réception.",
         ),
       ],
     },
@@ -202,7 +202,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Traitement",
           contenu: [
             texte(
-              "Évaluation par compétences des étudiants de DN MADE, avec l'application DNMAX installée sur l'ordinateur de l'enseignant.",
+              "Évaluation par compétences des étudiant·es de DN MADE, avec l'application DNMAX installée sur l'ordinateur de l'enseignant·e.",
             ),
           ],
         },
@@ -210,15 +210,15 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Responsable du traitement",
           contenu: [
             gras(etablissement),
-            texte(", représenté par son chef d'établissement. L'enseignant utilise DNMAX pour son compte."),
+            texte(", représenté par son ou sa chef·fe d'établissement. L'enseignant·e utilise DNMAX pour son compte."),
           ],
         },
-        { intitule: "Délégué à la protection des données", contenu: [gras(delegue)] },
+        { intitule: "Délégué·e à la protection des données", contenu: [gras(delegue)] },
         {
           intitule: "Finalités",
           contenu: [
             texte(
-              "Construire les évaluations sur le référentiel du diplôme, saisir et suivre les acquis de chaque étudiant, restituer les résultats, préparer les bilans de la formation.",
+              "Construire les évaluations sur le référentiel du diplôme, saisir et suivre les acquis de chaque étudiant·e, restituer les résultats, préparer les bilans de la formation.",
             ),
           ],
         },
@@ -226,16 +226,16 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Base légale",
           contenu: [
             texte(
-              "Mission d'intérêt public de l'établissement (article 6.1.e du RGPD) : l'évaluation des étudiants fait partie de sa mission d'enseignement. Le consentement des étudiants n'est donc pas la base légale ; ils sont informés.",
+              "Mission d'intérêt public de l'établissement (article 6.1.e du RGPD) : l'évaluation des étudiant·es fait partie de sa mission d'enseignement. Le consentement des étudiant·es n'est donc pas la base légale ; ils et elles sont informé·es.",
             ),
           ],
         },
-        { intitule: "Personnes concernées", contenu: [texte("Les étudiants des promotions suivies par l'enseignant.")] },
+        { intitule: "Personnes concernées", contenu: [texte("Les étudiant·es des promotions suivies par l'enseignant·e.")] },
         {
           intitule: "Données",
           contenu: [
             texte(
-              "Prénom, nom, promotion ; niveaux atteints par compétence ; observations et appréciations ; dates de rendu et de restitution ; mentions « non rendu » ou « dispensé ». Aucune donnée sensible ne doit être saisie dans les champs de texte libre (santé, situation familiale…).",
+              "Prénom, nom, promotion ; niveaux atteints par compétence ; observations et appréciations ; dates de rendu et de restitution ; mentions « non rendu » ou « dispensé·e ». Aucune donnée sensible ne doit être saisie dans les champs de texte libre (santé, situation familiale…).",
             ),
           ],
         },
@@ -243,7 +243,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Destinataires",
           contenu: [
             texte(
-              "L'enseignant ; les collègues de l'équipe pédagogique à qui il transmet volontairement une évaluation (fichier chiffré par mot de passe, ou échange direct d'ordinateur à ordinateur) ; l'étudiant pour ses propres résultats. L'éditeur de DNMAX et l'hébergeur du site n'y ont jamais accès.",
+              "L'enseignant·e ; les collègues de l'équipe pédagogique à qui il ou elle transmet volontairement une évaluation (fichier chiffré par mot de passe, ou échange direct d'ordinateur à ordinateur) ; l'étudiant·e pour ses propres résultats. L'éditeur de DNMAX et l'hébergeur du site n'y ont jamais accès.",
             ),
           ],
         },
@@ -258,7 +258,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Lieu de stockage",
           contenu: [
             texte(
-              "Uniquement l'ordinateur de l'enseignant, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec des sauvegardes chiffrées elles aussi (une par semaine récente, puis une par mois). Aucun stockage en ligne, aucun transfert hors de l'Union européenne des données d'étudiants.",
+              "Uniquement l'ordinateur de l'enseignant·e, dans un fichier chiffré (XChaCha20-Poly1305, clé dérivée du mot de passe par Argon2id), avec des sauvegardes chiffrées elles aussi (une par semaine récente, puis une par mois). Aucun stockage en ligne, aucun transfert hors de l'Union européenne des données d'étudiant·es.",
             ),
           ],
         },
@@ -271,10 +271,10 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           ],
         },
         {
-          intitule: "Droits des étudiants",
+          intitule: "Droits des étudiant·es",
           contenu: [
             texte(
-              "Accès, rectification, effacement et limitation, à exercer auprès de l'enseignant ou du délégué à la protection des données. Dans DNMAX, Paramètres > Données des étudiants permet d'exporter toutes les données d'un étudiant, de l'effacer partout, et d'anonymiser ou d'effacer une promotion. Les sauvegardes automatiques, chiffrées, en gardent une trace jusqu'à leur remplacement (au plus un an avec le réglage par défaut de Paramètres > Sauvegardes).",
+              "Accès, rectification, effacement et limitation, à exercer auprès de l'enseignant·e ou du délégué ou de la déléguée à la protection des données. Dans DNMAX, Paramètres > Données des étudiant·es permet d'exporter toutes les données d'un·e étudiant·e, de l'effacer partout, et d'anonymiser ou d'effacer une promotion. Les sauvegardes automatiques, chiffrées, en gardent une trace jusqu'à leur remplacement (au plus un an avec le réglage par défaut de Paramètres > Sauvegardes).",
             ),
           ],
         },
@@ -282,13 +282,13 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
           intitule: "Sécurité",
           contenu: [
             texte(
-              `Chiffrement de toutes les données saisies ; mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères, demandé à chaque ouverture ; verrouillage après ${String(champs.minutesVerrouillage)} minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des étudiants.`,
+              `Chiffrement de toutes les données saisies ; mot de passe d'au moins ${String(LONGUEUR_MINIMALE_MOT_DE_PASSE_ELEVES)} caractères, demandé à chaque ouverture ; verrouillage après ${String(champs.minutesVerrouillage)} minutes sans activité ; code de secours remis une seule fois. Les documents exportés (Word, tableur, PDF) ne sont pas chiffrés : DNMAX le rappelle à chaque export contenant des étudiant·es.`,
             ),
           ],
         },
       ],
     },
-    { type: "intertitre", texte: "Bonnes pratiques demandées aux enseignants" },
+    { type: "intertitre", texte: "Bonnes pratiques demandées aux enseignant·es" },
     {
       type: "liste",
       elements: [
@@ -299,7 +299,7 @@ export function composerNoteEtablissement(champs: ChampsDocumentsRgpd): Document
         ],
         [texte("ne pas l'installer sur un poste partagé entre plusieurs personnes ;")],
         [texte("ranger et supprimer les documents exportés avec le même soin qu'un relevé de notes ;")],
-        [texte("ne jamais écrire le nom d'un étudiant dans un signalement de bug ou une suggestion.")],
+        [texte("ne jamais écrire le nom d'un·e étudiant·e dans un signalement de bug ou une suggestion.")],
       ],
     },
     { type: "intertitre", texte: "Pour en savoir plus" },

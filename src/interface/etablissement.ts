@@ -36,7 +36,7 @@ export const VOLETS: Readonly<Record<string, string>> = {
   etab: "Établissement",
   diplome: "Diplômes et mentions",
   promos: "Promotions",
-  enseignants: "Enseignants",
+  enseignants: "Enseignant·es",
   affect: "Répartition de service",
 };
 

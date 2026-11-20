@@ -243,7 +243,7 @@ function peindreValidation(zone: HTMLElement, contexte: ContextePageConstituer, 
     balise(
       "div",
       [["class", "hint"]],
-      "Tant que le référentiel d'une promotion n'a pas été vérifié et validé ici, DNMAX vous le rappelle quand vous la cochez dans une évaluation. C'est l'enseignant qui est responsable du référentiel, y compris quand il est livré avec DNMAX ou reçu d'un collègue.",
+      "Tant que le référentiel d'une promotion n'a pas été vérifié et validé ici, DNMAX vous le rappelle quand vous la cochez dans une évaluation. C'est l'enseignant·e qui est responsable du référentiel, y compris quand il est livré avec DNMAX ou reçu d'un·e collègue.",
     ),
     chiffres,
   );

@@ -70,7 +70,7 @@ describe("construireDocx", () => {
     expect(document).toContain("Lycée d'essai — Camille Durand");
     expect(document).toContain("Rendre le carnet &lt;complet&gt;");
     expect(document).not.toContain('w:type="page"');
-    expect(document).not.toContain("Étudiant :");
+    expect(document).not.toContain("Étudiant·e :");
   });
 
   it("parle de niveau de maîtrise, pas de niveau d'acquisition, dans la grille et sa consigne", async () => {
@@ -82,7 +82,7 @@ describe("construireDocx", () => {
   it("sépare les fiches des étudiants par un saut de page et nomme chacun", async () => {
     const document = await contenu(await construireDocx(fiche({ etudiants: ETUDIANTS }), dessin), "word/document.xml");
     expect(document.match(/w:type="page"/g)).toHaveLength(1);
-    expect(document).toContain("Étudiant : Alix Martin");
+    expect(document).toContain("Étudiant·e : Alix Martin");
     expect(document).toContain("Bonne recherche");
     expect(document).toContain("Travail régulier");
   });
@@ -129,7 +129,7 @@ describe("construireOdt", () => {
   it("commence chaque fiche d'étudiant, sauf la première, par un saut de page", async () => {
     const document = await contenu(await construireOdt(fiche({ etudiants: ETUDIANTS }), dessin), "content.xml");
     expect(document.match(/text:style-name="PB"\/>/g)).toHaveLength(1);
-    expect(document).toContain("Étudiant : Sam Petit");
+    expect(document).toContain("Étudiant·e : Sam Petit");
   });
 });
 

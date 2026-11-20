@@ -83,7 +83,7 @@ export function consigneEtudiants(vises: number, total: number): string {
   if (vises)
     return (
       String(vises) +
-      " étudiant" +
+      " étudiant·e" +
       (vises > 1 ? "s" : "") +
       " sur " +
       String(total) +
@@ -93,7 +93,7 @@ export function consigneEtudiants(vises: number, total: number): string {
       (vises > 1 ? "s" : "") +
       "."
     );
-  return "Toute la promotion — " + String(total) + " étudiant" + (total > 1 ? "s" : "") + ".";
+  return "Toute la promotion — " + String(total) + " étudiant·e" + (total > 1 ? "s" : "") + ".";
 }
 
 /** Étape 1, choix des étudiants visés parmi ceux des promotions cochées (module Étudiants). */

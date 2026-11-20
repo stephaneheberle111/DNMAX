@@ -98,7 +98,7 @@ class Redaction {
       texte(fiche.titre || "Évaluation", "Ph") +
       (fiche.signature === "" ? "" : texte(fiche.signature)) +
       texte(fiche.contexte, "Pa");
-    if (etudiant !== null && etudiant.nom !== "") entete += texte(`Étudiant : ${etudiant.nom}`);
+    if (etudiant !== null && etudiant.nom !== "") entete += texte(`Étudiant·e : ${etudiant.nom}`);
     let xml = fiche.sceau === null ? entete : this.avecSceau(entete, fiche.sceau);
     if (fiche.consignes !== "") xml += texte("Consignes et attendus", "Ps") + texte(fiche.consignes);
     xml += texte("Compétences évaluées", "Ps") + texte(CONSIGNE_JAUGE, "Pi");

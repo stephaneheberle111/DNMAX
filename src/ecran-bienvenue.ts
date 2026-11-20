@@ -53,7 +53,7 @@ function decrireChoix(choix: string, debutAnnee: number): string {
   if (referentiel === undefined) {
     return (
       "Votre mention n'est pas encore livrée avec DNMAX. La visite guidée vous montrera comment recevoir le référentiel " +
-      "d'un collègue ou construire le vôtre dans l'onglet « Référentiel » ; vos promotions se déclarent ensuite dans « Mon établissement »."
+      "d'un·e collègue ou construire le vôtre dans l'onglet « Référentiel » ; vos promotions se déclarent ensuite dans « Mon établissement »."
     );
   }
   const annees = anneesEntreePromotionsEnCours(debutAnnee, DUREE_DN_MADE).map(
@@ -62,7 +62,7 @@ function decrireChoix(choix: string, debutAnnee: number): string {
   const promotions = `${annees.slice(0, -1).join(", ")} et ${annees.at(-1) ?? ""}`;
   return (
     `DNMAX installe le référentiel ${referentiel.nom}, livré avec l'application, et crée vos trois promotions en cours, ` +
-    `entrées en ${promotions}, encore sans étudiants. Vous vérifierez et validerez le référentiel pendant la visite guidée, avant votre première évaluation.`
+    `entrées en ${promotions}, encore sans étudiant·es. Vous vérifierez et validerez le référentiel pendant la visite guidée, avant votre première évaluation.`
   );
 }
 
