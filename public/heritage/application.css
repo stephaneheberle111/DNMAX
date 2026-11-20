@@ -56,6 +56,9 @@ nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink)
 .btn.primary:hover{filter:brightness(1.08);color:var(--on-accent,#fff)}
 .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);padding:6px 8px}
 .btn.ghost:hover{background:var(--surface-2);color:var(--ink)}
+/* Boutons de suppression des listes (« Supprimer », « Retirer ») : à la taille des autres commandes de la ligne,
+   et de largeur fixe pour que le passage à « Confirmer » ne déplace rien. */
+.btn.ghost[data-eddel]{font-size:13px;padding:5px 8px;min-width:84px;justify-content:center}
 .btn:focus-visible,nav.tabs button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,input.cbox:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .btn[disabled]{opacity:.45;cursor:not-allowed}
 

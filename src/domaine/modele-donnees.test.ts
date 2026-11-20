@@ -232,7 +232,7 @@ describe("donneesDuReferentiel", () => {
   });
 
   it("rend des données vides pour un référentiel vide", () => {
-    expect(donneesDuReferentiel({}, [])).toEqual({ diplome: "", blocTint: "#D1F1DA", niveaux: [], blocs: [], ues: [], ecs: [], competences: [], livrables: [] });
+    expect(donneesDuReferentiel({}, [])).toEqual({ diplome: "", blocTint: "#B9D6D8", niveaux: [], blocs: [], ues: [], ecs: [], competences: [], livrables: [] });
   });
 });
 

@@ -2,8 +2,13 @@
 
 ## À venir
 
+### Modifié
+
+- Référentiel : les lignes « Bloc » des tableaux (Planification, compétences × semestres, Recherche) prennent le pétrole pâle de DNMAX à la place du vert d'eau. Vos référentiels déjà enregistrés suivent, sans rien avoir à faire.
+
 ### Corrigé
 
+- Les boutons « Supprimer » et « Retirer » des listes (Mon établissement, Référentiel > Constituer) sont à la taille des autres commandes de leur ligne, et ne déplacent plus rien en devenant « Confirmer ».
 - Première page de bienvenue : elle tient désormais dans la fenêtre, sans ascenseur, jusqu'à sa plus petite taille. Les conseils sont resserrés, et seuls ceux de votre système (Windows, macOS ou Linux) sont cités pour le verrouillage de l'écran et le chiffrement du disque ; le volet pétrole se resserre, et le bandeau gaufré, que le texte recouvrait, s'efface le temps de cette page.
 
 ## 1.0.0 — 2026-11-20
