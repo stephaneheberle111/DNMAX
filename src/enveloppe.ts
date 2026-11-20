@@ -293,6 +293,23 @@ export async function changerMotDePasse(ancienMotDePasse: string, nouveauMotDePa
   await appelerCoffre("changer_mot_de_passe", { ancienMotDePasse, nouveauMotDePasse });
 }
 
+/**
+ * Renouvelle mot de passe, code de secours et clé des données, après
+ * vérification du mot de passe actuel. À employer quand l'un des deux secrets
+ * a pu être vu : plus rien de ce qui ouvrait les données ne les ouvre.
+ *
+ * @returns le nouveau code de secours, à montrer une seule fois
+ * @throws ErreurCoffre « acces-refuse » si le mot de passe actuel est incorrect,
+ *   « mot-de-passe-trop-court » si le nouveau ne convient pas.
+ */
+export async function renouvelerCoffre(ancienMotDePasse: string, nouveauMotDePasse: string): Promise<string> {
+  const reponse = await appelerCoffre("renouveler_coffre", { ancienMotDePasse, nouveauMotDePasse });
+  if (typeof reponse !== "object" || reponse === null || !("codeSecours" in reponse) || typeof reponse.codeSecours !== "string") {
+    throw new ErreurCoffre("interne");
+  }
+  return reponse.codeSecours;
+}
+
 /** Lit la version de l'application ; texte vide si elle ne peut pas être lue. */
 export async function lireVersion(): Promise<string> {
   try {

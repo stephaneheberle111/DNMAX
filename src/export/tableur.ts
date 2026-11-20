@@ -8,6 +8,23 @@ import * as XLSX from "xlsx";
 import { nomDuNiveau } from "../editeur/jauge";
 import { pourcentageDe, type FicheExport } from "./modele";
 
+/**
+ * Ramène une valeur à ce qu'une cellule peut contenir : un nombre ou un texte.
+ *
+ * La bibliothèque prend un objet ou un tableau pour une cellule déjà
+ * construite, formule comprise. Les champs d'une évaluation peuvent venir
+ * d'un fichier reçu : rien d'autre qu'un texte ou un nombre n'est donc écrit.
+ */
+function enCellule(valeur: unknown): string | number {
+  if (typeof valeur === "string") return valeur;
+  if (typeof valeur === "number" && Number.isFinite(valeur)) return valeur;
+  return typeof valeur === "boolean" ? String(valeur) : "";
+}
+
+function feuilleDe(lignes: readonly (readonly unknown[])[]): XLSX.WorkSheet {
+  return XLSX.utils.aoa_to_sheet(lignes.map((ligne) => ligne.map(enCellule)));
+}
+
 /** Classeur complet, en octets. */
 export function construireTableur(fiche: FicheExport, format: "xlsx" | "ods"): Uint8Array {
   const { colonnes, lignes } = fiche;
@@ -39,7 +56,7 @@ export function construireTableur(fiche: FicheExport, format: "xlsx" | "ods"): U
   cellules.push(["Appréciation générale"]);
   cellules.push([]);
   cellules.push([]);
-  const feuille = XLSX.utils.aoa_to_sheet(cellules);
+  const feuille = feuilleDe(cellules);
   feuille["!cols"] = colonnes.map((colonne) => ({ wch: colonne.largeur + 2 }));
   feuille["!merges"] = fusions;
   feuille["!rows"] = cellules.map((_, rang) => (rang === entete ? { hpt: 28 } : {}));
@@ -63,13 +80,13 @@ export function construireTableur(fiche: FicheExport, format: "xlsx" | "ods"): U
     }
     grille.push([]);
     grille.push(["Échelle", ...fiche.niveaux]);
-    const feuilleGrille = XLSX.utils.aoa_to_sheet(grille);
+    const feuilleGrille = feuilleDe(grille);
     feuilleGrille["!cols"] = [{ wch: 26 }, ...lignes.map(() => ({ wch: 12 }))];
     XLSX.utils.book_append_sheet(classeur, feuilleGrille, "Grille classe");
   }
 
   const competences: unknown[][] = [["Bloc", "Code", "Compétence", "EC retenus", "Semestre"]];
   for (const ligne of lignes) competences.push([ligne.bloc, ligne.code, ligne.lib, ligne.ec, fiche.semestre]);
-  XLSX.utils.book_append_sheet(classeur, XLSX.utils.aoa_to_sheet(competences), "Compétences");
+  XLSX.utils.book_append_sheet(classeur, feuilleDe(competences), "Compétences");
   return new Uint8Array(XLSX.write(classeur, { bookType: format, type: "array" }) as ArrayBuffer);
 }

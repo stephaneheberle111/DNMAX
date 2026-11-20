@@ -4,7 +4,6 @@ import {
   CLE_EVALUATIONS,
   CLE_PROMOTIONS,
   analyserJson,
-  estEvaluation,
   estObjet,
   lireDonneesEtablissement,
   lireEvaluations,
@@ -22,6 +21,7 @@ import {
   type DonneesEleves,
   type PromotionEchangee,
 } from "./donnees-eleves";
+import { assainirContenuRecu, estDateIso } from "./contenu-recu";
 import { extraireModele } from "./modele-evaluation";
 import {
   decrireBase,
@@ -30,7 +30,8 @@ import {
   type BaseReferentiel,
   type ReferentielLocal,
 } from "./referentiel";
-import { lireListes, preparerEnvoi, type ReferentielEchange } from "./referentiel-echange";
+import { PARTIES, lireListes, preparerEnvoi, type Listes, type ReferentielEchange } from "./referentiel-echange";
+import { LONGUEURS, TAILLES, bornerPromotion, estJsonBorne, lireElementDictionnaire, lireElementStructure, lireModeleRecu } from "./schema-recu";
 import { CLE_DATES_MODIFICATION, lireDatesModification } from "./suivi-modifications";
 import { nettoyerNom } from "../identite";
 import type { Entrees } from "../magasin-memoire";
@@ -171,6 +172,35 @@ function extraireReferentiels(
   return referentiels;
 }
 
+/** Avance admise d'une date reçue sur l'heure du poste : les horloges de deux ordinateurs ne sont jamais d'accord. */
+export const AVANCE_HORLOGE_ADMISE_MS = 24 * 60 * 60_000;
+
+/**
+ * Date de modification reçue, ou texte vide si elle n'en est pas une.
+ *
+ * Elle est ensuite comparée à la date locale pour dire quelle version est la
+ * plus récente : un texte libre ou une date lointaine dans le futur
+ * feraient taire l'alerte « votre version est plus récente ».
+ */
+function lireDateModification(valeur: unknown, maintenant: Date | null): string {
+  if (typeof valeur !== "string" || !estDateIso(valeur)) {
+    return "";
+  }
+  if (maintenant !== null && new Date(valeur).getTime() > maintenant.getTime() + AVANCE_HORLOGE_ADMISE_MS) {
+    return "";
+  }
+  return valeur;
+}
+
+/**
+ * Données d'étudiants reçues. Leur forme appartient à l'écran de saisie : elles
+ * sont reprises telles quelles, mais refusées si elles sont démesurées.
+ */
+function lireDonneesElevesBornees(valeur: unknown): DonneesEleves | null {
+  const donnees = lireDonneesEleves(valeur);
+  return donnees !== null && estJsonBorne(donnees.champs) ? donnees : null;
+}
+
 function lireReferentiel(valeur: unknown): ReferentielEchange | null {
   const base = lireBase(valeur);
   if (base === null || !estObjet(valeur)) {
@@ -178,10 +208,28 @@ function lireReferentiel(valeur: unknown): ReferentielEchange | null {
   }
   const structure = lireListes(valeur.structure);
   const dictionnaire = lireListes(valeur.dictionnaire);
-  if (structure === null || dictionnaire === null) {
+  // Le contenu lisible est repris tel quel (son empreinte en dépend) : il doit au moins rester dans des bornes.
+  if (structure === null || dictionnaire === null || !estJsonBorne(valeur.contenuLisible)) {
     return null;
   }
-  return { ...base, structure, dictionnaire, contenuLisible: retirerHorsContenu(valeur.contenuLisible) };
+  return {
+    ...base,
+    structure: reconstruireListes(structure, lireElementStructure),
+    dictionnaire: reconstruireListes(dictionnaire, lireElementDictionnaire),
+    contenuLisible: retirerHorsContenu(valeur.contenuLisible),
+  };
+}
+
+/** Reconstruit chaque élément reçu selon le schéma : champs inconnus écartés, textes et listes bornés. */
+function reconstruireListes(listes: Listes, lire: typeof lireElementStructure): Listes {
+  const reconstruites: Listes = { ues: [], ecs: [], blocs: [], competences: [] };
+  for (const partie of PARTIES) {
+    reconstruites[partie] = listes[partie]
+      .slice(0, TAILLES.longue)
+      .map((element) => lire(partie, element))
+      .filter((element) => element !== null);
+  }
+  return reconstruites;
 }
 
 function lireBase(valeur: unknown): BaseReferentiel | null {
@@ -195,25 +243,28 @@ function lireBase(valeur: unknown): BaseReferentiel | null {
     return null;
   }
   return {
-    diplome: valeur.diplome,
-    mention: valeur.mention,
-    empreinte: valeur.empreinte,
-    dateVersion: valeur.dateVersion,
+    diplome: valeur.diplome.slice(0, LONGUEURS.nom),
+    mention: valeur.mention.slice(0, LONGUEURS.nom),
+    empreinte: valeur.empreinte.slice(0, LONGUEURS.nom),
+    dateVersion: valeur.dateVersion.slice(0, LONGUEURS.code),
   };
 }
 
 /**
  * Lit un fichier d'échange reçu d'un autre enseignant.
  *
- * Le fichier vient de l'extérieur : sa forme est vérifiée, et tout modèle
+ * Le fichier vient de l'extérieur : ses identifiants, ses clés et ses couleurs
+ * sont contrôlés d'un bloc (`assainirContenuRecu`), sa forme est vérifiée, et tout modèle
  * reçu repasse par `extraireModele` pour qu'un fichier trafiqué ne puisse pas
  * injecter des résultats d'étudiants ni des identifiants locaux.
  *
+ * @param maintenant l'heure du poste ; une date de modification reçue qui la dépasse de plus de
+ *   `AVANCE_HORLOGE_ADMISE_MS` est oubliée. `null` : pas de contrôle (contenus livrés avec l'application).
  * @param protege vrai si le texte vient d'un fichier protégé par mot de passe ;
  *   les données d'étudiants ne sont lues que dans ce cas, pour qu'un fichier en
  *   clair ne puisse jamais en faire entrer.
  */
-export function lirePaquet(texte: string, protege = false): Paquet | ErreurPaquet {
+export function lirePaquet(texte: string, protege = false, maintenant: Date | null = null): Paquet | ErreurPaquet {
   const valeur = analyserJson(texte);
   if (!estObjet(valeur)) {
     return "illisible";
@@ -227,19 +278,26 @@ export function lirePaquet(texte: string, protege = false): Paquet | ErreurPaque
   if (!Array.isArray(valeur.evaluations) && !Array.isArray(valeur.referentiels)) {
     return "illisible";
   }
+  // Avant toute lecture champ par champ : identifiants, clés réservées et couleurs (voir `contenu-recu`).
+  if (!assainirContenuRecu(valeur)) {
+    return "illisible";
+  }
   const evaluations: EvaluationEchangee[] = [];
   const identifiantsVus = new Set<string>();
-  for (const element of Array.isArray(valeur.evaluations) ? (valeur.evaluations as unknown[]) : []) {
-    if (!estObjet(element) || !estEvaluation(element.modele) || identifiantsVus.has(element.modele.id)) {
+  for (const element of (Array.isArray(valeur.evaluations) ? (valeur.evaluations as unknown[]) : []).slice(0, TAILLES.longue)) {
+    // Le modèle est reconstruit champ par champ (`schema-recu`) : rien d'inconnu ne passe.
+    const modele = estObjet(element) ? lireModeleRecu(element.modele) : null;
+    if (!estObjet(element) || modele === null || identifiantsVus.has(modele.id)) {
       continue;
     }
-    identifiantsVus.add(element.modele.id);
+    identifiantsVus.add(modele.id);
     evaluations.push({
-      modele: extraireModele(element.modele),
-      modifieLe: typeof element.modifieLe === "string" ? element.modifieLe : "",
+      modele: extraireModele(modele),
+      // Comparée ensuite comme un texte à la date locale : un texte libre fausserait « la plus récente ».
+      modifieLe: lireDateModification(element.modifieLe, maintenant),
       modifiePar: typeof element.modifiePar === "string" ? nettoyerNom(element.modifiePar) : "",
       base: lireBase(element.base),
-      donneesEleves: protege ? lireDonneesEleves(element.donneesEleves) : null,
+      donneesEleves: protege ? lireDonneesElevesBornees(element.donneesEleves) : null,
     });
   }
   return {
@@ -249,10 +307,13 @@ export function lirePaquet(texte: string, protege = false): Paquet | ErreurPaque
     expediteur: typeof valeur.expediteur === "string" ? nettoyerNom(valeur.expediteur) : "",
     evaluations,
     referentiels: (Array.isArray(valeur.referentiels) ? valeur.referentiels : [])
+      .slice(0, TAILLES.moyenne)
       .map(lireReferentiel)
       .filter((referentiel) => referentiel !== null),
     promotions: (protege && Array.isArray(valeur.promotions) ? valeur.promotions : [])
+      .slice(0, TAILLES.moyenne)
       .map(lirePromotionEchangee)
-      .filter((promotion) => promotion !== null),
+      .filter((promotion) => promotion !== null)
+      .map(bornerPromotion),
   };
 }

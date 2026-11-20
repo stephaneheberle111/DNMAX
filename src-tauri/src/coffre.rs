@@ -316,6 +316,33 @@ pub fn changer_mot_de_passe(
     Ok((coffre, octets))
 }
 
+/// Renouvelle tout ce qui ouvre le coffre : mot de passe, code de secours et
+/// clé de données, sous laquelle le contenu est rechiffré.
+///
+/// À la différence de [`changer_mot_de_passe`], rien de ce qui ouvrait
+/// l'ancien fichier n'ouvre le nouveau : c'est ce qu'il faut quand le mot de
+/// passe ou le code de secours a pu être vu. Les copies antérieures du coffre
+/// (sauvegardes) restent, elles, lisibles avec les anciens secrets.
+/// Rend le coffre ouvert, le fichier à écrire et le nouveau code de secours.
+///
+/// # Errors
+///
+/// `AccesRefuse` si le mot de passe actuel est incorrect, `MotDePasseTropCourt`
+/// si le nouveau est trop court, `FichierIllisible` ou `VersionInconnue` si le
+/// fichier n'est pas exploitable.
+pub fn renouveler(
+    fichier: &[u8],
+    mot_de_passe_actuel: &str,
+    nouveau_mot_de_passe: &str,
+    alea: &mut (impl RngCore + CryptoRng),
+) -> Result<(CoffreOuvert, Vec<u8>, String), ErreurCoffre> {
+    verifier_mot_de_passe(nouveau_mot_de_passe)?;
+    let (ancien, entrees) = ouvrir(fichier, mot_de_passe_actuel)?;
+    let (coffre, code_secours) = creer(nouveau_mot_de_passe, ancien.derivation, alea)?;
+    let octets = coffre.sceller(&entrees, alea)?;
+    Ok((coffre, octets, code_secours))
+}
+
 /// Vérifie qu'un fichier a bien la forme d'un coffre que cette version sait
 /// ouvrir, sans le déchiffrer (aucun mot de passe n'est nécessaire).
 ///
@@ -966,5 +993,86 @@ mod tests {
             .sceller(&entrees_exemple(), &mut alea)
             .expect("scellement");
         assert_ne!(premier, second);
+    }
+
+    /// Tirage distinct de celui qui a créé le coffre : avec la même graine, le
+    /// renouvellement retirerait exactement la même clé et le même code.
+    fn autre_alea() -> ChaCha20Rng {
+        ChaCha20Rng::seed_from_u64(11)
+    }
+
+    #[test]
+    fn le_renouvellement_garde_le_contenu_sous_le_nouveau_mot_de_passe() {
+        let (fichier, _) = coffre_scelle();
+        let (_, nouveau, _) = renouveler(
+            &fichier,
+            MOT_DE_PASSE,
+            "nouveau-mot-de-passe",
+            &mut autre_alea(),
+        )
+        .expect("renouvellement");
+        let (_, entrees) = ouvrir(&nouveau, "nouveau-mot-de-passe").expect("ouverture");
+        assert_eq!(entrees, entrees_exemple());
+        assert_eq!(
+            ouvrir(&nouveau, MOT_DE_PASSE).err(),
+            Some(ErreurCoffre::AccesRefuse)
+        );
+    }
+
+    #[test]
+    fn le_renouvellement_remplace_le_code_de_secours() {
+        let (fichier, ancien_code) = coffre_scelle();
+        let (_, nouveau, nouveau_code) = renouveler(
+            &fichier,
+            MOT_DE_PASSE,
+            "nouveau-mot-de-passe",
+            &mut autre_alea(),
+        )
+        .expect("renouvellement");
+        assert_ne!(nouveau_code, ancien_code);
+        assert_eq!(
+            ouvrir_par_secours(&nouveau, &ancien_code, "encore-un-autre", &mut alea()).err(),
+            Some(ErreurCoffre::AccesRefuse)
+        );
+        assert!(
+            ouvrir_par_secours(&nouveau, &nouveau_code, "encore-un-autre", &mut alea()).is_ok()
+        );
+    }
+
+    #[test]
+    fn le_renouvellement_change_la_cle_des_donnees() {
+        let (fichier, _) = coffre_scelle();
+        let (ancien, _) = ouvrir(&fichier, MOT_DE_PASSE).expect("ouverture");
+        let (_, nouveau, _) = renouveler(
+            &fichier,
+            MOT_DE_PASSE,
+            "nouveau-mot-de-passe",
+            &mut autre_alea(),
+        )
+        .expect("renouvellement");
+        // Qui détient l'ancienne clé (ancien mot de passe et ancienne copie) ne lit pas le nouveau fichier.
+        assert_eq!(
+            ancien.relire(&nouveau).err(),
+            Some(ErreurCoffre::FichierIllisible)
+        );
+    }
+
+    #[test]
+    fn le_renouvellement_refuse_un_mauvais_mot_de_passe_ou_un_nouveau_trop_court() {
+        let (fichier, _) = coffre_scelle();
+        assert_eq!(
+            renouveler(
+                &fichier,
+                "autre-mot-de-passe",
+                "nouveau-mot-de-passe",
+                &mut alea()
+            )
+            .err(),
+            Some(ErreurCoffre::AccesRefuse)
+        );
+        assert_eq!(
+            renouveler(&fichier, MOT_DE_PASSE, "court", &mut alea()).err(),
+            Some(ErreurCoffre::MotDePasseTropCourt)
+        );
     }
 }

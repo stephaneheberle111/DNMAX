@@ -44,6 +44,36 @@ describe("lirePaquet", () => {
     expect(lirePaquet(JSON.stringify(paquet))).toEqual(paquet);
   });
 
+  it("refuse un paquet dont un identifiant contient du balisage", () => {
+    const paquet = construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand", CATALOGUE);
+    const trafique = JSON.stringify(paquet).replace('"id":"eval1"', '"id":"x\\"><style>"');
+    expect(trafique).toContain("<style>");
+    expect(lirePaquet(trafique)).toBe("illisible");
+  });
+
+  it("refuse un paquet qui porte une clé réservée du langage", () => {
+    const texte = `{"format":"dnmax-echange","version":1,"evaluations":[{"modele":{"id":"eval1","res":{"__proto__":{"x":1}}}}],"referentiels":[]}`;
+    expect(lirePaquet(texte)).toBe("illisible");
+  });
+
+  it("oublie une date de modification située dans le futur, garde celle du passé", () => {
+    const texte = (le: string): string =>
+      `{"format":"dnmax-echange","version":1,"evaluations":[{"modele":{"id":"eval1"},"modifieLe":"${le}"}],"referentiels":[]}`;
+    const futur = lirePaquet(texte("9999-01-01T00:00:00.000Z"), false, MAINTENANT);
+    expect(typeof futur === "object" && futur.evaluations[0]?.modifieLe).toBe("");
+    const passe = lirePaquet(texte("2026-03-01T00:00:00.000Z"), false, MAINTENANT);
+    expect(typeof passe === "object" && passe.evaluations[0]?.modifieLe).toBe("2026-03-01T00:00:00.000Z");
+    // Horloges mal réglées d'un poste à l'autre : quelques heures d'avance sont admises.
+    const proche = lirePaquet(texte("2026-03-09T15:00:00.000Z"), false, MAINTENANT);
+    expect(typeof proche === "object" && proche.evaluations[0]?.modifieLe).toBe("2026-03-09T15:00:00.000Z");
+  });
+
+  it("oublie une date de modification qui n'a pas la forme d'une date", () => {
+    const texte = `{"format":"dnmax-echange","version":1,"evaluations":[{"modele":{"id":"eval1"},"modifieLe":"9999 toujours plus récente"}],"referentiels":[]}`;
+    const paquet = lirePaquet(texte);
+    expect(typeof paquet === "object" && paquet.evaluations[0]?.modifieLe).toBe("");
+  });
+
   it("relit un paquet protégé qui ne contient pas d'étudiants, sans données d'étudiants", () => {
     const paquet = construirePaquet(creerEntrees([creerEvaluation()]), new Set(["eval1"]), MAINTENANT, "Camille Ferrand", CATALOGUE);
     const relu = lirePaquet(JSON.stringify(paquet), true);

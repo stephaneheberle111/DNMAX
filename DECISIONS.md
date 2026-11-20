@@ -82,11 +82,17 @@ La consigne est de préférer, à fonction égale, un outil référencé au [SIL
 
 **Risque connu** : `npm audit` signale deux vulnérabilités élevées sur cette version (pollution de prototype et expression régulière coûteuse). Elles concernent la **lecture** de classeurs ; DNMAX ne fait qu'en **écrire**. À réévaluer impérativement le jour où l'application lira un classeur fourni par un tiers.
 
+**Garde-fou** : cette réserve ne repose pas sur la mémoire de qui lira ce fichier. Une règle du linter (`eslint.config.js`, `no-restricted-syntax`) refuse, hors tests, tout appel de lecture de la bibliothèque (`XLSX.read`, `readFile`, `stream`, `sheet_to_…`, y compris importés par leur nom) avec un message qui renvoie ici. Le linter devant être à zéro erreur avant toute fusion, un import Excel ne peut pas entrer dans l'application sans que quelqu'un lève la règle, donc sans rouvrir cette décision. La lever suppose d'avoir d'abord changé de bibliothèque ou de version : le correctif n'existe pas sur le registre npm, seulement sur le site de l'éditeur. Les tests, qui relisent les classeurs qu'ils viennent de produire eux-mêmes, sont exemptés.
+
+**Cellules** : `construireTableur` n'écrit que des textes et des nombres. La bibliothèque prend un objet ou un tableau pour une cellule déjà construite, formule comprise, et les champs d'une évaluation peuvent venir d'un fichier reçu.
+
 ## 7. Les exports passent par la boîte de dialogue du système
 
 L'interface ne choisit jamais un chemin sur le disque : elle transmet un nom proposé et des octets, l'enveloppe nettoie le nom, ouvre « Enregistrer sous » et écrit là où l'enseignant l'a décidé. Aucun droit d'accès général aux fichiers n'est accordé à la page.
 
 La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en indique un. Après l'enregistrement, l'application propose d'ouvrir le document avec le logiciel par défaut du système : l'enveloppe retient pour cela l'emplacement du dernier export, que la page ne connaît jamais — elle ne peut donc faire ouvrir que ce que l'enseignant vient d'enregistrer lui-même.
+
+Seuls les documents que l'application produit (`docx`, `odt`, `xlsx`, `ods`, `pdf`) sont ouverts ainsi (`export::est_ouvrable`) : pour le système, « ouvrir » un fichier dont l'extension désigne un programme, c'est l'exécuter, et l'enseignant peut changer le nom dans la boîte de dialogue.
 
 ## 8. Les données sont chiffrées par un mot de passe
 
@@ -113,7 +119,7 @@ La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en
 
 **Conséquence assumée** : mot de passe **et** code de secours perdus, les données sont irrécupérables, y compris par l'auteur de l'application.
 
-**Verrouiller sans quitter** : avec le module Élèves, l'application se verrouille d'elle-même après une période sans activité (décision 27). (Le changement de mot de passe est décrit dans la décision 18, la restauration d'une sauvegarde dans la décision 22.)
+**Verrouiller sans quitter** : « Mon compte » > « Verrouiller » à tout moment (décision 18) ; avec le module Élèves, l'application se verrouille aussi d'elle-même après une période sans activité (décision 27). (Le changement de mot de passe est décrit dans la décision 18, la restauration d'une sauvegarde dans la décision 22.)
 
 **Au premier lancement**, avant le choix du mot de passe, une page rappelle ce que ce chiffrement ne couvre pas et les bonnes pratiques qui le complètent : session protégée et non partagée, écran verrouillé, chiffrement du disque (BitLocker, FileVault, LUKS) conseillé, sauvegardes hors de l'ordinateur, exports non chiffrés, code de secours gardé hors de l'ordinateur. Elle ne bloque rien : DNMAX ne peut pas vérifier ces points, et le chiffrement du disque ne dépend pas toujours de l'enseignant.
 
@@ -145,6 +151,12 @@ La boîte s'ouvre dans le dossier Documents de l'enseignant quand le système en
 **Dates de modification** : l'interface historique n'en tenait pas. Elles sont déduites à chaque enregistrement, en comparant le modèle avant et après, et rangées sous la clé `dnmax.modifications`. Une évaluation antérieure à cette fonction affiche « date inconnue » jusqu'à sa prochaine modification.
 
 **Depuis** : l'échange du référentiel (décision 12), celui des élèves et de leurs résultats dans un fichier chiffré (décision 13) et le transfert vers un autre ordinateur (décision 14) ont été ajoutés.
+
+**Contrôle du contenu reçu** : avant toute lecture champ par champ, le fichier entier passe par `assainirContenuRecu` (`src/domaine/echange/contenu-recu.ts`). Il est refusé (« illisible ») s'il porte une clé réservée du langage (`__proto__`, `constructor`, `prototype`), un identifiant (`id`, `…Id`, `…Ids`) qui n'a pas la forme de ceux que l'application produit (lettres, chiffres, `.`, `_`, `-`, 64 caractères au plus) ou une imbrication démesurée ; une couleur qui n'est pas hexadécimale est retirée ; une date de modification qui n'est pas une date ISO, ou qui dépasse l'heure du poste de plus d'un jour (`AVANCE_HORLOGE_ADMISE_MS`), est oubliée. Les identifiants servent ensuite de clés et d'attributs dans la page : c'est à l'entrée qu'ils sont tenus.
+
+**Schéma strict** : ce qui a passé ce premier contrôle est ensuite reconstruit champ par champ à partir d'une liste blanche (`src/domaine/echange/schema-recu.ts`) : le modèle d'une évaluation, ses lignes et ses regroupements, les éléments de la structure et du dictionnaire d'un référentiel, les promotions. Un champ inconnu est écarté sans bruit, un champ du mauvais type aussi, un texte ou une liste démesurés sont coupés. Deux contenus ne peuvent pas être reconstruits et sont seulement bornés (profondeur, longueurs, nombre de valeurs), puis refusés s'ils dépassent : le contenu lisible d'un référentiel, dont l'empreinte dépend au caractère près, et les résultats d'étudiants, dont la forme appartient à l'écran de saisie.
+
+**Conséquence pour qui ajoute un champ** à une évaluation ou à un référentiel : tant qu'il n'est pas déclaré dans `schema-recu.ts`, il ne voyage pas. Entre deux versions de DNMAX, un champ que le destinataire ne connaît pas est donc perdu en silence à la réception : c'est voulu, pour qu'un fichier trafiqué ne puisse rien faire entrer d'inattendu. Le numéro de version du format (`VERSION_COURANTE`, `paquet.ts`) ne monte que si c'est nécessaire, c'est-à-dire quand une version plus ancienne lirait mal le contenu ; elle le refuse alors avec un message clair. Les tests d'aller-retour de `schema-recu.test.ts` (évaluations d'exemple, référentiels livrés) échouent si un champ produit par l'application manque au schéma.
 
 ## 11. L'enseignant est identifié par son nom
 
@@ -242,9 +254,11 @@ Le nom se corrige sur la ligne « C'est moi » de « Mon établissement » (déc
 
 ## 18. « Mon compte » : un menu, mot de passe et préférences
 
-**Retenu** (révisé) : « Mon compte » est un menu de la barre du haut, à droite des onglets, à côté de « Échanger… », avec deux entrées.
+**Retenu** (révisé) : « Mon compte » est un menu de la barre du haut, à droite des onglets, à côté de « Échanger… », avec trois entrées.
 
 - **Mot de passe** : il se change en fournissant l'ancien. Seule la clé de données est ré-enfermée sous le nouveau mot de passe ; le contenu n'est pas rechiffré et le code de secours reste valable. Les sauvegardes antérieures s'ouvrent toujours avec le mot de passe en vigueur le jour où elles ont été faites.
+- **Mot de passe, renouvellement complet** : une case de la même fenêtre (« Mon mot de passe ou mon code de secours a pu être vu ») renouvelle en plus le code de secours et la clé de données, sous laquelle le contenu est rechiffré (commande `renouveler_coffre`, `coffre::renouveler`). Sans elle, quelqu'un qui détient l'ancien mot de passe et une ancienne copie du fichier en tire la clé de données, qui ouvre aussi le fichier actuel. Le nouveau code de secours est montré une seule fois. **Limite** : les sauvegardes antérieures restent lisibles avec les anciens secrets ; elles ne sont pas effacées, pour ne pas priver l'enseignant de ses sauvegardes sur une simple case cochée, et s'éteignent avec la politique de conservation.
+- **Verrouiller** : referme les données tout de suite, que le module Étudiants soit actif ou non. Ce qui est en attente est écrit, l'enveloppe oublie la clé et la page se recharge, comme pour le verrouillage après inactivité (décision 27) ; si l'écriture échoue, rien n'est verrouillé.
 - **Préférences** : une page sans onglet propre, qui regroupe ce qui relève du goût de l'enseignant plutôt que de l'établissement : thème (clair, sombre, comme le système), fond de page (voir décision 4), échelles d'évaluation, nom du champ d'évaluation et livrables proposés. Tout changement d'échelle rappelle d'abord que l'échelle officielle des DN MADE est celle des niveaux de maîtrise.
 
 **Nom** : il ne se corrige plus dans « Mon compte » mais sur la ligne « C'est moi » de « Mon établissement » › « Enseignants », qui le montrait déjà : un seul endroit pour un même nom. L'identité (qui signe les envois) reprend ce prénom et ce nom tant qu'ils sont tous deux remplis ; l'identifiant d'installation ne change pas, et les modifications déjà signées gardent l'ancien nom.
@@ -266,6 +280,8 @@ Le nom se corrige sur la ligne « C'est moi » de « Mon établissement » (déc
 **Non retenu** : les pages GitHub, qui auraient gardé un hébergeur américain.
 
 **Installeurs** : les installeurs Windows, macOS et `.deb` de la dernière version publiée sont aussi servis par le site (`telechargements/`, environ 20 Mo), pour que leur téléchargement ne transmette pas l'adresse IP des visiteurs à GitHub. L'AppImage (environ 80 Mo) dépasserait l'espace de l'offre gratuite (100 Mo) : elle reste sur GitHub, comme les fichiers de mise à jour et le code source.
+
+**Empreintes et surveillance** : les installeurs ne portent pas de certificat (décision 9) ; un visiteur ne peut donc pas savoir si celui qu'il télécharge est bien celui qui a été construit. L'atelier « Téléchargements » dépose avec eux un fichier `SHA256SUMS.txt`, que le site affiche sous chaque bouton. Une empreinte servie par le même hébergement que le fichier ne prouve rien si cet hébergement est compromis : la référence indépendante est la page de la version sur GitHub, où les installeurs sont construits, et l'atelier « Surveillance » (`.github/workflows/surveillance.yml`) compare chaque jour les installeurs servis par dnmax.fr à ceux de la dernière version publiée. Un écart fait échouer l'atelier, et GitHub prévient par courriel. L'application, elle, ne lit jamais ces empreintes : ses mises à jour sont vérifiées par signature (décision 15). Le même atelier audite chaque jour les dépendances livrées (`npm audit --omit=dev`, `cargo audit`) ; les alertes connues et acceptées sont listées dans `outils/audit-npm.ts`, avec leur raison. Quand une vérification trouve quelque chose, l'atelier envoie un courriel marqué urgent à l'adresse de contact, par une boîte d'envoi dont l'identifiant et le mot de passe sont des secrets du dépôt (`ALERTE_SMTP_*`, voir README) : les notifications de GitHub ne vont qu'à l'adresse du compte, avec un objet qu'on ne choisit pas. Le message est envoyé par `curl`, sans action tierce de plus à épingler et à surveiller. Toute faille d'une dépendance livrée déclenche le courriel, pas seulement les critiques : `cargo audit` ne donne pas toujours la gravité, et mieux vaut un message de trop. **Limites** : GitHub ne lance un atelier planifié que depuis `main` et le suspend après 60 jours sans activité du dépôt ; un remplacement est repéré au plus tard le lendemain, pas à la minute.
 
 **Transition** : l'application ouvre dnmax.fr à partir de la version 0.2.0 ; l'ancienne adresse du site est fermée.
 

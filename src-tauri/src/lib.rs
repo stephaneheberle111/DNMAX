@@ -56,7 +56,8 @@ fn enregistrer_fichier(
 /// Ouvre, avec le logiciel par défaut du système, le dernier document exporté.
 ///
 /// La page ne fournit aucun chemin : seul un fichier que l'enseignant vient
-/// d'enregistrer lui-même par la boîte de dialogue peut être ouvert.
+/// d'enregistrer lui-même par la boîte de dialogue peut être ouvert, et
+/// seulement s'il a l'extension d'un document (voir `export::est_ouvrable`).
 #[tauri::command(async)]
 fn ouvrir_dernier_export(
     application: AppHandle,
@@ -66,6 +67,9 @@ fn ouvrir_dernier_export(
         .verrou()
         .clone()
         .ok_or_else(|| "aucun document n'a été exporté".to_owned())?;
+    if !export::est_ouvrable(&chemin) {
+        return Err("ce type de fichier ne s'ouvre pas depuis DNMAX".to_owned());
+    }
     application
         .opener()
         .open_path(chemin.to_string_lossy(), None::<&str>)
@@ -362,6 +366,33 @@ fn changer_mot_de_passe(
     depot::ecrire(&dossier, &octets)?;
     *session = Some(coffre);
     Ok(())
+}
+
+/// Renouvelle mot de passe, code de secours et clé des données du coffre ouvert,
+/// après vérification du mot de passe actuel. Rend le nouveau code de secours,
+/// à montrer une seule fois ; l'ancien n'ouvre plus le coffre.
+#[tauri::command(async)]
+fn renouveler_coffre(
+    application: AppHandle,
+    session: State<'_, Session>,
+    ancien_mot_de_passe: String,
+    nouveau_mot_de_passe: String,
+) -> Result<CoffreCree, ErreurCommande> {
+    let dossier = dossier_donnees(&application)?;
+    let mut session = session.verrou();
+    if session.is_none() {
+        return Err(ErreurCommande::CoffreVerrouille);
+    }
+    let fichier = depot::lire(&dossier)?.ok_or(ErreurCommande::CoffreAbsent)?;
+    let (coffre, octets, code_secours) = coffre::renouveler(
+        &fichier,
+        &ancien_mot_de_passe,
+        &nouveau_mot_de_passe,
+        &mut OsRng,
+    )?;
+    depot::ecrire(&dossier, &octets)?;
+    *session = Some(coffre);
+    Ok(CoffreCree { code_secours })
 }
 
 /// Vérifie le mot de passe du coffre ouvert, sans rien changer.
@@ -837,6 +868,7 @@ pub fn lancer() {
             exporter_coffre,
             installer_coffre,
             changer_mot_de_passe,
+            renouveler_coffre,
             lister_sauvegardes,
             restaurer_sauvegarde,
             lire_politique_sauvegardes,

@@ -799,7 +799,7 @@ export async function ouvrirTexteRecu(acces: AccesDonnees, texte: string): Promi
   if (clair === null) {
     return;
   }
-  const paquet = lirePaquet(clair, protege);
+  const paquet = lirePaquet(clair, protege, new Date());
   if (typeof paquet === "string") {
     afficherMessage("Recevoir", MESSAGES_PAQUET[paquet]);
     return;

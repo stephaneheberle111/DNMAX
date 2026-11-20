@@ -53,6 +53,12 @@ describe("chainSvgNode", () => {
     expect(balisage).toContain(`data-code0="EC 1.1"`);
   });
 
+  it("échappe un identifiant qui tenterait de sortir de son attribut", () => {
+    const balisage = chainSvgNode(caseDe({ id: `ec:x"><style>*{display:none}</style>` }), 172);
+    expect(balisage).not.toContain("<style>");
+    expect(balisage).toContain(`id="ec:x&quot;&gt;&lt;style&gt;`);
+  });
+
   it("coupe un sous-titre de plus de 32 caractères et échappe les valeurs", () => {
     const balisage = chainSvgNode(caseDe({ t: ["<b>"], sub: "x".repeat(40), strong: true }), 172);
     expect(balisage).toContain(`<text class="cn b" x="22" y="65.0">&lt;b&gt;</text>`);

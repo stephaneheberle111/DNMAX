@@ -3,6 +3,7 @@ name: Téléchargements
 # Dépose sur dnmax.fr (dossier telechargements/) les installeurs Windows,
 # macOS et Debian/Ubuntu de la dernière version publiée, pour que les
 # visiteurs du site les téléchargent en France, chez OVH, ainsi que le
+# fichier de leurs empreintes (SHA256SUMS.txt) que le site affiche, et le
 # manifeste de mise à jour (latest.json) que l'application consulte : la
 # recherche de mise à jour s'adresse à dnmax.fr. L'installeur Windows sert
 # aussi de fichier de mise à jour ; l'AppImage Linux et l'archive macOS,
@@ -67,6 +68,9 @@ jobs:
           mkdir -p manifeste
           gh release download --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir manifeste
           node outils/manifeste-ovh.ts manifeste/latest.json telechargements https://dnmax.fr/telechargements
+          # Empreintes affichées sur le site à côté des boutons, et comparées chaque jour
+          # à la version publiée par l'atelier « Surveillance ».
+          (cd telechargements && sha256sum DNMAX-* > SHA256SUMS.txt && cat SHA256SUMS.txt)
           ls -l telechargements
           # L'hébergement gratuit est limité à 100 Mo : on refuse d'y dépasser 60 Mo d'installeurs.
           total=$(du -sm telechargements | cut -f1)
@@ -95,7 +99,7 @@ jobs:
           "
       - name: Les installeurs répondent
         run: |
-          for fichier in $FICHIERS latest.json; do
+          for fichier in $FICHIERS latest.json SHA256SUMS.txt; do
             case " $ABSENTS " in *" $fichier "*) echo "$fichier : absent de la version, non vérifié"; continue ;; esac
             code="$(curl -sS -r 0-1023 -o /dev/null -w '%{http_code}' --max-time 30 "https://dnmax.fr/telechargements/$fichier")"
             echo "$fichier : $code"

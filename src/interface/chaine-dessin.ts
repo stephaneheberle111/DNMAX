@@ -86,8 +86,8 @@ export function chainSvgNode(o: CaseChaine, w: number): string {
     const sb = o.sub.length > 32 ? o.sub.slice(0, 31).trim() + "…" : o.sub;
     t += `<text class="cs" x="${String(o.x + 12)}" y="${(ty + 1).toFixed(1)}">${esc(sb)}</text>`;
   }
-  // `id`, `data-node` et `data-kind` ne sont pas échappés : c'était déjà le cas (rendu gardé à l'identique).
-  return `<g class="cnode" id="${o.id}" data-node="${o.id}" data-kind="${o.kind}" data-sel="${esc(o.sel)}" data-code0="${esc(o.code || "")}" tabindex="0">
+  // L'identifiant d'un élément peut venir d'un référentiel reçu : il est échappé comme le reste.
+  return `<g class="cnode" id="${esc(o.id)}" data-node="${esc(o.id)}" data-kind="${esc(o.kind)}" data-sel="${esc(o.sel)}" data-code0="${esc(o.code || "")}" tabindex="0">
     <rect x="${String(o.x)}" y="${o.y.toFixed(1)}" width="${String(w)}" height="${o.h.toFixed(1)}" rx="7" class="cbox" style="--c:${esc(o.col)}"/>
     <rect x="${String(o.x)}" y="${o.y.toFixed(1)}" width="4" height="${o.h.toFixed(1)}" rx="2" fill="${esc(o.col)}"/>
     ${t}</g>`;
