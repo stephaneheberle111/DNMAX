@@ -579,3 +579,12 @@ Arbitrées par l'auteur le 15 novembre 2026, règle par règle, avec un principe
 **Outils** : NSIS est celui que Tauri emploie déjà ; aucun outil nouveau. Les polices sont celles du site, sous licence SIL OFL 1.1 (`site/polices/`).
 
 **Limite** : le rendu n'a été vérifié qu'avec Wine avant le premier essai sur un vrai Windows ; les coins arrondis de la fenêtre et son liseré n'existent que sous Windows 11.
+
+## 40. Fenêtre d'installation macOS : bandeau pétrole, icônes sur le papier
+
+**Retenu** (20 novembre 2026) : sous macOS, il n'y a pas d'installeur à pages ; le `.dmg` ouvre une fenêtre où l'on glisse DNMAX vers Applications. Son fond (`src-tauri/macos/fond-dmg.png`) porte le logotype sur un bandeau pétrole, puis, sur le papier, une flèche entre les deux icônes et la consigne. Il se régénère avec `node outils/generer-fond-dmg.ts` ; la taille de la fenêtre et la place des icônes sont dans `tauri.conf.json`, et un test vérifie qu'elles sont celles du dessin.
+
+**Pourquoi pas tout en pétrole, comme l'installeur Windows** : macOS écrit lui-même le nom des icônes, en noir quand le Mac est en mode clair, et l'icône de DNMAX est elle-même pétrole ; l'un et l'autre se perdraient sur ce fond.
+
+**Limites** : en mode sombre, macOS écrit ces noms en blanc, moins lisibles sur le papier ; aucun fond ne convient aux deux modes. L'image compte deux pixels par point, avec sa densité inscrite, pour rester nette sur un écran Retina. La 1.0.1 est partie sans que ce rendu ait été vu sur un Mac, l'auteur n'en ayant pas : la place des icônes par rapport à la flèche et la netteté du fond restent à confirmer par un·e utilisateur·rice de Mac.
+

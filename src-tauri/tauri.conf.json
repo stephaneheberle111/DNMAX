@@ -43,7 +43,13 @@
     "shortDescription": "Évaluations par compétences en DN MADE",
     "category": "Education",
     "macOS": {
-      "signingIdentity": "-"
+      "signingIdentity": "-",
+      "dmg": {
+        "background": "macos/fond-dmg.png",
+        "windowSize": { "width": 660, "height": 400 },
+        "appPosition": { "x": 180, "y": 220 },
+        "applicationFolderPosition": { "x": 480, "y": 220 }
+      }
     },
     "windows": {
       "nsis": {

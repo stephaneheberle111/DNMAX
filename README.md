@@ -79,6 +79,8 @@ Ses pages sont dessinées par DNMAX (décision 39) ; trois fichiers de `src-taur
 
 **À chaque montée de version de `@tauri-apps/cli`**, un test échoue exprès. Comparer alors le modèle d'origine de l'ancienne version à celui de la nouvelle (`crates/tauri-bundler/src/bundle/windows/nsis/installer.nsi`, dans le dépôt de Tauri, aux étiquettes `tauri-cli-v…`), reporter les différences dans `installeur.nsi`, puis mettre à jour le numéro de version noté en tête de ce fichier. Essayer ensuite l'installeur sur un vrai Windows (branche `essai-installeurs/…`) : installation, mise à jour depuis l'application, désinstallation.
 
+Le fond de la fenêtre du `.dmg` (macOS) est `src-tauri/macos/fond-dmg.png` ; il se régénère avec `node outils/generer-fond-dmg.ts` (décision 40).
+
 ### Installer une version d'essai (non signée)
 
 - **Windows** : à l'avertissement « Windows a protégé votre ordinateur », cliquer « Informations complémentaires » puis « Exécuter quand même ».
