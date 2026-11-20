@@ -151,37 +151,37 @@ nav.main a.cta{background:var(--accent);color:var(--accent-ink)}
 /* La fenêtre de l’application (reconstitution) */
 .app{
   --a-paper:#F1ECE0; --a-surface:#FFFDF7; --a-ink:#1C1A15; --a-muted:#5A5345; --a-line:#D6CDB9; --a-accent:#10555F; --a-on-accent:#FFFFFF; --a-soft:#DCEBEA;
+  --a-pic-d:#6B6455; --a-pic-a:#A39A86; --a-ambre:#C27A2C;
   container-type:inline-size;position:relative;aspect-ratio:16/11;background:var(--a-paper);color:var(--a-ink);
   border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
   box-shadow:0 40px 80px -40px rgba(40,30,15,.4),0 2px 6px rgba(40,30,15,.06);font-family:"Public Sans",Arial,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .app{
-  --a-paper:#1B1A17; --a-surface:#24221E; --a-ink:#EEE8DB; --a-muted:#ABA290; --a-line:#3A362E; --a-accent:#62A9AE; --a-on-accent:#10181A; --a-soft:#1D3537;
+  --a-paper:#1B1A17; --a-surface:#24221E; --a-ink:#EEE8DB; --a-muted:#ABA290; --a-line:#3A362E; --a-accent:#62A9AE; --a-on-accent:#10181A; --a-soft:#1D3537; --a-pic-d:#ABA290; --a-pic-a:#6E675A; --a-ambre:#D9A066;
   box-shadow:0 40px 80px -40px rgba(0,0,0,.8)}}
-:root[data-theme="dark"] .app{--a-paper:#1B1A17; --a-surface:#24221E; --a-ink:#EEE8DB; --a-muted:#ABA290; --a-line:#3A362E; --a-accent:#62A9AE; --a-on-accent:#10181A; --a-soft:#1D3537}
+:root[data-theme="dark"] .app{--a-paper:#1B1A17; --a-surface:#24221E; --a-ink:#EEE8DB; --a-muted:#ABA290; --a-line:#3A362E; --a-accent:#62A9AE; --a-on-accent:#10181A; --a-soft:#1D3537; --a-pic-d:#ABA290; --a-pic-a:#6E675A; --a-ambre:#D9A066}
 .app *{box-sizing:border-box}
 .app-fs{font-size:1.72cqw;line-height:1.45;display:flex;flex-direction:column;height:100%}
 .chrome{display:flex;align-items:center;gap:.5em;padding:.55em .9em;background:var(--a-surface);border-bottom:1px solid var(--a-line);font-size:.85em;color:var(--a-muted)}
 .chrome i{width:.85em;height:.85em;border-radius:50%;background:var(--a-line);display:inline-block}
 .chrome span{margin:0 auto;transform:translateX(-1.4em)}
-/* Barre du haut : la même que celle de l’application, pétrole dans les deux thèmes (onglets à picto, « Échanger… » et « Mon compte » à droite). */
-.onglets{display:flex;align-items:center;gap:.55em;padding:.5em .8em;background:#10555F;border-bottom:1px solid #0C444C;font-size:.8em;transition:opacity .4s}
+/* Barre du haut : la même que celle de l’application (onglets à picto, « Échanger… » et « Mon compte » à droite). */
+.onglets{display:flex;align-items:center;gap:.55em;padding:.5em .8em;background:var(--a-surface);border-bottom:1px solid var(--a-line);font-size:.8em;transition:opacity .4s}
 .onglets .logo-app{display:block;flex:none;width:4.7em;height:1.05em;margin-right:.35em}
-.app .onglets .piece-design{fill:#FFFFFF}
-.app .onglets .piece-art{fill:#E9B978}
 .app .piece-design{fill:#10555F}
 .app .piece-art{fill:#C27A2C}
 .ong-groupe{display:flex;gap:.15em}
-.onglet{display:inline-flex;align-items:center;gap:.4em;padding:.4em .55em;border-radius:.35em;color:#D6E6E6;white-space:nowrap;transition:background .3s,color .3s}
-.onglet.on{background:#0C444C;color:#FFFFFF;font-weight:600}
+.onglet{display:inline-flex;align-items:center;gap:.4em;padding:.4em .55em;border-radius:.35em;color:var(--a-muted);white-space:nowrap;transition:background .3s,color .3s}
+.onglet.on{background:var(--a-soft);color:var(--a-accent);font-weight:600}
+/* Pictos : en deux gris, et aux deux couleurs du logotype pour l’onglet actif. */
 .onglet .pic{width:1.15em;height:1.15em;flex:none}
-.onglet .pic-d{fill:#D6E6E6;transition:fill .3s}
-.onglet .pic-a{fill:#8FB5B8;stroke:#10555F;transition:fill .3s}
-.onglet.on .pic-d{fill:#FFFFFF}
-.onglet.on .pic-a{fill:#E9B978;stroke:#0C444C}
+.onglet .pic-d{fill:var(--a-pic-d);transition:fill .3s}
+.onglet .pic-a{fill:var(--a-pic-a);stroke:var(--a-surface);transition:fill .3s}
+.onglet.on .pic-d{fill:var(--a-accent)}
+.onglet.on .pic-a{fill:var(--a-ambre);stroke:var(--a-soft)}
 .outils{margin-left:auto;display:flex;gap:.35em}
-.outil{display:inline-flex;align-items:center;gap:.4em;padding:.4em .62em;border:1px solid #5F9296;border-radius:.45em;color:#FFFFFF;white-space:nowrap;transition:background .3s,color .3s}
-.outil.on{background:#0C444C;border-color:#D6E6E6}
+.outil{display:inline-flex;align-items:center;gap:.4em;padding:.4em .62em;border:1px solid var(--a-line);border-radius:.45em;background:var(--a-paper);color:var(--a-muted);white-space:nowrap;transition:background .3s,color .3s}
+.outil.on{background:var(--a-surface);color:var(--a-ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
 .outil svg{width:1.1em;height:1.1em;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .outil svg.chev{width:.85em;height:.85em}
 .app.ferme .onglets{opacity:0}
