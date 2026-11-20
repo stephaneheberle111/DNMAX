@@ -470,6 +470,10 @@ svg.dim .dot.off{opacity:.1}
 .note h3{margin:0 0 8px;font-size:17px}
 .note ul{margin:0;padding-left:20px}
 .note li{margin:4px 0}
+.note p{margin:0 0 10px}
+.note h4{margin:18px 0 6px;font:700 15px/1.3 var(--display)}
+.note ol{margin:0;padding-left:22px}
+.note code{font-family:var(--mono);font-size:.9em;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 5px;overflow-wrap:anywhere}
 .apres{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
 .apres h3{font:700 18px/1.3 var(--body);margin:0 0 6px;padding-top:12px;border-top:3px solid var(--accent)}
 .apres p{margin:0;color:var(--ink-2);font-size:16px}
@@ -961,14 +965,35 @@ footer a{color:var(--ink-2)}
         <h3>Toutes les sources de téléchargement</h3>
         <p>Versions précédentes et ensemble des fichiers de chaque version&nbsp;: <a href="https://github.com/stephaneheberle111/DNMAX/releases">page des versions sur GitHub</a>.</p>
       </div>
-      <div class="note">
-        <h3>Votre système affiche un avertissement au premier lancement&nbsp;?</h3>
-        <p style="margin:0 0 8px">Les installeurs ne sont pas encore signés par Microsoft ni Apple. C’est attendu&nbsp;:</p>
-        <ul>
-          <li><strong>Windows</strong>&nbsp;: à «&nbsp;Windows a protégé votre ordinateur&nbsp;», cliquez «&nbsp;Informations complémentaires&nbsp;» puis «&nbsp;Exécuter quand même&nbsp;».</li>
-          <li><strong>macOS</strong>&nbsp;: si l’ouverture est refusée, allez dans Réglages Système &gt; Confidentialité et sécurité, puis «&nbsp;Ouvrir quand même&nbsp;».</li>
-          <li><strong>Linux</strong>&nbsp;: installez le .deb, ou rendez le fichier .AppImage exécutable puis lancez-le.</li>
-        </ul>
+      <div class="note" id="installer">
+        <h3>Votre système bloque l’installation ou affiche un avertissement&nbsp;?</h3>
+        <p>C’est attendu. Les installeurs de DNMAX ne portent pas encore de certificat payant de Microsoft ni d’Apple&nbsp;: votre système ne connaît pas leur éditeur et le signale, comme pour tout logiciel libre distribué sans certificat. Voici quoi faire, système par système.</p>
+        <p>Avant de passer outre, vous pouvez vérifier que le fichier téléchargé est le bon&nbsp;: son empreinte doit être celle affichée sous le bouton de téléchargement. Pour la calculer&nbsp;: sous Windows, dans PowerShell, <code>Get-FileHash DNMAX-windows.exe</code>&nbsp;; sous macOS, dans le Terminal, <code>shasum -a 256 DNMAX-macos.dmg</code>&nbsp;; sous Linux, <code>sha256sum DNMAX-linux.deb</code>.</p>
+
+        <h4>Windows</h4>
+        <ol>
+          <li><strong>Le navigateur retient le téléchargement.</strong> Edge peut afficher «&nbsp;DNMAX-windows.exe n’est pas couramment téléchargé&nbsp;». Survolez le fichier dans la liste des téléchargements, cliquez «&nbsp;…&nbsp;» puis «&nbsp;Conserver&nbsp;», puis «&nbsp;Afficher plus&nbsp;» et «&nbsp;Conserver quand même&nbsp;».</li>
+          <li><strong>«&nbsp;Windows a protégé votre ordinateur&nbsp;»</strong> (SmartScreen, fenêtre bleue). Cliquez «&nbsp;Informations complémentaires&nbsp;», puis «&nbsp;Exécuter quand même&nbsp;». L’installation se poursuit normalement.</li>
+          <li><strong>«&nbsp;Le Contrôle intelligent des applications a bloqué une application&nbsp;»</strong> (Windows&nbsp;11), sans bouton pour continuer. Ce contrôle n’accepte aucune exception application par application&nbsp;: tant que DNMAX n’a pas de certificat, il ne s’installe et ne se lance que si ce contrôle est désactivé. Ouvrez Sécurité Windows &gt; Contrôle des applications et du navigateur &gt; Paramètres du Contrôle intelligent des applications, et choisissez «&nbsp;Désactivé&nbsp;». Sur un Windows&nbsp;11 à jour (24H2 ou 25H2), vous pourrez le réactiver au même endroit&nbsp;; sur une version plus ancienne, le désactiver est définitif jusqu’à une réinstallation de Windows. Les autres protections (antivirus, SmartScreen) restent actives. À vous de juger si vous souhaitez le faire.</li>
+        </ol>
+
+        <h4>macOS</h4>
+        <ol>
+          <li>Ouvrez le fichier .dmg et faites glisser DNMAX dans Applications, puis lancez DNMAX.</li>
+          <li>macOS affiche «&nbsp;Apple n’a pas pu vérifier que «&nbsp;DNMAX&nbsp;» ne contenait pas de logiciel malveillant&nbsp;». Cliquez «&nbsp;Terminé&nbsp;» (pas «&nbsp;Placer dans la corbeille&nbsp;»).</li>
+          <li>Ouvrez Réglages Système &gt; Confidentialité et sécurité, descendez jusqu’à «&nbsp;Sécurité&nbsp;»&nbsp;: une ligne signale que DNMAX a été bloqué. Cliquez «&nbsp;Ouvrir quand même&nbsp;», confirmez, et saisissez le mot de passe de votre session si macOS le demande.</li>
+          <li>C’est à faire une seule fois&nbsp;: DNMAX s’ouvre ensuite normalement. Sur un macOS antérieur à la version&nbsp;15, un clic droit sur DNMAX puis «&nbsp;Ouvrir&nbsp;» suffit.</li>
+        </ol>
+
+        <h4>Linux</h4>
+        <ol>
+          <li><strong>Paquet .deb</strong> (Debian, Ubuntu, Mint)&nbsp;: double-cliquez le fichier pour l’installer avec le gestionnaire de logiciels, ou, dans un terminal, <code>sudo apt install ./DNMAX-linux.deb</code>.</li>
+          <li><strong>AppImage</strong>&nbsp;: le fichier doit être rendu exécutable. Clic droit &gt; Propriétés &gt; Permissions, cochez «&nbsp;Autoriser l’exécution du fichier comme un programme&nbsp;»&nbsp;; ou, dans un terminal, <code>chmod +x DNMAX-linux.AppImage</code>. Lancez-le ensuite d’un double-clic.</li>
+          <li>Si l’AppImage ne démarre pas et parle de «&nbsp;FUSE&nbsp;», installez la bibliothèque qui lui manque&nbsp;: <code>sudo apt install libfuse2</code> (<code>libfuse2t64</code> sur Ubuntu&nbsp;24.04 et suivants).</li>
+        </ol>
+
+        <h4>Sur un ordinateur de l’établissement</h4>
+        <p>Si ces réglages sont grisés ou si l’installation demande un compte d’administration que vous n’avez pas, adressez-vous à la personne qui gère les postes&nbsp;: elle peut installer DNMAX ou l’autoriser pour vous. Cette page lui donne ce qu’il lui faut.</p>
       </div>
       <div class="apres">
         <div><h3>Au premier lancement</h3><p>Une page de bienvenue vous demande votre nom et votre établissement, un mot de passe, puis votre mention&nbsp;; notez le code de secours hors de l’ordinateur. <a href="#documentation" data-doc-lien="demarrer">Voir le détail</a>.</p></div>
@@ -1321,7 +1346,7 @@ npm run dev</code></pre>
       <h2>Vos droits</h2>
       <p>Pour toute question ou demande sur les données traitées par ce site ou par l’éditeur, écrivez à <a href="mailto:contact@dnmax.fr">contact@dnmax.fr</a>. Si la réponse ne vous satisfait pas, vous pouvez saisir la Commission nationale de l’informatique et des libertés&nbsp;: <a href="https://www.cnil.fr/fr/plaintes" target="_blank" rel="noopener">cnil.fr/fr/plaintes</a>.</p>
 
-      <p class="maj">Dernière mise à jour&nbsp;: 19 novembre 2026.</p>
+      <p class="maj">Dernière mise à jour&nbsp;: 20 novembre 2026.</p>
     </div>
   </section>
 </div>
