@@ -1,5 +1,11 @@
 # Journal des modifications
 
+## À venir
+
+### Modifié
+
+- macOS : la fenêtre qui s'ouvre avec le fichier `.dmg` est aux couleurs de DNMAX : le logotype sur un bandeau pétrole, puis une flèche qui mène de l'icône de DNMAX au dossier Applications.
+
 ## 1.0.0 — 2026-11-20
 
 ### Modifié

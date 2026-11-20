@@ -69,6 +69,8 @@ Les installeurs sont produits dans `src-tauri/target/release/bundle/`, pour le s
 
 Pour obtenir les installeurs des trois systèmes sans les construire soi-même : onglet « Actions » du dépôt, atelier « Installeurs », bouton « Run workflow ». Ils sont joints à l'exécution, en bas de sa page. Pousser une branche nommée `essai-installeurs/…` déclenche le même atelier.
 
+Le fond de la fenêtre du `.dmg` (macOS) est `src-tauri/macos/fond-dmg.png` ; il se régénère avec `node outils/generer-fond-dmg.ts` (décision 40).
+
 ### Installer une version d'essai (non signée)
 
 - **Windows** : à l'avertissement « Windows a protégé votre ordinateur », cliquer « Informations complémentaires » puis « Exécuter quand même ».
