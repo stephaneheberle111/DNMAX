@@ -54,7 +54,7 @@ La consigne est de préférer, à fonction égale, un outil référencé au [SIL
 
 **Icône** : « D + N en grand, le D seul en petit ». Sur un pavé pétrole arrondi (rx 22 sur 100), le D et le N blancs et ambre clair `#E9B978` à partir de 64 px, le D seul en dessous (favicon de l'application et du site, petites tailles du `.ico`). Dans la barre des tâches de Windows et de Linux, la fenêtre prend le D sans fond : pétrole et ambre sur une barre claire, blanc et ambre clair sur une barre sombre, d'après le thème du système (`src-tauri/src/lib.rs`). Le pavé reste l'icône des raccourcis, de l'installeur et du Dock de macOS, qui ignore l'icône de fenêtre. Les icônes de `src-tauri/icons/` se régénèrent avec `node outils/generer-icones.ts` (dessin dans `outils/icones.ts`), le sceau des exports avec `node outils/generer-sceau.ts`.
 
-**Menus** : un picto en deux pièces par onglet (planche 43), en couleurs sur le fond pétrole pâle pour le menu actif, en deux gris pour les autres.
+**Menus** : un picto en deux pièces par onglet (planche 43). Depuis novembre 2026, le bandeau du haut est pétrole dans les deux thèmes, pour que le logotype y prenne le blanc et l'ambre clair de l'icône : le menu actif porte ses couleurs sur un pétrole plus foncé, les autres sont en clair d'un seul ton (`src/identite.css`). La reconstitution de l'application sur le site garde pour l'instant l'ancien bandeau clair.
 
 **Écran d'ouverture** (planche 44) : volet pétrole à gauche, avec le DN en pièces et « Métiers d'art / Design » ; à droite, le logotype, le mot de passe et « Ouvrir ». La bienvenue et les autres formulaires du coffre prennent le même écran.
 

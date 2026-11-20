@@ -5,8 +5,9 @@
 ### Modifié
 
 - Référentiel : les lignes « Bloc » des tableaux (Planification, compétences × semestres, Recherche) prennent le pétrole pâle de DNMAX à la place du vert d'eau. Vos référentiels déjà enregistrés suivent, sans rien avoir à faire.
-- Référentiel > Constituer > Planification : une colonne d'EC sur deux est voilée du pétrole de DNMAX, au lieu de beige.
-- Mes évaluations : le titre « Mes évaluations », que l'onglet dit déjà, n'est plus répété en haut de la page.
+- Le bandeau du haut passe au pétrole de DNMAX, en thème clair comme en thème sombre : le logotype y est blanc et ambre clair, le menu actif se détache sur un pétrole plus foncé.
+- Mes évaluations : le titre « Mes évaluations », que l'onglet dit déjà, n'est plus répété en haut de la page ; « Nouvelle évaluation » prend place à droite de « Évaluations enregistrées ».
+- Référentiel > Explorer > Recherche : tous les blocs portent la même teinte pétrole ; un sur deux restait beige.
 
 ### Corrigé
 
