@@ -136,7 +136,7 @@ L'atelier « Surveillance » (`.github/workflows/surveillance.yml`) tourne chaqu
 
 | Réglage | Sorte | Valeur |
 |---|---|---|
-| `ALERTE_SMTP_SERVEUR` | variable | serveur d'envoi de la boîte (chez OVH, celui indiqué dans l'espace client pour la boîte, souvent `ssl0.ovh.net`) ; connexion chiffrée, port 465 |
+| `ALERTE_SMTP_SERVEUR` | variable (un secret est accepté aussi) | serveur d'envoi de la boîte (chez OVH, celui indiqué dans l'espace client pour la boîte, souvent `ssl0.ovh.net`) ; connexion chiffrée, port 465 |
 | `ALERTE_SMTP_UTILISATEUR` | secret | adresse de la boîte qui envoie |
 | `ALERTE_SMTP_MOT_DE_PASSE` | secret | son mot de passe |
 | `ALERTE_DESTINATAIRE` | variable, facultative | adresse qui reçoit ; `contact@dnmax.fr` par défaut |
