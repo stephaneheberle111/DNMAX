@@ -7,6 +7,10 @@
 ; associations de fichiers, que DNMAX n'a pas : on le fait ici, après
 ; chaque installation ou mise à jour.
 
+; Dossier de ce fichier, donc des autres fichiers de l'installeur : le modèle
+; (installeur.nsi) est copié ailleurs avant d'être compilé, et les retrouve par là.
+!define DOSSIER_INSTALLEUR "${__FILEDIR__}"
+
 !macro NSIS_HOOK_POSTINSTALL
   ; SHCNE_ASSOCCHANGED (0x08000000) avec SHCNF_FLUSH (0x1000) : l'Explorateur relit les icônes.
   System::Call "shell32::SHChangeNotify(i 0x08000000, i 0x1000, p 0, p 0)"

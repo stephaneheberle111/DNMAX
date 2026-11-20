@@ -555,3 +555,27 @@ Arbitrées par l'auteur le 15 novembre 2026, règle par règle, avec un principe
 **Accomplie** (0.9.2, 19 novembre 2026) : la carte radiale reprise (`src/interface/radiale-dessin.ts`, `radiale-gestes.ts`, `explorer.ts`) à l'identique, vérifiée au pixel ; `public/heritage/application.js` est supprimé, le pont démarre l'interface juste après avoir publié ses fonctions, et l'exception du linter est retirée. Les accesseurs et les noms publiés restent pour l'instant : les modules repris s'appellent encore entre eux par la fenêtre, ce que vérifie `src/heritage/appels-historiques.test.ts`. Leur retrait sera un réaménagement à part.
 
 **Suite** (19 novembre 2026) : les modules de `src/interface/` s'appellent par des imports ; chaque `publierX(fenetre, …)` est devenu `brancherX(…)`, qui ne fait plus que donner au module ce qu'il demande à l'extérieur (stockage, horloge, hasard, document). Les cycles d'import entre modules sont sans risque, aucun n'utilisant à son chargement ce qu'il importe d'un autre. Restent publiés sur la fenêtre, pour le seul banc de comparaison (`outils/banc/banc.cjs`), qui rejoue ses gestes dans la page sur `main` et sur une branche : l'état, par les accesseurs de `src/interface/etat.ts`, et les 19 fonctions de `src/heritage/noms-banc.ts` (`paintTabs`, `paintForm`, `paintPick`, `paintLignes`, `paintRef`, `paintOrg`, `paintSet`, `paintPrefs`, `paintProg`, `paintSaved`, `goStep`, `nouvelleFiche`, `migF`, `computeREF`, `materialize`, `saveData`, `loadDemo`, `exportFiche`, `askRestitWarn`). Aucun gabarit HTML ni test de bout en bout n'appelle ces noms. Le garde-fou vérifie que chaque nom libre que le banc exécute dans la page est publié, dans l'état ou fourni par le navigateur, et que chaque fonction publiée y est appelée.
+
+## 39. Installeur Windows dessiné, sur un modèle dérivé de celui de Tauri
+
+**Constat** (20 novembre 2026) : l'installeur produit par Tauri gardait l'habillage par défaut de NSIS, étranger à DNMAX : bandeau bleu générique, quatre pages à « Suivant > », texte standard.
+
+**Retenu** : une fenêtre sans barre de titre, sur le pétrole de l'icône, avec le logotype et les polices du site (Public Sans, Bricolage Grotesque). Le parcours par défaut tient en un bouton ; « Personnaliser l'installation » ouvre à la demande le choix des raccourcis et du dossier. Le désinstalleur suit le même dessin, et fait confirmer sur une seconde page la suppression des données, décochée d'office.
+
+**Comment** : Tauri ne permet de changer les pages qu'en fournissant son propre modèle. `src-tauri/windows/installeur.nsi` est donc une copie du modèle de Tauri (tauri-cli 2.12.4), dont chaque écart est marqué « DNMAX : » ; les pages elles-mêmes sont dans `habillage-installeur.nsh`. Ce qui installe, met à jour et désinstalle (sections, WebView2, raccourcis, registre, modes discret et silencieux) reste celui de Tauri. Les images, une par échelle d'affichage de Windows, et les polices sont produites par `node outils/generer-habillage-installeur.ts`.
+
+**Prix à payer** : à chaque montée de version de `@tauri-apps/cli`, le modèle est à comparer au nouveau modèle d'origine, sans quoi ses correctifs seraient perdus. Un test (`outils/habillage-installeur.test.ts`) échoue tant que le numéro de version noté en tête du modèle n'est pas celui du paquet, pour que la comparaison ne soit pas oubliée. La marche à suivre est dans le README.
+
+**Écarts de comportement assumés** :
+
+- le raccourci sur le bureau n'est plus créé d'office dans l'installeur à pages (il l'est toujours en installation silencieuse ou discrète, comme avant) ;
+- une version déjà installée est remplacée sur place, sans proposer de la désinstaller d'abord : c'est ce que fait déjà la mise à jour depuis l'application ;
+- la liste détaillée des opérations n'est plus affichée ; si l'installation de WebView2 échoue, le message s'écrit sous la barre de progression.
+
+**Accessibilité** : Entrée lance l'action principale de la page, Échap ferme, Tab parcourt les liens et les cases, qui sont de vrais contrôles Windows. Sur la page qui confirme la suppression des données, Entrée ramène en arrière : il faut choisir « Tout supprimer ».
+
+**Poids** : environ 160 Ko de plus pour l'installeur (images, polices, et leur copie dans le désinstalleur), mesurés sur le banc d'essai.
+
+**Outils** : NSIS est celui que Tauri emploie déjà ; aucun outil nouveau. Les polices sont celles du site, sous licence SIL OFL 1.1 (`site/polices/`).
+
+**Limite** : le rendu n'a été vérifié qu'avec Wine avant le premier essai sur un vrai Windows ; les coins arrondis de la fenêtre et son liseré n'existent que sous Windows 11.

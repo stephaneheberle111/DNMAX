@@ -1,5 +1,13 @@
 # Journal des modifications
 
+## À venir
+
+### Modifié
+
+- Installeur Windows redessiné aux couleurs de DNMAX, sans barre de titre : le logotype, un seul bouton « Installer » (ou « Mettre à jour », « Réinstaller » si DNMAX est déjà là), puis « Ouvrir DNMAX ». « Personnaliser l'installation » ouvre, seulement si on le demande, le choix des raccourcis et du dossier. Le raccourci sur le bureau n'est plus créé d'office : il se coche dans « Personnaliser ». La mise à jour depuis l'application montre la même fenêtre, réduite au logotype et à la barre de progression.
+- Désinstallation Windows redessinée de la même façon. Vos données sont gardées, sauf si vous cochez « Supprimer aussi mes données de ce poste », ce qu'une seconde page fait confirmer ; la dernière page dit ce qu'il en est advenu.
+- L'installeur Windows et le désinstalleur portent l'icône de DNMAX.
+
 ## 1.0.0 — 2026-11-20
 
 ### Modifié
