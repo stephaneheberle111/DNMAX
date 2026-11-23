@@ -1,5 +1,12 @@
 # Journal des modifications
 
+## À venir
+
+### Modifié
+
+- Pages de bienvenue : les étapes 2 à 4 prennent la répartition de la première, un volet pétrole étroit à gauche et le formulaire sur le reste de la fenêtre. Le bandeau gaufré figure désormais sur les quatre étapes, première comprise, et aucune ne demande plus d'ascenseur à la plus petite taille de la fenêtre. L'écran du mot de passe garde ses deux moitiés.
+- Site, présentation : à « Étape 4, les étudiant·es », la reconstitution de l'application montre la grille de la promo telle qu'elle est : une jauge par compétence avec le nom du niveau, le statut « Rendu », la case « Restitué » et le décompte de chaque ligne.
+
 ## 1.0.1 — 2026-11-20
 
 ### Modifié
