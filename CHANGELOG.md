@@ -1,5 +1,13 @@
 # Journal des modifications
 
+## À venir
+
+### Modifié
+
+- Pages de bienvenue : les étapes 2 à 4 prennent la répartition de la première, un volet pétrole étroit à gauche et le formulaire sur le reste de la fenêtre. Le bandeau gaufré figure désormais sur les quatre étapes, première comprise, et aucune ne demande plus d'ascenseur à la plus petite taille de la fenêtre. L'écran du mot de passe garde ses deux moitiés.
+- Pages de bienvenue, grands écrans : le DN est centré dans son volet et grandit avec la fenêtre ; le texte et les champs grossissent aussi, jusqu'à 1,6 fois, dès que la fenêtre dépasse sa taille d'ouverture (1280 × 800). En dessous, rien ne change.
+- Site, présentation : à « Étape 4, les étudiant·es », la reconstitution de l'application montre la grille de la promo telle qu'elle est : une jauge par compétence avec le nom du niveau, le statut « Rendu », la case « Restitué » et le décompte de chaque ligne.
+
 ## 1.0.1 — 2026-11-20
 
 ### Modifié

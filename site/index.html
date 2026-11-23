@@ -353,25 +353,35 @@ svg.dim .dot.off{opacity:.1}
 .feuille td.v{width:12%}
 
 /* Étudiants */
-.grille-a{width:100%;border-collapse:separate;border-spacing:.25em;font-size:.84em;table-layout:fixed}
-.grille-a th{font-weight:600;text-align:left;color:var(--a-muted);font-size:.8em;padding:0 .3em .2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.grille-a th.n{color:var(--a-ink);font-size:.95em}
-.grille-a th.e{width:11.5em}
-.grille-a th.r{width:5.2em}
-.grille-a th.f{width:3.4em;text-align:right}
-.grille-a td{height:2.3em;border-radius:.3em;background:var(--l0);transition:background .35s;text-align:center;font-size:.8em;font-weight:600}
-.grille-a td.rd,.grille-a td.ft{background:transparent;font-weight:500;color:var(--a-muted);text-align:left;white-space:nowrap}
-.grille-a td.ft{text-align:right;font-family:"IBM Plex Mono",ui-monospace,monospace}
-.grille-a td.rd.nr{color:var(--bug,#B4432C);font-weight:600}
-.scr.on .grille-a td[data-l="1"]{background:var(--l1);transition-delay:calc(var(--d)*1ms)}
-.scr.on .grille-a td[data-l="2"]{background:var(--l2);transition-delay:calc(var(--d)*1ms)}
-.scr.on .grille-a td[data-l="3"]{background:var(--l3);color:#fff;transition-delay:calc(var(--d)*1ms)}
-.scr.on .grille-a td[data-l="4"]{background:var(--l4);color:#fff;transition-delay:calc(var(--d)*1ms)}
-.grille-a td.sans{background:transparent;border:1px dashed var(--a-line)}
-.leg{display:flex;flex-wrap:wrap;gap:.9em;font-size:.76em;color:var(--a-muted);margin-top:.6em}
-.leg span{display:inline-flex;align-items:center;gap:.35em}
-.leg i{width:.9em;height:.9em;border-radius:.2em;display:inline-block}
-.seg2{display:inline-flex;border:1px solid var(--a-line);border-radius:.45em;overflow:hidden;font-size:.8em}
+.grille-a{width:100%;border-collapse:collapse;font-size:.84em;table-layout:fixed}
+.grille-a th{font-weight:600;text-align:left;color:var(--a-muted);font-size:.72em;letter-spacing:.06em;text-transform:uppercase;padding:.3em .45em .5em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grille-a th.c{font-family:"IBM Plex Mono",ui-monospace,monospace;letter-spacing:0;text-transform:none;text-align:center;color:var(--a-ink)}
+.grille-a th.n{color:var(--a-ink);font-size:.92em;letter-spacing:0;text-transform:none;padding:.45em}
+.grille-a th.e{width:15.5em}
+.grille-a th.r{width:10.5em}
+.grille-a th.t{width:7em;text-align:center}
+.grille-a th.f{width:4.2em;text-align:right}
+.grille-a tbody tr{border-top:1px solid var(--a-line)}
+.grille-a tbody tr.ok{background:color-mix(in srgb,var(--a-soft) 40%,transparent)}
+.grille-a td{padding:.45em;vertical-align:middle}
+.grille-a .sel{display:flex;justify-content:space-between;gap:.3em;border:1px solid var(--a-line);border-radius:.4em;background:var(--a-paper);padding:.2em .45em;font-size:.78em;white-space:nowrap}
+.grille-a .sel::after{content:"▾";color:var(--a-muted)}
+.grille-a .sel.nr{color:var(--bug,#B4432C);font-weight:600}
+/* Jauge du niveau de maîtrise, comme dans l'application : repères à 15, 50 et 85 %, nom du niveau dessous. */
+.jg{display:block;position:relative;height:.62em;border-radius:.31em;background:var(--l0);overflow:hidden}
+.jg i{position:absolute;inset:0 auto 0 0;width:0;background:var(--c);transition:width .5s ease}
+.jg::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(15% - 1px),var(--a-surface) 0 calc(15% + 1px),transparent 0 calc(50% - 1px),var(--a-surface) 0 calc(50% + 1px),transparent 0 calc(85% - 1px),var(--a-surface) 0 calc(85% + 1px),transparent 0)}
+.jl{display:block;margin-top:.3em;font-size:.76em;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s}
+.jl.rien{color:var(--a-muted);opacity:1}
+.scr.on .jg i{width:var(--w);transition-delay:calc(var(--d)*1ms)}
+.scr.on .jl{opacity:1;transition-delay:calc(var(--d)*1ms)}
+.grille-a td.rt{text-align:center}
+.grille-a .cr{display:inline-block;width:1.05em;height:1.05em;border:1px solid var(--a-line);border-radius:.25em;background:var(--a-surface);vertical-align:middle}
+.grille-a td.ft{text-align:right;font:600 .8em "IBM Plex Mono",ui-monospace,monospace;color:var(--a-muted);white-space:nowrap}
+.grille-a tr.ok td.ft{color:var(--a-accent)}
+.aide-g{font-size:.76em;color:var(--a-muted);margin:.7em 0 0}
+.tete .resume{font-size:.76em;color:var(--a-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg2{display:inline-flex;border:1px solid var(--a-line);border-radius:.45em;overflow:hidden;font-size:.8em;flex:none}
 .seg2 span{padding:.3em .8em;white-space:nowrap}
 .seg2 span.on{background:var(--a-accent);color:var(--a-on-accent)}
 
@@ -853,12 +863,12 @@ footer a{color:var(--ink-2)}
                 <div class="scr" data-scr="eleves">
                   <div class="steps a"><span class="fait"><b>1</b>L’évaluation</span><span class="fait"><b>2</b>Compétences</span><span class="fait"><b>3</b>Formulation</span><span class="on"><b>4</b>Évaluation des étudiant·es</span></div>
                   <div class="pan a" style="--d:100">
-                    <div class="tete"><h4>Évaluation des étudiant·es</h4><span class="nb">14</span><span class="seg2 pousse"><span>Fiche par étudiant·e</span><span class="on">Grille de la promo</span></span></div>
+                    <div class="tete"><h4>Évaluation des étudiant·es</h4><span class="nb">14</span><span class="resume">11 / 14 évalué·es · 1 commencé·e · 4 lignes</span><span class="seg2 pousse"><span>Fiche par étudiant·e</span><span class="on">Grille de la promo</span></span></div>
                     <table class="grille-a" id="grille-promo">
-                      <thead><tr><th class="e">Étudiant·e</th><th class="r">Rendu</th><th>C4.1 + C4.3</th><th>C10.3 + C11.2</th><th>C10.6</th><th>C2.1</th><th class="f">Fait</th></tr></thead>
+                      <thead><tr><th class="e">Étudiant·e</th><th class="r">Rendu</th><th class="c">C4.1 + C4.3</th><th class="c">C10.3 + C11.2</th><th class="c">C10.6</th><th class="c">C2.1</th><th class="t">Restitué</th><th class="f">Fait</th></tr></thead>
                       <tbody></tbody>
                     </table>
-                    <div class="leg a" style="--d:300"><span><i style="background:var(--l1)"></i>Insuffisant</span><span><i style="background:var(--l2)"></i>Fragile</span><span><i style="background:var(--l3)"></i>Satisfaisant</span><span><i style="background:var(--l4)"></i>Très bonne maîtrise</span></div>
+                    <p class="aide-g">Une ligne par étudiant·e, une colonne par compétence évaluée. Un clic sur un nom ouvre sa fiche.</p>
                   </div>
                 </div>
 
@@ -1529,23 +1539,33 @@ npm run dev</code></pre>
     });
   })();
   (function grillePromo(){
-    // Une colonne par ligne de l’évaluation, comme la grille de la promo ; 0 : non rendu, rien à saisir.
+    // Comme la grille de la promo : une jauge par ligne de l’évaluation, le nom du niveau dessous ; 0 : non rendu, rien à saisir.
     const noms=["Camille Ferrand","Yasmine Haddad","Noé Baptiste","Linh Tran","Timothée Vasseur","Aïssatou Konaté","Sacha Delaunay"];
-    const nv=[[3,4,3,3],[2,3,3,4],[3,2,2,3],[4,4,3,null],0,[3,3,4,3],[2,1,3,2]];
+    const nv=[[4,4,3,4],[2,3,4,4],[4,3,3,3],[2,2,3,null],0,[4,4,3,2],[3,4,3,4]];
+    const NIVEAUX=["Insuffisant","Fragile","Satisfaisant","Très bonne maîtrise"], LARGEURS=[8,33,67,100];
     const tb=document.querySelector("#grille-promo tbody");
     let d=400;
     noms.forEach((nom,r)=>{
       const tr=el("tr");
       tr.appendChild(el("th","n",nom));
       const nr=nv[r]===0, niveaux=nr?[null,null,null,null]:nv[r];
-      tr.appendChild(el("td","rd"+(nr?" nr":""),nr?"Non rendu":"Rendu"));
+      const faits=niveaux.filter(l=>l!==null).length;
+      if (faits===niveaux.length) tr.className="ok";
+      const rendu=el("td"); rendu.appendChild(el("span","sel"+(nr?" nr":""),nr?"Non rendu":"Rendu")); tr.appendChild(rendu);
       niveaux.forEach(l=>{
-        const td=el("td");
-        if (l===null) td.className="sans";
-        else { td.dataset.l=l; td.style.setProperty("--d",d); d+=45; }
+        const td=el("td"), jauge=el("span","jg"), fond=el("i");
+        jauge.appendChild(fond); td.appendChild(jauge);
+        if (l===null) td.appendChild(el("span","jl rien","—"));
+        else {
+          fond.style.setProperty("--w",LARGEURS[l-1]+"%"); fond.style.setProperty("--c",`var(--l${l})`);
+          const nomNiveau=el("span","jl",NIVEAUX[l-1]);
+          fond.style.setProperty("--d",d); nomNiveau.style.setProperty("--d",d); d+=45;
+          td.appendChild(nomNiveau);
+        }
         tr.appendChild(td);
       });
-      tr.appendChild(el("td","ft",`${niveaux.filter(l=>l!==null).length}/4`));
+      const restitue=el("td","rt"); restitue.appendChild(el("i","cr")); tr.appendChild(restitue);
+      tr.appendChild(el("td","ft",`${faits}/4`));
       tb.appendChild(tr);
     });
   })();
