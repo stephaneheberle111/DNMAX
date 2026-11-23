@@ -1,6 +1,6 @@
 [package]
 name = "dnmax"
-version = "1.0.1"
+version = "1.0.2"
 description = "Évaluations par compétences pour les enseignant·es de DN MADE"
 license = "CECILL-2.1"
 edition = "2021"
