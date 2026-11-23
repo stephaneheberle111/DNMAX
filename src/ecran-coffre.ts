@@ -191,12 +191,18 @@ const COUCHES_BANDEAU = `
   <use href="#bandeau-texte" class="gaufre-lumiere" transform="translate(0.23 0.50)"/>
   <use href="#bandeau-texte" class="gaufre-fond"/>`;
 
+/** Une copie du bandeau gaufré : `classe` vaut « sur-petrole » pour celle qui se lit sur le volet. */
+function svgBandeau(classe = ""): string {
+  return `<svg class="bandeau-gaufre ${classe}" viewBox="0 0 1200 16" focusable="false">${COUCHES_BANDEAU}</svg>`;
+}
+
 /**
  * Écran d'ouverture de la série 8 (planche 44) : à gauche, le volet pétrole avec
  * le DN en pièces ; à droite, le logotype puis le formulaire ; en bas, le bandeau
- * gaufré, aux couleurs du volet sur sa moitié gauche et du papier sur la droite.
- * Les deux moitiés se partagent la fenêtre à parts égales, pour que la coupure
- * du bandeau tombe sur celle des volets.
+ * gaufré, aux couleurs du volet à gauche de la coupure et du papier à droite.
+ * Le bandeau est dessiné deux fois, l'un sur l'autre : les styles ne gardent de
+ * chaque copie que son côté de la coupure, où qu'elle tombe (au milieu à
+ * l'ouverture, plus à gauche pendant la bienvenue).
  */
 const GABARIT_ECRAN = `
   <div class="coffre-volet" aria-hidden="true">
@@ -207,12 +213,7 @@ const GABARIT_ECRAN = `
     ${svgLogotype("coffre-logotype")}
     <div class="coffre-place"></div>
   </div>
-  <svg class="bandeau-gaufre" viewBox="0 0 1200 16" aria-hidden="true" focusable="false">
-    <clipPath id="bandeau-volet"><rect width="600" height="16"/></clipPath>
-    <clipPath id="bandeau-papier"><rect x="600" width="600" height="16"/></clipPath>
-    <g clip-path="url(#bandeau-volet)" class="sur-petrole">${COUCHES_BANDEAU}</g>
-    <g clip-path="url(#bandeau-papier)">${COUCHES_BANDEAU}</g>
-  </svg>`;
+  <div class="coffre-bandeau" aria-hidden="true">${svgBandeau("sur-petrole")}${svgBandeau()}</div>`;
 
 /**
  * Crée l'écran du coffre (aussi celui de la bienvenue) et rend l'écran entier,

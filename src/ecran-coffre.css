@@ -6,12 +6,15 @@
   display: none;
 }
 
-/* Écran d'ouverture de la série 8 (planche 44) : volet pétrole à gauche, formulaire sur le papier à droite,
-   à parts égales pour que la coupure du bandeau gaufré tombe sur celle des volets. */
+/* Écran d'ouverture de la série 8 (planche 44) : volet pétrole à gauche, formulaire sur le papier à droite.
+   `--part-volet` est la largeur du volet, en centièmes de la fenêtre : la moitié à l'ouverture, moins pendant
+   la bienvenue. La coupure du bandeau gaufré s'en déduit, pour tomber sur celle des volets. */
 .ecran-coffre {
+  --part-volet: 50;
+  --largeur-formulaire: 440px;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: calc(var(--part-volet) * 1%) minmax(0, 1fr);
 }
 /* Le bandeau du fond de page laisse la place à celui de l'écran, dessiné sur les deux volets. */
 .coffre-ferme .fond-page .bandeau-gaufre {
@@ -61,11 +64,29 @@
   color: #fff;
 }
 
-.ecran-coffre > .bandeau-gaufre {
+/* Les deux copies du bandeau, l'une sur l'autre, à 30 px du bas : celle du volet n'est gardée qu'à gauche de
+   la coupure, celle du papier qu'à droite. La coupure se compte depuis le bord du bandeau, centré et large de
+   1200 px au plus. Le débord vertical laisse passer les ombres et les lumières. */
+.coffre-bandeau {
   position: fixed;
-  bottom: 30px;
+  inset: auto 0 30px;
   z-index: 1;
+  display: grid;
+  justify-items: center;
   pointer-events: none;
+  container-type: inline-size;
+}
+.coffre-bandeau .bandeau-gaufre {
+  --largeur-bandeau: min(1200px, 100cqw);
+  --coupure: clamp(0px, calc(var(--part-volet) * 1cqw - (100cqw - var(--largeur-bandeau)) / 2), var(--largeur-bandeau));
+  position: static;
+  grid-area: 1 / 1;
+  width: var(--largeur-bandeau);
+  transform: none;
+  clip-path: inset(-8px 0 -8px var(--coupure));
+}
+.coffre-bandeau .bandeau-gaufre.sur-petrole {
+  clip-path: inset(-8px calc(100% - var(--coupure)) -8px 0);
 }
 
 .coffre-colonne {
@@ -99,7 +120,7 @@
 .coffre-colonne:has(form.coffre-ouverture) .coffre-logotype {
   margin-bottom: -12px;
 }
-/* Pages de bienvenue, plus longues : un logotype plus discret laisse la place au texte. */
+/* Autres formulaires du coffre (mot de passe oublié, mot de passe à renforcer) : un logotype plus discret. */
 .coffre-colonne:not(:has(form.coffre-ouverture)) {
   gap: 24px;
 }
@@ -110,7 +131,7 @@
 
 .ecran-coffre form {
   width: 100%;
-  max-width: 440px;
+  max-width: var(--largeur-formulaire);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -182,37 +203,38 @@
 }
 
 .ecran-coffre form.coffre-large {
-  max-width: 660px;
   gap: 10px;
 }
-
-/* Première page de bienvenue, la plus longue : elle doit tenir dans la fenêtre sans défiler, jusqu'à sa
-   taille minimale (900 × 600). Le volet pétrole se resserre, ses mots passent sous le DN, les marges se
-   réduisent, et le bandeau gaufré, que le texte recouvrirait, s'efface le temps de cette page. */
 .ecran-coffre:has(form.coffre-large) {
-  grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+  --largeur-formulaire: 660px;
 }
-.ecran-coffre:has(form.coffre-large) > .bandeau-gaufre {
-  display: none;
+
+/* Pages de bienvenue : le volet pétrole se resserre pour laisser la place au texte, ses mots passent sous le
+   DN, et le logotype, plus discret, s'aligne sur la gauche du formulaire. Le bas de la colonne reste libre
+   pour le bandeau gaufré. */
+.ecran-coffre:has(.bienvenue-etape) {
+  --part-volet: 30;
 }
-.ecran-coffre:has(form.coffre-large) .coffre-volet {
+.ecran-coffre:has(.bienvenue-etape) .coffre-volet {
   flex-direction: column;
   align-items: flex-start;
   padding: 0 clamp(16px, 3vw, 36px);
 }
-.ecran-coffre:has(form.coffre-large) .coffre-dn {
+.ecran-coffre:has(.bienvenue-etape) .coffre-dn {
   width: min(180px, 100%);
 }
-.coffre-colonne:has(form.coffre-large) {
+.coffre-colonne:has(.bienvenue-etape) {
   gap: 12px;
-  padding: 16px clamp(20px, 3vw, 40px);
+  padding: 16px clamp(20px, 3vw, 40px) 56px;
 }
-.coffre-colonne:has(form.coffre-large) .coffre-logotype {
+.coffre-colonne:has(.bienvenue-etape) .coffre-logotype {
   width: 144px;
   height: 32px;
   align-self: flex-start;
-  margin-left: max(0px, calc((100% - 660px) / 2));
+  margin-left: max(0px, calc((100% - var(--largeur-formulaire)) / 2));
 }
+/* Première page, la plus longue : elle doit tenir dans la fenêtre sans défiler, jusqu'à sa taille minimale
+   (900 × 600). */
 .ecran-coffre form.coffre-large h1 {
   font-size: 24px;
 }
@@ -226,7 +248,7 @@
 }
 /* Fenêtre à sa hauteur minimale : le logotype, déjà présent dans le volet, cède sa place. */
 @media (max-height: 640px) {
-  .coffre-colonne:has(form.coffre-large) .coffre-logotype {
+  .coffre-colonne:has(.bienvenue-etape) .coffre-logotype {
     display: none;
   }
 }
