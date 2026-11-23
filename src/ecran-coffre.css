@@ -220,12 +220,20 @@
   place-content: center;
   padding: 0 clamp(16px, 3vw, 36px);
 }
-/* Largeur fixe : un pourcentage se compterait sur la colonne de la grille, qui s'élargirait et décentrerait le bloc.
-   Le volet le plus étroit (270 px, marges déduites) la contient. */
+/* Le DN grandit avec la fenêtre : un peu plus de la moitié du volet. Sa largeur ne dépend pas de celle de son
+   parent : un pourcentage se compterait sur la colonne de la grille, qui s'élargirait et décentrerait le bloc.
+   Le volet le plus étroit (270 px, marges déduites) contient les 180 px du minimum. */
 .ecran-coffre:has(.bienvenue-etape) .coffre-dn {
-  width: 180px;
+  width: clamp(180px, 16.5vw, 420px);
 }
+/* Les mots grandissent avec le DN, sans jamais devenir plus larges que lui. */
+.ecran-coffre:has(.bienvenue-etape) .coffre-volet-mots {
+  font-size: clamp(22px, 2.1vw, 54px);
+}
+/* Sur une fenêtre plus grande que celle d'ouverture, tout le contenu grossit d'un bloc (`--echelle-bienvenue`,
+   posée par src/ecran-coffre.ts) : la page garde la mise en page de la fenêtre de référence. */
 .coffre-colonne:has(.bienvenue-etape) {
+  zoom: var(--echelle-bienvenue, 1);
   gap: 12px;
   padding: 16px clamp(20px, 3vw, 40px) 56px;
 }

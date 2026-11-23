@@ -109,3 +109,22 @@ export function installerPremierEtablissement(entrees: Entrees, installation: In
   }
   return resultat;
 }
+
+/** Fenêtre de référence et plafond du grossissement des pages de bienvenue. */
+export interface ReglageEchelle {
+  reference: { largeur: number; hauteur: number };
+  maximum: number;
+}
+
+/**
+ * Grossissement du texte des pages de bienvenue pour une fenêtre donnée : 1 jusqu'à la fenêtre de référence,
+ * puis en proportion de la dimension la plus contrainte, pour que la page tienne comme à la taille de
+ * référence, sans dépasser `maximum`. Une taille inconnue (nulle, négative, non finie) vaut 1.
+ */
+export function echelleBienvenue(largeur: number, hauteur: number, reglage: ReglageEchelle): number {
+  const rapport = Math.min(largeur / reglage.reference.largeur, hauteur / reglage.reference.hauteur);
+  if (!Number.isFinite(rapport)) {
+    return 1;
+  }
+  return Math.min(Math.max(rapport, 1), reglage.maximum);
+}

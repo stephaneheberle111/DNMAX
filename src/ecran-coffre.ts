@@ -12,7 +12,8 @@ import {
   type DefautMotDePasse,
 } from "./domaine/saisie-coffre";
 import { moduleElevesActif } from "./domaine/securite";
-import { DELAI_VERROUILLAGE_INACTIVITE_MS } from "./configuration";
+import { DELAI_VERROUILLAGE_INACTIVITE_MS, ECHELLE_MAXIMALE_BIENVENUE, FENETRE_REFERENCE_BIENVENUE } from "./configuration";
+import { echelleBienvenue } from "./domaine/bienvenue";
 import { svgDN, svgLogotype } from "./identite-pieces";
 import {
   changerMotDePasse,
@@ -216,6 +217,30 @@ const GABARIT_ECRAN = `
   <div class="coffre-bandeau" aria-hidden="true">${svgBandeau("sur-petrole")}${svgBandeau()}</div>`;
 
 /**
+ * Tient à jour `--echelle-bienvenue` sur l'écran : le grossissement du texte des pages de bienvenue, d'après
+ * la taille de la fenêtre. Les styles ne s'en servent que pour ces pages. Le suivi s'arrête de lui-même une
+ * fois l'écran retiré de la page.
+ */
+function suivreEchelle(ecran: HTMLElement): void {
+  const ajuster = (): void => {
+    const echelle = echelleBienvenue(window.innerWidth, window.innerHeight, {
+      reference: FENETRE_REFERENCE_BIENVENUE,
+      maximum: ECHELLE_MAXIMALE_BIENVENUE,
+    });
+    ecran.style.setProperty("--echelle-bienvenue", String(echelle));
+  };
+  const surRedimensionnement = (): void => {
+    if (ecran.isConnected) {
+      ajuster();
+    } else {
+      window.removeEventListener("resize", surRedimensionnement);
+    }
+  };
+  ajuster();
+  window.addEventListener("resize", surRedimensionnement);
+}
+
+/**
  * Crée l'écran du coffre (aussi celui de la bienvenue) et rend l'écran entier,
  * à placer dans la page, et la place où vont ses formulaires successifs.
  */
@@ -225,6 +250,7 @@ export function creerEcranCoffre(): { ecran: HTMLElement; place: HTMLElement } {
   // Gabarit fixe de ce fichier, sans aucune donnée saisie.
   ecran.innerHTML = GABARIT_ECRAN;
   const place = ecran.querySelector<HTMLElement>(".coffre-place") ?? ecran;
+  suivreEchelle(ecran);
   return { ecran, place };
 }
 

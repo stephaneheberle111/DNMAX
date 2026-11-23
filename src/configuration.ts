@@ -31,3 +31,10 @@ export const DELAI_VERROUILLAGE_INACTIVITE_MS = 15 * 60_000;
 
 /** Fréquence à laquelle l'inactivité est contrôlée, en millisecondes. */
 export const INTERVALLE_CONTROLE_INACTIVITE_MS = 15_000;
+
+/**
+ * Pages de bienvenue : fenêtre à partir de laquelle le texte grandit (la taille d'ouverture de DNMAX), et
+ * grossissement à ne pas dépasser sur un très grand écran.
+ */
+export const FENETRE_REFERENCE_BIENVENUE = { largeur: 1280, hauteur: 800 };
+export const ECHELLE_MAXIMALE_BIENVENUE = 1.6;

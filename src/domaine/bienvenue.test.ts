@@ -7,6 +7,7 @@ import {
   debutAnneeScolaire,
   diplomeDeVersion,
   doitProposerBienvenue,
+  echelleBienvenue,
   installerPremierEtablissement,
   type Installation,
 } from "./bienvenue";
@@ -121,5 +122,34 @@ describe("installerPremierEtablissement", () => {
     const deuxAns = JSON.stringify({ diplomes: [{ id: "d1", duree: 2 }] });
     const resultat = installerPremierEtablissement({ [CLE_DONNEES]: deuxAns }, installation());
     expect(JSON.parse(resultat[CLE_PROMOTIONS] ?? "[]")).toHaveLength(2);
+  });
+});
+
+describe("grossissement des pages de bienvenue", () => {
+  const REGLAGE = { reference: { largeur: 1280, hauteur: 800 }, maximum: 1.6 };
+
+  it("grossit le texte en proportion d'une fenêtre plus grande que la référence", () => {
+    expect(echelleBienvenue(1920, 1200, REGLAGE)).toBe(1.5);
+  });
+
+  it("suit la dimension la plus contrainte", () => {
+    expect(echelleBienvenue(1920, 1080, REGLAGE)).toBe(1.35);
+    expect(echelleBienvenue(1600, 2000, REGLAGE)).toBe(1.25);
+  });
+
+  it("ne change rien à la fenêtre de référence ni en dessous", () => {
+    expect(echelleBienvenue(1280, 800, REGLAGE)).toBe(1);
+    expect(echelleBienvenue(900, 600, REGLAGE)).toBe(1);
+    expect(echelleBienvenue(2560, 600, REGLAGE)).toBe(1);
+  });
+
+  it("plafonne sur un très grand écran", () => {
+    expect(echelleBienvenue(3840, 2160, REGLAGE)).toBe(1.6);
+  });
+
+  it("vaut 1 pour une taille inconnue", () => {
+    expect(echelleBienvenue(0, 0, REGLAGE)).toBe(1);
+    expect(echelleBienvenue(Number.NaN, 800, REGLAGE)).toBe(1);
+    expect(echelleBienvenue(-5, 800, REGLAGE)).toBe(1);
   });
 });
