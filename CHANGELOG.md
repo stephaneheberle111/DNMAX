@@ -1,5 +1,11 @@
 # Journal des modifications
 
+## À venir
+
+### Modifié
+
+- Site, page Télécharger : après un clic sur « Télécharger pour… », la page descend d'elle-même à « Votre système bloque l'installation ou affiche un avertissement ? », ouverte sur la marche à suivre du système choisi.
+
 ## 1.0.2 — 2026-11-23
 
 ### Modifié
