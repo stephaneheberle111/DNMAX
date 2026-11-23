@@ -997,14 +997,14 @@ footer a{color:var(--ink-2)}
       <div class="note" id="installer">
         <h3>Votre système bloque l’installation ou affiche un avertissement&nbsp;?</h3>
         <p>C’est attendu&nbsp;: les installeurs de DNMAX ne portent pas encore de certificat payant de Microsoft ni d’Apple. Cliquez sur votre système pour la marche à suivre.</p>
-        <details><summary>Windows</summary>
+        <details data-aide="win"><summary>Windows</summary>
           <ol>
           <li><strong>Le navigateur retient le téléchargement.</strong> Edge peut afficher «&nbsp;DNMAX-windows.exe n’est pas couramment téléchargé&nbsp;». Survolez le fichier dans la liste des téléchargements, cliquez «&nbsp;…&nbsp;» puis «&nbsp;Conserver&nbsp;», puis «&nbsp;Afficher plus&nbsp;» et «&nbsp;Conserver quand même&nbsp;».</li>
           <li><strong>«&nbsp;Windows a protégé votre ordinateur&nbsp;»</strong> (SmartScreen, fenêtre bleue). Cliquez «&nbsp;Informations complémentaires&nbsp;», puis «&nbsp;Exécuter quand même&nbsp;». L’installation se poursuit normalement.</li>
           <li><strong>«&nbsp;Le Contrôle intelligent des applications a bloqué une application&nbsp;»</strong> (Windows&nbsp;11), sans bouton pour continuer. Ce contrôle n’accepte aucune exception application par application&nbsp;: tant que DNMAX n’a pas de certificat, il ne s’installe et ne se lance que si ce contrôle est désactivé. Ouvrez Sécurité Windows &gt; Contrôle des applications et du navigateur &gt; Paramètres du Contrôle intelligent des applications, et choisissez «&nbsp;Désactivé&nbsp;». Sur un Windows&nbsp;11 à jour (24H2 ou 25H2), vous pourrez le réactiver au même endroit&nbsp;; sur une version plus ancienne, le désactiver est définitif jusqu’à une réinstallation de Windows. Les autres protections (antivirus, SmartScreen) restent actives. À vous de juger si vous souhaitez le faire.</li>
         </ol>
         </details>
-        <details><summary>macOS</summary>
+        <details data-aide="mac"><summary>macOS</summary>
           <ol>
           <li>Ouvrez le fichier .dmg et faites glisser DNMAX dans Applications, puis lancez DNMAX.</li>
           <li>macOS affiche «&nbsp;Apple n’a pas pu vérifier que «&nbsp;DNMAX&nbsp;» ne contenait pas de logiciel malveillant&nbsp;». Cliquez «&nbsp;Terminé&nbsp;» (pas «&nbsp;Placer dans la corbeille&nbsp;»).</li>
@@ -1012,7 +1012,7 @@ footer a{color:var(--ink-2)}
           <li>C’est à faire une seule fois&nbsp;: DNMAX s’ouvre ensuite normalement. Sur un macOS antérieur à la version&nbsp;15, un clic droit sur DNMAX puis «&nbsp;Ouvrir&nbsp;» suffit.</li>
         </ol>
         </details>
-        <details><summary>Linux</summary>
+        <details data-aide="linux"><summary>Linux</summary>
           <ol>
           <li><strong>Paquet .deb</strong> (Debian, Ubuntu, Mint)&nbsp;: double-cliquez le fichier pour l’installer avec le gestionnaire de logiciels, ou, dans un terminal, <code>sudo apt install ./DNMAX-linux.deb</code>.</li>
           <li><strong>AppImage</strong>&nbsp;: le fichier doit être rendu exécutable. Clic droit &gt; Propriétés &gt; Permissions, cochez «&nbsp;Autoriser l’exécution du fichier comme un programme&nbsp;»&nbsp;; ou, dans un terminal, <code>chmod +x DNMAX-linux.AppImage</code>. Lancez-le ensuite d’un double-clic.</li>
@@ -1750,6 +1750,22 @@ npm run dev</code></pre>
     document.getElementById("systemes").prepend(ligne);
     document.getElementById("f-sys").value = {win:"Windows",mac:"macOS",linux:"Linux"}[os];
   }
+
+  /* ---------- Après un téléchargement : la marche à suivre ---------- */
+  // Le clic lance le téléchargement comme d'habitude ; la page descend ensuite à l'aide à l'installation,
+  // ouverte sur le système de l'installeur choisi, puisque c'est là que le système risque de bloquer.
+  // Le court délai laisse le navigateur montrer d'abord son téléchargement.
+  const DELAI_APRES_TELECHARGEMENT_MS = 600;
+  document.querySelectorAll("#systemes .sys a[href]").forEach(lien=>{
+    if (!/\.(exe|dmg|deb|AppImage)$/.test(lien.getAttribute("href"))) return;
+    lien.addEventListener("click",()=>{
+      const aide = document.querySelector('#installer details[data-aide="'+lien.closest(".sys").dataset.os+'"]');
+      setTimeout(()=>{
+        if (aide) aide.open = true;
+        document.getElementById("installer").scrollIntoView({behavior:reduit?"auto":"smooth",block:"start"});
+      },DELAI_APRES_TELECHARGEMENT_MS);
+    });
+  });
 
   /* ---------- Documentation ---------- */
   const pages = [...document.querySelectorAll("[data-doc]")];
