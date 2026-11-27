@@ -6,6 +6,10 @@
 
 - Site, page Télécharger : après un clic sur « Télécharger pour… », la page descend d'elle-même à « Votre système bloque l'installation ou affiche un avertissement ? », ouverte sur la marche à suivre du système choisi.
 
+### Sécurité
+
+- Deux bibliothèques dont dépend DNMAX sont mises à jour après la publication d'une faille dans chacune (`url` et `cookie`, signalées par la surveillance quotidienne). Aucune n'était exploitable dans l'usage qu'en fait DNMAX.
+
 ## 1.0.2 — 2026-11-23
 
 ### Modifié
